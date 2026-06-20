@@ -1,7 +1,7 @@
 # 11 — Simulator Signal Gap & Raw-Event Generator Spec
 
 > **Hand-off doc for the `sim/` owner (P2).** Answers one question: *does the simulation lab produce the
-> signals needed to model and derive the production graph schema ([10](10-production-graph-schema.md))?*
+> signals needed to model and derive the production graph schema ([production-graph-schema.md](production-graph-schema.md))?*
 > This is a **scoped raw-event generator spec, not a mandate to build a full poker simulator.** Verdict
 > below is split into three levels so you build only what your goal needs.
 
