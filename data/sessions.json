@@ -38,7 +38,7 @@
     },
     {
       "session_id": "SES-0003",
-      "player_id": "P-CA",
+      "player_id": "P-198",
       "table_id": "T-11",
       "case_ref": "coordinated-cluster",
       "scenario": "both",
@@ -53,7 +53,7 @@
     },
     {
       "session_id": "SES-0004",
-      "player_id": "P-CB",
+      "player_id": "P-199",
       "table_id": "T-11",
       "case_ref": "coordinated-cluster",
       "scenario": "both",
@@ -68,7 +68,7 @@
     },
     {
       "session_id": "SES-0005",
-      "player_id": "P-CC",
+      "player_id": "P-200",
       "table_id": "T-11",
       "case_ref": "coordinated-cluster",
       "scenario": "standard",
@@ -83,7 +83,7 @@
     },
     {
       "session_id": "SES-0006",
-      "player_id": "P-CC",
+      "player_id": "P-200",
       "table_id": "T-14",
       "case_ref": "coordinated-cluster",
       "scenario": "fairplay",
@@ -98,7 +98,7 @@
     },
     {
       "session_id": "SES-0007",
-      "player_id": "P-H1",
+      "player_id": "P-192",
       "table_id": "T-7",
       "case_ref": "shared-device-fp",
       "scenario": "both",
@@ -113,7 +113,7 @@
     },
     {
       "session_id": "SES-0008",
-      "player_id": "P-H2",
+      "player_id": "P-193",
       "table_id": "T-3",
       "case_ref": "shared-device-fp",
       "scenario": "both",
@@ -185,8 +185,8 @@
     {"session_id": "SES-0103", "player_id": "P-189", "table_id": "T-18", "scenario": "both", "start_hour": -1, "status": "active"},
     {"session_id": "SES-0104", "player_id": "P-190", "table_id": "T-18", "scenario": "both", "start_hour": -1, "status": "active"},
     {"session_id": "SES-0105", "player_id": "P-191", "table_id": "T-18", "scenario": "both", "start_hour": -1, "status": "active"},
-    {"session_id": "SES-0110", "player_id": "P-183", "table_id": "T-22", "scenario": "both", "start_hour": -1, "status": "active"},
-    {"session_id": "SES-0111", "player_id": "P-184", "table_id": "T-22", "scenario": "both", "start_hour": -1, "status": "active"},
+    {"session_id": "SES-0110", "player_id": "P-176", "table_id": "T-22", "scenario": "both", "start_hour": -1, "status": "active"},
+    {"session_id": "SES-0111", "player_id": "P-177", "table_id": "T-22", "scenario": "both", "start_hour": -1, "status": "active"},
     {"session_id": "SES-0112", "player_id": "P-185", "table_id": "T-22", "scenario": "both", "start_hour": -1, "status": "active"},
     {"session_id": "SES-0120", "player_id": "P-131", "table_id": "T-25", "scenario": "both", "start_hour": -1, "status": "active"},
     {"session_id": "SES-0121", "player_id": "P-132", "table_id": "T-25", "scenario": "both", "start_hour": -1, "status": "active"},

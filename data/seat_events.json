@@ -51,12 +51,12 @@
       "case_ref": "new-player"
     },
     {
-      "_section": "CASE PLAYER EVENTS — P-CC cluster-C third-seat case"
+      "_section": "CASE PLAYER EVENTS — P-200 cluster-C third-seat case"
     },
     {
       "event_id": "SE-0005",
       "session_id": "SES-0005",
-      "player_id": "P-CC",
+      "player_id": "P-200",
       "table_id": "T-11",
       "event_type": "join",
       "scenario": "standard",
@@ -67,7 +67,7 @@
     {
       "event_id": "SE-0006",
       "session_id": null,
-      "player_id": "P-CC",
+      "player_id": "P-200",
       "table_id": "T-11",
       "event_type": "seat_hold",
       "scenario": "fairplay",
@@ -79,7 +79,7 @@
     {
       "event_id": "SE-0007",
       "session_id": "SES-0006",
-      "player_id": "P-CC",
+      "player_id": "P-200",
       "table_id": "T-14",
       "event_type": "join",
       "scenario": "fairplay",
@@ -93,7 +93,7 @@
     {
       "event_id": "SE-0008",
       "session_id": "SES-0003",
-      "player_id": "P-CA",
+      "player_id": "P-198",
       "table_id": "T-11",
       "event_type": "join",
       "scenario": "both",
@@ -104,7 +104,7 @@
     {
       "event_id": "SE-0009",
       "session_id": "SES-0004",
-      "player_id": "P-CB",
+      "player_id": "P-199",
       "table_id": "T-11",
       "event_type": "join",
       "scenario": "both",
@@ -118,7 +118,7 @@
     {
       "event_id": "SE-0010",
       "session_id": "SES-0007",
-      "player_id": "P-H1",
+      "player_id": "P-192",
       "table_id": "T-7",
       "event_type": "join",
       "scenario": "both",
@@ -129,7 +129,7 @@
     {
       "event_id": "SE-0011",
       "session_id": "SES-0008",
-      "player_id": "P-H2",
+      "player_id": "P-193",
       "table_id": "T-3",
       "event_type": "join",
       "scenario": "both",
@@ -308,7 +308,7 @@
     {
       "event_id": "SE-0035",
       "session_id": "SES-0110",
-      "player_id": "P-183",
+      "player_id": "P-176",
       "table_id": "T-22",
       "event_type": "leave",
       "scenario": "both",
@@ -430,8 +430,8 @@
     {"event_id": "SE-0193", "session_id": "SES-0103", "player_id": "P-189", "table_id": "T-18", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
     {"event_id": "SE-0194", "session_id": "SES-0104", "player_id": "P-190", "table_id": "T-18", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
     {"event_id": "SE-0195", "session_id": "SES-0105", "player_id": "P-191", "table_id": "T-18", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0200", "session_id": "SES-0110", "player_id": "P-183", "table_id": "T-22", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0201", "session_id": "SES-0111", "player_id": "P-184", "table_id": "T-22", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
+    {"event_id": "SE-0200", "session_id": "SES-0110", "player_id": "P-176", "table_id": "T-22", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
+    {"event_id": "SE-0201", "session_id": "SES-0111", "player_id": "P-177", "table_id": "T-22", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
     {"event_id": "SE-0202", "session_id": "SES-0112", "player_id": "P-185", "table_id": "T-22", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
     {"event_id": "SE-0210", "session_id": "SES-0120", "player_id": "P-131", "table_id": "T-25", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
     {"event_id": "SE-0211", "session_id": "SES-0121", "player_id": "P-132", "table_id": "T-25", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
