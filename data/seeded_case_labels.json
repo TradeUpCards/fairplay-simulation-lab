@@ -22,7 +22,7 @@
         "new_player": "P-104",
         "table_aggressors": ["P-176", "P-177"],
         "seeded_table_label": "T-22",
-        "healthy_alternative_label": "T-08",
+        "healthy_alternative_label": "T-8",
         "good_fit_label": "T-14"
       },
       "expected_category": "beginner_unfriendly",
@@ -39,13 +39,13 @@
       },
       "eval_checks": [
         "true_risk_ranks_above_false_positive_traps",
-        "P-104_routed_to_T-08_not_T-22",
+        "P-104_routed_to_T-8_not_T-22",
         "T-22_not_promoted_to_new_or_recreational_players",
         "table_health_risk_not_conflated_with_integrity_risk"
       ],
       "counterfactual": {
         "standard_room_outcome": "P-104 joins T-22; short session (~12 min); likely churn",
-        "fairplay_outcome": "P-104 routed to T-08; longer session (~42 min expected); retained"
+        "fairplay_outcome": "P-104 routed to T-8; longer session (~42 min expected); retained"
       }
     },
     {
@@ -82,7 +82,7 @@
         "account_C": "P-200",
         "cluster_id": "CL-001",
         "device_link_group": "DG-001",
-        "seeded_table_label": "T-cluster"
+        "seeded_table_label": "T-11"
       },
       "expected_category": "integrity_review",
       "expected_risk_lens": "integrity_risk",
@@ -258,7 +258,7 @@
       "path_id": "fairplay",
       "label": "FairPlay Enabled — interventions active",
       "key_events": [
-        "P-104 routed to T-08 (balanced, healthy alternative); expected session ~42 min; retained",
+        "P-104 routed to T-8 (balanced, healthy alternative); expected session ~42 min; retained",
         "P-200 held for pit-boss review before completing cluster CL-001 formation; pit boss accepts containment recommendation",
         "T-22 not promoted to new or recreational players in lobby during simulation window"
       ]
@@ -272,7 +272,7 @@
     "eval_invariant": "True-risk cases must rank above false-positive traps in integrity and seating-risk scores. Eval fails if a trap (B, D, or E) scores higher than its paired true-risk case in the same risk lens."
   },
   "schema_warnings": {
-    "table_id_format": "Table labels T-22, T-08, T-14 (CASE-A) and T-cluster (CASE-C) are placeholder strings for the Day-2 static fixture. Bram's table_roster.json is the authoritative source. When Bram publishes IDs, update seeded_entities.seeded_table_label values in both cases to match the exact table_id format used in that file (e.g. string 'T-22' vs. integer 22 vs. 'table_22'). P3 join keys must use the same format in both files.",
+    "table_id_format": "RESOLVED 2026-06-20. All table-label join keys now match data/table_roster.json's exact string format: CASE-A uses T-22 (seeded), T-8 (healthy alternative), T-14 (good fit); CASE-C uses T-11 (cluster CL-001 table, replaces former 'T-cluster' placeholder). Format is the 'T-<n>' string with no leading zeros (roster has T-1/T-3/T-5/T-7/T-8/T-9/T-11/T-14/T-15/T-18/T-22/T-25). P3 joins on these keys against table_roster.json are safe.",
     "room_metrics_files": "data/room_metrics_standard.json and data/room_metrics_fairplay.json are required Contract 1 outputs owned by Cleo (P2c). They are not present yet — Cleo must generate them. These are required for the simulator comparison screen (PRD §5 P1 Room Impact Simulator, PRD §6 Counterfactual runs)."
   }
 }
