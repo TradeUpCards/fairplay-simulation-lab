@@ -1,0 +1,85 @@
+{
+  "schema_version": "0.1.0",
+  "seed_ref": "TBD — sim/config shared seed",
+  "horizon_hours": 8,
+  "decisions": [
+    {
+      "id": "t22-promotion-policy",
+      "hour": 0,
+      "case_ref": "new-player",
+      "trigger": "lobby promotes tables to new/rec players",
+      "standard": {
+        "action": "promote_normally",
+        "table": "T-22"
+      },
+      "fairplay": {
+        "action": "suppress_promotion_to_new_rec",
+        "table": "T-22",
+        "reason_codes": ["beginner_unfriendly"]
+      }
+    },
+    {
+      "id": "new-player-route",
+      "hour": 1,
+      "case_ref": "new-player",
+      "trigger": "P-104 (new) requests a seat",
+      "standard": {
+        "action": "seat",
+        "table": "T-22",
+        "rationale": "no risk-aware routing"
+      },
+      "fairplay": {
+        "action": "seat",
+        "table": "T-8",
+        "rationale": "T-22 beginner-unfriendly → route to balanced table",
+        "reason_codes": ["new_player_bad_mix", "volatility_high"]
+      }
+    },
+    {
+      "id": "cluster-third-seat",
+      "hour": 2,
+      "case_ref": "coordinated-cluster",
+      "trigger": "account C requests the open seat where A and B already sit",
+      "standard": {
+        "action": "seat",
+        "table": "T-cluster",
+        "rationale": "completes A/B/C co-seating formation"
+      },
+      "fairplay": {
+        "action": "hold_for_review",
+        "table": "T-cluster",
+        "rationale": "hold 3rd seat for pit-boss review before formation completes",
+        "reason_codes": ["repeated_co_seating", "within_cluster_soft_play"]
+      }
+    },
+    {
+      "id": "cluster-pit-boss-accept",
+      "hour": 3,
+      "case_ref": "coordinated-cluster",
+      "trigger": "pit boss reviews the held C seat (FairPlay path only; Standard path has no pending review)",
+      "standard": {
+        "action": "none",
+        "rationale": "A/B/C formation completed at hour 2; no review pending"
+      },
+      "fairplay": {
+        "action": "accept_containment",
+        "rationale": "pit boss accepts hold — A/B/C cannot co-seat; C re-routed to a separate table",
+        "reason_codes": ["pit_boss_intervention", "cluster_formation_blocked"]
+      }
+    },
+    {
+      "id": "household-monitor",
+      "hour": 3,
+      "case_ref": "shared-device-fp",
+      "trigger": "H1/H2 same-device flag surfaces",
+      "standard": {
+        "action": "none"
+      },
+      "fairplay": {
+        "action": "monitor_only",
+        "rationale": "same device but no co-seating/soft-play → monitor, don't escalate",
+        "reason_codes": ["shared_device_low_risk"]
+      }
+    }
+  ]
+}
