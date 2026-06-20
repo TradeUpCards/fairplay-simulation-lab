@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FairPlay IQ — Dataset → Property Graph Gap Analysis</title>
+<style>
+  :root{
+    --felt:#0b3d2e; --felt2:#0e4a37; --ink:#0a0f0d; --panel:#11241c; --panel2:#16302480;
+    --line:#1f4a39; --txt:#e7efe9; --mut:#9fc4b2; --gold:#e3c46a; --gold2:#f0d98a;
+    --match:#46c98b; --xform:#e3b341; --miss:#ef6f6f; --excl:#7d93a8;
+    --chipbg:#0d2c20;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:radial-gradient(1200px 700px at 70% -10%,#11543c 0%,var(--felt) 45%,var(--ink) 100%);
+    color:var(--txt);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  a{color:var(--gold2);text-decoration:none}
+  .wrap{display:flex;max-width:1280px;margin:0 auto;gap:0}
+  /* sidebar */
+  nav{position:sticky;top:0;align-self:flex-start;height:100vh;width:262px;padding:26px 18px;
+    border-right:1px solid var(--line);overflow-y:auto;flex:0 0 262px;background:#0a221a55;backdrop-filter:blur(4px)}
+  nav h1{font-size:15px;margin:0 0 4px;color:var(--gold)}
+  nav .sub{font-size:11.5px;color:var(--mut);margin-bottom:18px;letter-spacing:.02em}
+  nav a{display:block;color:var(--mut);padding:6px 10px;border-radius:7px;font-size:13px;border-left:2px solid transparent}
+  nav a:hover{background:#ffffff0a;color:var(--txt)}
+  nav a.active{color:var(--gold2);background:#e3c46a14;border-left:2px solid var(--gold)}
+  nav .grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;color:#6f9384;margin:16px 0 6px 10px}
+  main{flex:1;min-width:0;padding:40px 46px 120px}
+  /* hamburger */
+  .ham{display:none}
+  section{margin-bottom:54px;scroll-margin-top:20px}
+  h2{font-size:25px;margin:0 0 6px;color:var(--gold2);letter-spacing:-.01em}
+  h2 .n{color:#5f8273;font-size:15px;font-weight:600;margin-right:10px}
+  h3{font-size:17px;color:var(--txt);margin:26px 0 8px}
+  .lead{color:var(--mut);font-size:15.5px;max-width:74ch}
+  p{max-width:78ch}
+  code{background:#06140f;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font:12.5px/1.5 "SF Mono",ui-monospace,Menlo,monospace;color:#cfe7da}
+  .hero{border:1px solid var(--line);background:linear-gradient(135deg,#0e3527,#0a241b);border-radius:16px;padding:26px 28px;margin-bottom:30px}
+  .hero h2{margin-top:0}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+  .kpi{background:var(--chipbg);border:1px solid var(--line);border-radius:11px;padding:13px 14px}
+  .kpi b{display:block;font-size:23px;color:var(--gold2)}
+  .kpi span{font-size:11.5px;color:var(--mut)}
+  /* legend */
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 0 4px}
+  .lg{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--mut)}
+  .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .d-match{background:var(--match)} .d-xform{background:var(--xform)} .d-miss{background:var(--miss)} .d-excl{background:var(--excl)}
+  /* badges */
+  .b{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .b-match{background:#11402d;color:var(--match);border:1px solid #1d6647}
+  .b-xform{background:#3d3110;color:var(--gold2);border:1px solid #6b551b}
+  .b-miss{background:#3d1717;color:var(--miss);border:1px solid #6b2727}
+  .b-excl{background:#1b2730;color:var(--excl);border:1px solid #36495a}
+  /* tables */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.3px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--gold);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #2c5d49}
+  tr:hover td{background:#ffffff06}
+  td code{font-size:12px}
+  .mono{font-family:"SF Mono",ui-monospace,Menlo,monospace}
+  /* cards */
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .card{border:1px solid var(--line);border-radius:13px;padding:18px 20px;background:var(--panel)}
+  .card.full{grid-column:1/-1}
+  .card h4{margin:0 0 6px;font-size:15px;color:var(--gold2);display:flex;align-items:center;gap:9px}
+  .card p{margin:6px 0;font-size:13.5px;color:var(--mut)}
+  .card .tag{font-size:10.5px;color:#6f9384;text-transform:uppercase;letter-spacing:.1em}
+  /* callouts */
+  .call{border-left:3px solid var(--gold);background:#e3c46a0d;padding:13px 18px;border-radius:0 10px 10px 0;margin:16px 0}
+  .call.warn{border-color:var(--miss);background:#ef6f6f0d}
+  .call.good{border-color:var(--match);background:#46c98b0d}
+  .call b{color:var(--gold2)}
+  /* flow / steps */
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:18px 0}
+  ol.steps li{position:relative;padding:14px 16px 14px 56px;border:1px solid var(--line);border-radius:11px;margin-bottom:11px;background:var(--panel)}
+  ol.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:14px;top:13px;width:28px;height:28px;
+    background:linear-gradient(135deg,var(--gold),#b8922f);color:#1a1304;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px}
+  ol.steps b{color:var(--gold2)}
+  ol.steps .meta{font-size:12px;color:var(--mut);margin-top:3px}
+  .pill{font-size:10.5px;padding:1px 7px;border-radius:12px;border:1px solid var(--line);color:var(--mut);margin-left:6px}
+  pre{background:#06140f;border:1px solid var(--line);border-radius:10px;padding:15px 17px;overflow-x:auto;
+    font:12.5px/1.55 "SF Mono",ui-monospace,Menlo,monospace;color:#cfe7da}
+  pre .k{color:var(--gold2)} pre .c{color:#6f9384} pre .s{color:#8fd6b0}
+  .small{font-size:12.5px;color:var(--mut)}
+  hr{border:none;border-top:1px solid var(--line);margin:30px 0}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:880px){
+    nav{position:fixed;left:0;top:0;z-index:40;transform:translateX(-100%);transition:.25s;box-shadow:0 0 40px #000a}
+    nav.open{transform:none}
+    .ham{display:flex;position:fixed;top:14px;right:14px;z-index:50;width:44px;height:44px;border-radius:11px;
+      background:var(--panel);border:1px solid var(--line);color:var(--gold);align-items:center;justify-content:center;font-size:20px;cursor:pointer}
+    main{padding:64px 18px 90px}
+    .kpis,.cards,.twocol{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<button class="ham" id="ham" aria-label="menu">☰</button>
+<div class="wrap">
+<nav id="nav">
+  <h1>Dataset → LPG</h1>
+  <div class="sub">FairPlay IQ · gap analysis &amp; data plan</div>
+  <div class="grp">Orient</div>
+  <a href="#overview">Overview &amp; verdict</a>
+  <a href="#inventory">Dataset inventory</a>
+  <div class="grp">The Mapping</div>
+  <a href="#nodes">Nodes: data → graph</a>
+  <a href="#edges">Edges: data → graph</a>
+  <a href="#mismatch">3 structural mismatches</a>
+  <div class="grp">The Plan</div>
+  <a href="#decision">Include / Transform / Exclude</a>
+  <a href="#gaps">Gaps to fill (data requests)</a>
+  <a href="#etl">ETL pipeline</a>
+  <a href="#contract">Target schema contract</a>
+  <a href="#next">Next steps</a>
+</nav>
+
+<main>
+<!-- ===================== OVERVIEW ===================== -->
+<section id="overview">
+  <div class="hero">
+    <h2>Dataset vs. the Labeled Property Graph</h2>
+    <p class="lead">What the <code>fairplay-simulation-lab/data</code> fixtures contain today, what the
+    integrity property graph actually needs (our ontology: 7 node types, 3 edge tiers), and the explicit,
+    actionable plan to turn one into the other. <b>Bottom line:</b> the data is <i>rich and correct</i> —
+    but it stores relationships as <b>group objects + scalar signals</b>, while the graph needs
+    <b>individual nodes + pairwise typed edges</b>. The gap is an ETL/explode problem, not a re-collection problem.</p>
+    <div class="kpis">
+      <div class="kpi"><b>10</b><span>data files (static Day-2 fixtures)</span></div>
+      <div class="kpi"><b>2 / 6</b><span>signal edge-types present as real edges</span></div>
+      <div class="kpi"><b>0</b><span>Evidence nodes (counter-evidence is prose)</span></div>
+      <div class="kpi"><b>6</b><span>files load to graph · 3 transform · 3 stay tabular</span></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="lg"><i class="dot d-match"></i> Loads cleanly</span>
+    <span class="lg"><i class="dot d-xform"></i> Needs transform (explode/derive)</span>
+    <span class="lg"><i class="dot d-miss"></i> Missing — must create</span>
+    <span class="lg"><i class="dot d-excl"></i> Keep out of graph (tabular)</span>
+  </div>
+
+  <div class="call good">
+    <b>The good news.</b> Every node type our ontology needs has a home in the data. The simulator
+    already produces the three demo cases (escalate / monitor-household / benign-overlap), paid-seat-time,
+    pace/volatility, and seeded ground-truth labels. Nothing needs to be re-simulated.
+  </div>
+  <div class="call warn">
+    <b>The gap.</b> The graph's core rule — <i>"integrity = convergence of N independent edge-types on
+    one connected component"</i> — needs those signals to be <b>edges</b>. Right now 4 of the 6 signal
+    relationships are aggregate objects (<code>co_seating</code>), per-player scalars
+    (<code>soft_play_delta</code>), or booleans (<code>outsider_pressure_signal</code>). They can't be
+    counted by a WCC convergence gate until they're exploded into <code>(Account)-[:EDGE]->(Account)</code>.
+  </div>
+</section>
+
+<!-- ===================== INVENTORY ===================== -->
+<section id="inventory">
+  <h2><span class="n">01</span>Dataset inventory</h2>
+  <p class="lead">What's in the box, and where each file lands relative to the graph.</p>
+  <table>
+    <thead><tr><th>File</th><th>Records</th><th>Holds</th><th>Graph role</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">players.json</td><td>120</td><td>player stats: vpip, pfr, aggression, sessions, promo, +integrity scalars (bot_similarity, soft_play_delta, timing_regularity), nullable device/household/cluster ids</td><td><span class="b b-match">→ Account</span></td></tr>
+      <tr><td class="mono">table_roster.json</td><td>12</td><td>stakes, seats, pace, volatility label, avg session, paid-seat-time trend, seated_player_ids</td><td><span class="b b-match">→ Table</span></td></tr>
+      <tr><td class="mono">sessions.json</td><td>72</td><td>player×table×time, duration, paid_seat_time_intervals, exit_reason, status</td><td><span class="b b-match">→ Seating (event)</span></td></tr>
+      <tr><td class="mono">seat_events.json</td><td>96</td><td>join / leave / seat_hold lifecycle stamps (hour, offset, scenario)</td><td><span class="b b-xform">→ Seating props</span></td></tr>
+      <tr><td class="mono">devices.json</td><td>5 groups</td><td>device_group_id, <b>player_ids[]</b>, link_type, risk_signal</td><td><span class="b b-xform">→ Device + USES_DEVICE</span></td></tr>
+      <tr><td class="mono">relationships.json</td><td>2 cl · 3 hh · n ovl</td><td>clusters / households / regular_overlaps: member_ids[], co_seating obj, edges[] (device_link, timing_correlation), signal booleans</td><td><span class="b b-xform">→ Cluster + signal edges</span></td></tr>
+      <tr><td class="mono">seeded_case_labels.json</td><td>7 cases</td><td>ground-truth: expected category/action, pit_boss_evidence_seed, eval_checks, counterfactual</td><td><span class="b b-xform">→ Evidence + labels</span></td></tr>
+      <tr><td class="mono">room_state_hourly.json</td><td>9 snaps</td><td>per-hour table occupancy + paid-seat-time trend</td><td><span class="b b-excl">tabular / time-series</span></td></tr>
+      <tr><td class="mono">room_metrics_standard.json</td><td>—</td><td>Standard-arm room KPIs (the "without FairPlay" counterfactual)</td><td><span class="b b-excl">simulator output</span></td></tr>
+      <tr><td class="mono">room_metrics_fairplay.json</td><td>—</td><td>FairPlay-arm room KPIs (ROI / eval evidence)</td><td><span class="b b-excl">simulator output</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== NODES ===================== -->
+<section id="nodes">
+  <h2><span class="n">02</span>Nodes: dataset → graph</h2>
+  <p class="lead">Mapping each ontology node type (docs 04 / 07) to its source in the data.</p>
+  <table>
+    <thead><tr><th>Graph node</th><th>Source in data</th><th>Fit</th><th>What's missing / off</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Account</b><div class="small">player</div></td>
+        <td class="mono">players.json → players[]</td>
+        <td><span class="b b-xform">strong + derive</span></td>
+        <td>No explicit <code>archetype</code> field — it's documented only as <b>ID ranges in a meta note</b> (new = P-100–107, predatory = P-176–183…). No <code>risk_score</code>. Integrity signals sit <i>on the node</i> as scalars rather than feeding edges.</td>
+      </tr>
+      <tr>
+        <td><b>Table</b></td>
+        <td class="mono">table_roster.json → tables[]</td>
+        <td><span class="b b-match">clean</span></td>
+        <td>No computed <code>health_score</code> / <code>health_band</code> on the roster — only <b>T-22</b> carries one (=38) inside seeded_case_labels. Health is P3-computed; roster has the raw inputs (pace, volatility, avg session).</td>
+      </tr>
+      <tr>
+        <td><b>Session</b><div class="small">time anchor</div></td>
+        <td class="mono">sessions.json (collapsed)</td>
+        <td><span class="b b-xform">collapsed</span></td>
+        <td>Dataset has <b>one</b> session concept that already carries <code>paid_seat_time_intervals</code> + duration + exit_reason — i.e. it's really our <b>Seating</b> event, not a bare time anchor. Decide: treat <code>sessions</code> as the Seating node; Session-as-anchor is optional.</td>
+      </tr>
+      <tr>
+        <td><b>Seating</b><div class="small">event node</div></td>
+        <td class="mono">sessions.json + seat_events.json</td>
+        <td><span class="b b-xform">split</span></td>
+        <td>Our Seating is <b>split across two files</b>: paid-seat-time/duration live in <code>sessions</code>, the join/leave/hold stamps live in <code>seat_events</code>. Merge: Seating = a session record, with seat_events folded in as lifecycle timestamps.</td>
+      </tr>
+      <tr>
+        <td><b>Device</b></td>
+        <td class="mono">devices.json → device_groups[]</td>
+        <td><span class="b b-xform">explode</span></td>
+        <td>Stored as a <b>group object holding <code>player_ids[]</code></b> (a hyper-edge), not as a Device node. No per-device fingerprint id beyond the group. Explode: 1 group → 1 Device node + N <code>USES_DEVICE</code> edges.</td>
+      </tr>
+      <tr>
+        <td><b>Cluster</b><div class="small">case</div></td>
+        <td class="mono">relationships.json (clusters / households / regular_overlaps) + seeded_case_labels.json</td>
+        <td><span class="b b-xform">unify</span></td>
+        <td>The case concept is <b>spread across three relationship types + a labels file</b>. They actually map to <b>one</b> Cluster node with <code>status ∈ {escalated, monitor, benign}</code> (CASE-C escalate, CASE-E household monitor, CASE-D overlap benign). Data's separation is more explicit than the ontology — unify on load.</td>
+      </tr>
+      <tr>
+        <td><b>Evidence</b></td>
+        <td class="mono">— (implicit only)</td>
+        <td><span class="b b-miss">missing</span></td>
+        <td><b>No Evidence nodes exist.</b> Reason codes, scores, and especially <b>counter-evidence</b> live as free-text <code>note</code> / <code>distinguishing_signals</code> prose. This is the guardrail + GraphRAG requirement — must be synthesized into structured <code>Evidence{type, score, reason_code, is_counter_evidence}</code>.</td>
+      </tr>
+      <tr>
+        <td><b>Hand</b><div class="small">optional</div></td>
+        <td class="mono">— (absent)</td>
+        <td><span class="b b-excl">correctly absent</span></td>
+        <td>Out of scope by design (doc 04/07: hands → lakehouse, not the graph). Soft-play is pre-aggregated to <code>soft_play_delta</code>, so no hand granularity needed. ✔</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== EDGES ===================== -->
+<section id="edges">
+  <h2><span class="n">03</span>Edges: dataset → graph</h2>
+  <p class="lead">The heart of the gap. Our ontology has three edge tiers; the dataset only materializes
+  a fraction of them as real edges.</p>
+
+  <h3>Tier 1 — Raw / ingested edges</h3>
+  <table>
+    <thead><tr><th>Graph edge</th><th>In data as…</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">USES_DEVICE<div class="small">Account→Device</div></td><td><code>device_groups.player_ids[]</code> — and as <code>edge_type:"device_link"</code> inside clusters</td><td><span class="b b-xform">explode group</span></td></tr>
+      <tr><td class="mono">PARTICIPATED_IN<div class="small">Account→Seating</div></td><td>implicit: <code>sessions.player_id</code> / <code>seat_events.player_id</code></td><td><span class="b b-xform">materialize</span></td></tr>
+      <tr><td class="mono">AT_TABLE<div class="small">Seating→Table</div></td><td>implicit: <code>sessions.table_id</code></td><td><span class="b b-xform">materialize</span></td></tr>
+      <tr><td class="mono">IN_SESSION<div class="small">Seating→Session</div></td><td>implicit: <code>seat_events.session_id</code></td><td><span class="b b-xform">materialize</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Tier 2 — Derived signal edges <span class="pill">these decide cases</span></h3>
+  <table>
+    <thead><tr><th>Graph edge</th><th>In data as…</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">TIMING_CORRELATED<div class="small">Account↔Account</div></td>
+        <td><code>edge_type:"timing_correlation"</code> w/ <code>correlation, strength</code> ✔ real edge</td>
+        <td><span class="b b-match">present</span></td>
+        <td>Rename <code>timing_correlation</code> → <code>TIMING_CORRELATED</code>; map <code>correlation</code> → <code>median_join_gap_sec</code> or keep as-is.</td>
+      </tr>
+      <tr>
+        <td class="mono">CO_SEATED_WITH<div class="small">Account↔Account</div></td>
+        <td><b>aggregate object</b> <code>co_seating:{recent_shared_tables, opportunities, rate}</code> on the cluster/household — <b>not</b> an edge</td>
+        <td><span class="b b-xform">derive edge</span></td>
+        <td>Emit one pairwise edge per member pair carrying <code>co_seat_count, total_tables, rate</code>. (Also derivable bottom-up from <code>sessions</code> table co-occurrence.)</td>
+      </tr>
+      <tr>
+        <td class="mono">SOFT_PLAYS_AGAINST<div class="small">Account→Account</div></td>
+        <td><b>per-player scalar</b> <code>players.soft_play_delta</code> + cluster boolean <code>soft_play_signal</code> + threshold in a prose note (≤ −0.60 escalate)</td>
+        <td><span class="b b-miss">no pairwise data</span></td>
+        <td>Underspecified: a scalar can't say <i>who soft-plays whom</i>. Need pairwise <code>{from,to,aggression_delta,hand_count,confidence}</code>, or derive within-cluster from the per-player deltas.</td>
+      </tr>
+      <tr>
+        <td class="mono">TARGETS_OUTSIDER<div class="small">Account→Account</div></td>
+        <td><b>boolean</b> <code>outsider_pressure_signal</code> on the cluster — no target, no magnitude</td>
+        <td><span class="b b-miss">no pairwise data</span></td>
+        <td>Need the victim identity + <code>aggression_lift, ev_extracted</code>. Today only "true/false that it happened."</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="small">Dataset edge_types actually present across all relationships: <code>device_link</code>, <code>timing_correlation</code> — that's it. The convergence rule needs up to 5 converging types (device + timing + co-seating + soft-play + outsider). <b>3 of those 5 don't yet exist as edges.</b></p>
+
+  <h3>Tier 3 — Case-attachment edges</h3>
+  <table>
+    <thead><tr><th>Graph edge</th><th>In data as…</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">MEMBER_OF<div class="small">Account→Cluster</div></td><td><code>cluster.member_ids[]</code></td><td><span class="b b-xform">explode array</span></td></tr>
+      <tr><td class="mono">CONCERNS_TABLE<div class="small">Cluster→Table</div></td><td>weak: <code>seeded_case_labels.seeded_table_label</code> + <code>high_casual_exit_impact</code> — no direct cluster→table link</td><td><span class="b b-miss">materialize</span></td></tr>
+      <tr><td class="mono">SUPPORTED_BY<div class="small">Cluster→Evidence</div></td><td>none — Evidence nodes don't exist</td><td><span class="b b-miss">create both</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== MISMATCH ===================== -->
+<section id="mismatch">
+  <h2><span class="n">04</span>The 3 structural mismatches</h2>
+  <p class="lead">Everything above reduces to three recurring shape-mismatches. Fix these patterns and the
+  whole dataset snaps into the graph.</p>
+  <div class="cards">
+    <div class="card">
+      <h4>① Groups-as-objects vs. nodes+edges</h4>
+      <p class="tag">device_groups · clusters · households</p>
+      <p>The data models relationships as a <b>container holding <code>player_ids[]</code></b> (a hyper-edge).
+      The LPG needs a real node (Device / Cluster) plus <b>pairwise / membership edges</b> exploded from that array.</p>
+      <p class="small mono">{player_ids:[A,B,C]} → (A)-[:USES_DEVICE]->(D)&lt;-[:USES_DEVICE]-(B)…</p>
+    </div>
+    <div class="card">
+      <h4>② Signals as scalars/booleans vs. typed edges</h4>
+      <p class="tag">soft_play_delta · outsider_pressure_signal · co_seating</p>
+      <p>The discriminating signals live as <b>per-player numbers</b> or <b>per-cluster booleans</b>. The
+      convergence gate can only count them if they're <b>pairwise edges with from/to + strength</b>.
+      A scalar loses the directionality the rule depends on.</p>
+    </div>
+    <div class="card">
+      <h4>③ Evidence &amp; counter-evidence as prose</h4>
+      <p class="tag">note · distinguishing_signals</p>
+      <p>The guardrail requirement — <code>is_counter_evidence</code>, <code>reason_code</code> — has
+      <b>no structured home</b>. "No single signal is proof" is currently an English sentence, not a
+      queryable <code>Evidence</code> node. GraphRAG grounding needs it structured.</p>
+    </div>
+    <div class="card">
+      <h4>(bonus) Thresholds buried in note strings</h4>
+      <p class="tag">soft_play ≤ −0.60 · convergence N</p>
+      <p>Escalation thresholds are written inside <code>note</code> text. Lift them into a small
+      <code>config/thresholds.json</code> so scoring is data-driven and auditable, not parsed from prose.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DECISION ===================== -->
+<section id="decision">
+  <h2><span class="n">05</span>Include / Transform / Exclude</h2>
+  <p class="lead">The explicit call on every file. <b>Rule of thumb:</b> the graph holds <i>entities and
+  the relationships between them</i>; time-series and room KPIs stay in tabular/lakehouse land and feed
+  dashboards, not nodes.</p>
+
+  <div class="twocol">
+    <div>
+      <h3 style="color:var(--match)">✓ Include / Transform → graph</h3>
+      <table>
+        <tbody>
+          <tr><td class="mono">players</td><td><span class="b b-match">Account</span></td></tr>
+          <tr><td class="mono">table_roster</td><td><span class="b b-match">Table</span></td></tr>
+          <tr><td class="mono">sessions</td><td><span class="b b-xform">Seating</span></td></tr>
+          <tr><td class="mono">seat_events</td><td><span class="b b-xform">→ Seating lifecycle</span></td></tr>
+          <tr><td class="mono">devices</td><td><span class="b b-xform">Device + USES_DEVICE</span></td></tr>
+          <tr><td class="mono">relationships</td><td><span class="b b-xform">Cluster + signal edges</span></td></tr>
+          <tr><td class="mono">seeded_case_labels</td><td><span class="b b-xform">Evidence + CONCERNS_TABLE</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3 style="color:var(--excl)">✗ Exclude → stays tabular</h3>
+      <table>
+        <tbody>
+          <tr><td class="mono">room_state_hourly</td><td><span class="b b-excl">time-series</span></td></tr>
+          <tr><td class="mono">room_metrics_standard</td><td><span class="b b-excl">sim output / ROI</span></td></tr>
+          <tr><td class="mono">room_metrics_fairplay</td><td><span class="b b-excl">sim output / ROI</span></td></tr>
+        </tbody>
+      </table>
+      <div class="call">
+        <b>Why exclude these.</b> They're <i>aggregate room state over time</i> and <i>counterfactual KPIs</i> —
+        the simulator's eval/ROI output. They answer "did the policy work?" (a dashboard question), not
+        "who is connected to whom?" (the graph question). Loading hourly snapshots as nodes bloats the
+        graph with no traversal value. Keep them as the eval/ROI data source feeding the Room Impact view.
+      </div>
+    </div>
+  </div>
+  <div class="call good" style="margin-top:8px"><b>Also keep tabular (not in graph):</b> the per-player
+  health/loss-velocity aggregates and the room KPI trends. The graph <i>feeds</i> health (via
+  <code>CONCERNS_TABLE</code>) but doesn't <i>store</i> health time-series — consistent with docs 04/06.</div>
+</section>
+
+<!-- ===================== GAPS ===================== -->
+<section id="gaps">
+  <h2><span class="n">06</span>Gaps to fill — explicit data requests</h2>
+  <p class="lead">To produce the <b>best</b> property graph (full convergence rule + grounded
+  explanations), the fixtures need these additions. Ordered by impact on the demo.</p>
+  <table>
+    <thead><tr><th>#</th><th>Add to data</th><th>Why it matters</th><th>Severity</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Pairwise <b>SOFT_PLAYS_AGAINST</b> records <code>{from,to,aggression_delta,hand_count,confidence}</code> within clusters</td><td>3rd convergence signal for CASE-C; today only a per-player scalar + boolean. Without it the escalation rests on 2 edge-types, not the "5 converging signals" the note claims.</td><td><span class="b b-miss">high</span></td></tr>
+      <tr><td>2</td><td>Pairwise <b>TARGETS_OUTSIDER</b> records naming the victim + <code>aggression_lift, ev_extracted</code></td><td>The "outsider pressure" signal + the link to <i>which recreational is being bled</i> — drives the integrity→health (CONCERNS_TABLE) story.</td><td><span class="b b-miss">high</span></td></tr>
+      <tr><td>3</td><td>Structured <b>Evidence items</b> per case: <code>{type, score, reason_code, is_counter_evidence, description}</code></td><td>Guardrail + GraphRAG requirement. Turns the prose "no single signal is proof" and the household's <code>distinguishing_signals</code> into queryable counter-evidence nodes. <b>This is the eval-panel criterion.</b></td><td><span class="b b-miss">high</span></td></tr>
+      <tr><td>4</td><td>Explicit <b>archetype</b> field on every player</td><td>Currently inferred from ID ranges in a meta note — brittle. Cohort-segmented health ("recreational, not average") and Fit both key off archetype. Make it a real field (deterministic from the documented thresholds).</td><td><span class="b b-xform">med</span></td></tr>
+      <tr><td>5</td><td><b>CO_SEATED_WITH</b> as an explicit pairwise edge list (or a deterministic deriver from <code>sessions</code>)</td><td>Today it's an aggregate object on the group. Explicit edges let WCC/Louvain run and let co-seating count toward convergence.</td><td><span class="b b-xform">med</span></td></tr>
+      <tr><td>6</td><td><b>health_score / health_band</b> on all 12 tables (or a derived <code>table_health.json</code>)</td><td>Only T-22 has one today. Either pre-compute for the fixture or clearly mark "computed by P3 at runtime" so the graph's <code>Table.health_band</code> isn't silently empty.</td><td><span class="b b-xform">med</span></td></tr>
+      <tr><td>7</td><td><b>config/thresholds.json</b>: soft-play ≤ −0.60, convergence N, co-seat rate cutoffs</td><td>Lift escalation thresholds out of <code>note</code> strings into config so scoring is auditable and tunable.</td><td><span class="b b-xform">low</span></td></tr>
+      <tr><td>8</td><td>Real <b>Device fingerprint id</b> per group (not just a group id)</td><td>Makes <code>USES_DEVICE</code> point at a concrete Device node; supports future multi-device-per-account.</td><td><span class="b b-xform">low</span></td></tr>
+      <tr><td>9</td><td>Lock <b>player IDs</b> (fixtures say "provisional pending Architect")</td><td>The graph is all about identity joins; provisional IDs break every edge if they shift. Freeze them before load.</td><td><span class="b b-xform">low</span></td></tr>
+      <tr><td>10</td><td>Explicit <b>CONCERNS_TABLE</b> link from each cluster to the table(s) it sits at</td><td>The integrity→health bridge. Derivable from members' <code>sessions.table_id</code>, but make it explicit on the case so health deductions trace to a ring.</td><td><span class="b b-xform">low</span></td></tr>
+    </tbody>
+  </table>
+  <div class="call"><b>Note on #1–#2:</b> these are the only true <i>collection</i> gaps — the simulator must
+  emit pairwise soft-play / outsider records. Everything else (#4–#10) is <b>transform-on-load</b> from
+  data that already exists.</div>
+</section>
+
+<!-- ===================== ETL ===================== -->
+<section id="etl">
+  <h2><span class="n">07</span>ETL pipeline — fixtures → graph</h2>
+  <p class="lead">A deterministic loader (Python or TS) that reads the fixtures and emits graph nodes/edges.
+  No new modeling — just explode, derive, and unify.</p>
+  <ol class="steps">
+    <li><b>Load &amp; lock identities</b><div class="meta">Read all 7 graph-bound files; freeze player/table IDs; build lookup maps. Fail loudly on any unresolved <code>provisional</code> id.</div></li>
+    <li><b>Emit entity nodes</b><div class="meta">players → <code>Account</code> (compute <code>archetype</code> from documented thresholds + <code>risk_score</code>); table_roster → <code>Table</code>; one node per device_group → <code>Device</code>.</div></li>
+    <li><b>Merge Seating</b><div class="meta">Join <code>sessions</code> ⨝ <code>seat_events</code> on session_id → one <code>Seating</code> node carrying duration, paid_seat_time, exit_reason + join/leave/hold stamps. Emit <code>PARTICIPATED_IN / AT_TABLE / IN_SESSION</code>.</div></li>
+    <li><b>Explode device groups</b><div class="meta">Each <code>device_groups.player_ids[]</code> → N <code>USES_DEVICE</code> edges into the Device node. (Shared device falls out structurally — no signal edge here.)</div></li>
+    <li><b>Derive Tier-2 signal edges</b><div class="meta">timing_correlation → <code>TIMING_CORRELATED</code> (rename); co_seating obj → pairwise <code>CO_SEATED_WITH</code>; <b>soft_play / outsider → pairwise edges (needs gaps #1–#2, else derive within-cluster from per-player deltas + flag as inferred)</b>.</div></li>
+    <li><b>Unify cases → Cluster nodes</b><div class="meta">clusters + households + regular_overlaps → <code>Cluster{status}</code> (escalated / monitor / benign). Explode member_ids → <code>MEMBER_OF</code>. Add <code>CONCERNS_TABLE</code> from members' tables.</div></li>
+    <li><b>Synthesize Evidence</b><div class="meta">From <code>pit_boss_evidence_seed</code> + relationship notes + household <code>distinguishing_signals</code> → <code>Evidence{type,score,reason_code,is_counter_evidence}</code> + <code>SUPPORTED_BY</code>. Counter-evidence flag = the household's benign distinguishers.</div></li>
+    <li><b>Run convergence gate</b><div class="meta">WCC for components; count distinct Tier-2 edge-types per component vs <code>config/thresholds.json</code>. CASE-C → escalate (device+timing+co-seat+soft-play converge); household → monitor (device only, counter-evidence present); overlap → benign (co-seat only, no device/timing).</div></li>
+    <li><b>Validate against labels</b><div class="meta">Assert the graph's status matches <code>seeded_case_labels.expected_*</code> and passes every <code>eval_checks</code> entry. This is your loader's unit test.</div></li>
+  </ol>
+</section>
+
+<!-- ===================== CONTRACT ===================== -->
+<section id="contract">
+  <h2><span class="n">08</span>Target schema contract</h2>
+  <p class="lead">What the loader must emit — the canonical contract both stacks read from.</p>
+  <pre><span class="c">// NODES</span>
+<span class="k">Account</span>   {account_id, archetype, registered_days_ago, risk_score,
+           vpip, pfr, aggression_factor, soft_play_delta, timing_regularity, bot_similarity_score}
+<span class="k">Device</span>    {device_id, fingerprint, link_type}
+<span class="k">Table</span>     {table_id, stakes, game_type, max_seats, pace_label, volatility_label,
+           avg_session_min, paid_seat_time_trend, health_score?, health_band?}
+<span class="k">Seating</span>   {seating_id, player_id, table_id, session_id, seated_at, left_at,
+           duration_min, paid_seat_time_intervals, exit_reason, status}
+<span class="k">Cluster</span>   {case_id, case_type, status:[escalated|monitor|benign], integrity_score}
+<span class="k">Evidence</span>  {evidence_id, type, score, reason_code, is_counter_evidence, description}
+
+<span class="c">// EDGES — tier 1 raw</span>
+(Account)-[:<span class="s">USES_DEVICE</span>]->(Device)
+(Account)-[:<span class="s">PARTICIPATED_IN</span>]->(Seating)-[:<span class="s">AT_TABLE</span>]->(Table)
+(Seating)-[:<span class="s">IN_SESSION</span>]->(Session?)
+
+<span class="c">// EDGES — tier 2 signals (window_start/end + strength on each)</span>
+(Account)-[:<span class="s">CO_SEATED_WITH</span> {co_seat_count,total_tables,rate}]-(Account)
+(Account)-[:<span class="s">TIMING_CORRELATED</span> {correlation,strength}]-(Account)
+(Account)-[:<span class="s">SOFT_PLAYS_AGAINST</span> {aggression_delta,hand_count,confidence}]->(Account)   <span class="c">// gap #1</span>
+(Account)-[:<span class="s">TARGETS_OUTSIDER</span> {aggression_lift,ev_extracted}]->(Account)              <span class="c">// gap #2</span>
+
+<span class="c">// EDGES — tier 3 case attachment</span>
+(Account)-[:<span class="s">MEMBER_OF</span>]->(Cluster)-[:<span class="s">SUPPORTED_BY</span>]->(Evidence)   <span class="c">// gap #3</span>
+(Cluster)-[:<span class="s">CONCERNS_TABLE</span>]->(Table)</pre>
+  <p class="small">Note: <code>device_link</code> in the source data is <b>not</b> a graph edge type — it maps to
+  the structural <code>USES_DEVICE</code> path through a shared Device node. Keep the Neo4j
+  <code>UPPER_SNAKE</code> convention for relationship types.</p>
+</section>
+
+<!-- ===================== NEXT ===================== -->
+<section id="next">
+  <h2><span class="n">09</span>Next steps</h2>
+  <ol class="steps">
+    <li><b>Ship <code>graph_schema.json</code> + Cypher constraints</b> <span class="pill">½ day</span><div class="meta">Freeze the contract above as the canonical artifact both stacks read. Unique constraints on every <code>*_id</code>.</div></li>
+    <li><b>Write the deterministic loader</b> <span class="pill">1–2 days</span><div class="meta">The §07 pipeline. Emits nodes + edges from the existing fixtures; flags derived/inferred edges (soft-play/outsider) until gaps #1–#2 land.</div></li>
+    <li><b>Request the 3 high-severity data additions</b> <span class="pill">sim team</span><div class="meta">Pairwise SOFT_PLAYS_AGAINST (#1), TARGETS_OUTSIDER w/ victim (#2), structured Evidence (#3). These are the only true collection gaps; the rest is transform-on-load.</div></li>
+    <li><b>Add <code>config/thresholds.json</code> + explicit <code>archetype</code></b> <span class="pill">½ day</span><div class="meta">Lift escalation thresholds out of prose; materialize archetype from the documented ID-range / stat thresholds.</div></li>
+    <li><b>Wire the loader's validation to <code>seeded_case_labels</code></b> <span class="pill">½ day</span><div class="meta">Every <code>eval_checks</code> entry becomes a passing assertion — CASE-C escalates, CASE-E monitors, CASE-D stays benign. Green = the graph reproduces ground truth.</div></li>
+    <li><b>Hand the subgraph to GraphRAG</b> <span class="pill">after load</span><div class="meta">Anchor on Cluster, pull 2-hop subgraph incl. counter-evidence, serialize to triples → grounded pit-boss case summary. Now possible <i>because</i> Evidence is structured.</div></li>
+  </ol>
+  <div class="call good"><b>One-line verdict.</b> The dataset is the right data with the wrong <i>shape</i> for a graph:
+  it stores relationships as group objects and signals as scalars. A single deterministic loader —
+  exploding groups into nodes+edges, deriving pairwise signal edges, and synthesizing Evidence — turns it
+  into a clean LPG. Only three additions need new simulation output (pairwise soft-play, outsider, structured evidence);
+  everything else is transform-on-load.</div>
+</section>
+
+</main>
+</div>
+<script>
+(function(){
+  // scrollspy
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav a'));
+  var map = {};
+  links.forEach(function(a){ var id=a.getAttribute('href').slice(1); var s=document.getElementById(id); if(s) map[id]=a; });
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(l){l.classList.remove('active');});
+        var a=map[e.target.id]; if(a) a.classList.add('active');
+      }
+    });
+  }, {rootMargin:'-15% 0px -75% 0px', threshold:0});
+  Object.keys(map).forEach(function(id){ var s=document.getElementById(id); if(s) obs.observe(s); });
+
+  // mobile menu
+  var ham=document.getElementById('ham'), nav=document.getElementById('nav');
+  if(ham){ ham.addEventListener('click',function(){nav.classList.toggle('open');}); }
+  links.forEach(function(a){ a.addEventListener('click',function(){ if(nav) nav.classList.remove('open'); }); });
+})();
+</script>
+</body>
+</html>
