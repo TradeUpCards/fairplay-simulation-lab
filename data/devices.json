@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "generated": "2026-06-20",
+    "seed": 42,
+    "note": "Mocked device groups — simulated as fields, not real device detection or fingerprinting. All device_group_id values here match player records in players.json."
+  },
+  "device_groups": [
+    {
+      "device_group_id": "DG-001",
+      "device_type": "mocked_shared",
+      "player_ids": ["P-198", "P-199"],
+      "link_type": "device_match",
+      "risk_signal": true,
+      "note": "Cluster A (P-198) and B (P-199) share this mocked device fingerprint — used as integrity input signal for Case C (coordinated cluster). C (P-200) is in the same cluster but linked by timing correlation, not device."
+    },
+    {
+      "device_group_id": "DG-002",
+      "device_type": "mocked_shared",
+      "player_ids": ["P-192", "P-193"],
+      "link_type": "device_match",
+      "risk_signal": false,
+      "note": "Household H-01: H1 (P-192) and H2 (P-193) share a mocked device. FALSE POSITIVE case — different session patterns, low co-seating, no soft-play signal. Scoring should produce monitor-only, no suppression."
+    },
+    {
+      "device_group_id": "DG-003",
+      "device_type": "mocked_shared",
+      "player_ids": ["P-194", "P-195"],
+      "link_type": "device_match",
+      "risk_signal": false,
+      "note": "Household H-02: additional household pair for population realism. Low risk."
+    },
+    {
+      "device_group_id": "DG-004",
+      "device_type": "mocked_shared",
+      "player_ids": ["P-196", "P-197"],
+      "link_type": "device_match",
+      "risk_signal": false,
+      "note": "Household H-03: additional household pair for population realism. Low risk."
+    },
+    {
+      "device_group_id": "DG-005",
+      "device_type": "mocked_shared",
+      "player_ids": ["P-201", "P-202"],
+      "link_type": "device_match",
+      "risk_signal": true,
+      "note": "Cluster CL-002 (weaker signal pair): lower co-seating frequency and soft_play_delta than CL-001. Monitor-level, not integrity review."
+    }
+  ]
+}

@@ -1,0 +1,164 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "generated": "2026-06-20",
+    "seed": 42,
+    "note": "Mocked device groups + cluster/household relationship graph. All linkage is simulated as fields — not real device detection, OSINT, or account-level data. Player IDs match players.json. co_seating counts are recent-history snapshots used as integrity input signals."
+  },
+  "clusters": [
+    {
+      "cluster_id": "CL-001",
+      "label": "coordinated_cluster",
+      "member_ids": ["P-198", "P-199", "P-200"],
+      "aliases": {
+        "P-198": "Account A",
+        "P-199": "Account B",
+        "P-200": "Account C"
+      },
+      "co_seating": {
+        "recent_shared_tables": 14,
+        "opportunities": 18,
+        "rate": 0.778
+      },
+      "edges": [
+        {
+          "from": "P-198",
+          "to": "P-199",
+          "edge_type": "device_link",
+          "device_group_id": "DG-001",
+          "strength": 1.0
+        },
+        {
+          "from": "P-198",
+          "to": "P-200",
+          "edge_type": "timing_correlation",
+          "correlation": 0.88,
+          "strength": 0.88
+        },
+        {
+          "from": "P-199",
+          "to": "P-200",
+          "edge_type": "timing_correlation",
+          "correlation": 0.85,
+          "strength": 0.85
+        }
+      ],
+      "soft_play_signal": true,
+      "outsider_pressure_signal": true,
+      "high_casual_exit_impact": true,
+      "case_ref": "CASE-C",
+      "note": "Primary integrity review case. Three convergent signals: device link (A/B), timing correlation (C to both), repeated co-seating, within-cluster soft_play_delta. Counter-evidence: no individual signal alone proves collusion — all three must converge."
+    },
+    {
+      "cluster_id": "CL-002",
+      "label": "cluster_candidate_monitor",
+      "member_ids": ["P-201", "P-202"],
+      "aliases": {},
+      "co_seating": {
+        "recent_shared_tables": 8,
+        "opportunities": 15,
+        "rate": 0.533
+      },
+      "edges": [
+        {
+          "from": "P-201",
+          "to": "P-202",
+          "edge_type": "device_link",
+          "device_group_id": "DG-005",
+          "strength": 1.0
+        }
+      ],
+      "soft_play_signal": true,
+      "soft_play_signal_note": "soft_play_delta values are -0.35 and -0.30 for CL-002 members. Escalation threshold for integrity review is soft_play_delta ≤ -0.60 (CL-001 members range -0.75 to -0.82). CL-002 is above the threshold — signal is present but sub-threshold. P3 should score this as monitor, not integrity review.",
+      "soft_play_escalation_threshold": -0.60,
+      "outsider_pressure_signal": false,
+      "high_casual_exit_impact": false,
+      "case_ref": null,
+      "note": "Weaker cluster candidate — device link present, soft_play_signal true but sub-threshold (-0.30 to -0.35 vs. escalation threshold -0.60), co-seating rate moderate (8/15). Population filler demonstrating that not every device link with soft-play is an integrity-review case. Monitor only."
+    }
+  ],
+  "households": [
+    {
+      "household_id": "H-01",
+      "label": "shared_device_low_risk",
+      "member_ids": ["P-192", "P-193"],
+      "aliases": {
+        "P-192": "H1",
+        "P-193": "H2"
+      },
+      "device_group_id": "DG-002",
+      "co_seating": {
+        "recent_shared_tables": 2,
+        "opportunities": 22,
+        "rate": 0.091
+      },
+      "session_pattern_overlap": false,
+      "soft_play_signal": false,
+      "correlated_profitability": false,
+      "casual_exit_increase": false,
+      "case_ref": "CASE-E",
+      "distinguishing_signals": {
+        "P-192_preferred_time": "evening",
+        "P-193_preferred_time": "morning_afternoon",
+        "vpip_difference": 0.08,
+        "avg_session_diff_minutes": 35.0
+      },
+      "note": "FALSE POSITIVE TRAP. Same mocked device, but radically different session profiles — H1 plays evenings (~145 min), H2 plays mornings (~110 min), different vpip/pfr. Low co-seating rate (2 of 22). No soft-play, no correlated profit. Must produce monitor-only outcome, NOT escalation or suppression."
+    },
+    {
+      "household_id": "H-02",
+      "label": "shared_device_low_risk",
+      "member_ids": ["P-194", "P-195"],
+      "aliases": {},
+      "device_group_id": "DG-003",
+      "co_seating": {
+        "recent_shared_tables": 3,
+        "opportunities": 18,
+        "rate": 0.167
+      },
+      "session_pattern_overlap": false,
+      "soft_play_signal": false,
+      "correlated_profitability": false,
+      "casual_exit_increase": false,
+      "case_ref": null,
+      "note": "Additional household pair — population realism. Low risk, monitor only."
+    },
+    {
+      "household_id": "H-03",
+      "label": "shared_device_low_risk",
+      "member_ids": ["P-196", "P-197"],
+      "aliases": {},
+      "device_group_id": "DG-004",
+      "co_seating": {
+        "recent_shared_tables": 1,
+        "opportunities": 25,
+        "rate": 0.040
+      },
+      "session_pattern_overlap": false,
+      "soft_play_signal": false,
+      "correlated_profitability": false,
+      "casual_exit_increase": false,
+      "case_ref": null,
+      "note": "Additional household pair — lowest co-seating rate. Low risk, monitor only."
+    }
+  ],
+  "regular_overlaps": [
+    {
+      "overlap_id": "OVL-001",
+      "label": "schedule_overlap_not_collusion",
+      "member_ids": ["P-142", "P-143"],
+      "co_seating": {
+        "recent_shared_tables": 9,
+        "opportunities": 18,
+        "rate": 0.500
+      },
+      "edges": [],
+      "device_link": false,
+      "soft_play_signal": false,
+      "correlated_profitability": false,
+      "case_ref": "CASE-D",
+      "explanation": "Two regular players who prefer the same stakes and time slot. High co-seating rate (50%) but entirely explained by schedule alignment — no device link, no soft-play, no correlated win/loss patterns. Must produce low/medium flag, NOT over-escalation.",
+      "note": "TRAP for over-eager classifiers. High overlap without collusion signals is expected for players who share a preferred session window."
+    }
+  ]
+}

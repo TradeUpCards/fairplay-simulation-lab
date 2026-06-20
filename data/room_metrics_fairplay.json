@@ -1,0 +1,130 @@
+{
+  "meta": {
+    "schema_version": "0.1.0",
+    "path": "fairplay",
+    "generated": "static-fixture-day2",
+    "seed_ref": "TBD — sim/config shared seed",
+    "horizon_hours": 8,
+    "counterfactual_decisions_ref": "sim/counterfactual/decision_list.json",
+    "room_state_ref": "data/room_state_hourly.json",
+    "fixture_note": "Static Day-2 fixture. FairPlay path: all four FairPlay decisions applied. P-104 routed to T-8 (hour 1, 42-min session). T-22 suppressed from new/rec lobby (hour 0). Cluster P-CC seat held for review at T-11 (hour 2); pit boss accepts containment (hour 3), P-CC re-routed. H1/H2 monitored only (no escalation). All divergence from standard path is traceable to decisions in decision_list.json.",
+    "field_glossary": {
+      "hour": "Simulation hour (1–8). Hour 0 start state is in room_state_hourly.json.",
+      "cumulative_paid_seat_time_minutes": "Running total of all player-minutes at active tables from hour 0 to end of this hour.",
+      "active_players": "Players actively seated at a table at end of this hour.",
+      "active_healthy_tables": "Tables classified healthy (not fragile/beginner-unfriendly/integrity-candidate) at end of this hour.",
+      "new_player_retention_pct": "Percentage of new and recreational archetype players who remain actively seated vs. those who have exited prematurely. Running metric from sim start.",
+      "avg_casual_session_length_minutes": "Mean session length (minutes) for new/recreational players who exited during or before this hour.",
+      "early_table_breaks": "Cumulative count of tables that broke up ahead of natural end-of-session due to player exodus.",
+      "projected_eod_paid_seat_time_minutes": "Model projection of total cumulative paid seat-time at end of hour 8, updated each hour.",
+      "reward_fee_ratio": "Ratio of rewards paid out to rake/time-fees collected this hour. Higher = more balanced reward distribution.",
+      "high_risk_seating_formations": "Count of active high-risk seating formations (coordinated cluster or predatory-mix) flagged at end of this hour."
+    }
+  },
+  "hours": [
+    {
+      "hour": 1,
+      "cumulative_paid_seat_time_minutes": 3950,
+      "active_players": 69,
+      "active_healthy_tables": 10,
+      "new_player_retention_pct": 75,
+      "avg_casual_session_length_minutes": 46,
+      "early_table_breaks": 1,
+      "projected_eod_paid_seat_time_minutes": 32500,
+      "reward_fee_ratio": 0.27,
+      "high_risk_seating_formations": 1,
+      "hour_note": "P-104 routed to T-8 (balanced); 42-min session, still active at hour end. T-22 suppressed from new/rec lobby — no predatory-mix recruitment. One natural table break (T-7 organic attrition). Cluster A/B (P-CA/P-CB) still flagged at T-11 but no third seat yet — partial formation only."
+    },
+    {
+      "hour": 2,
+      "cumulative_paid_seat_time_minutes": 7900,
+      "active_players": 74,
+      "active_healthy_tables": 11,
+      "new_player_retention_pct": 68,
+      "avg_casual_session_length_minutes": 44,
+      "early_table_breaks": 1,
+      "projected_eod_paid_seat_time_minutes": 32000,
+      "reward_fee_ratio": 0.28,
+      "high_risk_seating_formations": 1,
+      "hour_note": "P-CC requests open seat at T-11 — held for pit-boss review. A/B/C formation incomplete; casual players at T-11 remain. T-22 stays short-handed (no lobby promotion to new/rec); no additional early exits. Active healthy tables improve to 11 as T-22 stops being a churn source."
+    },
+    {
+      "hour": 3,
+      "cumulative_paid_seat_time_minutes": 12000,
+      "active_players": 76,
+      "active_healthy_tables": 12,
+      "new_player_retention_pct": 62,
+      "avg_casual_session_length_minutes": 42,
+      "early_table_breaks": 2,
+      "projected_eod_paid_seat_time_minutes": 32000,
+      "reward_fee_ratio": 0.29,
+      "high_risk_seating_formations": 1,
+      "hour_note": "Pit boss accepts cluster containment: P-CC re-routed to a separate table. P-CA/P-CB remain at T-11 but formation is blocked — casual players at T-11 stay. Same-device flag (H1/H2) surfaces; FairPlay path monitors only — no escalation. One additional early break (organic). Healthy tables reach 12."
+    },
+    {
+      "hour": 4,
+      "cumulative_paid_seat_time_minutes": 16100,
+      "active_players": 75,
+      "active_healthy_tables": 12,
+      "new_player_retention_pct": 56,
+      "avg_casual_session_length_minutes": 40,
+      "early_table_breaks": 2,
+      "projected_eod_paid_seat_time_minutes": 31800,
+      "reward_fee_ratio": 0.29,
+      "high_risk_seating_formations": 1,
+      "hour_note": "Room stabilizing at 12 healthy tables. No new high-risk formations. Casual players continue longer sessions — avg 40 min vs 29 min in standard path. No new early table breaks. P-104 left T-8 naturally (full session). New players replacing P-104 at T-8 finding a balanced table."
+    },
+    {
+      "hour": 5,
+      "cumulative_paid_seat_time_minutes": 20100,
+      "active_players": 74,
+      "active_healthy_tables": 12,
+      "new_player_retention_pct": 51,
+      "avg_casual_session_length_minutes": 39,
+      "early_table_breaks": 3,
+      "projected_eod_paid_seat_time_minutes": 31600,
+      "reward_fee_ratio": 0.30,
+      "high_risk_seating_formations": 1,
+      "hour_note": "One additional natural table break (end-of-session attrition, not predatory pressure). Retention remains above 50% — more than double the standard path. Room health sustained: 12 healthy tables, 74 active players vs 65 in standard. Reward/fee ratio improving as casual volume stays higher."
+    },
+    {
+      "hour": 6,
+      "cumulative_paid_seat_time_minutes": 24000,
+      "active_players": 73,
+      "active_healthy_tables": 12,
+      "new_player_retention_pct": 47,
+      "avg_casual_session_length_minutes": 38,
+      "early_table_breaks": 3,
+      "projected_eod_paid_seat_time_minutes": 31500,
+      "reward_fee_ratio": 0.30,
+      "high_risk_seating_formations": 1,
+      "hour_note": "Room at peak health for this session window. Projection converging toward ~31,500. Natural retention decline continues (not predatory-driven). 12 healthy tables — contrast with 7 in standard path at same hour."
+    },
+    {
+      "hour": 7,
+      "cumulative_paid_seat_time_minutes": 27800,
+      "active_players": 72,
+      "active_healthy_tables": 11,
+      "new_player_retention_pct": 44,
+      "avg_casual_session_length_minutes": 38,
+      "early_table_breaks": 3,
+      "projected_eod_paid_seat_time_minutes": 31500,
+      "reward_fee_ratio": 0.31,
+      "high_risk_seating_formations": 1,
+      "hour_note": "One healthy table closes naturally (full-session end). Retention and session length stable — the FairPlay compounding effect has flattened into a new baseline. Still 11 healthy tables vs 7 in standard. Projection locked at 31,500."
+    },
+    {
+      "hour": 8,
+      "cumulative_paid_seat_time_minutes": 31500,
+      "active_players": 71,
+      "active_healthy_tables": 11,
+      "new_player_retention_pct": 42,
+      "avg_casual_session_length_minutes": 38,
+      "early_table_breaks": 3,
+      "projected_eod_paid_seat_time_minutes": 31500,
+      "reward_fee_ratio": 0.31,
+      "high_risk_seating_formations": 1,
+      "hour_note": "End of 8-hour simulation. FairPlay path result: 11 healthy tables (of 12 active), 42% new-player retention, 38-min avg casual session, 1 active formation (P-CA/P-CB monitored, P-CC contained), 31,500 total paid seat-minutes. Delta vs Standard: +22.6% paid seat-time, +16pp retention, +4 healthy tables, -5 early breaks, -2 formations."
+    }
+  ]
+}

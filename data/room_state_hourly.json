@@ -1,0 +1,253 @@
+{
+  "schema_version": "0.1.0",
+  "generated": "static-fixture-day2",
+  "fixture_note": "Static Day-2 fixture. Per-hour room state for the 8-hour simulation window (hours 0–8). This is the Standard-baseline room trajectory; FairPlay divergences are captured in data/room_metrics_fairplay.json (Cleo/P2c). Seed TBD pending sim/config shared seed lock.",
+  "seed_ref": "TBD — sim/config shared seed",
+  "horizon_hours": 8,
+  "snapshots": [
+    {
+      "hour": 0,
+      "label": "Simulation start — initial room state",
+      "tables": [
+        {"table_id": "T-1",  "seated_count": 8, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-3",  "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-5",  "seated_count": 4, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-7",  "seated_count": 8, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-8",  "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-9",  "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-11", "seated_count": 4, "open_seats": 2, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-14", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-15", "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-18", "seated_count": 6, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-22", "seated_count": 3, "open_seats": 3, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-25", "seated_count": 5, "open_seats": 4, "paid_seat_time_trend": "stable"}
+      ],
+      "room_events": [],
+      "room_summary": {
+        "active_tables": 12,
+        "total_seated": 68,
+        "total_open_seats": 24
+      }
+    },
+    {
+      "hour": 1,
+      "label": "Hour 1 of 8 — P-104 seat request",
+      "tables": [
+        {"table_id": "T-1",  "seated_count": 8, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-3",  "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-5",  "seated_count": 4, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-7",  "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-8",  "seated_count": 8, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-9",  "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-11", "seated_count": 4, "open_seats": 2, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-14", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-15", "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-18", "seated_count": 6, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-22", "seated_count": 3, "open_seats": 3, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-25", "seated_count": 5, "open_seats": 4, "paid_seat_time_trend": "stable"}
+      ],
+      "room_events": [
+        "P-104 (new player) seat request at +5 min. Standard: seated T-22, 12-min session, exit at +17 min (early exit — net T-22 unchanged end-of-hour). FairPlay: seated T-8, 42-min session (active at hour end).",
+        "T-7: one player ended session and left. T-8: one new player joined organically."
+      ],
+      "room_summary": {
+        "active_tables": 12,
+        "total_seated": 68,
+        "total_open_seats": 24
+      }
+    },
+    {
+      "hour": 2,
+      "label": "Hour 2 of 8 — cluster C seat request",
+      "tables": [
+        {"table_id": "T-1",  "seated_count": 8, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-3",  "seated_count": 5, "open_seats": 4, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-5",  "seated_count": 4, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-7",  "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-8",  "seated_count": 8, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-9",  "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-11", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-14", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-15", "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-18", "seated_count": 6, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-22", "seated_count": 3, "open_seats": 3, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-25", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"}
+      ],
+      "room_events": [
+        "P-CC (cluster C) requests open seat at T-11 where P-CA (A) and P-CB (B) are already seated. Standard: seated at T-11 (+10 min), A/B/C formation complete. FairPlay: seat held pending pit-boss review.",
+        "T-3: one player ended session and left. T-25: new player joined. T-11: +1 in Standard baseline."
+      ],
+      "room_summary": {
+        "active_tables": 12,
+        "total_seated": 69,
+        "total_open_seats": 23
+      }
+    },
+    {
+      "hour": 3,
+      "label": "Hour 3 of 8 — device flag + pit-boss review window",
+      "tables": [
+        {"table_id": "T-1",  "seated_count": 8, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-3",  "seated_count": 5, "open_seats": 4, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-5",  "seated_count": 4, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-7",  "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-8",  "seated_count": 8, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-9",  "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-11", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-14", "seated_count": 4, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-15", "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-18", "seated_count": 7, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-22", "seated_count": 2, "open_seats": 4, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-25", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"}
+      ],
+      "room_events": [
+        "H1/H2 (P-H1, P-H2) same-device flag surfaces in session data. FairPlay: monitor_only action triggered — no escalation.",
+        "FairPlay: pit-boss reviews held T-11 seat. Accepts containment — P-CC blocked from T-11, re-routed to T-14.",
+        "T-22: P-185 (regular) ended session and left — table now 2/6, short-handed.",
+        "T-14: one player left (-1). T-18: new player joined (+1)."
+      ],
+      "room_summary": {
+        "active_tables": 12,
+        "total_seated": 68,
+        "total_open_seats": 24
+      }
+    },
+    {
+      "hour": 4,
+      "label": "Hour 4 of 8 — room stabilizing",
+      "tables": [
+        {"table_id": "T-1",  "seated_count": 9, "open_seats": 0, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-3",  "seated_count": 5, "open_seats": 4, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-5",  "seated_count": 4, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-7",  "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-8",  "seated_count": 8, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-9",  "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-11", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-14", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-15", "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-18", "seated_count": 7, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-22", "seated_count": 3, "open_seats": 3, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-25", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"}
+      ],
+      "room_events": [
+        "T-1: fills to capacity (9/9). T-22: one new player joins (back to 3/6 — the short-handed cycle continues).",
+        "T-7: another player ended long session and left. T-14: replacement player joined."
+      ],
+      "room_summary": {
+        "active_tables": 12,
+        "total_seated": 70,
+        "total_open_seats": 22
+      }
+    },
+    {
+      "hour": 5,
+      "label": "Hour 5 of 8 — promo drain begins at T-9",
+      "tables": [
+        {"table_id": "T-1",  "seated_count": 9, "open_seats": 0, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-3",  "seated_count": 5, "open_seats": 4, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-5",  "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-7",  "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-8",  "seated_count": 8, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-9",  "seated_count": 4, "open_seats": 2, "paid_seat_time_trend": "declining"},
+        {"table_id": "T-11", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-14", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-15", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-18", "seated_count": 7, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-22", "seated_count": 3, "open_seats": 3, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-25", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"}
+      ],
+      "room_events": [
+        "T-9: promo hunter (P-164) completes minimum seat-time and leaves — pattern emerging (promo-abuse indicator).",
+        "T-5: new high-stakes arrival. T-15: one player left for dinner break."
+      ],
+      "room_summary": {
+        "active_tables": 12,
+        "total_seated": 69,
+        "total_open_seats": 23
+      }
+    },
+    {
+      "hour": 6,
+      "label": "Hour 6 of 8 — evening shift; T-22 short-handed again",
+      "tables": [
+        {"table_id": "T-1",  "seated_count": 9, "open_seats": 0, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-3",  "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-5",  "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-7",  "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-8",  "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-9",  "seated_count": 4, "open_seats": 2, "paid_seat_time_trend": "declining"},
+        {"table_id": "T-11", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-14", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-15", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-18", "seated_count": 7, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-22", "seated_count": 2, "open_seats": 4, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-25", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"}
+      ],
+      "room_events": [
+        "T-22: another player leaves — now 2/6, third short-handed episode this session (predatory-mix table: entry is a revolving door for casual players).",
+        "T-8: one player ended long session and left (dinner/break). T-3: evening arrival joins."
+      ],
+      "room_summary": {
+        "active_tables": 12,
+        "total_seated": 68,
+        "total_open_seats": 24
+      }
+    },
+    {
+      "hour": 7,
+      "label": "Hour 7 of 8 — late session; promo drain continues at T-9",
+      "tables": [
+        {"table_id": "T-1",  "seated_count": 9, "open_seats": 0, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-3",  "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-5",  "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-7",  "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-8",  "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-9",  "seated_count": 3, "open_seats": 3, "paid_seat_time_trend": "declining"},
+        {"table_id": "T-11", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-14", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-15", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-18", "seated_count": 7, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-22", "seated_count": 3, "open_seats": 3, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-25", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"}
+      ],
+      "room_events": [
+        "T-9: second promo hunter (P-162) completes minimum and leaves — promo-abuse pattern confirmed across the 8-hour window.",
+        "T-22: new arrival joins back to 3/6 — the grinder cycle masks the early-exit churn.",
+        "T-3: two evening arrivals fill seats."
+      ],
+      "room_summary": {
+        "active_tables": 12,
+        "total_seated": 69,
+        "total_open_seats": 23
+      }
+    },
+    {
+      "hour": 8,
+      "label": "Hour 8 of 8 — final simulation state",
+      "tables": [
+        {"table_id": "T-1",  "seated_count": 9, "open_seats": 0, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-3",  "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-5",  "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-7",  "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-8",  "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-9",  "seated_count": 2, "open_seats": 4, "paid_seat_time_trend": "declining"},
+        {"table_id": "T-11", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-14", "seated_count": 5, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-15", "seated_count": 7, "open_seats": 2, "paid_seat_time_trend": "growing"},
+        {"table_id": "T-18", "seated_count": 7, "open_seats": 1, "paid_seat_time_trend": "stable"},
+        {"table_id": "T-22", "seated_count": 3, "open_seats": 3, "paid_seat_time_trend": "flat"},
+        {"table_id": "T-25", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"}
+      ],
+      "room_events": [
+        "T-9: third promo hunter (P-161) leaves — table at 2/6 by simulation end. Promo-abuse pattern fully visible in 8-hour arc.",
+        "T-15: player returns from break — back to 7/9. Healthy table absorbs natural churn.",
+        "Simulation complete. T-22 still 3/6 (short-handed all 8 hours). T-11 cluster stable at 5/6 (Standard path A/B/C together all session)."
+      ],
+      "room_summary": {
+        "active_tables": 12,
+        "total_seated": 69,
+        "total_open_seats": 23
+      }
+    }
+  ]
+}
