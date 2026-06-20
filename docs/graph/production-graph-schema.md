@@ -6,6 +6,10 @@
 > capstone) and realizes the production additions anticipated in [07](07-production-target-and-geo.md)
 > (Customer/IP/Location/Payment, CHIP_FLOW, geo + AML). It is a **labeled property graph** (Neo4j /
 > Memgraph), not RDF/OWL — verdict unchanged ([01](01-graph-vs-relational.md)).
+>
+> **Simulator handoff:** see [simulator-signal-gap.md](simulator-signal-gap.md) for the exact P2 fixture
+> changes required to derive this schema's Layer-1 raw relationships and Layer-2 signal edges instead of
+> asserting them as rolled-up fields.
 
 ## The four layers
 
