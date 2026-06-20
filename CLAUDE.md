@@ -73,3 +73,26 @@ lobby recommendation → pit-boss review/override → Standard-vs-FairPlay 8-hou
 Default to the latest, most capable Claude models for the AI Investigator. Check the project's
 `claude-api` reference / official docs for current model IDs and pricing before wiring the SDK —
 don't hardcode from memory.
+
+## How this project is built (this checkout)
+
+This is a 4-person capstone on a shared GitHub repo. **This checkout owns P2 — Data Simulation +
+Scenario.** P1 / P3 / P4 are owned by human teammates on the same repo. P2 is run as a small AI
+team coordinated by a Director:
+
+- **`/tate`** — Director. Coordinates the P2 sub-leads, watches the PRD §9 timeline, owns
+  `CLAUDE_SESSION_HANDOFF.md`, and guards the **Contract 1 seam** (the `data/*.json` files P2 hands
+  to the human P3 teammate).
+- **`/aria`** — Population & Relationships (P2a): archetypes, mocked devices, cluster/household
+  graph, seeded truth labels.
+- **`/bram`** — Session & Seat-Time Engine (P2b): table roster, sessions/seat events, paid
+  seat-time, the deterministic hour-by-hour loop.
+- **`/cleo`** — Counterfactual & Metrics (P2c): the two 8-hour Standard-vs-FairPlay paths, hourly
+  room metrics, the 3 mandatory case fixtures.
+
+Coordination state, kickoffs, handoffs, and file ownership live in
+`.project/fairplay-simulation-lab/` (local-only, gitignored, OneDrive-backed — **not** in the shared
+repo). Lead personas are in `.claude/agents/`; slash-command skills in `.claude/skills/`.
+Provisional `sim/**` source paths are pending the stack decision (PRD §10); the `data/*.json`
+output filenames are fixed Contract-1 names. **Restart the session for the `/tate` etc. skills to
+load.**
