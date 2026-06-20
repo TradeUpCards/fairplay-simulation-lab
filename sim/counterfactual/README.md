@@ -31,8 +31,8 @@ fully deterministic and reproducible without the scoring engine present.
 |----|------|------|-----------------|-----------------|
 | `t22-promotion-policy` | 0 | new-player | promote T-22 normally to new/rec players | suppress T-22 promotion to new/rec players |
 | `new-player-route` | 1 | new-player | seat P-104 at T-22 (no risk routing) | seat P-104 at T-8 (balanced table) |
-| `cluster-third-seat` | 2 | coordinated-cluster | seat account C, completing A/B/C formation | hold 3rd seat for pit-boss review |
-| `cluster-pit-boss-accept` | 3 | coordinated-cluster | no action (formation already complete) | pit boss accepts containment; C re-routed to separate table |
+| `cluster-third-seat` | 2 | coordinated-cluster | seat P-CC at T-11, completing P-CA/P-CB/P-CC formation | hold 3rd seat at T-11 for pit-boss review |
+| `cluster-pit-boss-accept` | 3 | coordinated-cluster | no action (formation already complete) | pit boss accepts containment; P-CC re-routed to separate table |
 | `household-monitor` | 3 | shared-device-fp | no action on H1/H2 same-device flag | monitor only; no escalation |
 
 Each decision traces directly to PRD §6 counterfactual runs. Note that `cluster-pit-boss-accept`
@@ -42,11 +42,12 @@ unresolved held seat and hours 3–8 metrics would be ambiguous.
 ## Open placeholders (patch when dependencies land)
 
 - `seed_ref: "TBD"` — update once Aria/Bram agree on the shared seed in `sim/config/`.
-- `"table": "T-cluster"` in `cluster-third-seat` and `cluster-pit-boss-accept` — placeholder until
-  Bram delivers `data/table_roster.json` and Aria delivers the cluster account IDs (A/B/C). Patch
-  both branches simultaneously so the two paths don't accidentally share a stale reference.
+- `"T-cluster"` placeholder has been replaced with `"T-11"` (confirmed by `data/table_roster.json`).
+  Cluster IDs P-CA/P-CB/P-CC are taken from `table_roster.json` (Bram). **Cross-workstream flag:**
+  `data/players.json` (Aria) lists CL-001 members as P-198/P-199/P-200, not P-CA/P-CB/P-CC — Aria
+  and Bram must reconcile this ID mismatch before P3 integrates.
 - `case_ref: "shared-device-fp"` will need cross-checking against `data/seeded_case_labels.json`
-  once Aria delivers that file.
+  once Aria confirms the case label key matches.
 
 ## File ownership
 

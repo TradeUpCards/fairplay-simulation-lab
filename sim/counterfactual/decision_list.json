@@ -39,16 +39,16 @@
       "id": "cluster-third-seat",
       "hour": 2,
       "case_ref": "coordinated-cluster",
-      "trigger": "account C requests the open seat where A and B already sit",
+      "trigger": "P-CC requests the open seat at T-11 where P-CA and P-CB are already seated",
       "standard": {
         "action": "seat",
-        "table": "T-cluster",
-        "rationale": "completes A/B/C co-seating formation"
+        "table": "T-11",
+        "rationale": "completes P-CA/P-CB/P-CC co-seating formation"
       },
       "fairplay": {
         "action": "hold_for_review",
-        "table": "T-cluster",
-        "rationale": "hold 3rd seat for pit-boss review before formation completes",
+        "table": "T-11",
+        "rationale": "hold 3rd seat at T-11 for pit-boss review before formation completes",
         "reason_codes": ["repeated_co_seating", "within_cluster_soft_play"]
       }
     },
@@ -56,14 +56,14 @@
       "id": "cluster-pit-boss-accept",
       "hour": 3,
       "case_ref": "coordinated-cluster",
-      "trigger": "pit boss reviews the held C seat (FairPlay path only; Standard path has no pending review)",
+      "trigger": "pit boss reviews the held P-CC seat at T-11 (FairPlay path only; Standard path has no pending review)",
       "standard": {
         "action": "none",
-        "rationale": "A/B/C formation completed at hour 2; no review pending"
+        "rationale": "P-CA/P-CB/P-CC formation completed at hour 2; no review pending"
       },
       "fairplay": {
         "action": "accept_containment",
-        "rationale": "pit boss accepts hold — A/B/C cannot co-seat; C re-routed to a separate table",
+        "rationale": "pit boss accepts hold — P-CA/P-CB/P-CC cannot co-seat; P-CC re-routed to a separate table",
         "reason_codes": ["pit_boss_intervention", "cluster_formation_blocked"]
       }
     },

@@ -1,0 +1,278 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "generated": "2026-06-20",
+    "seed": 42,
+    "access": "OPERATOR-FACING ONLY — never expose in player lobby, player-facing API, or any UI visible to players. This is the P4 eval harness answer key.",
+    "purpose": "Ground-truth labels for the three mandatory demo cases (PRD §6) and the seven seeded eval cases (PRD §7). P4 eval harness checks that true-risk cases rank above false-positive traps and that AI summaries do not overclaim.",
+    "prd_refs": {
+      "mandatory_cases": "PRD §6",
+      "eval_cases": "PRD §7",
+      "contracts": "PRD §4 Contract 1 (produced by P2), Contract 3 (evidence packet schema, defined by P4)"
+    }
+  },
+  "cases": [
+    {
+      "case_id": "CASE-A",
+      "eval_scenario": "A",
+      "prd_label": "new_player_bad_table_mix",
+      "prd_ref": "PRD §6 New Player Case / §7 Eval A",
+      "mandatory_demo_case": true,
+      "seeded_entities": {
+        "new_player": "P-104",
+        "table_aggressors": ["P-176", "P-177"],
+        "seeded_table_label": "T-22",
+        "healthy_alternative_label": "T-08",
+        "good_fit_label": "T-14"
+      },
+      "expected_category": "beginner_unfriendly",
+      "expected_risk_lens": "table_health",
+      "expected_seating_action": "reroute",
+      "is_false_positive_trap": false,
+      "pit_boss_evidence_seed": {
+        "table_health_score": 38,
+        "new_player_seating_risk": "high",
+        "occupancy": "3/6",
+        "new_player_avg_session_min_at_table": 12,
+        "new_player_avg_session_min_healthy_table": 42,
+        "predicted_state": "fragile_beginner_unfriendly"
+      },
+      "eval_checks": [
+        "true_risk_ranks_above_false_positive_traps",
+        "P-104_routed_to_T-08_not_T-22",
+        "T-22_not_promoted_to_new_or_recreational_players",
+        "table_health_risk_not_conflated_with_integrity_risk"
+      ],
+      "counterfactual": {
+        "standard_room_outcome": "P-104 joins T-22; short session (~12 min); likely churn",
+        "fairplay_outcome": "P-104 routed to T-08; longer session (~42 min expected); retained"
+      }
+    },
+    {
+      "case_id": "CASE-B",
+      "eval_scenario": "B",
+      "prd_label": "strong_grinder_health_concern_not_integrity",
+      "prd_ref": "PRD §7 Eval B",
+      "mandatory_demo_case": false,
+      "seeded_entities": {
+        "grinder": "P-164"
+      },
+      "expected_category": "room_health_concern",
+      "expected_risk_lens": "table_health",
+      "expected_seating_action": "monitor",
+      "is_false_positive_trap": true,
+      "eval_checks": [
+        "flagged_as_table_health_concern_not_integrity_risk",
+        "no_integrity_review_queue_recommended",
+        "health_vs_integrity_lens_separation_maintained",
+        "player_164_not_suppressed_or_restricted",
+        "AI_summary_distinguishes_health_impact_from_integrity_pattern"
+      ],
+      "note": "P-164 is a strong, high-volume grinder (285k lifetime hands, 360 min avg sessions). Health concern: may drive casuals off tables. NOT an integrity risk — no device link, no cluster, no soft-play. Eval must confirm the system does not over-escalate skilled-but-legal play."
+    },
+    {
+      "case_id": "CASE-C",
+      "eval_scenario": "C",
+      "prd_label": "true_coordinated_cluster_integrity_review",
+      "prd_ref": "PRD §6 Coordinated Cluster Case / §7 Eval C",
+      "mandatory_demo_case": true,
+      "seeded_entities": {
+        "account_A": "P-198",
+        "account_B": "P-199",
+        "account_C": "P-200",
+        "cluster_id": "CL-001",
+        "device_link_group": "DG-001",
+        "seeded_table_label": "T-cluster"
+      },
+      "expected_category": "integrity_review",
+      "expected_risk_lens": "integrity_risk",
+      "expected_seating_action": "hold_for_pitboss_review",
+      "is_false_positive_trap": false,
+      "convergent_signals": [
+        "device_link_A_B via DG-001",
+        "timing_correlation_C_to_A (0.88)",
+        "timing_correlation_C_to_B (0.85)",
+        "co_seating_14_of_18_recent_tables",
+        "soft_play_delta_A=-0.78, B=-0.82, C=-0.75",
+        "outsider_pressure_pattern"
+      ],
+      "counter_evidence": [
+        "no single signal alone is proof of collusion",
+        "device link could be shared workstation",
+        "timing correlation could reflect same time zone / schedule",
+        "co-seating could reflect preference for same stake level"
+      ],
+      "eval_checks": [
+        "cluster_ranked_high_on_integrity_convergence",
+        "hold_third_seat_for_pitboss_before_completing_formation",
+        "all_counter_evidence_surfaced_in_AI_summary",
+        "no_auto_ban_or_automatic_enforcement_recommended",
+        "AI_uses_uncertainty_language",
+        "recommended_action_is_human_review_not_enforcement"
+      ],
+      "counterfactual": {
+        "standard_room_outcome": "P-200 (Account C) completes cluster formation; cluster plays as coordinated unit; high casual-exit impact",
+        "fairplay_outcome": "P-200 held for pit-boss review; cluster formation blocked pending decision; pit boss accepts containment"
+      }
+    },
+    {
+      "case_id": "CASE-D",
+      "eval_scenario": "D",
+      "prd_label": "regular_overlap_not_over_escalated",
+      "prd_ref": "PRD §7 Eval D",
+      "mandatory_demo_case": false,
+      "seeded_entities": {
+        "player_1": "P-142",
+        "player_2": "P-143",
+        "overlap_record": "OVL-001"
+      },
+      "expected_category": "monitor_low_medium",
+      "expected_risk_lens": "table_health",
+      "expected_seating_action": "monitor",
+      "is_false_positive_trap": true,
+      "distinguishing_signals": {
+        "co_seating_rate": 0.500,
+        "device_link": false,
+        "soft_play_delta": 0.00,
+        "correlated_profitability": false,
+        "explanation": "same preferred stakes and time slot"
+      },
+      "eval_checks": [
+        "not_over_escalated_to_integrity_review",
+        "overlap_explained_by_schedule_no_collusion_signals",
+        "monitor_flag_acceptable_not_suppression",
+        "missing_device_link_and_soft_play_noted_as_counter_evidence"
+      ],
+      "note": "P-142 and P-143 co-seat 50% of recent sessions — high overlap by count, but entirely missing the corroborating signals (device, soft-play, profitability correlation) that would make it suspicious. A classifier that escalates this is over-triggering."
+    },
+    {
+      "case_id": "CASE-E",
+      "eval_scenario": "E",
+      "prd_label": "shared_device_household_false_positive",
+      "prd_ref": "PRD §6 Shared-Device False Positive / §7 Eval E",
+      "mandatory_demo_case": true,
+      "seeded_entities": {
+        "H1": "P-192",
+        "H2": "P-193",
+        "device_group": "DG-002",
+        "household_id": "H-01"
+      },
+      "expected_category": "monitor_low",
+      "expected_risk_lens": "integrity_risk",
+      "expected_seating_action": "monitor_only",
+      "is_false_positive_trap": true,
+      "exculpatory_signals": [
+        "co_seating_rate_only_2_of_22 (0.091)",
+        "different_session_time_preferences: H1(P-192)=evening, H2(P-193)=morning_afternoon",
+        "different_vpip: H1(P-192)=0.27 vs H2(P-193)=0.35",
+        "different_pfr: H1(P-192)=0.20 vs H2(P-193)=0.15",
+        "avg_session_length_differs_by_35_minutes: H1=145min vs H2=110min",
+        "soft_play_delta_both_0.00",
+        "no_correlated_profitability",
+        "no_casual_exit_increase"
+      ],
+      "eval_checks": [
+        "monitor_only_no_suppression_no_enforcement",
+        "exculpatory_signals_listed_as_counter_evidence_in_AI_summary",
+        "different_session_patterns_explicitly_noted",
+        "low_co_seating_rate_explicitly_noted",
+        "AI_does_not_state_collusion_as_fact",
+        "recommended_action_is_monitor_not_escalate"
+      ],
+      "counterfactual": {
+        "standard_room_outcome": "H1/H2 play normally; no suppression needed",
+        "fairplay_outcome": "H1/H2 monitored only; no intervention; FairPlay correctly avoids false positive"
+      }
+    },
+    {
+      "case_id": "CASE-F",
+      "eval_scenario": "F",
+      "prd_label": "promo_abuse_not_collusion",
+      "prd_ref": "PRD §7 Eval F",
+      "mandatory_demo_case": false,
+      "seeded_entities": {
+        "promo_abuser": "P-184"
+      },
+      "expected_category": "promo_abuse",
+      "expected_risk_lens": "table_health",
+      "expected_seating_action": "flag_promo_team",
+      "is_false_positive_trap": false,
+      "distinguishing_signals": {
+        "promo_redemptions_30d": 21,
+        "avg_session_minutes": 32.0,
+        "sessions_last_30d": 22,
+        "pattern": "completes minimum then leaves — high churn, promo drain, not collusion"
+      },
+      "eval_checks": [
+        "labeled_as_promo_abuse_distinctly_not_collusion",
+        "category_is_promo_abuse_not_integrity_review",
+        "routed_to_promo_team_not_pit_boss_integrity_queue",
+        "AI_does_not_conflate_promo_abuse_with_coordinated_play",
+        "no_overclaiming"
+      ],
+      "note": "P-184 exploits promotional structures — 21 redemptions in 30 days, 32-min average sessions (just enough to qualify). This is a distinct pattern from collusion. Scoring and AI must place this in a promo-abuse bucket, not an integrity-review bucket."
+    },
+    {
+      "case_id": "CASE-G",
+      "eval_scenario": "G",
+      "prd_label": "bot_like_similarity_own_review_queue",
+      "prd_ref": "PRD §7 Eval G",
+      "mandatory_demo_case": false,
+      "seeded_entities": {
+        "bot_candidate": "P-221"
+      },
+      "expected_category": "bot_like_review",
+      "expected_risk_lens": "integrity_risk",
+      "expected_seating_action": "route_to_bot_review_queue",
+      "is_false_positive_trap": false,
+      "distinguishing_signals": {
+        "bot_similarity_score": 0.87,
+        "timing_regularity": 0.88,
+        "sessions_last_30d": 28,
+        "avg_session_minutes": 182.0,
+        "note": "Near-daily play, extremely consistent session length and timing — high bot_similarity_score from simulated composite. Low vpip (0.24) and high sessions_last_30d create an unusual combination for a player registered only 95 days ago."
+      },
+      "eval_checks": [
+        "routed_to_bot_review_queue_not_collusion_queue",
+        "not_conflated_with_coordinated_cluster",
+        "AI_summary_uses_uncertainty_language",
+        "AI_notes_innocent_explanation_exists",
+        "recommended_action_is_specialized_bot_review_not_enforcement"
+      ],
+      "note": "P-221 triggers on bot_similarity_score and timing_regularity alone — no device link, no cluster, no soft-play. Must be routed to its own review queue distinct from collusion/cluster cases. Demonstrates the system's ability to distinguish integrity sub-categories."
+    }
+  ],
+  "counterfactual_scenario": {
+    "prd_ref": "PRD §6 final paragraph / §9 Days 5–6",
+    "shared_starting_state": "Identical room configuration at hour 0 for both paths",
+    "standard_room": {
+      "path_id": "standard",
+      "label": "Standard Room — no FairPlay intervention",
+      "key_events": [
+        "P-104 joins T-22 (high-volatility, beginner-unfriendly); expected session ~12 min before churn",
+        "P-200 (Account C) completes cluster CL-001 formation at active table; cluster plays as coordinated unit",
+        "No risk-aware routing; no pit-boss hold; no table suppression for new/recreational players"
+      ]
+    },
+    "fairplay_enabled": {
+      "path_id": "fairplay",
+      "label": "FairPlay Enabled — interventions active",
+      "key_events": [
+        "P-104 routed to T-08 (balanced, healthy alternative); expected session ~42 min; retained",
+        "P-200 held for pit-boss review before completing cluster CL-001 formation; pit boss accepts containment recommendation",
+        "T-22 not promoted to new or recreational players in lobby during simulation window"
+      ]
+    }
+  },
+  "eval_summary": {
+    "total_cases": 7,
+    "true_risk_cases": ["CASE-A", "CASE-C", "CASE-F", "CASE-G"],
+    "false_positive_traps": ["CASE-B", "CASE-D", "CASE-E"],
+    "mandatory_demo_cases": ["CASE-A", "CASE-C", "CASE-E"],
+    "eval_invariant": "True-risk cases must rank above false-positive traps in integrity and seating-risk scores. Eval fails if a trap (B, D, or E) scores higher than its paired true-risk case in the same risk lens."
+  },
+  "schema_warnings": {
+    "table_id_format": "Table labels T-22, T-08, T-14 (CASE-A) and T-cluster (CASE-C) are placeholder strings for the Day-2 static fixture. Bram's table_roster.json is the authoritative source. When Bram publishes IDs, update seeded_entities.seeded_table_label values in both cases to match the exact table_id format used in that file (e.g. string 'T-22' vs. integer 22 vs. 'table_22'). P3 join keys must use the same format in both files.",
+    "room_metrics_files": "data/room_metrics_standard.json and data/room_metrics_fairplay.json are required Contract 1 outputs owned by Cleo (P2c). They are not present yet — Cleo must generate them. These are required for the simulator comparison screen (PRD §5 P1 Room Impact Simulator, PRD §6 Counterfactual runs)."
+  }
+}
