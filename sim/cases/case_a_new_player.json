@@ -1,0 +1,80 @@
+{
+  "schema_version": "0.1.0",
+  "case_id": "CASE-A",
+  "eval_scenario": "A",
+  "mandatory_demo_case": true,
+  "prd_ref": "PRD §6 New Player Case / §7 Eval A",
+  "title": "New player seated into a predatory table mix",
+  "demo_role": "table_health",
+  "risk_lens": "table_health",
+  "is_false_positive_trap": false,
+  "labels_ref": "data/seeded_case_labels.json#CASE-A",
+  "generated": "static-fixture-day2",
+  "fixture_note": "Operator-facing demo-case scenario. Structure + entity references only — NO computed scores or classifications (P3 produces those from this scaffold + Contract-1 data). The pit_boss_evidence_seed values are the ground-truth seeds from seeded_case_labels.json, restated here as the demo narrative target, not computed by P2.",
+
+  "entities": {
+    "new_player": "P-104",
+    "table_aggressors": ["P-176", "P-177"],
+    "seeded_table": { "seeded_label": "T-22", "roster_table_id": "T-22", "style_volatility_label": "High Volatility / Predatory-Mix" },
+    "healthy_alternative": { "seeded_label": "T-8", "roster_table_id": "T-8", "style_volatility_label": "Balanced / Mixed Skill" },
+    "good_fit_alternative": { "seeded_label": "T-14", "roster_table_id": "T-14" }
+  },
+
+  "narrative": "P-104 is a 4-day-old new player (31 lifetime hands). On a seat request the room can route them to T-22 (short-handed 3/6, high-volatility, two aggressive/high-volume regulars P-176/P-177) or to a balanced table. T-22 is statistically beginner-unfriendly: new players seated there churn fast (~12-min sessions vs ~42 min at a healthy table). This is a TABLE-HEALTH risk, not an integrity risk — no collusion, no device link, no cluster. The harm is silent churn, not cheating.",
+
+  "demo_spine": {
+    "lobby": "Player lobby shows neutral copy only. FairPlay path: T-08 'Recommended for you', T-14 'Good fit', T-22 'Available' (de-prioritized internally — never labeled predatory player-side).",
+    "pit_boss": "Operator console surfaces table-health score, new-player seating risk, composition, reason codes, and the alternative route. Operator can accept reroute / override / suppress T-22 for new players.",
+    "simulator": "Room Impact Simulator contrasts P-104 churning at T-22 (Standard) vs retained at T-08 (FairPlay).",
+    "eval": "Eval A checks the case is classed beginner_unfriendly (table_health), rerouted, and NOT conflated with integrity risk."
+  },
+
+  "divergence_points": [
+    {
+      "decision_id": "t22-promotion-policy",
+      "decision_list_ref": "sim/counterfactual/decision_list.json#t22-promotion-policy",
+      "hour": 0,
+      "standard": "T-22 promoted normally to new/rec players",
+      "fairplay": "T-22 suppressed from new/rec lobby (reason: beginner_unfriendly)"
+    },
+    {
+      "decision_id": "new-player-route",
+      "decision_list_ref": "sim/counterfactual/decision_list.json#new-player-route",
+      "hour": 1,
+      "standard": "P-104 seated at T-22 (no risk-aware routing) → ~12-min session, early exit",
+      "fairplay": "P-104 routed to T-08 (balanced) → ~42-min session, retained"
+    }
+  ],
+
+  "expected_outcome": {
+    "standard": "P-104 churns; T-22 trends fragile/beginner-unfriendly; contributes to lower new-player retention.",
+    "fairplay": "P-104 retained at T-08; new-player retention preserved.",
+    "metrics_ref": {
+      "standard": "data/room_metrics_standard.json (hours 1-8: new_player_retention_pct 72→26, avg_casual_session 44→22)",
+      "fairplay": "data/room_metrics_fairplay.json (hours 1-8: new_player_retention_pct 75→42, avg_casual_session 46→38)"
+    }
+  },
+
+  "pit_boss_evidence_seed": {
+    "note": "Ground-truth seeds from seeded_case_labels.json — restated as demo target. P3 computes the real packet.",
+    "table_health_score": 38,
+    "new_player_seating_risk": "high",
+    "occupancy": "3/6",
+    "new_player_avg_session_min_at_table": 12,
+    "new_player_avg_session_min_healthy_table": 42,
+    "predicted_state": "fragile_beginner_unfriendly"
+  },
+
+  "counter_evidence": [
+    "T-22 aggressors P-176/P-177 are playing legally — strong/aggressive is not cheating.",
+    "A single new player's short session is not proof the table is bad; the pattern across new players is the signal.",
+    "Health risk only — must not be escalated to integrity review."
+  ],
+
+  "lens_separation_guard": "This case is TABLE_HEALTH only. It must not be scored or summarized as an integrity/collusion case. Conflating it with CASE-C (integrity) is a failing eval.",
+
+  "id_reconciliation": [
+    "Table-label padding RESOLVED by Aria (branch sim/aria-case-c-table-id): canonical is 'T-8' (no leading zero) — adopted here.",
+    "All player IDs (P-104, P-176, P-177) match across players.json + seeded_case_labels.json."
+  ]
+}
