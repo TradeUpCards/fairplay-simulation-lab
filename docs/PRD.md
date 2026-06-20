@@ -148,11 +148,12 @@ Required table fields: table ID · stakes · game type · max seats · seated pl
 average pot size · average session length · hands/hour or pace label · style/volatility label · paid
 seat-time trend.
 
-**Output files:** `room_state_hourly.json` · `room_metrics_standard.json` ·
-`room_metrics_fairplay.json` · `seeded_case_labels.json`. Each hourly metrics file includes:
-cumulative paid seat-time · active players · active healthy tables · new-player retention · average
-casual session length · early table breaks · projected end-of-day paid seat-time · reward/fee ratio ·
-high-risk seating formations.
+**Output files:** `players.json` · `devices.json` · `relationships.json` ·
+`table_roster.json` · `sessions.json` · `seat_events.json` · `room_state_hourly.json` ·
+`room_metrics_standard.json` · `room_metrics_fairplay.json` · `seeded_case_labels.json`.
+Each hourly metrics file includes: cumulative paid seat-time · active players · active healthy
+tables · new-player retention · average casual session length · early table breaks · projected
+end-of-day paid seat-time · reward/fee ratio · high-risk seating formations.
 
 **Definition of done:** the two simulated paths share identical starting conditions and produce a
 clear, internally consistent difference *because of* defined FairPlay decisions.
