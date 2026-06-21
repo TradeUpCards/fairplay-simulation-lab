@@ -74,7 +74,7 @@
         {"table_id": "T-25", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"}
       ],
       "room_events": [
-        "P-CC (cluster C) requests open seat at T-11 where P-CA (A) and P-CB (B) are already seated. Standard: seated at T-11 (+10 min), A/B/C formation complete. FairPlay: seat held pending pit-boss review.",
+        "P-200 (cluster C) requests open seat at T-11 where P-198 (A) and P-199 (B) are already seated. Standard: seated at T-11 (+10 min), A/B/C formation complete. FairPlay: seat held pending pit-boss review.",
         "T-3: one player ended session and left. T-25: new player joined. T-11: +1 in Standard baseline."
       ],
       "room_summary": {
@@ -101,8 +101,8 @@
         {"table_id": "T-25", "seated_count": 6, "open_seats": 3, "paid_seat_time_trend": "stable"}
       ],
       "room_events": [
-        "H1/H2 (P-H1, P-H2) same-device flag surfaces in session data. FairPlay: monitor_only action triggered — no escalation.",
-        "FairPlay: pit-boss reviews held T-11 seat. Accepts containment — P-CC blocked from T-11, re-routed to T-14.",
+        "H1/H2 (P-192, P-193) same-device flag surfaces in session data. FairPlay: monitor_only action triggered — no escalation.",
+        "FairPlay: pit-boss reviews held T-11 seat. Accepts containment — P-200 blocked from T-11, re-routed to T-14.",
         "T-22: P-185 (regular) ended session and left — table now 2/6, short-handed.",
         "T-14: one player left (-1). T-18: new player joined (+1)."
       ],
