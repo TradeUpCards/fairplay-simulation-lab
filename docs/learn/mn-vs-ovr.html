@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multinomial vs One-vs-Rest — Two Ways to Sort Into 9 Types</title>
+<style>
+:root{
+  --bg:#070f09; --bg2:#0c1810; --bg3:#102013; --border:#1b3221; --border2:#244a2e;
+  --text:#e4f2e6; --muted:#8fb89a; --dim:#3a5a42;
+  --gold:#e3c46a; --gold2:#c9a84c; --gold-bg:rgba(227,196,106,.1);
+  --blue:#5b9bf5; --teal:#33e0c4; --purple:#b98cff; --red:#ef6f6f; --amber:#f5b743; --green:#46c98b;
+  --sb:264px; --pad:clamp(28px,4.5vw,80px); --r:10px;
+  --mn:#e3c46a; --ovr:#33e0c4;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;line-height:1.7;display:flex;min-height:100dvh}
+#sidebar{position:fixed;top:0;left:0;width:var(--sb);height:100dvh;overflow-y:auto;background:var(--bg2);border-right:1px solid var(--border);z-index:400;display:flex;flex-direction:column;transition:transform .24s ease;scrollbar-width:thin}
+.sb-top{padding:22px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.sb-diamond{width:28px;height:28px;flex-shrink:0;background:linear-gradient(135deg,var(--gold2),var(--gold) 60%,#f0d98a);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:flex;align-items:center;justify-content:center;font-size:11px;color:#0a140c;font-weight:900}
+.sb-name{font-size:13.5px;font-weight:800;color:var(--gold)}
+.sb-tag{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);line-height:1.5}
+nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--muted);font-size:12.5px;text-decoration:none;border-left:2px solid transparent;transition:all .14s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.03)}
+nav a.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-bg)}
+.nav-n{font-family:'Courier New',monospace;font-size:10px;color:var(--dim);min-width:18px;text-align:right}
+.sb-foot{margin-top:auto;padding:14px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--dim);line-height:1.8}
+.sb-foot a{color:var(--muted);text-decoration:none;display:block;padding:2px 0}
+.sb-foot a:hover{color:var(--gold)}
+#hbg{display:none;position:fixed;top:14px;left:14px;z-index:500;width:42px;height:42px;border-radius:9px;background:var(--bg2);border:1px solid var(--border2);color:var(--gold);font-size:18px;cursor:pointer;align-items:center;justify-content:center}
+#overlay{display:none;position:fixed;inset:0;z-index:390;background:rgba(0,0,0,.6)}#overlay.open{display:block}
+#main{margin-left:var(--sb);flex:1;min-width:0;padding:0 var(--pad) 120px;max-width:1180px}
+.hero{padding:clamp(40px,7vh,80px) 0 clamp(26px,4vh,44px);border-bottom:1px solid var(--border);margin-bottom:40px}
+.hero .kicker{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.hero .kicker::before{content:'';width:26px;height:1px;background:var(--gold2)}
+.hero h1{font-size:clamp(25px,4.2vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1.12;margin-bottom:14px}
+.hero h1 em{color:var(--gold);font-style:normal}
+.hero p{font-size:clamp(15px,1.8vw,18px);color:var(--muted);max-width:700px;line-height:1.65}
+.crosslink{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.crosslink a{font-size:12px;padding:6px 13px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);background:var(--bg3);text-decoration:none}
+.crosslink a:hover{border-color:var(--gold2);color:var(--gold)}
+.crosslink a.here{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+
+.bigidea{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:48px}
+.idea{border-radius:var(--r);padding:22px 24px;border:1px solid var(--border2)}
+.idea.mn{background:rgba(227,196,106,.06);border-color:rgba(227,196,106,.3)}
+.idea.ovr{background:rgba(51,224,196,.05);border-color:rgba(51,224,196,.3)}
+.idea h3{font-size:16px;margin-bottom:6px}
+.idea.mn h3{color:var(--mn)}.idea.ovr h3{color:var(--ovr)}
+.idea .tag{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin-bottom:12px}
+.idea p{font-size:14px;color:var(--muted);line-height:1.65}
+.idea svg{width:100%;height:auto;margin:12px 0;max-height:130px}
+
+.sec{margin-bottom:54px}
+.sec h2{font-size:clamp(18px,2.4vw,24px);font-weight:800;margin-bottom:8px;letter-spacing:-.01em}
+.sec .lede{color:var(--muted);font-size:15px;margin-bottom:22px;max-width:760px}
+
+.row{display:grid;grid-template-columns:48px 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.row-n{background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;font-weight:700;color:var(--gold2);font-size:14px}
+.row-step{grid-column:1 / -1;background:var(--bg2);padding:10px 16px;font-weight:700;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.samediff{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:2px 8px;border-radius:4px;margin-left:auto}
+.same{background:rgba(70,201,139,.12);color:var(--green)}
+.diff{background:rgba(245,183,67,.14);color:var(--amber)}
+.cell{padding:13px 16px;font-size:13.5px;color:var(--muted);line-height:1.6}
+.cell.mn{border-right:1px solid var(--border);background:rgba(227,196,106,.03)}
+.cell.ovr{background:rgba(51,224,196,.02)}
+.cell .ch{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:5px}
+.cell.mn .ch{color:var(--mn)}.cell.ovr .ch{color:var(--ovr)}
+.cell b{color:var(--text)}
+
+.verdict{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:24px 26px;margin-top:10px}
+.verdict h2{margin-bottom:14px}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+.pickbox{border-radius:8px;padding:16px 18px}
+.pickbox.mn{background:rgba(227,196,106,.06);border:1px solid rgba(227,196,106,.28)}
+.pickbox.ovr{background:rgba(51,224,196,.05);border:1px solid rgba(51,224,196,.28)}
+.pickbox h4{font-size:14px;margin-bottom:8px}
+.pickbox.mn h4{color:var(--mn)}.pickbox.ovr h4{color:var(--ovr)}
+.pickbox p{font-size:13.5px;color:var(--muted);line-height:1.6}
+.rec{margin-top:20px;border-left:3px solid var(--gold);background:var(--gold-bg);border-radius:0 8px 8px 0;padding:14px 18px;font-size:14.5px;color:var(--muted)}
+.rec b{color:var(--text)}
+
+@media(max-width:820px){.bigidea,.pick{grid-template-columns:1fr}.row{grid-template-columns:36px 1fr}.cell.ovr{grid-column:1 / -1;border-top:1px solid var(--border)}.cell.mn{border-right:none}}
+@media(max-width:1000px){#hbg{display:flex}#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#overlay.open{display:block}#main{margin-left:0;padding-top:64px}}
+</style>
+</head>
+<body>
+<button id="hbg" aria-label="Menu">☰</button>
+<div id="overlay"></div>
+<aside id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo"><div class="sb-diamond">◆</div><div class="sb-name">FairPlay IQ · Learn</div></div>
+    <div class="sb-tag">Multinomial vs<br>One-vs-Rest</div>
+  </div>
+  <nav>
+    <a href="#idea" class="nav-link"><span class="nav-n">A</span>The two ideas</a>
+    <a href="#steps" class="nav-link"><span class="nav-n">B</span>Step-by-step diff</a>
+    <a href="#verdict" class="nav-link"><span class="nav-n">C</span>Which to pick</a>
+  </nav>
+  <div class="sb-foot">
+    <span style="color:var(--muted)">Start with these first:</span>
+    <a href="binary-logistic-walkthrough.html">→ Binary logistic (yes/no)</a>
+    <a href="multinomial-walkthrough.html">→ Multinomial (9-way)</a>
+  </div>
+</aside>
+<main id="main">
+<div class="hero">
+  <div class="kicker">FairPlay IQ · Learning Guide · Builds on the two walkthroughs</div>
+  <h1>Two ways to sort players into <em>9 types</em></h1>
+  <p>Both get you the same result — every player labeled. They just take different routes. This shows where the two routes are <b>identical</b>, where they <b>differ</b>, and which to pick for our project. If you haven't read the two walkthroughs yet, start there.</p>
+  <div class="crosslink">
+    <a href="binary-logistic-walkthrough.html">Binary (yes/no)</a>
+    <a href="multinomial-walkthrough.html">Multinomial (9-way)</a>
+    <a class="here" href="mn-vs-ovr.html">You are here: MN vs OvR</a>
+  </div>
+</div>
+
+<!-- THE TWO IDEAS -->
+<section class="sec" id="idea">
+  <h2>The two ideas, in one picture each</h2>
+  <p class="lede">"Multinomial" (MN) and "One-vs-Rest" (OvR) are just two strategies for answering a 9-way question.</p>
+  <div class="bigidea">
+    <div class="idea mn">
+      <div class="tag">Strategy 1</div>
+      <h3>Multinomial — one big 9-way sorter</h3>
+      <svg viewBox="0 0 280 110" role="img" aria-label="One model with nine outputs">
+        <rect x="20" y="38" width="60" height="36" rx="8" fill="#102013" stroke="#e3c46a" stroke-width="2"/>
+        <text x="50" y="60" text-anchor="middle" font-size="9" fill="#e3c46a">1 model</text>
+        <g stroke="#3a5a42"><line x1="80" y1="56" x2="120" y2="20"/><line x1="80" y1="56" x2="120" y2="38"/><line x1="80" y1="56" x2="120" y2="56"/><line x1="80" y1="56" x2="120" y2="74"/><line x1="80" y1="56" x2="120" y2="92"/></g>
+        <g font-size="7.5" fill="#8fb89a"><text x="128" y="23">new</text><text x="128" y="41">recreational</text><text x="128" y="59">grinder</text><text x="128" y="77">aggressive</text><text x="128" y="95">… +5 more</text></g>
+      </svg>
+      <p>One model considers all 9 types at once and outputs a probability for each — they add up to 100%. The biggest one wins.</p>
+    </div>
+    <div class="idea ovr">
+      <div class="tag">Strategy 2</div>
+      <h3>One-vs-Rest — nine yes/no gates</h3>
+      <svg viewBox="0 0 280 110" role="img" aria-label="Nine separate yes/no models">
+        <g font-size="7.5">
+        <rect x="20" y="14" width="120" height="18" rx="4" fill="#102013" stroke="#33e0c4"/><text x="28" y="26" fill="#33e0c4">is it new? y/n</text>
+        <rect x="20" y="36" width="120" height="18" rx="4" fill="#102013" stroke="#33e0c4"/><text x="28" y="48" fill="#33e0c4">is it a grinder? y/n</text>
+        <rect x="20" y="58" width="120" height="18" rx="4" fill="#102013" stroke="#33e0c4"/><text x="28" y="70" fill="#33e0c4">is it aggressive? y/n</text>
+        <text x="28" y="92" fill="#3a5a42">…9 of these total</text>
+        <line x1="140" y1="45" x2="175" y2="45" stroke="#3a5a42" stroke-width="1.5"/>
+        <text x="180" y="42" fill="#8fb89a">pick the</text><text x="180" y="53" fill="#8fb89a">most confident</text>
+        </g>
+      </svg>
+      <p>Build 9 separate yes/no models — one per type. Each says how sure it is; the most confident "yes" wins.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STEP DIFF -->
+<section class="sec" id="steps">
+  <h2>Walking the same steps — same or different?</h2>
+  <p class="lede">Most steps are identical. The differences cluster around <b>binning, baselines, and the final readout</b> — and they're exactly the steps a scorecard modeler cares about.</p>
+
+  <div class="row"><div class="row-step">1 · The goal <span class="samediff diff">differs</span></div>
+    <div class="cell mn"><span class="ch">Multinomial</span>One question with 9 possible answers. <b>1 model.</b></div>
+    <div class="cell ovr"><span class="ch">One-vs-Rest</span>Nine yes/no questions ("is it type X?"). <b>9 models.</b></div></div>
+
+  <div class="row"><div class="row-step">2–4 · Meet data · explore · clean <span class="samediff same">same</span></div>
+    <div class="cell mn"><span class="ch">Multinomial</span>Identical — same table, same exploring, same fixing of blanks.</div>
+    <div class="cell ovr"><span class="ch">One-vs-Rest</span>Identical — <b>plus</b> you can rank clues with Information Value, because each yes/no target is binary.</div></div>
+
+  <div class="row"><div class="row-step">5 · Prep the clues <span class="samediff diff">differs</span></div>
+    <div class="cell mn"><span class="ch">Multinomial</span>Rescale clues. <b>WoE binning doesn't apply</b> — it needs a two-group target, and MN has nine.</div>
+    <div class="cell ovr"><span class="ch">One-vs-Rest</span>You get the <b>full WoE / fine-coarse binning</b> per model. This is the big one for scorecard fans.</div></div>
+
+  <div class="row"><div class="row-step">6 · Drop redundant clues <span class="samediff same">same</span></div>
+    <div class="cell mn"><span class="ch">Multinomial</span>VIF / varclus — identical.</div>
+    <div class="cell ovr"><span class="ch">One-vs-Rest</span>VIF / varclus — identical. (These look only at the clues, not the answer.)</div></div>
+
+  <div class="row"><div class="row-step">7 · The baseline / target setup <span class="samediff diff">differs</span></div>
+    <div class="cell mn"><span class="ch">Multinomial</span>You must <b>pick a baseline type</b>; every weight is "compared to that baseline." Extra step.</div>
+    <div class="cell ovr"><span class="ch">One-vs-Rest</span><b>No baseline needed</b> — "no" is automatically the comparison. Simpler here.</div></div>
+
+  <div class="row"><div class="row-step">8 · Split &amp; train <span class="samediff same">same</span></div>
+    <div class="cell mn"><span class="ch">Multinomial</span>One train/test split, one fit. Variable selection happens <b>once, across all 9 types at once</b> — a clue is in or out for everyone.</div>
+    <div class="cell ovr"><span class="ch">One-vs-Rest</span>Same split, but you fit (and do stepwise) <b>9 times independently</b> — keep a clue for "grinder" even if you drop it for "new."</div></div>
+
+  <div class="row"><div class="row-step">9 · Read what it learned <span class="samediff diff">differs</span></div>
+    <div class="cell mn"><span class="ch">Multinomial</span>Each clue has <b>8 weights</b> (one per type vs the baseline). More to read; reference-relative.</div>
+    <div class="cell ovr"><span class="ch">One-vs-Rest</span>Each model has <b>one clean weight per clue</b> — the simplest possible readout. Nine tidy scorecards.</div></div>
+
+  <div class="row"><div class="row-step">10 · Points scorecard <span class="samediff diff">differs</span></div>
+    <div class="cell mn"><span class="ch">Multinomial</span><b>Not available</b> — there's no single score to scale into points (9 probabilities, not one).</div>
+    <div class="cell ovr"><span class="ch">One-vs-Rest</span><b>A real points scorecard per type</b> — the classic FICO/SAS deliverable.</div></div>
+
+  <div class="row"><div class="row-step">11 · Measure quality <span class="samediff same">mostly same</span></div>
+    <div class="cell mn"><span class="ch">Multinomial</span>Accuracy + confusion matrix across 9 types.</div>
+    <div class="cell ovr"><span class="ch">One-vs-Rest</span>Same, plus <b>KS / AUC per model</b> — separation metrics you only get with a yes/no target.</div></div>
+
+  <div class="row"><div class="row-step">12 · Set the decision <span class="samediff diff">differs</span></div>
+    <div class="cell mn"><span class="ch">Multinomial</span>Argmax — whichever type has the highest probability wins. <b>No per-type knob.</b></div>
+    <div class="cell ovr"><span class="ch">One-vs-Rest</span><b>A separate cutoff per type</b> — tune each one to what its mistakes cost.</div></div>
+</section>
+
+<!-- VERDICT -->
+<section class="sec" id="verdict">
+  <div class="verdict">
+    <h2>So which should we use?</h2>
+    <p class="lede" style="margin-bottom:18px">They're almost the same model under the hood. The real question is whether you want the scorecard control surface.</p>
+    <div class="pick">
+      <div class="pickbox mn">
+        <h4>Pick Multinomial if…</h4>
+        <p>You want <b>one compact model</b>, the simplest pipeline, and you're happy tuning with regularization + a baseline choice. Fewer moving parts, faster to ship. Good when nobody needs WoE/points/KS.</p>
+      </div>
+      <div class="pickbox ovr">
+        <h4>Pick One-vs-Rest if…</h4>
+        <p>You want the <b>full scorecard craft</b> — WoE binning, Information Value, stepwise per model, points tables, KS — and a clean, defensible model <b>per type</b>. More models to maintain (nine), but every lever you're used to is there.</p>
+      </div>
+    </div>
+    <div class="rec">
+      <b>Our recommendation: One-vs-Rest.</b> Our team has deep scorecard experience, and interpretability is the whole point of this layer. OvR is the only path that keeps every lever — binning, IV, stepwise, points, KS — and the "9 separate scorecards" shape is the honest shape of a 9-type problem anyway. The only cost is maintaining nine simple models instead of one slightly-less-tweakable one. The Python tools (<code>toad</code>, <code>OptBinning</code>, <code>scorecardpy</code>) are built for exactly this loop.
+    </div>
+  </div>
+</section>
+
+</main>
+<script>
+(function(){var h=document.getElementById('hbg'),s=document.getElementById('sidebar'),o=document.getElementById('overlay');if(!h)return;h.onclick=function(){s.classList.add('open');o.classList.add('open')};o.onclick=function(){s.classList.remove('open');o.classList.remove('open')}})();
+(function(){var l=[].slice.call(document.querySelectorAll('.nav-link')),s=[].slice.call(document.querySelectorAll('.sec'));if(!l.length)return;var o=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){l.forEach(function(x){x.classList.remove('active')});var a=document.querySelector('.nav-link[href="#'+e.target.id+'"]');if(a)a.classList.add('active')}})},{rootMargin:'-15% 0px -75% 0px'});s.forEach(function(x){o.observe(x)})})();
+</script>
+</body>
+</html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How a Yes/No Model Works — Binary Logistic, Step by Step</title>
+<style>
+:root{
+  --bg:#070f09; --bg2:#0c1810; --bg3:#102013; --border:#1b3221; --border2:#244a2e;
+  --text:#e4f2e6; --muted:#8fb89a; --dim:#3a5a42;
+  --gold:#e3c46a; --gold2:#c9a84c; --gold-bg:rgba(227,196,106,.1);
+  --blue:#5b9bf5; --teal:#33e0c4; --purple:#b98cff; --pink:#ff8fb0; --red:#ef6f6f; --amber:#f5b743; --green:#46c98b;
+  --sb:264px; --pad:clamp(28px,4.5vw,80px); --r:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;line-height:1.7;display:flex;min-height:100dvh}
+#sidebar{position:fixed;top:0;left:0;width:var(--sb);height:100dvh;overflow-y:auto;background:var(--bg2);border-right:1px solid var(--border);z-index:400;display:flex;flex-direction:column;transition:transform .24s ease;scrollbar-width:thin}
+.sb-top{padding:22px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.sb-diamond{width:28px;height:28px;flex-shrink:0;background:linear-gradient(135deg,var(--gold2),var(--gold) 60%,#f0d98a);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:flex;align-items:center;justify-content:center;font-size:11px;color:#0a140c;font-weight:900}
+.sb-name{font-size:13.5px;font-weight:800;color:var(--gold)}
+.sb-tag{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);line-height:1.5}
+nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--muted);font-size:12.5px;text-decoration:none;border-left:2px solid transparent;transition:all .14s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.03)}
+nav a.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-bg)}
+.nav-n{font-family:'Courier New',monospace;font-size:10px;color:var(--dim);min-width:18px;text-align:right}
+nav a.active .nav-n{color:var(--gold2)}
+.sb-foot{margin-top:auto;padding:14px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--dim);line-height:1.8}
+.sb-foot a{color:var(--muted);text-decoration:none;display:block;padding:2px 0}
+.sb-foot a:hover{color:var(--gold)}
+#hbg{display:none;position:fixed;top:14px;left:14px;z-index:500;width:42px;height:42px;border-radius:9px;background:var(--bg2);border:1px solid var(--border2);color:var(--gold);font-size:18px;cursor:pointer;align-items:center;justify-content:center}
+#overlay{display:none;position:fixed;inset:0;z-index:390;background:rgba(0,0,0,.6)}
+#overlay.open{display:block}
+#main{margin-left:var(--sb);flex:1;min-width:0;padding:0 var(--pad) 120px;max-width:1180px}
+.hero{padding:clamp(40px,7vh,80px) 0 clamp(26px,4vh,44px);border-bottom:1px solid var(--border);margin-bottom:40px}
+.hero .kicker{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.hero .kicker::before{content:'';width:26px;height:1px;background:var(--gold2)}
+.hero h1{font-size:clamp(26px,4.4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.12;margin-bottom:14px}
+.hero h1 em{color:var(--gold);font-style:normal}
+.hero p{font-size:clamp(15px,1.8vw,18px);color:var(--muted);max-width:680px;line-height:1.65}
+.crosslink{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.crosslink a{font-size:12px;padding:6px 13px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);background:var(--bg3);text-decoration:none;transition:all .15s}
+.crosslink a:hover{border-color:var(--gold2);color:var(--gold)}
+.crosslink a.here{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+.tldr{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:22px 26px;margin-bottom:48px}
+.tldr h3{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:10px}
+.tldr p{color:var(--muted);font-size:15px}.tldr b{color:var(--text)}
+.step{margin-bottom:clamp(48px,7vh,80px);scroll-margin-top:20px}
+.step-head{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.step-badge{width:46px;height:46px;flex-shrink:0;border-radius:12px;background:linear-gradient(140deg,var(--teal),#1aa890);color:#04130f;font-size:20px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(51,224,196,.16)}
+.step-head h2{font-size:clamp(19px,2.6vw,27px);font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.step-head .of{font-family:'Courier New',monospace;font-size:11px;color:var(--dim);margin-top:3px}
+.panel{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}
+.illus{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;display:flex;align-items:center;justify-content:center;min-height:210px}
+.illus svg{width:100%;height:auto;max-height:280px;display:block}
+.explain .what,.explain .why{margin-bottom:18px}
+.lbl{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:5px;margin-bottom:8px}
+.lbl-what{background:rgba(91,155,245,.12);color:var(--blue)}
+.lbl-why{background:rgba(70,201,139,.12);color:var(--green)}
+.explain p{font-size:15px;color:var(--muted);line-height:1.72}
+.explain p b{color:var(--text)}.explain p em{color:var(--gold);font-style:normal}
+.termbox{background:var(--bg3);border-left:3px solid var(--gold2);border-radius:0 8px 8px 0;padding:11px 16px;margin-top:14px;font-size:13.5px;color:var(--muted)}
+.termbox b{color:var(--gold)}
+.analogy{background:rgba(185,140,255,.07);border:1px solid rgba(185,140,255,.2);border-radius:8px;padding:12px 16px;margin-top:14px;font-size:14px;color:var(--muted)}
+.analogy b{color:var(--purple)}
+.pro{background:rgba(245,183,67,.07);border:1px solid rgba(245,183,67,.28);border-radius:8px;padding:13px 16px;margin-top:14px;font-size:13.5px;color:var(--muted)}
+.pro .ptag{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);background:rgba(245,183,67,.12);padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.pro b{color:var(--amber)}
+.callout{border-left:3px solid var(--gold);background:var(--gold-bg);border-radius:0 8px 8px 0;padding:14px 18px;margin:8px 0 0;font-size:14.5px;color:var(--muted)}
+.callout b{color:var(--text)}
+@media(max-width:880px){.panel{grid-template-columns:1fr}.illus{order:-1}}
+@media(max-width:1000px){#hbg{display:flex}#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#overlay.open{display:block}#main{margin-left:0;padding-top:64px}}
+</style>
+</head>
+<body>
+<button id="hbg" aria-label="Menu">☰</button>
+<div id="overlay"></div>
+<aside id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo"><div class="sb-diamond">◆</div><div class="sb-name">FairPlay IQ · Learn</div></div>
+    <div class="sb-tag">Binary logistic<br>The yes/no building block</div>
+  </div>
+  <nav>
+    <a href="#s1" class="nav-link"><span class="nav-n">1</span>The goal (one yes/no)</a>
+    <a href="#s2" class="nav-link"><span class="nav-n">2</span>Meet the data</a>
+    <a href="#s3" class="nav-link"><span class="nav-n">3</span>Explore + rank clues (IV)</a>
+    <a href="#s4" class="nav-link"><span class="nav-n">4</span>Fix missing &amp; odd values</a>
+    <a href="#s5" class="nav-link"><span class="nav-n">5</span>Scale (or bin with WoE)</a>
+    <a href="#s6" class="nav-link"><span class="nav-n">6</span>Drop redundant clues</a>
+    <a href="#s7" class="nav-link"><span class="nav-n">7</span>Split study vs quiz</a>
+    <a href="#s8" class="nav-link"><span class="nav-n">8</span>Train + pick variables</a>
+    <a href="#s9" class="nav-link"><span class="nav-n">9</span>Read what it learned</a>
+    <a href="#s10" class="nav-link"><span class="nav-n">10</span>Turn it into points</a>
+    <a href="#s11" class="nav-link"><span class="nav-n">11</span>How good is it? (KS)</a>
+    <a href="#s12" class="nav-link"><span class="nav-n">12</span>Pick the cutoff</a>
+  </nav>
+  <div class="sb-foot">
+    <span style="color:var(--muted)">Related docs:</span>
+    <a href="multinomial-walkthrough.html">→ Multinomial (the 9-way version)</a>
+    <a href="mn-vs-ovr.html">→ Multinomial vs One-vs-Rest</a>
+  </div>
+</aside>
+<main id="main">
+<div class="hero">
+  <div class="kicker">FairPlay IQ · Learning Guide · No stats background needed</div>
+  <h1>How a <em>yes/no</em> model works — binary logistic</h1>
+  <p>This is the simplest kind of model: it answers one yes/no question, like <em>"Is this player a grinder?"</em> It's also the building block of the one-vs-rest approach — run this nine times (one per type) and you've classified everyone. And it's where the classic credit-scorecard tools live.</p>
+  <div class="crosslink">
+    <a class="here" href="binary-logistic-walkthrough.html">You are here: Binary (yes/no)</a>
+    <a href="multinomial-walkthrough.html">Multinomial (9-way)</a>
+    <a href="mn-vs-ovr.html">MN vs One-vs-Rest</a>
+  </div>
+</div>
+<div class="tldr">
+  <h3>The 30-second version</h3>
+  <p>A <b>binary logistic regression</b> answers one yes/no question by weighing clues and outputting a <b>probability</b> ("82% chance this is a grinder"). You then pick a cutoff to turn that into a yes or no. It's the same machinery as the multinomial model but with only two answers — which makes it simpler <em>and</em> unlocks the scorecard toolkit (binning, Information Value, points, KS). Watch for the <span style="color:var(--amber)">amber "scorecard" notes</span> — those are the power-user steps a credit modeler would recognize.</p>
+</div>
+
+<!-- 1 -->
+<section class="step" id="s1">
+  <div class="step-head"><div class="step-badge">1</div><div><h2>The goal: answer one yes/no question</h2><div class="of">step 1 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="A player going into a model and out comes a yes or no">
+        <circle cx="40" cy="100" r="12" fill="#5b9bf5"/><text x="40" y="130" font-size="8" fill="#8fb89a" text-anchor="middle">a player</text>
+        <path d="M70 100 L120 100" stroke="#3a5a42" stroke-width="2" marker-end="url(#a)"/>
+        <rect x="120" y="72" width="80" height="56" rx="10" fill="#102013" stroke="#244a2e" stroke-width="2"/>
+        <text x="160" y="96" text-anchor="middle" font-size="9" fill="#e3c46a">"is this a</text><text x="160" y="110" text-anchor="middle" font-size="9" fill="#e3c46a">grinder?"</text>
+        <path d="M200 90 L250 70" stroke="#46c98b" stroke-width="2"/><text x="270" y="72" font-size="11" fill="#46c98b" font-weight="700">YES</text>
+        <path d="M200 110 L250 130" stroke="#ef6f6f" stroke-width="2"/><text x="270" y="134" font-size="11" fill="#ef6f6f" font-weight="700">NO</text>
+        <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="#3a5a42"/></marker></defs>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>We pick <b>one type</b> and ask a single yes/no question about every player: <em>"Is this player a grinder — yes or no?"</em> Everyone who isn't a grinder is simply "no." Two possible answers, that's it.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>Yes/no is the simplest possible model, so it's the best place to learn the ideas. It's also the <b>building block of one-vs-rest</b>: ask this 9 times (grinder? new? aggressive? …) and every player gets sorted.</p></div>
+      <div class="termbox"><b>Binary</b> = two outcomes (yes/no). <b>Logistic regression</b> = a method that outputs the <b>probability</b> of "yes," which you then round to a decision.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="step" id="s2">
+  <div class="step-head"><div class="step-badge">2</div><div><h2>Meet the data</h2><div class="of">step 2 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="A table where the answer column is now yes or no">
+        <g font-size="8" fill="#8fb89a">
+        <rect x="20" y="24" width="280" height="22" fill="#102013" stroke="#244a2e"/>
+        <text x="36" y="39" fill="#e3c46a">player</text><text x="110" y="39" fill="#e3c46a">vpip</text><text x="160" y="39" fill="#e3c46a">hands</text><text x="245" y="39" fill="#e3c46a">grinder?</text>
+        <rect x="20" y="46" width="280" height="22" fill="#0c1810" stroke="#1b3221"/><text x="30" y="61">P-164</text><text x="110" y="61">0.19</text><text x="160" y="61">285k</text><text x="252" y="61" fill="#46c98b">YES</text>
+        <rect x="20" y="68" width="280" height="22" fill="#0c1810" stroke="#1b3221"/><text x="30" y="83">P-104</text><text x="110" y="83">0.62</text><text x="160" y="83">14</text><text x="255" y="83" fill="#ef6f6f">NO</text>
+        <rect x="20" y="90" width="280" height="22" fill="#0c1810" stroke="#1b3221"/><text x="30" y="105">P-176</text><text x="110" y="105">0.58</text><text x="160" y="105">9.2k</text><text x="255" y="105" fill="#ef6f6f">NO</text>
+        <rect x="228" y="24" width="62" height="88" fill="none" stroke="#46c98b" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <text x="160" y="140" fill="#e3c46a" font-size="9">the answer is now just YES or NO</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Same table of players and clues as before, but the answer column is collapsed to <b>YES</b> (is a grinder) or <b>NO</b> (everything else).</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>This two-value answer is what unlocks the simplest math and the whole scorecard toolkit in the steps ahead.</p></div>
+      <div class="termbox"><b>Target</b> = the yes/no column we predict. In scorecard language the two groups are often called <b>"good" and "bad"</b> — here, "grinder" vs "not."</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="step" id="s3">
+  <div class="step-head"><div class="step-badge">3</div><div><h2>Explore — and <em>rank</em> — the clues</h2><div class="of">step 3 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="Clues ranked by how well they separate yes from no">
+        <g font-size="9" fill="#8fb89a">
+        <text x="160" y="18" text-anchor="middle" fill="#e3c46a">which clues separate grinders best?</text>
+        <text x="20" y="46">lifetime_hands</text><rect x="120" y="36" width="160" height="13" fill="#46c98b"/><text x="286" y="46" fill="#46c98b" font-size="8">IV 0.9</text>
+        <text x="20" y="72">avg_session</text><rect x="120" y="62" width="120" height="13" fill="#46c98b"/><text x="246" y="72" font-size="8">IV 0.6</text>
+        <text x="20" y="98">vpip</text><rect x="120" y="88" width="70" height="13" fill="#f5b743"/><text x="196" y="98" font-size="8">IV 0.3</text>
+        <text x="20" y="124">promo_redempt</text><rect x="120" y="114" width="20" height="13" fill="#ef6f6f"/><text x="146" y="124" fill="#ef6f6f" font-size="8">IV 0.02 weak</text>
+        <text x="160" y="160" text-anchor="middle" font-size="8.5">longer bar = stronger clue for this question</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>We look at each clue's spread <em>and</em> — because there are only two groups — we can measure how well each clue <b>separates</b> the yes group from the no group, and rank them.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>Up front you can see which clues actually carry signal (long, active players → grinder) and which are dead weight, before spending effort on them.</p></div>
+      <div class="pro"><span class="ptag">Scorecard tool</span><p><b>Information Value (IV)</b> is the classic number for this — it scores each clue's power to separate good from bad. Rough rule of thumb: under 0.02 = useless, 0.1–0.3 = decent, over 0.5 = strong. This only exists because the target is binary.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="step" id="s4">
+  <div class="step-head"><div class="step-badge">4</div><div><h2>Fix missing &amp; odd values</h2><div class="of">step 4 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="Filling a blank cell with a sensible value">
+        <g font-size="9" fill="#8fb89a">
+        <rect x="60" y="50" width="60" height="30" fill="#0c1810" stroke="#1b3221"/><text x="90" y="69" text-anchor="middle">112k</text>
+        <rect x="120" y="50" width="60" height="30" fill="rgba(239,111,111,.12)" stroke="#ef6f6f" stroke-dasharray="3 2"/><text x="150" y="69" text-anchor="middle" fill="#ef6f6f">blank</text>
+        <rect x="180" y="50" width="60" height="30" fill="#0c1810" stroke="#1b3221"/><text x="210" y="69" text-anchor="middle">98k</text>
+        <text x="150" y="104" text-anchor="middle" fill="#e3c46a" font-size="16">↓</text>
+        <rect x="120" y="114" width="60" height="30" fill="rgba(70,201,139,.12)" stroke="#46c98b"/><text x="150" y="133" text-anchor="middle" fill="#46c98b">105k</text>
+        <text x="150" y="168" text-anchor="middle" font-size="8.5">a blank can also be its own "missing" bin</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Blanks get filled with a sensible value, and impossible values get corrected — same as any model.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>The math can't run on blanks, and one bad value skews everything.</p></div>
+      <div class="pro"><span class="ptag">Scorecard tool</span><p>In scorecards you often don't just fill a blank — you give <b>"missing" its own bin</b>. Sometimes the fact that a value is missing is itself a useful clue, and binning lets you keep that signal instead of hiding it.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="step" id="s5">
+  <div class="step-head"><div class="step-badge">5</div><div><h2>Scale the clues — or bin them with WoE</h2><div class="of">step 5 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 210" role="img" aria-label="A clue split into bins, each bin given a weight of evidence value">
+        <g font-size="8" fill="#8fb89a" text-anchor="middle">
+        <text x="160" y="16" fill="#e3c46a" font-size="9">lifetime_hands → bins → WoE</text>
+        <rect x="20" y="40" width="64" height="40" fill="#0c1810" stroke="#1b3221"/><text x="52" y="58">0–1k</text><text x="52" y="72" fill="#ef6f6f">WoE −1.2</text>
+        <rect x="84" y="40" width="64" height="40" fill="#0c1810" stroke="#1b3221"/><text x="116" y="58">1k–50k</text><text x="116" y="72" fill="#f5b743">WoE −0.3</text>
+        <rect x="148" y="40" width="64" height="40" fill="#0c1810" stroke="#1b3221"/><text x="180" y="58">50k–150k</text><text x="180" y="72" fill="#46c98b">WoE +0.8</text>
+        <rect x="212" y="40" width="64" height="40" fill="#0c1810" stroke="#1b3221"/><text x="244" y="58">150k+</text><text x="244" y="72" fill="#46c98b">WoE +1.6</text>
+        <path d="M148 95 Q200 80 244 95" fill="none" stroke="#46c98b" stroke-width="1.5"/>
+        <text x="160" y="125" font-size="9">each bin gets a number saying</text>
+        <text x="160" y="140" font-size="9">"how grinder-ish is this range?"</text>
+        <text x="160" y="170" font-size="8" fill="#3a5a42">smooth, monotonic bins = a clean, defensible clue</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>The plain path: rescale clues like before. The <b>scorecard path</b>: chop each clue into <em>bins</em> (e.g. hand-count ranges) and replace each bin with a number that says how strongly that range points to "yes."</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>Binning tames outliers, handles bends in the relationship, and makes the final model read like a human-friendly table of ranges instead of raw math.</p></div>
+      <div class="pro"><span class="ptag">Scorecard tool</span><p><b>Weight of Evidence (WoE)</b> is the number each bin gets — positive = "this range leans yes," negative = "leans no." You usually tidy bins so the trend only goes one direction (<b>monotonic</b>): more hands → more grinder-ish, never zig-zagging. "Coarse vs fine binning" is just how many bins you cut.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="step" id="s6">
+  <div class="step-head"><div class="step-badge">6</div><div><h2>Drop redundant clues</h2><div class="of">step 6 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 180" role="img" aria-label="Keep one of two overlapping clues">
+        <g font-size="9" text-anchor="middle">
+        <rect x="60" y="40" width="200" height="20" rx="3" fill="#102013" stroke="#46c98b"/><text x="160" y="54" fill="#46c98b" font-size="9">aggression_factor ✓ keep</text>
+        <rect x="60" y="74" width="200" height="20" rx="3" fill="#0c1810" stroke="#3a5a42" stroke-dasharray="3 2"/><text x="160" y="88" fill="#3a5a42" font-size="9">pfr (twin) ✗ drop</text>
+        <text x="160" y="124" fill="#8fb89a" font-size="9">overlapping clues split the credit</text>
+        <text x="160" y="140" fill="#8fb89a" font-size="9">and make signs hard to read</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Just like in any model: if two clues overlap heavily, keep one. Correlation, VIF, and varclus find the twins.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>Overlapping clues split the credit between them, which can flip a clue's sign and make the model hard to explain — a cardinal sin in a scorecard you have to defend.</p></div>
+      <div class="termbox"><b>VIF / varclus</b> = tools that flag overlapping clues so you can keep one representative from each group. Identical to the multinomial step — this one transfers over unchanged.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="step" id="s7">
+  <div class="step-head"><div class="step-badge">7</div><div><h2>Split: study set vs quiz set</h2><div class="of">step 7 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 180" role="img" aria-label="Split players into study and quiz piles">
+        <g font-size="9" fill="#8fb89a" text-anchor="middle">
+        <rect x="40" y="46" width="100" height="64" rx="6" fill="#0c1810" stroke="#46c98b"/><text x="90" y="74" fill="#46c98b" font-weight="700">STUDY</text><text x="90" y="92" font-size="8">~80%</text>
+        <rect x="190" y="50" width="84" height="58" rx="6" fill="#0c1810" stroke="#f5b743"/><text x="232" y="76" fill="#f5b743" font-weight="700">QUIZ</text><text x="232" y="92" font-size="8">~20% hidden</text>
+        <text x="160" y="148">learn on STUDY, grade on QUIZ</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Teach on ~80% of players, hide ~20% for an honest final grade. Same golden rule as the multinomial model.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>A model that's only graded on data it studied will look great and fail in real life. The hidden set keeps you honest.</p></div>
+      <div class="pro"><span class="ptag">Scorecard tool</span><p>Credit modelers often add a third slice: an <b>out-of-time</b> sample (players from a later period) to check the model still holds up as the world changes. Optional, but it's why scorecards age gracefully.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="step" id="s8">
+  <div class="step-head"><div class="step-badge">8</div><div><h2>Train — and add/remove clues</h2><div class="of">step 8 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 190" role="img" aria-label="Stepwise adding and removing variables">
+        <g font-size="9" fill="#8fb89a">
+        <rect x="40" y="40" width="110" height="24" rx="5" fill="#0c1810" stroke="#46c98b"/><text x="95" y="56" text-anchor="middle" fill="#46c98b">+ add lifetime_hands</text>
+        <rect x="40" y="70" width="110" height="24" rx="5" fill="#0c1810" stroke="#46c98b"/><text x="95" y="86" text-anchor="middle" fill="#46c98b">+ add avg_session</text>
+        <rect x="40" y="100" width="110" height="24" rx="5" fill="#0c1810" stroke="#ef6f6f"/><text x="95" y="116" text-anchor="middle" fill="#ef6f6f">− remove vpip (weak)</text>
+        <path d="M160 76 L210 76" stroke="#3a5a42" stroke-width="2" marker-end="url(#b)"/>
+        <rect x="210" y="58" width="80" height="40" rx="6" fill="#102013" stroke="#e3c46a"/><text x="250" y="82" text-anchor="middle" fill="#e3c46a">final model</text>
+        <text x="160" y="160" font-size="8.5">keep clues that earn their place; drop the rest</text>
+        <defs><marker id="b" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="#3a5a42"/></marker></defs>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>We fit the model on the study set, then add and remove clues one at a time, keeping only the ones that genuinely improve it. The model learns <b>one weight per clue</b> (just yes-vs-no — no per-type weights to juggle).</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>A lean model with only clues that pull their weight is more accurate on new players and far easier to explain and defend.</p></div>
+      <div class="pro"><span class="ptag">Scorecard tool</span><p><b>Stepwise selection</b> is the formal version of add/remove, using statistical significance (p-values) to decide. Because there's only one yes/no target, you get one clean p-value per clue — exactly the control surface a SAS/FICO modeler is used to.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="step" id="s9">
+  <div class="step-head"><div class="step-badge">9</div><div><h2>Read what it learned</h2><div class="of">step 9 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 190" role="img" aria-label="One weight per clue, toward or away from yes">
+        <g font-size="8.5" fill="#8fb89a">
+        <text x="160" y="16" text-anchor="middle" fill="#e3c46a">what makes a "grinder"?</text>
+        <line x1="160" y1="28" x2="160" y2="150" stroke="#3a5a42" stroke-dasharray="2 2"/>
+        <text x="30" y="46">lifetime_hands</text><rect x="160" y="40" width="100" height="14" fill="#46c98b"/><text x="266" y="51" fill="#46c98b">+ yes</text>
+        <text x="30" y="72">avg_session</text><rect x="160" y="66" width="72" height="14" fill="#46c98b"/>
+        <text x="64" y="98">vpip</text><rect x="96" y="92" width="64" height="14" fill="#ef6f6f"/><text x="40" y="103" fill="#ef6f6f">− no</text>
+        <text x="160" y="176" text-anchor="middle">one number per clue — simple to read</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Each clue gets <b>one weight</b>: positive pushes toward "yes," negative toward "no." High <em>lifetime_hands</em> and long <em>avg_session</em> push toward grinder; high <em>vpip</em> pushes away.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>Because there are only two answers, the readout is even cleaner than the multinomial model — one number per clue, no baseline to keep straight. Easy reason codes.</p></div>
+      <div class="analogy"><b>Think of it like</b> a points checklist: each clue adds or subtracts from a running "grinder score," and the total decides the call.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="step" id="s10">
+  <div class="step-head"><div class="step-badge">10</div><div><h2>Turn it into a points scorecard</h2><div class="of">step 10 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="A points scorecard table adding up to a score">
+        <g font-size="9" fill="#8fb89a">
+        <rect x="40" y="34" width="240" height="22" fill="#102013" stroke="#244a2e"/><text x="52" y="49" fill="#e3c46a">range</text><text x="232" y="49" fill="#e3c46a">points</text>
+        <rect x="40" y="56" width="240" height="20" fill="#0c1810" stroke="#1b3221"/><text x="52" y="70">hands 150k+</text><text x="244" y="70" fill="#46c98b">+40</text>
+        <rect x="40" y="76" width="240" height="20" fill="#0c1810" stroke="#1b3221"/><text x="52" y="90">session &gt; 3h</text><text x="244" y="90" fill="#46c98b">+25</text>
+        <rect x="40" y="96" width="240" height="20" fill="#0c1810" stroke="#1b3221"/><text x="52" y="110">vpip &gt; 0.4</text><text x="248" y="110" fill="#ef6f6f">−15</text>
+        <rect x="40" y="120" width="240" height="24" fill="#0c1810" stroke="#e3c46a"/><text x="52" y="136" fill="#e3c46a">TOTAL</text><text x="240" y="136" fill="#e3c46a" font-weight="700">= 50</text>
+        <text x="160" y="170" text-anchor="middle" font-size="8.5">add the points; higher = more grinder-ish</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>The weights can be rescaled into round <b>points</b> so the model becomes a literal scorecard: this range = +40, that range = −15, add them up, and a higher total means a stronger "yes."</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>A points table is something anyone — even non-technical reviewers — can read, audit, and trust. It's why credit scores look the way they do.</p></div>
+      <div class="pro"><span class="ptag">Scorecard tool</span><p>This is the <b>"points to double the odds"</b> scaling from FICO/SAS scorecards. It only exists for a yes/no model — a 9-way model has no single score to scale, which is one reason a scorecard modeler often prefers one-vs-rest.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section class="step" id="s11">
+  <div class="step-head"><div class="step-badge">11</div><div><h2>How good is it? (separation &amp; KS)</h2><div class="of">step 11 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="Two score distributions, grinders and non-grinders, pulling apart">
+        <g font-size="8.5" fill="#8fb89a">
+        <path d="M30 150 Q70 60 110 150" fill="rgba(239,111,111,.18)" stroke="#ef6f6f"/><text x="64" y="140" fill="#ef6f6f">not grinder</text>
+        <path d="M150 150 Q210 50 270 150" fill="rgba(70,201,139,.18)" stroke="#46c98b"/><text x="220" y="140" fill="#46c98b">grinder</text>
+        <line x1="20" y1="150" x2="300" y2="150" stroke="#3a5a42"/>
+        <text x="160" y="172" text-anchor="middle">low score → high score</text>
+        <text x="160" y="190" text-anchor="middle" fill="#e3c46a">the further apart the humps, the better</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>We score the hidden quiz players and check whether grinders pile up at high scores and non-grinders at low scores. The more the two groups separate, the better the model.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>For a yes/no model, <em>separation</em> matters more than raw accuracy — especially when one answer is rarer than the other.</p></div>
+      <div class="pro"><span class="ptag">Scorecard tool</span><p>The <b>KS statistic</b> measures exactly this — the biggest gap between the two groups' score curves. Higher KS = cleaner separation. <b>AUC / ROC</b> is the close cousin. These are the headline metrics on every credit-scorecard report.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="step" id="s12">
+  <div class="step-head"><div class="step-badge">12</div><div><h2>Pick the cutoff (yes vs no)</h2><div class="of">step 12 of 12</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="A threshold line on the score deciding yes or no">
+        <g font-size="8.5" fill="#8fb89a">
+        <line x1="20" y1="120" x2="300" y2="120" stroke="#3a5a42" stroke-width="2"/>
+        <line x1="190" y1="40" x2="190" y2="140" stroke="#e3c46a" stroke-width="2" stroke-dasharray="4 3"/>
+        <text x="190" y="34" text-anchor="middle" fill="#e3c46a">cutoff</text>
+        <circle cx="60" cy="120" r="6" fill="#ef6f6f"/><circle cx="90" cy="120" r="6" fill="#ef6f6f"/><circle cx="130" cy="120" r="6" fill="#ef6f6f"/>
+        <circle cx="225" cy="120" r="6" fill="#46c98b"/><circle cx="255" cy="120" r="6" fill="#46c98b"/><circle cx="285" cy="120" r="6" fill="#46c98b"/>
+        <text x="110" y="160" text-anchor="middle" fill="#ef6f6f">call these NO</text>
+        <text x="250" y="160" text-anchor="middle" fill="#46c98b">call these YES</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>The model outputs a probability; you pick a <b>cutoff</b> (say 50%) above which you call it "yes." A 2×2 confusion table shows the trade-off: move the line and you catch more grinders but also mislabel more non-grinders.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>The right cutoff depends on what a mistake costs. In a yes/no model you control this directly — a flexibility you lose in the all-at-once multinomial model.</p></div>
+      <div class="callout"><b>You're done.</b> You have a yes/no model, optionally a points scorecard, separation/KS to prove it works, and a cutoff you control. Do this nine times — once per type — and you've built <b>one-vs-rest</b>. &nbsp;See <a href="mn-vs-ovr.html" style="color:var(--gold)">Multinomial vs One-vs-Rest →</a></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<script>
+(function(){var h=document.getElementById('hbg'),s=document.getElementById('sidebar'),o=document.getElementById('overlay');if(!h)return;h.onclick=function(){s.classList.add('open');o.classList.add('open')};o.onclick=function(){s.classList.remove('open');o.classList.remove('open')}})();
+(function(){var l=[].slice.call(document.querySelectorAll('.nav-link')),s=[].slice.call(document.querySelectorAll('.step'));if(!l.length)return;var o=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){l.forEach(function(x){x.classList.remove('active')});var a=document.querySelector('.nav-link[href="#'+e.target.id+'"]');if(a)a.classList.add('active')}})},{rootMargin:'-12% 0px -75% 0px'});s.forEach(function(x){o.observe(x)})})();
+</script>
+</body>
+</html>
