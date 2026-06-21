@@ -51,7 +51,7 @@
     },
     {
       "cluster_id": "CL-002",
-      "label": "cluster_candidate_monitor",
+      "label": "cluster_candidate_neutral",
       "member_ids": ["P-201", "P-202"],
       "aliases": {},
       "co_seating": {
@@ -69,7 +69,7 @@
         }
       ],
       "soft_play_signal": true,
-      "soft_play_signal_note": "soft_play_delta values are -0.35 and -0.30 for CL-002 members. Escalation threshold for integrity review is soft_play_delta ≤ -0.60 (CL-001 members range -0.75 to -0.82). CL-002 is above the threshold — signal is present but sub-threshold. P3 should score this as monitor, not integrity review.",
+      "soft_play_signal_note": "soft_play_delta values are -0.35 and -0.30 for CL-002 members. Escalation threshold for integrity review is soft_play_delta ≤ -0.60 (CL-001 members range -0.75 to -0.82). CL-002 is above the threshold — signal is present but sub-threshold. P3 should score this as neutral, not integrity review.",
       "soft_play_escalation_threshold": -0.60,
       "outsider_pressure_signal": false,
       "high_casual_exit_impact": false,
