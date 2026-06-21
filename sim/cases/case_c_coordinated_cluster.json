@@ -1,0 +1,84 @@
+{
+  "schema_version": "0.1.0",
+  "case_id": "CASE-C",
+  "eval_scenario": "C",
+  "mandatory_demo_case": true,
+  "prd_ref": "PRD §6 Coordinated Cluster Case / §7 Eval C",
+  "title": "Coordinated cluster converging on a single table",
+  "demo_role": "integrity",
+  "risk_lens": "integrity_risk",
+  "is_false_positive_trap": false,
+  "labels_ref": "data/seeded_case_labels.json#CASE-C",
+  "generated": "static-fixture-day2",
+  "fixture_note": "Operator-facing demo-case scenario. Structure + entity references only — NO computed scores or classifications (P3 produces those). convergent_signals / soft_play_delta values are simulated fields (seeded ground truth), restated here as the demo narrative target — never real detection.",
+
+  "entities": {
+    "account_A": "P-198",
+    "account_B": "P-199",
+    "account_C": "P-200",
+    "cluster_id": "CL-001",
+    "device_link_group": "DG-001",
+    "cluster_table": { "seeded_label": "T-11", "roster_table_id": "T-11", "stakes": "2/5" }
+  },
+
+  "narrative": "Accounts A (P-198) and B (P-199) already sit at T-11 and are device-linked via DG-001. Account C (P-200) requests the open third seat, which would complete an A/B/C co-seating formation. Multiple WEAK signals converge: device link (A/B), timing correlation (C→A 0.88, C→B 0.85), repeated co-seating (14 of 18 recent tables), within-cluster soft-play (negative soft_play_delta), and outsider-pressure driving casuals out. No single signal proves collusion — convergence is the signal. The safe action is to HOLD the third seat for pit-boss review before the formation completes. Recommend review — never accuse, never auto-enforce.",
+
+  "demo_spine": {
+    "lobby": "Player lobby is unaffected and shows nothing integrity-related (player-facing separation is load-bearing).",
+    "pit_boss": "Operator console surfaces integrity score, convergent signals, counter-evidence, AI summary, and the hold recommendation. Operator actions: accept containment / override / escalate to manual review.",
+    "simulator": "Standard: C completes the formation, cluster plays as a unit, casual-exit impact high. FairPlay: C held → formation blocked → pit boss accepts containment → C re-routed.",
+    "eval": "Eval C checks the cluster ranks high on integrity convergence, the third seat is held, ALL counter-evidence is surfaced, and NO auto-ban/enforcement is recommended."
+  },
+
+  "divergence_points": [
+    {
+      "decision_id": "cluster-third-seat",
+      "decision_list_ref": "sim/counterfactual/decision_list.json#cluster-third-seat",
+      "hour": 2,
+      "standard": "Account C (P-200) seated at T-11 → A/B/C co-seating formation complete",
+      "fairplay": "Third seat held for pit-boss review → formation incomplete"
+    },
+    {
+      "decision_id": "cluster-pit-boss-accept",
+      "decision_list_ref": "sim/counterfactual/decision_list.json#cluster-pit-boss-accept",
+      "hour": 3,
+      "standard": "No review pending; formation already entrenched",
+      "fairplay": "Pit boss accepts containment → C re-routed to a separate table → formation blocked"
+    }
+  ],
+
+  "expected_outcome": {
+    "standard": "Cluster formation completes; coordinated unit drives casual exits; high_risk_seating_formations stays elevated.",
+    "fairplay": "Formation blocked at review; high_risk_seating_formations reduced; casual retention preserved.",
+    "metrics_ref": {
+      "standard": "data/room_metrics_standard.json (high_risk_seating_formations 1→3; early_table_breaks 1→8)",
+      "fairplay": "data/room_metrics_fairplay.json (high_risk_seating_formations stays 1; early_table_breaks 1→3)"
+    }
+  },
+
+  "convergent_signals": {
+    "note": "Simulated ground-truth seeds from seeded_case_labels.json. P3 computes the real integrity packet.",
+    "device_link_A_B": "DG-001",
+    "timing_correlation_C_to_A": 0.88,
+    "timing_correlation_C_to_B": 0.85,
+    "co_seating_rate": "14_of_18_recent_tables",
+    "soft_play_delta": { "P-198": -0.78, "P-199": -0.82, "P-200": -0.75 },
+    "outsider_pressure_pattern": true
+  },
+
+  "counter_evidence": [
+    "No single signal alone is proof of collusion.",
+    "Device link could be a shared workstation.",
+    "Timing correlation could reflect same time zone / schedule.",
+    "Co-seating could reflect a shared preference for the same stake level.",
+    "Recommended action is HUMAN REVIEW — not enforcement."
+  ],
+
+  "lens_separation_guard": "This case is INTEGRITY_RISK. It is the true-positive integrity case and must rank ABOVE the false-positive traps (CASE-D regular overlap, CASE-E shared device). It must use uncertainty language and never state collusion as fact.",
+
+  "id_reconciliation": [
+    "Canonical cluster IDs are P-198/P-199/P-200 (agree across players.json + seeded_case_labels.json).",
+    "table_roster.json T-11 seated_player_ids currently show P-CA/P-CB (Bram placeholder namespace) instead of P-198/P-199 — Bram must reconcile the roster seating to the canonical P-19x IDs. Flagged to Tate.",
+    "My decision_list.json was patched to P-CA/P-CB/P-CC from the roster; once the namespace is canonicalized to P-19x, decision_list triggers should be re-patched to match. Tracked in cleo-handoff."
+  ]
+}

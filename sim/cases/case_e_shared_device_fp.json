@@ -1,0 +1,76 @@
+{
+  "schema_version": "0.1.0",
+  "case_id": "CASE-E",
+  "eval_scenario": "E",
+  "mandatory_demo_case": true,
+  "prd_ref": "PRD §6 Shared-Device False Positive / §7 Eval E",
+  "title": "Shared-device household — false-positive trap",
+  "demo_role": "false_positive",
+  "risk_lens": "integrity_risk",
+  "is_false_positive_trap": true,
+  "labels_ref": "data/seeded_case_labels.json#CASE-E",
+  "generated": "static-fixture-day2",
+  "fixture_note": "Operator-facing demo-case scenario. Structure + entity references only — NO computed scores or classifications (P3 produces those). This is a deliberate FALSE-POSITIVE TRAP: a shared device exists, but every corroborating collusion signal is absent. Correct outcome is MONITOR ONLY — no suppression, no enforcement.",
+
+  "entities": {
+    "H1": "P-192",
+    "H2": "P-193",
+    "device_group": "DG-002",
+    "household_id": "H-01"
+  },
+
+  "narrative": "Household members H1 (P-192) and H2 (P-193) share a device (DG-002) and a household (H-01) — a single weak signal that, in isolation, can look like the cluster case. But the corroborating signals that make CASE-C suspicious are all ABSENT here: co-seating is rare (2 of 22, 0.091), session-time preferences differ (H1 evening / H2 morning-afternoon), playing styles differ (VPIP 0.27 vs 0.35; PFR 0.20 vs 0.15), session lengths differ by ~35 min, soft_play_delta is 0.00 for both, there's no correlated profitability and no casual-exit increase. A system that escalates this is over-triggering on the device link alone. Correct action: MONITOR ONLY.",
+
+  "demo_spine": {
+    "lobby": "Player lobby unaffected — nothing integrity-related shown player-side.",
+    "pit_boss": "Operator console shows the same-device flag PLUS the full set of exculpatory signals as counter-evidence. AI summary must NOT state collusion and must recommend monitor, not escalate.",
+    "simulator": "Standard: H1/H2 play normally, no intervention needed. FairPlay: H1/H2 monitored only — the system correctly AVOIDS a false positive.",
+    "eval": "Eval E checks monitor-only (no suppression/enforcement), exculpatory signals surfaced as counter-evidence, and that the AI does not state collusion as fact."
+  },
+
+  "divergence_points": [
+    {
+      "decision_id": "household-monitor",
+      "decision_list_ref": "sim/counterfactual/decision_list.json#household-monitor",
+      "hour": 3,
+      "standard": "No action on the H1/H2 same-device flag (none surfaced)",
+      "fairplay": "Monitor only — same device but no co-seating/soft-play, so do not escalate"
+    }
+  ],
+
+  "expected_outcome": {
+    "standard": "H1/H2 play normally; no suppression needed; no metric impact (they are not a health or integrity problem).",
+    "fairplay": "H1/H2 monitored only; correctly NOT counted as a high-risk formation — this is why fairplay high_risk_seating_formations stays at 1 (the contained cluster), not inflated by this household.",
+    "metrics_ref": {
+      "note": "This case is a NON-event in the metrics by design — its correctness shows up as the ABSENCE of an extra high-risk formation.",
+      "fairplay.hour_8.high_risk_seating_formations": 1,
+      "assertion": "data/room_metrics_fairplay.json hour 8 high_risk_seating_formations == 1 (the contained cluster only) — the monitored household is NOT counted as a formation."
+    }
+  },
+
+  "exculpatory_signals": {
+    "note": "Simulated ground-truth seeds from seeded_case_labels.json. P3 computes the real packet; these are the demo target.",
+    "co_seating_rate": "2_of_22 (0.091)",
+    "session_time_preference": { "P-192": "evening", "P-193": "morning_afternoon" },
+    "vpip": { "P-192": 0.27, "P-193": 0.35 },
+    "pfr": { "P-192": 0.20, "P-193": 0.15 },
+    "avg_session_length_min": { "P-192": 145, "P-193": 110 },
+    "soft_play_delta": { "P-192": 0.00, "P-193": 0.00 },
+    "correlated_profitability": false,
+    "casual_exit_increase": false
+  },
+
+  "counter_evidence": [
+    "Same device is expected for a household — not evidence of coordinated play.",
+    "Low co-seating (0.091) directly contradicts a coordination hypothesis.",
+    "Different session times, styles, and lengths argue against shared strategy.",
+    "Zero soft-play delta — no value being passed between the accounts.",
+    "Recommended action is MONITOR — not suppression, not enforcement."
+  ],
+
+  "lens_separation_guard": "This case is a FALSE_POSITIVE trap that probes the INTEGRITY lens. It MUST rank BELOW the true integrity case (CASE-C) and must NOT be escalated. Conflating this household with CASE-C's coordinated cluster — treating a shared device as proof of collusion — is a failing eval. The contrast pair CASE-C (escalate to review) vs CASE-E (monitor only) is the core demonstration that the system separates real integrity risk from innocent linkage.",
+
+  "id_reconciliation": [
+    "All IDs (P-192, P-193, DG-002, H-01) match across players.json, relationships.json, and seeded_case_labels.json. No conflicts."
+  ]
+}
