@@ -240,6 +240,24 @@ Clarify whether "risk formations prevented" is computed (from pit-boss action di
 
 ---
 
+## D10 — Taxonomy validation: cluster-first vs assume archetypes 🟡  ⬜ OPEN
+**Affects:** P3 (classifier target), P2 (archetype definitions). **Owner:** P3, with P2.
+
+We assumed 9 archetypes (D7) from common sense. The sound way to confirm a taxonomy you're unsure of is **unsupervised
+clustering** (K-means to find the count, GMM for soft membership / BIC) → name the clusters → then train the supervised
+classifier on them. But our data is **synthetic** — generated *from* the archetype rules — so clustering it mostly
+**rediscovers** those rules (circular).
+
+**Recommendation:** Treat clustering as **demonstration, not requirement, on synthetic data** — it validates the *workflow*
+on data where we already know the answer, and is a useful rigor artifact ("we didn't just assume 9"). On **real player data
+it is essential discovery** and would run before any classifier is trained. The classifier path for the demo stays
+multinomial / one-vs-rest on the defined labels. Walkthrough + runnable notebook:
+`docs/learn/clustering-walkthrough.html` and `docs/learn/clustering-notebook.ipynb`.
+
+**Decision:** _______________________
+
+---
+
 ## Sign-off
 
 | Role | Name | Ratified |

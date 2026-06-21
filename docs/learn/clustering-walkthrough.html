@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finding the Groups — Clustering, Step by Step</title>
+<style>
+:root{
+  --bg:#070f09; --bg2:#0c1810; --bg3:#102013; --border:#1b3221; --border2:#244a2e;
+  --text:#e4f2e6; --muted:#8fb89a; --dim:#3a5a42;
+  --gold:#e3c46a; --gold2:#c9a84c; --gold-bg:rgba(227,196,106,.1);
+  --blue:#5b9bf5; --teal:#33e0c4; --purple:#b98cff; --purple2:#9a6df0; --pink:#ff8fb0; --red:#ef6f6f; --amber:#f5b743; --green:#46c98b;
+  --sb:264px; --pad:clamp(28px,4.5vw,80px); --r:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;line-height:1.7;display:flex;min-height:100dvh}
+#sidebar{position:fixed;top:0;left:0;width:var(--sb);height:100dvh;overflow-y:auto;background:var(--bg2);border-right:1px solid var(--border);z-index:400;display:flex;flex-direction:column;transition:transform .24s ease;scrollbar-width:thin}
+.sb-top{padding:22px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.sb-diamond{width:28px;height:28px;flex-shrink:0;background:linear-gradient(135deg,var(--purple2),var(--purple) 60%,#d4b8ff);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:flex;align-items:center;justify-content:center;font-size:11px;color:#160a26;font-weight:900}
+.sb-name{font-size:13.5px;font-weight:800;color:var(--purple)}
+.sb-tag{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);line-height:1.5}
+nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--muted);font-size:12.5px;text-decoration:none;border-left:2px solid transparent;transition:all .14s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.03)}
+nav a.active{color:var(--purple);border-left-color:var(--purple);background:rgba(185,140,255,.08)}
+.nav-n{font-family:'Courier New',monospace;font-size:10px;color:var(--dim);min-width:18px;text-align:right}
+nav a.active .nav-n{color:var(--purple2)}
+.sb-foot{margin-top:auto;padding:14px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--dim);line-height:1.8}
+.sb-foot a{color:var(--muted);text-decoration:none;display:block;padding:2px 0}
+.sb-foot a:hover{color:var(--purple)}
+#hbg{display:none;position:fixed;top:14px;left:14px;z-index:500;width:42px;height:42px;border-radius:9px;background:var(--bg2);border:1px solid var(--border2);color:var(--purple);font-size:18px;cursor:pointer;align-items:center;justify-content:center}
+#overlay{display:none;position:fixed;inset:0;z-index:390;background:rgba(0,0,0,.6)}#overlay.open{display:block}
+#main{margin-left:var(--sb);flex:1;min-width:0;padding:0 var(--pad) 120px;max-width:1180px}
+.hero{padding:clamp(40px,7vh,80px) 0 clamp(26px,4vh,40px);border-bottom:1px solid var(--border);margin-bottom:34px}
+.hero .kicker{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--purple2);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.hero .kicker::before{content:'';width:26px;height:1px;background:var(--purple2)}
+.hero h1{font-size:clamp(26px,4.4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.12;margin-bottom:14px}
+.hero h1 em{color:var(--purple);font-style:normal}
+.hero p{font-size:clamp(15px,1.8vw,18px);color:var(--muted);max-width:700px;line-height:1.65}
+.crosslink{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.crosslink a{font-size:12px;padding:6px 13px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);background:var(--bg3);text-decoration:none}
+.crosslink a:hover{border-color:var(--purple2);color:var(--purple)}
+.crosslink a.here{border-color:var(--purple);color:var(--purple);background:rgba(185,140,255,.08)}
+
+.frame{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:24px 26px;margin-bottom:46px}
+.frame h3{font-size:17px;color:var(--purple);margin-bottom:8px}
+.frame p{color:var(--muted);font-size:15px;margin-bottom:14px}
+.frame p b{color:var(--text)}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+.vsbox{border-radius:8px;padding:15px 18px}
+.vsbox.syn{background:rgba(245,183,67,.06);border:1px solid rgba(245,183,67,.28)}
+.vsbox.real{background:rgba(70,201,139,.06);border:1px solid rgba(70,201,139,.28)}
+.vsbox h4{font-size:13px;margin-bottom:8px}
+.vsbox.syn h4{color:var(--amber)}.vsbox.real h4{color:var(--green)}
+.vsbox p{font-size:13.5px;color:var(--muted);margin:0;line-height:1.6}
+.vsbox b{color:var(--text)}
+
+.step{margin-bottom:clamp(48px,7vh,80px);scroll-margin-top:20px}
+.step-head{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.step-badge{width:46px;height:46px;flex-shrink:0;border-radius:12px;background:linear-gradient(140deg,var(--purple2),var(--purple));color:#160a26;font-size:20px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(185,140,255,.18)}
+.step-head h2{font-size:clamp(19px,2.6vw,27px);font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.step-head .of{font-family:'Courier New',monospace;font-size:11px;color:var(--dim);margin-top:3px}
+.panel{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}
+.illus{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;display:flex;align-items:center;justify-content:center;min-height:210px}
+.illus svg{width:100%;height:auto;max-height:280px;display:block}
+.explain .what,.explain .why{margin-bottom:18px}
+.lbl{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:5px;margin-bottom:8px}
+.lbl-what{background:rgba(91,155,245,.12);color:var(--blue)}
+.lbl-why{background:rgba(70,201,139,.12);color:var(--green)}
+.explain p{font-size:15px;color:var(--muted);line-height:1.72}
+.explain p b{color:var(--text)}.explain p em{color:var(--purple);font-style:normal}
+.termbox{background:var(--bg3);border-left:3px solid var(--purple2);border-radius:0 8px 8px 0;padding:11px 16px;margin-top:14px;font-size:13.5px;color:var(--muted)}
+.termbox b{color:var(--purple)}
+.analogy{background:rgba(185,140,255,.07);border:1px solid rgba(185,140,255,.2);border-radius:8px;padding:12px 16px;margin-top:14px;font-size:14px;color:var(--muted)}
+.analogy b{color:var(--purple)}
+.callout{border-left:3px solid var(--purple);background:rgba(185,140,255,.08);border-radius:0 8px 8px 0;padding:14px 18px;margin:8px 0 0;font-size:14.5px;color:var(--muted)}
+.callout b{color:var(--text)}
+@media(max-width:880px){.panel{grid-template-columns:1fr}.illus{order:-1}.vs{grid-template-columns:1fr}}
+@media(max-width:1000px){#hbg{display:flex}#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#overlay.open{display:block}#main{margin-left:0;padding-top:64px}}
+</style>
+</head>
+<body>
+<button id="hbg" aria-label="Menu">☰</button>
+<div id="overlay"></div>
+<aside id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo"><div class="sb-diamond">◆</div><div class="sb-name">FairPlay IQ · Learn</div></div>
+    <div class="sb-tag">Clustering<br>Finding the groups</div>
+  </div>
+  <nav>
+    <a href="#why" class="nav-link"><span class="nav-n">★</span>Why &amp; when it matters</a>
+    <a href="#s1" class="nav-link"><span class="nav-n">1</span>The question</a>
+    <a href="#s2" class="nav-link"><span class="nav-n">2</span>Meet the data (no answers)</a>
+    <a href="#s3" class="nav-link"><span class="nav-n">3</span>Put clues on one scale</a>
+    <a href="#s4" class="nav-link"><span class="nav-n">4</span>How many groups?</a>
+    <a href="#s5" class="nav-link"><span class="nav-n">5</span>K-means (hard groups)</a>
+    <a href="#s6" class="nav-link"><span class="nav-n">6</span>GMM (soft groups)</a>
+    <a href="#s7" class="nav-link"><span class="nav-n">7</span>Name the clusters</a>
+    <a href="#s8" class="nav-link"><span class="nav-n">8</span>Compare to our hunches</a>
+    <a href="#s9" class="nav-link"><span class="nav-n">9</span>Lock the taxonomy</a>
+    <a href="#s10" class="nav-link"><span class="nav-n">10</span>Hand off to the classifier</a>
+  </nav>
+  <div class="sb-foot">
+    <span style="color:var(--muted)">Next, once groups are named:</span>
+    <a href="multinomial-walkthrough.html">→ Multinomial classifier</a>
+    <a href="binary-logistic-walkthrough.html">→ Binary / One-vs-Rest</a>
+  </div>
+</aside>
+<main id="main">
+<div class="hero">
+  <div class="kicker">FairPlay IQ · Learning Guide · Unsupervised "discovery" step</div>
+  <h1>Finding the groups: <em>do our archetypes really exist?</em></h1>
+  <p>We have hunches about player types — but what if the data disagrees? Clustering lets the data <b>vote on its own groupings</b>, with no answers given. This is how you check (or discover) a taxonomy before you commit to it.</p>
+  <div class="crosslink">
+    <a class="here" href="clustering-walkthrough.html">You are here: Clustering</a>
+    <a href="multinomial-walkthrough.html">Multinomial</a>
+    <a href="binary-logistic-walkthrough.html">Binary / OvR</a>
+    <a href="mn-vs-ovr.html">MN vs OvR</a>
+  </div>
+</div>
+
+<!-- WHY / WHEN FRAMING -->
+<section class="step" id="why">
+  <div class="frame">
+    <h3>★ Why we do this — and the one big caveat</h3>
+    <p>Classification (the other guides) <b>assigns</b> players to types you've already decided on. Clustering does the opposite: it has <b>no labels</b> and finds natural groups by similarity. You'd use it when you <em>think</em> you know the segments but want the data to confirm or refine them — exactly our situation.</p>
+    <p><b>But here's the honest caveat for our project:</b> our player data is <em>synthetic</em> — it was generated <em>from</em> the archetype rules. So clustering it will mostly rediscover the rules we put in. That's not a failure; it just changes what clustering is <em>for</em> here:</p>
+    <div class="vs">
+      <div class="vsbox syn">
+        <h4>On our synthetic data (now)</h4>
+        <p>Clustering mostly <b>confirms the workflow</b> — it'll recover our 9 groups because we built them in. Value: it <b>demonstrates the method</b> on data where we know the right answer (like the teaching notebooks recovering known rules). <b>Not required</b> for the demo; classification is the deliverable.</p>
+      </div>
+      <div class="vsbox real">
+        <h4>On real player data (later)</h4>
+        <p>Clustering is <b>essential</b>. With real players you genuinely don't know the segments — the data might merge two of your guesses, split one in three, or surface a type you never imagined. Here clustering <b>earns its keep</b> as real discovery, before any classifier is trained.</p>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:16px"><b>So:</b> read this as the method we'll lean on hard with real data, demonstrated now on synthetic data where we can check our work. The 10 steps below are the same in both worlds — only the stakes change.</div>
+  </div>
+</section>
+
+<!-- 1 -->
+<section class="step" id="s1">
+  <div class="step-head"><div class="step-badge">1</div><div><h2>The question: what groups are even in here?</h2><div class="of">step 1 of 10</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="A scatter of unlabeled dots with question marks">
+        <g>
+        <circle cx="70" cy="60" r="7" fill="#8fb89a"/><circle cx="85" cy="80" r="7" fill="#8fb89a"/><circle cx="60" cy="90" r="7" fill="#8fb89a"/>
+        <circle cx="200" cy="55" r="7" fill="#8fb89a"/><circle cx="220" cy="75" r="7" fill="#8fb89a"/><circle cx="235" cy="58" r="7" fill="#8fb89a"/>
+        <circle cx="140" cy="140" r="7" fill="#8fb89a"/><circle cx="160" cy="155" r="7" fill="#8fb89a"/><circle cx="125" cy="160" r="7" fill="#8fb89a"/>
+        <text x="160" y="30" text-anchor="middle" font-size="22" fill="#b98cff">?</text>
+        <text x="160" y="195" text-anchor="middle" font-size="9" fill="#8fb89a">no labels — just players in clue-space</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>We start with players placed by their stats but <b>no type labels at all</b>. The question isn't "is this a grinder?" — it's "<em>are there natural clumps in here, and how many?</em>"</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>This is the only honest way to ask whether your assumed archetypes are real. If you only ever classify into pre-decided types, you can never discover you were wrong about them.</p></div>
+      <div class="termbox"><b>Unsupervised</b> = learning with <b>no answer key</b>. The model groups by similarity alone. (Classification is <b>supervised</b> — it's given the answers.)</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="step" id="s2">
+  <div class="step-head"><div class="step-badge">2</div><div><h2>Meet the data — note the missing column</h2><div class="of">step 2 of 10</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 190" role="img" aria-label="Table with the answer column greyed out">
+        <g font-size="8" fill="#8fb89a">
+        <rect x="20" y="24" width="280" height="22" fill="#102013" stroke="#244a2e"/>
+        <text x="36" y="39" fill="#e3c46a">player</text><text x="110" y="39" fill="#e3c46a">vpip</text><text x="165" y="39" fill="#e3c46a">hands</text><text x="245" y="39" fill="#3a5a42">type?</text>
+        <rect x="20" y="46" width="280" height="22" fill="#0c1810" stroke="#1b3221"/><text x="30" y="61">P-164</text><text x="110" y="61">0.19</text><text x="165" y="61">285k</text>
+        <rect x="20" y="68" width="280" height="22" fill="#0c1810" stroke="#1b3221"/><text x="30" y="83">P-104</text><text x="110" y="83">0.62</text><text x="165" y="83">14</text>
+        <rect x="228" y="24" width="62" height="66" fill="rgba(58,90,66,.25)" stroke="#3a5a42" stroke-dasharray="3 2"/>
+        <text x="259" y="61" text-anchor="middle" fill="#3a5a42" font-size="14">✕</text>
+        <text x="160" y="120" text-anchor="middle" fill="#e3c46a" font-size="9">we deliberately hide the answer column</text>
+        <text x="160" y="135" text-anchor="middle" fill="#8fb89a" font-size="8.5">clustering must work without it</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Same clue columns as the classifier (vpip, hands, sessions…), but we <b>ignore the type column entirely</b> — clustering never sees it.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>The whole point is to see what the clues alone suggest. (On synthetic data we secretly know the answer — we'll use it in Step 8 only to <em>grade</em> the clusters, never to build them.)</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="step" id="s3">
+  <div class="step-head"><div class="step-badge">3</div><div><h2>Put the clues on the same scale</h2><div class="of">step 3 of 10</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 180" role="img" aria-label="Rescaling clues so distance is fair">
+        <g font-size="8" fill="#8fb89a">
+        <text x="80" y="20" text-anchor="middle">raw — hands dwarfs vpip</text>
+        <text x="20" y="44">vpip</text><rect x="56" y="37" width="14" height="9" fill="#5b9bf5"/>
+        <text x="20" y="62">hands</text><rect x="56" y="55" width="220" height="9" fill="#f5b743"/>
+        <text x="160" y="92" text-anchor="middle" fill="#b98cff" font-size="13">↓ rescale ↓</text>
+        <text x="80" y="116" text-anchor="middle">scaled — fair distance</text>
+        <text x="20" y="140">vpip</text><rect x="56" y="133" width="120" height="9" fill="#5b9bf5"/>
+        <text x="20" y="158">hands</text><rect x="56" y="151" width="128" height="9" fill="#f5b743"/>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Rescale every clue to a comparable range — same as in the classifier, but here it's <em>even more critical</em>.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>Clustering groups by <b>distance</b>. If <em>lifetime_hands</em> is in the hundred-thousands and <em>vpip</em> is around 0.3, distance is dominated entirely by hands and every other clue is ignored. Scaling makes "close" mean genuinely similar.</p></div>
+      <div class="termbox"><b>Distance</b> = how far apart two players sit across all clues. Clustering puts players who are "close" in the same group — so the yardstick has to be fair.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="step" id="s4">
+  <div class="step-head"><div class="step-badge">4</div><div><h2>How many groups? (the big question)</h2><div class="of">step 4 of 10</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="An elbow curve suggesting a good number of clusters">
+        <g font-size="8" fill="#8fb89a">
+        <line x1="40" y1="30" x2="40" y2="160" stroke="#3a5a42"/><line x1="40" y1="160" x2="300" y2="160" stroke="#3a5a42"/>
+        <polyline points="50,50 80,80 110,105 140,120 170,128 200,133 230,136 260,138" fill="none" stroke="#b98cff" stroke-width="2.5"/>
+        <circle cx="140" cy="120" r="7" fill="none" stroke="#e3c46a" stroke-width="2"/>
+        <text x="150" y="108" fill="#e3c46a">the "elbow"</text>
+        <text x="170" y="180" text-anchor="middle">number of groups (K) →</text>
+        <text x="30" y="95" transform="rotate(-90 30 95)" text-anchor="middle">messiness ↓</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>We try several values for the number of groups (K = 2, 3, 4… up to ~15) and measure how tidy the groups are at each. We look for the <b>"elbow"</b> — where adding more groups stops helping much.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>This directly answers <em>"is it really 9 archetypes?"</em> Maybe the data clearly prefers 6, or 11. You let the evidence pick the number instead of assuming it.</p></div>
+      <div class="termbox"><b>Elbow plot</b> and <b>silhouette score</b> are two ways to judge "what's a good K." For GMM (next steps) there's an even cleaner score called <b>BIC</b>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="step" id="s5">
+  <div class="step-head"><div class="step-badge">5</div><div><h2>K-means — sort into hard groups</h2><div class="of">step 5 of 10</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="Dots colored into three clusters with centers">
+        <g>
+        <circle cx="70" cy="60" r="7" fill="#5b9bf5"/><circle cx="85" cy="80" r="7" fill="#5b9bf5"/><circle cx="60" cy="90" r="7" fill="#5b9bf5"/><path d="M72 77 l-6 -6 m6 6 l6 -6 m-6 6 l-6 6 m6 -6 l6 6" stroke="#fff" stroke-width="2"/>
+        <circle cx="200" cy="55" r="7" fill="#33e0c4"/><circle cx="220" cy="75" r="7" fill="#33e0c4"/><circle cx="235" cy="58" r="7" fill="#33e0c4"/>
+        <circle cx="140" cy="140" r="7" fill="#ff8fb0"/><circle cx="160" cy="155" r="7" fill="#ff8fb0"/><circle cx="125" cy="160" r="7" fill="#ff8fb0"/>
+        <text x="160" y="190" text-anchor="middle" font-size="9" fill="#8fb89a">each player joins its nearest center; ✕ marks a center</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>K-means drops K "centers" into the data and assigns each player to the nearest one, then nudges the centers and repeats until they settle. Every player ends up in <b>exactly one</b> group.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>It's the fast, robust first read — especially good on a small dataset like ours. It gives you concrete groups to inspect right away.</p></div>
+      <div class="analogy"><b>Think of it like</b> three teachers standing in a field; every student walks to the nearest teacher, the teachers shuffle to the middle of their crowd, and everyone re-picks — until nobody moves.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="step" id="s6">
+  <div class="step-head"><div class="step-badge">6</div><div><h2>GMM — allow soft, fuzzy membership</h2><div class="of">step 6 of 10</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="Overlapping soft clusters as ellipses with a borderline point">
+        <g>
+        <ellipse cx="95" cy="80" rx="55" ry="38" fill="rgba(91,155,245,.14)" stroke="#5b9bf5"/>
+        <ellipse cx="205" cy="95" rx="55" ry="40" fill="rgba(51,224,196,.12)" stroke="#33e0c4"/>
+        <circle cx="150" cy="88" r="8" fill="#b98cff"/>
+        <text x="150" y="120" text-anchor="middle" font-size="8" fill="#b98cff">60% / 40%</text>
+        <text x="160" y="185" text-anchor="middle" font-size="9" fill="#8fb89a">a borderline player can be partly in two groups</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>A <b>Gaussian Mixture Model</b> is the "soft" cousin of K-means: instead of forcing each player into one group, it gives a <b>probability</b> of each group — "60% grinder, 40% regular." It also allows stretched, different-sized groups.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>Players are genuinely <em>in-between</em> sometimes; soft membership captures that honestly. GMM's <b>BIC</b> score is also a principled way to pick the number of groups. (Trade-off: it wants more data than K-means, so on our small set treat it as a second opinion.)</p></div>
+      <div class="termbox"><b>GMM</b> = soft clustering with probabilities + flexible shapes. <b>BIC</b> = a score that rewards fit but penalizes too many groups — pick the K with the best BIC.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="step" id="s7">
+  <div class="step-head"><div class="step-badge">7</div><div><h2>Name the clusters</h2><div class="of">step 7 of 10</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="A cluster's typical stats leading to a human name">
+        <g font-size="9" fill="#8fb89a">
+        <rect x="40" y="34" width="240" height="22" fill="#102013" stroke="#244a2e"/><text x="160" y="49" text-anchor="middle" fill="#e3c46a">Cluster 2 — typical player</text>
+        <rect x="40" y="56" width="240" height="20" fill="#0c1810" stroke="#1b3221"/><text x="52" y="70">lifetime_hands</text><text x="244" y="70" fill="#46c98b">very high</text>
+        <rect x="40" y="76" width="240" height="20" fill="#0c1810" stroke="#1b3221"/><text x="52" y="90">avg_session</text><text x="252" y="90" fill="#46c98b">long</text>
+        <rect x="40" y="96" width="240" height="20" fill="#0c1810" stroke="#1b3221"/><text x="52" y="110">vpip</text><text x="256" y="110" fill="#f5b743">low</text>
+        <text x="160" y="142" text-anchor="middle" fill="#b98cff" font-size="13">→ "grinder"</text>
+        <text x="160" y="175" text-anchor="middle" font-size="8.5">read the profile, give it a human name</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Each cluster is just "Cluster 2" until we look inside it. We read its <b>typical stats</b> (high hands, long sessions, low vpip → patient and serious) and give it a human name like <em>grinder</em>.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>Raw cluster numbers mean nothing to a business. Naming turns a math output into a real archetype people can reason about and act on.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="step" id="s8">
+  <div class="step-head"><div class="step-badge">8</div><div><h2>Compare to our hunches</h2><div class="of">step 8 of 10</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 200" role="img" aria-label="Discovered clusters lined up against hypothesized archetypes">
+        <g font-size="8" fill="#8fb89a">
+        <text x="80" y="20" text-anchor="middle" fill="#b98cff">discovered</text><text x="240" y="20" text-anchor="middle" fill="#e3c46a">our hunches</text>
+        <rect x="40" y="34" width="80" height="20" rx="4" fill="#0c1810" stroke="#b98cff"/><text x="80" y="48" text-anchor="middle">cluster 2</text>
+        <rect x="200" y="34" width="80" height="20" rx="4" fill="#0c1810" stroke="#e3c46a"/><text x="240" y="48" text-anchor="middle">grinder</text>
+        <line x1="120" y1="44" x2="200" y2="44" stroke="#46c98b" stroke-width="2"/>
+        <rect x="40" y="64" width="80" height="20" rx="4" fill="#0c1810" stroke="#b98cff"/><text x="80" y="78" text-anchor="middle">cluster 5a/5b</text>
+        <rect x="200" y="64" width="80" height="20" rx="4" fill="#0c1810" stroke="#e3c46a"/><text x="240" y="78" text-anchor="middle">regular</text>
+        <line x1="120" y1="74" x2="200" y2="74" stroke="#f5b743" stroke-width="2" stroke-dasharray="3 2"/>
+        <text x="160" y="100" text-anchor="middle" fill="#f5b743" font-size="7.5">data split "regular" into two!</text>
+        <text x="160" y="180" text-anchor="middle">matches? merges? splits? surprises?</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Now we lay the discovered clusters next to our assumed archetypes. Do they line up? Did the data <b>merge</b> two of our guesses into one, <b>split</b> one into two, or surface something we didn't expect?</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>This is the entire payoff. On real data, a split or merge here means your taxonomy was wrong — and you just found out <em>before</em> betting the whole system on it. <em>(On our synthetic data, expect a clean match — that's the workflow confirming itself.)</em></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="step" id="s9">
+  <div class="step-head"><div class="step-badge">9</div><div><h2>Lock the taxonomy</h2><div class="of">step 9 of 10</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 180" role="img" aria-label="A final agreed list of archetypes">
+        <g font-size="9" fill="#8fb89a">
+        <rect x="90" y="26" width="140" height="22" rx="5" fill="#0c1810" stroke="#46c98b"/><text x="160" y="41" text-anchor="middle" fill="#46c98b">new</text>
+        <rect x="90" y="52" width="140" height="22" rx="5" fill="#0c1810" stroke="#46c98b"/><text x="160" y="67" text-anchor="middle" fill="#46c98b">recreational</text>
+        <rect x="90" y="78" width="140" height="22" rx="5" fill="#0c1810" stroke="#46c98b"/><text x="160" y="93" text-anchor="middle" fill="#46c98b">grinder</text>
+        <text x="160" y="120" text-anchor="middle" fill="#3a5a42">… the agreed, evidence-backed list</text>
+        <text x="160" y="150" text-anchor="middle" fill="#e3c46a" font-size="9">🔒 frozen — these become the labels</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>We settle on the final archetype list — keeping, merging, or splitting based on what the clusters showed — and freeze it.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>Everything downstream (the classifier, the scoring, the UI) hard-codes these names. You want them <em>evidence-backed and stable</em> before that, not changing under you mid-build.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="step" id="s10">
+  <div class="step-head"><div class="step-badge">10</div><div><h2>Hand off to the classifier</h2><div class="of">step 10 of 10</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 180" role="img" aria-label="Named clusters becoming labels handed to a classifier">
+        <g font-size="9" fill="#8fb89a">
+        <rect x="20" y="60" width="110" height="50" rx="8" fill="#0c1810" stroke="#b98cff"/><text x="75" y="82" text-anchor="middle" fill="#b98cff">clustering</text><text x="75" y="98" text-anchor="middle" font-size="7.5">named groups</text>
+        <path d="M130 85 L190 85" stroke="#3a5a42" stroke-width="2" marker-end="url(#a)"/>
+        <text x="160" y="76" text-anchor="middle" font-size="7.5">labels</text>
+        <rect x="190" y="60" width="110" height="50" rx="8" fill="#0c1810" stroke="#e3c46a"/><text x="245" y="82" text-anchor="middle" fill="#e3c46a">classifier</text><text x="245" y="98" text-anchor="middle" font-size="7.5">MN / one-vs-rest</text>
+        <text x="160" y="150" text-anchor="middle" font-size="8.5">discovery feeds the supervised model</text>
+        <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="#3a5a42"/></marker></defs>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>The named clusters become the <b>labels</b> we train a supervised classifier on. Clustering discovered <em>and validated</em> the types; the classifier (multinomial or one-vs-rest) then assigns every future player to one.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>This is the full, honest pipeline: <em>discover the groups → name them → classify into them.</em> You never assumed the answer — you earned it, then operationalized it.</p></div>
+      <div class="callout"><b>You're done.</b> You now know whether your archetypes are real, what they are, and you've handed clean labels to the classifier. &nbsp;Next: the <a href="multinomial-walkthrough.html" style="color:var(--purple)">multinomial</a> or <a href="binary-logistic-walkthrough.html" style="color:var(--purple)">one-vs-rest</a> classifier turns those labels into a model.</div>
+    </div>
+  </div>
+</section>
+
+</main>
+<script>
+(function(){var h=document.getElementById('hbg'),s=document.getElementById('sidebar'),o=document.getElementById('overlay');if(!h)return;h.onclick=function(){s.classList.add('open');o.classList.add('open')};o.onclick=function(){s.classList.remove('open');o.classList.remove('open')}})();
+(function(){var l=[].slice.call(document.querySelectorAll('.nav-link')),s=[].slice.call(document.querySelectorAll('.step'));if(!l.length)return;var o=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){l.forEach(function(x){x.classList.remove('active')});var a=document.querySelector('.nav-link[href="#'+e.target.id+'"]');if(a)a.classList.add('active')}})},{rootMargin:'-12% 0px -75% 0px'});s.forEach(function(x){o.observe(x)})})();
+</script>
+</body>
+</html>
