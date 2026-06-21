@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FairPlay IQ — Scoring Architecture</title>
+<style>
+:root{
+  --bg:#060e08; --bg2:#0a1409; --bg3:#0e1c0f;
+  --border:#182d1c; --border2:#1f3c25;
+  --text:#d8ecda; --muted:#5a8060; --dim:#2b4231;
+  --gold:#c9a84c; --gold2:#a8882e; --gold-bg:rgba(201,168,76,.08); --gold-border:rgba(201,168,76,.22);
+  --blue:#4f8ef7; --purple:#b07eff; --teal:#2ee8cc; --red:#e05c4a; --amber:#f5a623; --green-hi:#3fcc6a;
+  --sb:280px; --pad:clamp(28px,4.5vw,88px); --r:7px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:15px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;line-height:1.74;display:flex;min-height:100dvh}
+
+/* SIDEBAR */
+#sidebar{position:fixed;top:0;left:0;width:var(--sb);height:100dvh;overflow-y:auto;overflow-x:hidden;background:var(--bg2);border-right:1px solid var(--border);z-index:400;display:flex;flex-direction:column;transition:transform .24s cubic-bezier(.4,0,.2,1);scrollbar-width:none}
+#sidebar::-webkit-scrollbar{display:none}
+.sb-top{padding:24px 22px 18px;border-bottom:1px solid var(--border);background:linear-gradient(160deg,#0d1e10 0%,#0a1409 100%)}
+.sb-logo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sb-diamond{width:32px;height:32px;flex-shrink:0;background:linear-gradient(135deg,var(--gold2),var(--gold) 50%,#e8c96a);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#070f09}
+.sb-wordmark{font-size:15px;font-weight:800;color:var(--gold);letter-spacing:.01em}
+.sb-tagline{font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:var(--dim);line-height:1.5}
+.sb-status{display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:3px 9px;background:rgba(63,204,106,.07);border:1px solid rgba(63,204,106,.18);border-radius:20px;font-size:9.5px;color:var(--green-hi);letter-spacing:.06em}
+.sb-status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green-hi);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sb-group{padding:14px 0 2px}
+.sb-glabel{padding:0 22px 4px;font-size:8.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+nav a{display:flex;align-items:center;gap:10px;padding:7px 22px;color:var(--muted);font-size:12.5px;text-decoration:none;border-left:2px solid transparent;transition:all .14s ease}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.03)}
+nav a.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-bg)}
+nav a.active .nav-n{color:var(--gold2)}
+.nav-n{font-family:'Courier New',monospace;font-size:9.5px;color:var(--dim);min-width:20px;flex-shrink:0}
+.sb-foot{margin-top:auto;padding:14px 22px;border-top:1px solid var(--border);font-size:9.5px;color:var(--dim);line-height:1.9}
+
+/* HAMBURGER */
+#hbg{display:none;position:fixed;top:14px;left:14px;z-index:500;width:42px;height:42px;border-radius:8px;background:var(--bg2);border:1px solid var(--border2);color:var(--gold);font-size:18px;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+#overlay{display:none;position:fixed;inset:0;z-index:390;background:rgba(0,0,0,.65);backdrop-filter:blur(2px)}
+#overlay.open{display:block}
+
+/* MAIN */
+#main{margin-left:var(--sb);flex:1;min-width:0;padding:0 var(--pad) 140px}
+.pg-hd{padding:clamp(40px,6vh,72px) 0 clamp(32px,4vh,52px);border-bottom:1px solid var(--border);margin-bottom:clamp(44px,6vh,80px);position:relative;overflow:hidden}
+.pg-hd::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 0% 0%,rgba(201,168,76,.06),transparent 70%);pointer-events:none}
+.pg-eyebrow{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold2);margin-bottom:14px}
+.pg-eyebrow::before{content:'';display:block;width:24px;height:1px;background:var(--gold2)}
+.pg-h1{font-size:clamp(24px,4vw,42px);font-weight:800;color:var(--text);letter-spacing:-.025em;line-height:1.15;margin-bottom:12px}
+.pg-h1 em{color:var(--gold);font-style:normal}
+.pg-sub{color:var(--muted);font-size:clamp(13px,1.6vw,15px);max-width:680px;line-height:1.7;margin-bottom:20px}
+.pg-pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font-size:10.5px;padding:4px 12px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);background:var(--bg3)}
+.pill b{color:var(--text)}
+
+/* SECTION */
+.sec{margin-bottom:clamp(64px,9vh,110px);scroll-margin-top:24px}
+.sec-hd{display:flex;align-items:flex-start;gap:20px;margin-bottom:clamp(20px,3vh,34px);padding-bottom:16px;border-bottom:1px solid var(--border)}
+.sec-num{font-family:'Courier New',monospace;font-size:11px;color:var(--gold2);letter-spacing:.08em;flex-shrink:0;margin-top:6px}
+.sec-hd h2{font-size:clamp(17px,2.4vw,24px);font-weight:800;color:var(--text);letter-spacing:-.018em;line-height:1.2}
+.sec-rt{font-size:9.5px;color:var(--dim);font-family:'Courier New',monospace;margin-left:auto;flex-shrink:0;margin-top:7px}
+
+/* PROSE */
+.p{color:#7aa87e;font-size:14px;margin-bottom:13px;line-height:1.8;max-width:840px}
+.p b{color:var(--text)}.p em{color:var(--gold);font-style:normal}
+.sp{height:16px}
+
+/* CALLOUTS */
+.callout{border-left:3px solid var(--gold);background:var(--gold-bg);border-radius:0 var(--r) var(--r) 0;padding:13px 18px;margin:18px 0;font-size:13.5px;color:#7aa87e;max-width:840px}
+.callout b{color:var(--text)}
+.callout.warn{border-left-color:var(--red);background:rgba(224,92,74,.06)}.callout.warn b{color:#f08070}
+.callout.info{border-left-color:var(--blue);background:rgba(79,142,247,.07)}.callout.info b{color:#90b8fa}
+.callout.purple{border-left-color:var(--purple);background:rgba(176,126,255,.06)}.callout.purple b{color:#c9a0ff}
+
+/* BADGES */
+.bdg{display:inline-flex;align-items:center;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 9px;border-radius:3px;vertical-align:middle}
+.bdg-ml{background:#0e1f3a;color:var(--blue);border:1px solid rgba(79,142,247,.3)}
+.bdg-det{background:#2a1c06;color:var(--amber);border:1px solid rgba(245,166,35,.3)}
+.bdg-llm{background:#1e0e40;color:var(--purple);border:1px solid rgba(176,126,255,.3)}
+.bdg-graph{background:#051f1d;color:var(--teal);border:1px solid rgba(46,232,204,.3)}
+.bdg-rule{background:#101c1a;color:#8ca8a0;border:1px solid rgba(140,168,160,.3)}
+.bdg-gold{background:#1e1500;color:var(--gold);border:1px solid var(--gold-border)}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto;margin:18px 0;border:1px solid var(--border);border-radius:var(--r)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead{position:sticky;top:0}
+th{text-align:left;padding:10px 14px;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;background:var(--bg3);border-bottom:1px solid var(--border2)}
+td{padding:11px 14px;border-bottom:1px solid rgba(24,45,28,.7);vertical-align:top;color:#7aa87e}
+td b{color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(201,168,76,.025)}
+code{font-family:'Courier New',monospace;font-size:11.5px;color:var(--gold);background:rgba(201,168,76,.06);border:1px solid var(--gold-border);padding:1px 5px;border-radius:3px}
+td code{font-size:11px}
+
+/* SCORE CARD */
+.score-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px;max-width:900px;transition:border-color .18s}
+.score-card:hover{border-color:var(--border2)}
+.sc-hd{display:flex;align-items:center;gap:12px;padding:15px 20px;border-bottom:1px solid var(--border);background:var(--bg3);flex-wrap:wrap}
+.sc-n{font-family:'Courier New',monospace;font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0}
+.sc-title{font-size:15px;font-weight:700;color:var(--text)}
+.sc-formula{font-family:Georgia,serif;font-style:italic;font-size:13px;color:var(--muted);margin-left:auto;flex-shrink:0}
+.sc-body{padding:18px 20px}
+.cc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 14px}
+.cc-box{border:1px solid var(--border);border-radius:6px;padding:13px 15px;background:var(--bg3)}
+.cc-champ{border-left:3px solid var(--green-hi)}
+.cc-chall{border-left:3px solid var(--blue)}
+.cc-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.cc-champ .cc-lbl{color:var(--green-hi)}
+.cc-chall .cc-lbl{color:var(--blue)}
+.cc-box .what{font-size:13px;color:var(--text);font-weight:600;margin-bottom:4px}
+.cc-box .why{font-size:12px;color:var(--muted);line-height:1.6}
+.sc-meta{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12.5px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.sc-meta dt{color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.08em;padding-top:2px}
+.sc-meta dd{color:#7aa87e}
+.sc-meta dd b{color:var(--text)}
+.sc-meta code{font-size:10.5px}
+.dep-none{color:var(--green-hi)}
+
+/* DAG */
+.dag{margin:24px 0;overflow-x:auto;padding-bottom:8px}
+.dag-row{display:flex;align-items:stretch;gap:14px;margin-bottom:14px;min-width:min-content}
+.dag-layer-lbl{writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);padding:4px;display:flex;align-items:center;flex-shrink:0;border-right:1px solid var(--border)}
+.dag-nodes{display:flex;gap:12px;flex-wrap:wrap;flex:1}
+.dag-node{border:1px solid var(--border2);border-radius:6px;padding:10px 14px;min-width:130px;background:var(--bg2);transition:transform .15s,border-color .15s}
+.dag-node:hover{transform:translateY(-2px)}
+.dag-node .dn-name{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:3px}
+.dag-node .dn-sub{font-size:10px;color:var(--muted);line-height:1.45}
+.dag-node.root{border-color:rgba(63,204,106,.4)}
+.dag-node.graph{border-color:rgba(46,232,204,.3)}
+.dag-node.det{border-color:rgba(245,166,35,.3)}
+.dag-node.decision{border-color:var(--gold-border);background:rgba(201,168,76,.05)}
+
+/* MISC */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(220px,28%,320px),1fr));gap:14px;margin:20px 0}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
+.card-tag{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.card h4{font-size:14px;font-weight:700;color:var(--text);margin-bottom:7px}
+.card p{font-size:12.5px;color:var(--muted);line-height:1.67}
+ul.ul{padding-left:18px;margin:10px 0;max-width:840px}
+ul.ul li{color:var(--muted);font-size:13.5px;margin-bottom:6px}
+ul.ul li b{color:var(--text)}
+ul.ul li em{color:var(--gold);font-style:normal}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);max-width:900px}
+.legend span{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+
+@media(max-width:1100px){#hbg{display:flex}#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#main{margin-left:0}}
+@media(max-width:760px){.two,.cc-grid,.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<button id="hbg" aria-label="Menu">☰</button>
+<div id="overlay"></div>
+
+<aside id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo"><div class="sb-diamond">◆</div><div class="sb-wordmark">FairPlay IQ</div></div>
+    <div class="sb-tagline">Scoring Architecture<br>Models · Champion/Challenger · Dependencies</div>
+    <div class="sb-status">P3 work-order</div>
+  </div>
+  <nav>
+    <div class="sb-group">
+      <div class="sb-glabel">Frame</div>
+      <a href="#sec-philosophy" class="nav-link"><span class="nav-n">01</span>Perception vs Decision</a>
+      <a href="#sec-inventory" class="nav-link"><span class="nav-n">02</span>Score Inventory</a>
+      <a href="#sec-cc" class="nav-link"><span class="nav-n">03</span>Champion / Challenger</a>
+      <a href="#sec-glossary" class="nav-link"><span class="nav-n">◇</span>Model Glossary</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-glabel">Each Score</div>
+      <a href="#sec-classify" class="nav-link"><span class="nav-n">04</span>Classification</a>
+      <a href="#sec-fit" class="nav-link"><span class="nav-n">05</span>Fit(P,T)</a>
+      <a href="#sec-health" class="nav-link"><span class="nav-n">06</span>Health(T) &amp; terms</a>
+      <a href="#sec-integrity" class="nav-link"><span class="nav-n">07</span>Integrity Score</a>
+      <a href="#sec-derived" class="nav-link"><span class="nav-n">08</span>ΔHealth · Seating Risk</a>
+      <a href="#sec-router" class="nav-link"><span class="nav-n">09</span>Router (no ML)</a>
+    </div>
+    <div class="sb-group">
+      <div class="sb-glabel">Build</div>
+      <a href="#sec-dag" class="nav-link"><span class="nav-n">10</span>Dependency Graph</a>
+      <a href="#sec-order" class="nav-link"><span class="nav-n">11</span>Build Order</a>
+      <a href="#sec-open" class="nav-link"><span class="nav-n">12</span>Open Decisions</a>
+    </div>
+  </nav>
+  <div class="sb-foot">P3 — Scoring &amp; Evidence<br>Pre-PRD · contract reference</div>
+</aside>
+
+<main id="main">
+
+<div class="pg-hd">
+  <div class="pg-eyebrow">P3 Scoring &amp; Evidence Engine · Contract 2 · Model Map</div>
+  <div class="pg-h1"><em>Scoring Architecture</em> — what model does what</div>
+  <div class="pg-sub">Every score the demo needs, the model behind it, whether it has a champion/challenger pair, and how they depend on each other. The throughline: <b style="color:var(--text)">ML competes in perception, never in the decision.</b></div>
+  <div class="pg-pills">
+    <span class="pill"><b>8</b> scores</span>
+    <span class="pill"><b>3</b> with champion/challenger</span>
+    <span class="pill"><b>1</b> frozen-policy (no ML)</span>
+    <span class="pill">Eval lab = the selection harness</span>
+  </div>
+</div>
+
+<!-- 01 -->
+<section class="sec" id="sec-philosophy">
+  <div class="sec-hd"><span class="sec-num">§01</span><h2>Perception vs. Decision — the line that sets every model choice</h2><span class="sec-rt">~3 min</span></div>
+  <p class="p">Before picking models, draw one line. <b>Perception</b> scores estimate <em>what is true</em> about a player or table (their type, their fit, the table's health, a cluster's risk). <b>Decision</b> scores choose <em>what to do</em> (rank tables, gate a seating). The model policy follows directly:</p>
+  <div class="two">
+    <div class="card" style="border-color:rgba(79,142,247,.3)">
+      <div class="card-tag" style="color:var(--blue)">Perception → ML is allowed</div>
+      <h4>Estimate truth from features</h4>
+      <p>Classification, Fit, predation pressure, integrity scoring. Here a model legitimately beats a hand-tuned rule, so this is exactly where a <b style="color:var(--text)">champion/challenger</b> pairing makes sense — a simple baseline that ships, and a trained interpretable model that competes in the eval lab.</p>
+    </div>
+    <div class="card" style="border-color:var(--gold-border)">
+      <div class="card-tag" style="color:var(--gold)">Decision → deterministic only</div>
+      <h4>Choose an action from scores</h4>
+      <p>The router <code>Rank(P,T)</code> and the integrity hard-gate. <b style="color:var(--text)">No model here, ever.</b> A frozen, human-designed weighted formula — auditable, explainable, overridable. There is no "challenger model" for the decision; you calibrate weights, you don't swap a black box in.</p>
+    </div>
+  </div>
+  <div class="callout"><b>So the answer to "how many models?"</b> — three perception scores carry a real champion/challenger pair (Classification, Fit, the P<sub>pred</sub> health term). The rest are deterministic formulas or graph algorithms you <em>calibrate</em>, not models you <em>swap</em>. The decision layer is frozen by mandate.</div>
+</section>
+
+<!-- 02 -->
+<section class="sec" id="sec-inventory">
+  <div class="sec-hd"><span class="sec-num">§02</span><h2>Score Inventory — every score, its method, its pair</h2><span class="sec-rt">~6 min</span></div>
+  <div class="legend">
+    <span><span class="bdg bdg-ml">ML</span> trained model</span>
+    <span><span class="bdg bdg-det">DET</span> deterministic formula</span>
+    <span><span class="bdg bdg-graph">GRAPH</span> community detection + rules</span>
+    <span><span class="bdg bdg-rule">RULE</span> rule aggregation</span>
+    <span><span class="bdg bdg-gold">POLICY</span> frozen decision</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Score</th><th>Method</th><th>Champion (ships demo)</th><th>Challenger (eval-lab upgrade)</th><th>Multiple?</th><th>Depends on</th></tr></thead>
+      <tbody>
+        <tr><td><b>1</b></td><td><b>Classification</b><br><small style="color:var(--dim)">9 archetypes</small></td><td><span class="bdg bdg-ml">ML</span></td><td>Rule thresholds (from data note)</td><td>Multinomial logistic / GBM (interpretable)</td><td><b style="color:var(--green-hi)">Yes</b></td><td><span class="dep-none">— root</span></td></tr>
+        <tr><td><b>2</b></td><td><b>Fit(P,T)</b></td><td><span class="bdg bdg-ml">ML</span></td><td>Archetype × table-style matrix</td><td>GBM session-length regressor</td><td><b style="color:var(--green-hi)">Yes</b></td><td>Classification</td></tr>
+        <tr><td><b>3</b></td><td><b>P<sub>pred</sub></b><br><small style="color:var(--dim)">predation pressure</small></td><td><span class="bdg bdg-ml">ML</span>/<span class="bdg bdg-det">DET</span></td><td>Skill-weighted ratio formula</td><td>Monotonic GBM on retention</td><td><b style="color:var(--green-hi)">Yes</b></td><td>Classification</td></tr>
+        <tr><td><b>4</b></td><td><b>P<sub>frag</sub></b><br><small style="color:var(--dim)">fragility</small></td><td><span class="bdg bdg-det">DET</span></td><td>Occupancy + trend formula</td><td>— calibrate constants</td><td>No</td><td>Roster fields</td></tr>
+        <tr><td><b>5</b></td><td><b>P<sub>bleed</sub></b><br><small style="color:var(--dim)">observed bleed</small></td><td><span class="bdg bdg-det">DET</span></td><td>Rolling-window formula</td><td>— calibrate window</td><td>No</td><td>Observed sessions</td></tr>
+        <tr><td><b>6</b></td><td><b>Integrity score</b> + P<sub>clus</sub></td><td><span class="bdg bdg-graph">GRAPH</span>+<span class="bdg bdg-rule">RULE</span></td><td>WCC/Louvain + convergence rules</td><td>GNN embeddings <i>(stretch only)</i></td><td>Stretch</td><td>Graph signals</td></tr>
+        <tr><td><b>7</b></td><td><b>Health(T)</b><br>ΔHealth · Seating risk</td><td><span class="bdg bdg-det">DET</span></td><td>Composite of terms 3–6</td><td>— no separate model</td><td>No</td><td>Terms 3–6, Classification</td></tr>
+        <tr><td><b>8</b></td><td><b>Rank(P,T) → badge</b></td><td><span class="bdg bdg-gold">POLICY</span></td><td>Frozen weighted formula</td><td><b style="color:var(--red)">none — by design</b></td><td>No</td><td>Fit, Health, ΔHealth, Integrity</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout info"><b>Read the "Multiple?" column as the direct answer to your question.</b> Only scores 1–3 genuinely run two models in parallel (champion + challenger). Score 6's "challenger" is a labeled stretch goal (the GNN), not a live competitor. Everything else is one method you tune, not two you race.</div>
+</section>
+
+<!-- 03 -->
+<section class="sec" id="sec-cc">
+  <div class="sec-hd"><span class="sec-num">§03</span><h2>The Champion / Challenger Framework</h2><span class="sec-rt">~5 min</span></div>
+  <p class="p">Champion/challenger means: a <b>champion</b> is live and always the fallback; one or more <b>challengers</b> run in shadow and only get promoted if they beat the champion on a held-out, labeled metric. For us the <em>eval lab is the comparison harness</em> — it already has seeded ground truth and the "true-risk ranks above false-positive traps" invariant. That makes it the natural place to score a challenger against a champion.</p>
+
+  <div class="cc-grid" style="max-width:900px">
+    <div class="cc-box cc-champ">
+      <div class="cc-lbl">● Champion — ships the demo</div>
+      <div class="what">Deterministic baseline</div>
+      <div class="why">A transparent rule or formula. Always works, always auditable, never blocks the demo. For Classification it's literally the threshold rules P2 already wrote into the data note. This is what's live on Day 2.</div>
+    </div>
+    <div class="cc-box cc-chall">
+      <div class="cc-lbl">● Challenger — the upgrade</div>
+      <div class="why" style="margin-top:2px"><span class="what" style="display:inline">Trained interpretable model.</span> Logistic regression or gradient-boosted trees with feature-importance as reason codes. Runs in the eval lab against the champion. Promoted only if it (a) beats the champion on labeled accuracy AND (b) stays interpretable. Wins → it becomes champion; loses → champion holds.</div>
+    </div>
+  </div>
+
+  <div class="callout purple"><b>Where champion/challenger does NOT apply:</b> the deterministic health terms (P<sub>frag</sub>, P<sub>bleed</sub>) — you calibrate their constants, you don't race two models. The integrity score — it's graph + rules, not a trained classifier (training a "collusion detector" on synthetic labels would be circular). And the <b>router decision</b> — frozen policy by mandate; a challenger black box there would break auditability and the "human decides" guardrail.</div>
+
+  <p class="p"><b>Promotion rule (one line):</b> a challenger replaces a champion only when it wins on the eval lab's labeled metric <em>and</em> remains explainable. Accuracy alone never promotes an uninterpretable model — interpretability is a gate, not a tiebreaker.</p>
+
+  <div class="callout"><b>Capstone-honest scope:</b> for the demo you ship all champions (deterministic). The challengers are the "ML in perception" story you turn on for scores 1–3 in Days 3–4, with the eval panel showing champion-vs-challenger side by side. You are never <em>required</em> to train a model to demo — but Classification, Fit, and P<sub>pred</sub> are where doing so visibly adds value.</div>
+</section>
+
+<!-- REF Model Glossary -->
+<section class="sec" id="sec-glossary">
+  <div class="sec-hd"><span class="sec-num">§ ref</span><h2>Model Glossary — what each method actually is</h2><span class="sec-rt">~6 min</span></div>
+  <p class="p">Plain-language descriptions of every method named above, so the inventory reads clearly whether or not you live in ML. Each says <b>what it is</b>, <b>what we use it for</b>, and <b>how interpretable it is</b> — because interpretability is a promotion gate here, not a nice-to-have.</p>
+
+  <p class="p" style="color:var(--blue);font-weight:700;margin-bottom:6px">▸ Trained ML methods <span class="bdg bdg-ml" style="margin-left:6px">ML</span></p>
+  <div class="cards">
+    <div class="card" style="border-color:rgba(79,142,247,.25)">
+      <div class="card-tag" style="color:var(--green-hi)">Champion baseline</div>
+      <h4>Threshold rules</h4>
+      <p><b>What it is:</b> explicit if/else cutoffs on raw features — <code>registered_days_ago ≤ 14 → new</code>. Not "trained," but it fills the ML slot as the day-one baseline.<br><b>Used for:</b> the Classification champion; the fallback for any perception score.<br><b>Interpretable:</b> total — you can read the rule.</p>
+    </div>
+    <div class="card" style="border-color:rgba(79,142,247,.25)">
+      <div class="card-tag" style="color:var(--blue)">Challenger</div>
+      <h4>Multinomial logistic regression</h4>
+      <p><b>What it is:</b> a linear model that outputs a probability for each class and picks the highest; every feature carries a readable weight (coefficient).<br><b>Used for:</b> the Classification challenger.<br><b>Interpretable:</b> high — the coefficients <em>are</em> the reason codes ("high vpip pushed toward aggressive_predatory").</p>
+    </div>
+    <div class="card" style="border-color:rgba(79,142,247,.25)">
+      <div class="card-tag" style="color:var(--blue)">Challenger</div>
+      <h4>Gradient-boosted trees (GBM)</h4>
+      <p><b>What it is:</b> an ensemble of many small decision trees built in sequence, each correcting the last; captures non-linear interactions a straight line misses.<br><b>Used for:</b> the Fit session-length regressor; an alternative Classification challenger.<br><b>Interpretable:</b> medium — feature-importance / SHAP give reason codes, less directly than logistic.</p>
+    </div>
+    <div class="card" style="border-color:rgba(79,142,247,.25)">
+      <div class="card-tag" style="color:var(--blue)">Challenger</div>
+      <h4>Monotonic GBM</h4>
+      <p><b>What it is:</b> a GBM constrained so a feature can only move the score one direction — more aggressive players can only <em>raise</em> predation pressure, never lower it.<br><b>Used for:</b> the P<sub>pred</sub> challenger.<br><b>Interpretable:</b> medium-high — the monotonic constraints make it predictable and defensible.</p>
+    </div>
+  </div>
+
+  <p class="p" style="color:#8ca8a0;font-weight:700;margin:18px 0 6px">▸ Heuristic / rule methods <span class="bdg bdg-rule" style="margin-left:6px">RULE</span></p>
+  <div class="cards">
+    <div class="card" style="border-color:rgba(140,168,160,.25)">
+      <div class="card-tag" style="color:var(--green-hi)">Champion baseline</div>
+      <h4>Compatibility matrix</h4>
+      <p><b>What it is:</b> a hand-built lookup table mapping archetype × table style/stakes → a fit score.<br><b>Used for:</b> the Fit champion.<br><b>Interpretable:</b> total — it's a table you can read and edit by hand.</p>
+    </div>
+    <div class="card" style="border-color:rgba(140,168,160,.25)">
+      <div class="card-tag" style="color:#8ca8a0">Verdict rule</div>
+      <h4>Convergence-rule aggregation</h4>
+      <p><b>What it is:</b> counts how many <em>independent</em> evidence families (device, co-seating, soft-play, timing) point at the same group, subtracts counter-evidence, and maps the total to a band.<br><b>Used for:</b> the integrity verdict (low/neutral/high/manual_review).<br><b>Interpretable:</b> total — "3 families converged, no counter-evidence → high."</p>
+    </div>
+  </div>
+
+  <p class="p" style="color:var(--teal);font-weight:700;margin:18px 0 6px">▸ Graph methods <span class="bdg bdg-graph" style="margin-left:6px">GRAPH</span></p>
+  <div class="cards">
+    <div class="card" style="border-color:rgba(46,232,204,.25)">
+      <div class="card-tag" style="color:var(--teal)">Find the ring</div>
+      <h4>WCC — Weakly Connected Components</h4>
+      <p><b>What it is:</b> a graph algorithm that finds blobs of nodes reachable from one another; each connected blob is a <em>candidate</em> ring boundary.<br><b>Used for:</b> drawing a cluster's outer boundary before it's scored.<br><b>Interpretable:</b> structural — it's literally "who is linked to whom."</p>
+    </div>
+    <div class="card" style="border-color:rgba(46,232,204,.25)">
+      <div class="card-tag" style="color:var(--teal)">Split the ring</div>
+      <h4>Louvain community detection</h4>
+      <p><b>What it is:</b> splits a large connected component into tightly-knit sub-communities by maximizing internal edge weight.<br><b>Used for:</b> separating a genuine tight ring from a crowd that merely shares a popular IP/device.<br><b>Interpretable:</b> structural — communities map to readable sub-groups.</p>
+    </div>
+    <div class="card" style="border-color:rgba(46,232,204,.25)">
+      <div class="card-tag" style="color:var(--purple)">Stretch only</div>
+      <h4>Graph Neural Network (GNN)</h4>
+      <p><b>What it is:</b> a neural net that learns a vector "embedding" for each node from its graph neighborhood, to spot rings the rules miss.<br><b>Used for:</b> integrity scoring — <em>stretch goal</em>, not the demo path.<br><b>Interpretable:</b> low — which is exactly why it stays a stretch, never the live verdict.</p>
+    </div>
+  </div>
+
+  <p class="p" style="color:var(--amber);font-weight:700;margin:18px 0 6px">▸ Deterministic &amp; policy methods <span class="bdg bdg-det" style="margin-left:6px">DET</span> <span class="bdg bdg-gold" style="margin-left:4px">POLICY</span></p>
+  <div class="cards">
+    <div class="card" style="border-color:rgba(245,166,35,.25)">
+      <div class="card-tag" style="color:var(--amber)">Formula</div>
+      <h4>Deterministic formula</h4>
+      <p><b>What it is:</b> explicit arithmetic over fields — ratios, rolling-window averages, clamps. No learning.<br><b>Used for:</b> P<sub>frag</sub>, P<sub>bleed</sub>, the Health(T) composite, ΔHealth.<br><b>Interpretable:</b> total — you can trace every number by hand.</p>
+    </div>
+    <div class="card" style="border-color:var(--gold-border)">
+      <div class="card-tag" style="color:var(--gold)">The decision</div>
+      <h4>Frozen weighted policy</h4>
+      <p><b>What it is:</b> a fixed linear formula (<code>w·Fit + w·Health + w·ΔHealth</code>) whose <em>weights</em> are tuned offline but whose <em>form</em> never changes and is never learned end-to-end.<br><b>Used for:</b> the router decision + integrity hard-gate.<br><b>Interpretable:</b> total — and deliberately so, for audit and human override.</p>
+    </div>
+  </div>
+
+  <div class="callout info"><b>The pattern across the glossary:</b> every method that touches the <em>decision</em> is maximally interpretable (rules, formulas, frozen policy). The lower-interpretability methods (GBM, GNN) live only in <em>perception</em>, behind the eval lab's promotion gate — and the least interpretable one (GNN) is the only method we keep as a stretch rather than a demo path. Interpretability falls as you move away from the decision, never toward it.</div>
+</section>
+
+<!-- 04 Classification -->
+<section class="sec" id="sec-classify">
+  <div class="sec-hd"><span class="sec-num">§04</span><h2>Classification — 9 archetypes</h2><span class="sec-rt">~4 min</span></div>
+  <div class="score-card">
+    <div class="sc-hd"><span class="sc-n">01</span><span class="sc-title">Player Classification</span><span class="sc-formula">features → archetype ∈ {9}</span></div>
+    <div class="sc-body">
+      <p class="p" style="margin-top:0">Assigns each player one of 9 archetypes. It is the <b>root input</b> — Fit, Health composition, and the integrity lens all consume it. The archetype is <em>not</em> in the data; P3 computes it from behavioral features.</p>
+      <div class="cc-grid">
+        <div class="cc-box cc-champ"><div class="cc-lbl">● Champion</div><div class="what">Threshold rules</div><div class="why">Straight from <code>players.json</code>'s inference note: <code>registered_days_ago≤14 → new</code>, <code>vpip≥0.54 &amp; pfr≥0.40 → aggressive_predatory</code>, <code>promo_redemptions_30d≥8 → promo_hunter</code>, <code>cluster_id set → cluster_member</code>, etc. Deterministic, demo-ready Day 2.</div></div>
+        <div class="cc-box cc-chall"><div class="cc-lbl">● Challenger</div><div class="what">Multinomial logistic / GBM</div><div class="why">Trained on the same features; coefficients (logistic) or split-importance (GBM) become the reason codes. Handles overlap the thresholds miss (a loose-passive regular vs. a recreational). Interpretable → eligible for promotion.</div></div>
+      </div>
+      <dl class="sc-meta">
+        <dt>Inputs</dt><dd><code>vpip · pfr · aggression_factor · registered_days_ago · lifetime_hands · avg_session_minutes · sessions_last_30d · promo_redemptions_30d · bot_similarity_score · timing_regularity</code> + presence of <code>cluster_id/household_id/device_group_id</code></dd>
+        <dt>Output</dt><dd>1 of: <b>new · recreational · regular · grinder · aggressive_predatory · promo_hunter · cluster_member · shared_device_household · healthy_anchor</b> (+ confidence)</dd>
+        <dt>Depends on</dt><dd class="dep-none">Nothing — root score. Build this first.</dd>
+        <dt>Demo test</dt><dd>P-104=new · P-176/177=aggressive_predatory · P-164=grinder · P-184=promo_hunter · P-221=bot-like · P-198/199/200=cluster_member · P-192/193=household</dd>
+        <dt>Eval note</dt><dd>Population-wide accuracy scoring needs a per-player <code>ground_truth_archetype</code> answer key (currently ground truth is prose ID-ranges) — small P2 add if P4 wants it.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- 05 Fit -->
+<section class="sec" id="sec-fit">
+  <div class="sec-hd"><span class="sec-num">§05</span><h2>Fit(P,T) — player × table</h2><span class="sec-rt">~3 min</span></div>
+  <div class="score-card">
+    <div class="sc-hd"><span class="sc-n">02</span><span class="sc-title">Player-Table Fit</span><span class="sc-formula">→ 0–100 (predicted session quality)</span></div>
+    <div class="sc-body">
+      <p class="p" style="margin-top:0">How well a player suits a table — predicted session length and enjoyment given P's archetype and T's style/stakes/composition. First term of the router.</p>
+      <div class="cc-grid">
+        <div class="cc-box cc-champ"><div class="cc-lbl">● Champion</div><div class="what">Compatibility matrix</div><div class="why">A hand-built archetype × <code>style_volatility_label</code>/<code>stakes</code>/<code>pace_label</code> lookup, adjusted for stake match. Transparent and demo-ready.</div></div>
+        <div class="cc-box cc-chall"><div class="cc-lbl">● Challenger</div><div class="what">GBM session-length regressor</div><div class="why">Predicts minutes-stayed from (player features × table composition). Captures non-linear interactions the matrix can't — the real "ML in perception" payoff for routing.</div></div>
+      </div>
+      <dl class="sc-meta">
+        <dt>Inputs</dt><dd>player archetype + features · table <code>stakes · style_volatility_label · pace_label · seated composition · avg_session_length_min</code></dd>
+        <dt>Depends on</dt><dd><b>Classification</b> (needs P's archetype + the table's seated archetypes)</dd>
+        <dt>Demo test</dt><dd>P-104 Fit high at balanced T-8, low at predatory T-22</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- 06 Health -->
+<section class="sec" id="sec-health">
+  <div class="sec-hd"><span class="sec-num">§06</span><h2>Health(T) and its four terms</h2><span class="sec-rt">~6 min</span></div>
+  <p class="p"><code>Health(T) = 100 − P_pred − P_frag − P_clus − P_bleed</code>. The composite is a <b>deterministic aggregation</b> — not a model. The interesting model choices live in the <em>terms</em>: one is a candidate for ML, two are pure formulas, one comes from the graph.</p>
+  <div class="score-card">
+    <div class="sc-hd"><span class="sc-n">03</span><span class="sc-title">P<sub>pred</sub> — Predation Pressure</span><span class="sc-formula">0–45</span></div>
+    <div class="sc-body">
+      <div class="cc-grid">
+        <div class="cc-box cc-champ"><div class="cc-lbl">● Champion</div><div class="what">Skill-weighted ratio formula</div><div class="why">aggressive_predatory weight ÷ recreational cohort, through a pressure curve. Interpretable, the D0b-default.</div></div>
+        <div class="cc-box cc-chall"><div class="cc-lbl">● Challenger</div><div class="what">Monotonic GBM</div><div class="why">Regress recreational retention on composition; monotonic constraints keep it auditable. Promote if it predicts churn better on sim outcomes.</div></div>
+      </div>
+      <dl class="sc-meta"><dt>Depends on</dt><dd><b>Classification</b> (composition archetypes)</dd></dl>
+    </div>
+  </div>
+  <div class="score-card">
+    <div class="sc-hd"><span class="sc-n">04</span><span class="sc-title">P<sub>frag</sub> — Fragility</span><span class="sc-formula">0–25</span><span class="bdg bdg-det" style="margin-left:8px">DET</span></div>
+    <div class="sc-body"><p class="p" style="margin:0">Pure formula: <code>occupied/max</code> ratio + <code>paid_seat_time_trend</code>. No model, no challenger — <b>calibrate the constants</b> against sim outcomes. Inputs all present in <code>table_roster.json</code>.</p></div>
+  </div>
+  <div class="score-card">
+    <div class="sc-hd"><span class="sc-n">05</span><span class="sc-title">P<sub>bleed</sub> — Observed Bleed</span><span class="sc-formula">0–20</span><span class="bdg bdg-det" style="margin-left:8px">DET</span></div>
+    <div class="sc-body"><p class="p" style="margin:0">Rolling-window formula over the last N paid-seat-time intervals — recreational truncations vs. archetype baseline. The <em>observed</em>, trailing term; held fixed between seatings. Calibrate window length + threshold; no competing model.</p></div>
+  </div>
+  <div class="callout"><b>P<sub>clus</sub></b> isn't built here — it's the integrity score (§07) mapped to a 0–30 penalty. That's the one cross-layer dependency inside Health: the graph feeds the table score.</div>
+</section>
+
+<!-- 07 Integrity -->
+<section class="sec" id="sec-integrity">
+  <div class="sec-hd"><span class="sec-num">§07</span><h2>Integrity Score — graph, not a classifier</h2><span class="sec-rt">~4 min</span></div>
+  <div class="score-card">
+    <div class="sc-hd"><span class="sc-n">06</span><span class="sc-title">Integrity Score</span><span class="sc-formula">→ low · neutral · high · manual_review</span></div>
+    <div class="sc-body">
+      <p class="p" style="margin-top:0">Per-cluster risk band from <b>convergence of independent signal families</b>, net of counter-evidence. Deliberately <em>not</em> a trained model — training a collusion classifier on synthetic labels would be circular and dishonest.</p>
+      <div class="cc-grid">
+        <div class="cc-box cc-champ"><div class="cc-lbl">● Champion</div><div class="what">WCC/Louvain + convergence rules</div><div class="why">Community detection finds candidate rings; a rule counts how many independent evidence families (device_link, co_seating, soft_play, timing) converge, weighted by confidence, minus counter-evidence. Stated thresholds → auditable.</div></div>
+        <div class="cc-box cc-chall"><div class="cc-lbl">● Challenger <span style="color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">(stretch)</span></div><div class="why" style="margin-top:2px"><span class="what" style="display:inline">GNN cluster embeddings.</span> A graph neural net over the signal edges — purely a stretch goal. The demo does not depend on it; rules are sufficient and the GNN needs real graph data to be honest.</div></div>
+      </div>
+      <dl class="sc-meta">
+        <dt>Inputs</dt><dd><code>relationships.json</code>: clusters, <code>soft_play_delta</code> (≤−0.60 fires), <code>co_seating{rate}</code>, <code>device_link</code>, <code>timing_correlation</code>, counter-evidence</dd>
+        <dt>Depends on</dt><dd>Graph construction from P2 signals (no classification dependency)</dd>
+        <dt>Demo test</dt><dd>CL-001 → <b>high</b> (4 families converge) → hold · household → <b>neutral</b> → monitor · CL-002 → <b>neutral</b> (sub-threshold)</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="callout warn"><b>Guardrail baked into the method:</b> counter-evidence (<code>household_counter_evidence</code>, <code>low_sample_size_counter_evidence</code>) holds a case at <code>neutral</code>/monitor — "no single signal is proof" is the convergence rule itself, not an afterthought.</div>
+</section>
+
+<!-- 08 Derived -->
+<section class="sec" id="sec-derived">
+  <div class="sec-hd"><span class="sec-num">§08</span><h2>ΔHealth &amp; Seating Risk — derived, no new models</h2><span class="sec-rt">~3 min</span></div>
+  <div class="two" style="max-width:900px">
+    <div class="card"><div class="card-tag" style="color:var(--amber)">Deterministic</div><h4>ΔHealth(P→T)</h4><p>Re-score Health's composition terms with P added, take the delta. A <b>function</b> of Health(T), not a separate model. O(1). Depends on Health terms + Classification.</p></div>
+    <div class="card"><div class="card-tag" style="color:var(--amber)">Deterministic</div><h4>Seating-risk score</h4><p>Composite + reason codes: Health band + ΔHealth + new-player vulnerability + integrity gate. Drives "new-player risk = HIGH." Depends on Health, ΔHealth, Classification, Integrity.</p></div>
+  </div>
+</section>
+
+<!-- 09 Router -->
+<section class="sec" id="sec-router">
+  <div class="sec-hd"><span class="sec-num">§09</span><h2>Router — the one place with no model</h2><span class="sec-rt">~3 min</span></div>
+  <div class="score-card" style="border-color:var(--gold-border)">
+    <div class="sc-hd" style="background:rgba(201,168,76,.06)"><span class="sc-n">08</span><span class="sc-title">Rank(P,T) → lobby badge</span><span class="sc-formula">w<sub>fit</sub>·Fit + w<sub>h</sub>·Health + w<sub>Δ</sub>·ΔHealth</span></div>
+    <div class="sc-body">
+      <p class="p" style="margin-top:0">The decision. A <b>frozen weighted policy</b> with an integrity hard-gate first. The weights are <em>calibrated offline</em> (grid/Bayesian search on the eval lab) but the <b>form is fixed and human-designed</b>.</p>
+      <div class="callout" style="margin-top:0"><b>No challenger model — on purpose.</b> An end-to-end routing model would be a black box: un-auditable, un-explainable, un-overridable. That breaks the regulator story and the "system recommends, human decides" guardrail. We tune weights; we never swap in a learned decision.</div>
+      <dl class="sc-meta">
+        <dt>Depends on</dt><dd>Fit (5), Health (6), ΔHealth (8), Integrity gate (7)</dd>
+        <dt>Demo test</dt><dd>P-104 → T-8 <b>Recommended</b> (55.2) · T-14 <b>Good fit</b> (44.2) · T-22 <b>Available</b> (13.0)</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- 10 DAG -->
+<section class="sec" id="sec-dag">
+  <div class="sec-hd"><span class="sec-num">§10</span><h2>Dependency Graph</h2><span class="sec-rt">~2 min</span></div>
+  <p class="p">Top feeds bottom. Build top-down: nothing below can be trusted until what it depends on is in place.</p>
+  <div class="legend">
+    <span><span class="bdg bdg-ml">ML</span> champion/challenger</span>
+    <span><span class="bdg bdg-graph">GRAPH</span> rules</span>
+    <span><span class="bdg bdg-det">DET</span> formula</span>
+    <span><span class="bdg bdg-gold">POLICY</span> frozen</span>
+  </div>
+  <div class="dag">
+    <div class="dag-row">
+      <div class="dag-layer-lbl">Roots</div>
+      <div class="dag-nodes">
+        <div class="dag-node root"><div class="dn-name">① Classification</div><div class="dn-sub">ML · from features · no deps</div></div>
+        <div class="dag-node graph"><div class="dn-name">⑥ Integrity score</div><div class="dn-sub">graph+rules · from signals · no deps</div></div>
+        <div class="dag-node det"><div class="dn-name">④ P_frag · ⑤ P_bleed</div><div class="dn-sub">formulas · from roster/sessions</div></div>
+      </div>
+    </div>
+    <div class="dag-row">
+      <div class="dag-layer-lbl">Perception</div>
+      <div class="dag-nodes">
+        <div class="dag-node"><div class="dn-name">② Fit(P,T)</div><div class="dn-sub">ML · needs ①</div></div>
+        <div class="dag-node"><div class="dn-name">③ P_pred</div><div class="dn-sub">ML/DET · needs ①</div></div>
+        <div class="dag-node"><div class="dn-name">P_clus</div><div class="dn-sub">from ⑥ → penalty</div></div>
+      </div>
+    </div>
+    <div class="dag-row">
+      <div class="dag-layer-lbl">Composite</div>
+      <div class="dag-nodes">
+        <div class="dag-node det"><div class="dn-name">⑦ Health(T)</div><div class="dn-sub">100 − P_pred − P_frag − P_clus − P_bleed</div></div>
+        <div class="dag-node det"><div class="dn-name">ΔHealth(P→T)</div><div class="dn-sub">re-score composition</div></div>
+        <div class="dag-node det"><div class="dn-name">Seating risk</div><div class="dn-sub">+ reason codes</div></div>
+      </div>
+    </div>
+    <div class="dag-row">
+      <div class="dag-layer-lbl">Decision</div>
+      <div class="dag-nodes">
+        <div class="dag-node decision"><div class="dn-name">⑧ Rank(P,T) → badge</div><div class="dn-sub">POLICY · needs ②⑦ + integrity gate ⑥</div></div>
+      </div>
+    </div>
+    <div class="dag-row">
+      <div class="dag-layer-lbl">Explain</div>
+      <div class="dag-nodes">
+        <div class="dag-node" style="border-color:rgba(176,126,255,.3)"><div class="dn-name">Evidence packet → LLM</div><div class="dn-sub">P4 · assembles all scores · GraphRAG summary</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 Build order -->
+<section class="sec" id="sec-order">
+  <div class="sec-hd"><span class="sec-num">§11</span><h2>Build Order</h2><span class="sec-rt">~2 min</span></div>
+  <ul class="ul">
+    <li><b>1 · Classification (champion)</b> — threshold rules. Unblocks everything. <em>Day 2.</em></li>
+    <li><b>2 · Integrity score (champion)</b> — graph + convergence rules. Independent of classification, so it can be built in parallel. <em>Day 2–3.</em></li>
+    <li><b>3 · Health terms</b> — P<sub>frag</sub>/P<sub>bleed</sub> formulas + P<sub>pred</sub> champion; wire P<sub>clus</sub> from the integrity score. Then compose Health(T). <em>Day 3.</em></li>
+    <li><b>4 · Fit champion + ΔHealth + Seating risk</b> — once classification and health exist. <em>Day 3–4.</em></li>
+    <li><b>5 · Router</b> — assemble Rank, calibrate weights on the eval lab, emit badges. <em>Day 4.</em></li>
+    <li><b>6 · Challengers (1–3)</b> — train the interpretable models, race them in the eval panel, promote winners. The "ML in perception" reveal. <em>Day 4–5.</em></li>
+    <li><b>7 · Evidence packet</b> — P3 assembles, P4's LLM explains. <em>Parallel from Day 3, needs the score outputs.</em></li>
+  </ul>
+  <div class="callout info"><b>The whole demo runs on champions.</b> Challengers are additive proof of the ML story, gated by the eval lab — never on the critical path to a working demo.</div>
+</section>
+
+<!-- 12 Open -->
+<section class="sec" id="sec-open">
+  <div class="sec-hd"><span class="sec-num">§12</span><h2>Open Decisions</h2><span class="sec-rt">~2 min</span></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Decision</th><th>Question</th><th>Recommendation</th></tr></thead>
+      <tbody>
+        <tr><td><b>D0b</b> — health/classification method</td><td>Interpretable ML vs hand-tuned formula for P<sub>pred</sub> &amp; classification challenger</td><td>Interpretable supervised models (logistic/GBM); coefficients = reason codes. Neural nets not acceptable in perception scores feeding the policy.</td></tr>
+        <tr><td><b>NEW</b> — classification ground truth</td><td>Population-wide eval needs a per-player archetype answer key; today it's prose ID-ranges</td><td>P2 adds <code>ground_truth_archetype</code> to an operator-facing key <i>if</i> P4 wants population-level classification accuracy. Optional — 3 cases are already pinned.</td></tr>
+        <tr><td><b>NEW</b> — challenger scope</td><td>Which of scores 1–3 actually get a trained challenger for the capstone?</td><td>Classification first (clearest payoff + reason codes), then Fit. P<sub>pred</sub> challenger only if time permits.</td></tr>
+        <tr><td><b>NEW</b> — router weight calibration</td><td>How are w<sub>fit</sub>/w<sub>h</sub>/w<sub>Δ</sub> chosen?</td><td>Grid search on the eval lab against the 3 cases + the "true-risk ranks above traps" invariant. Freeze the winning weights; document them.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="p" style="margin-top:18px;color:var(--dim);font-size:12px">Cross-refs: <code>docs/index.html</code> (formulas) · <code>docs/graph/fixture-vocab-mapping.md</code> (signal field names) · <code>docs/PRD.md</code> §5 Contract 2 · <code>docs/DECISIONS.md</code> D0b.</p>
+</section>
+
+</main>
+
+<script>
+(function(){var h=document.getElementById('hbg'),s=document.getElementById('sidebar'),o=document.getElementById('overlay');if(!h||!s||!o)return;h.addEventListener('click',function(){s.classList.add('open');o.classList.add('open')});o.addEventListener('click',function(){s.classList.remove('open');o.classList.remove('open')})})();
+(function(){var links=Array.from(document.querySelectorAll('.nav-link')),secs=Array.from(document.querySelectorAll('.sec'));if(!links.length||!secs.length)return;var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active')});var lk=document.querySelector('.nav-link[href="#'+e.target.id+'"]');if(lk)lk.classList.add('active')}})},{rootMargin:'-10% 0px -72% 0px'});secs.forEach(function(x){obs.observe(x)})})();
+</script>
+</body>
+</html>
