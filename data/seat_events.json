@@ -1,10 +1,10 @@
 {
   "schema_version": "0.1.0",
   "generated": "static-fixture-day2",
-  "fixture_note": "Static Day-2 fixture. Case player events are fully detailed. Background players each have one pre-sim join event (hour -1 = was seated before the 8-hour simulation window). Room-change events document the hourly transitions reflected in room_state_hourly.json. event_type: join | leave | seat_hold (FairPlay hold-pending-review, no physical seating).",
+  "fixture_note": "Static Day-2 fixture. Two record families: (1) LIVE 8-hour seat log under `events`; (2) PRIOR-WINDOW co-seating snapshots under `co_seating_history` (every record tagged window:\"history\"), kept strictly separate from the live log. Live `events`: event_type is join | leave | seat_hold (FairPlay hold-pending-review, no physical seating). Case-player events are fully detailed and unchanged. Background players seated in the hour-0 room carry one pre-sim join (hour -1). Players not in the hour-0 room appear via BACKGROUND LIVE COVERAGE so all 120 players have a live event: coverage:\"background_replacement\" = a persistent join realizing an arrival room_state_hourly.json narrates (T-14 hour-4 replacement); coverage:\"background_transient\" = a within-hour join+leave at a genuinely-open seat that nets to zero at end-of-hour, changing NO seated_count in room_state_hourly.json. NOTE: P-108/P-109 are legacy gap-player IDs (deliberately absent from players.json) that retain pre-sim events SE-0020/SE-0029/SE-0130/SE-0131 -- treat as fixture artifacts, NOT valid roster members. P2b fix this batch: SE-0040 retargeted P-217->P-216 (see its fix_note) so T-15 reconciles under both occupancy semantics. Room-change events document the hourly transitions in room_state_hourly.json. `co_seating_history` (NEW Contract-1 key for consumer P3): a terse prior-window list of shared/solo recent table sittings for the integrity case clusters/households. window:\"history\" marks these HISTORICAL -- NOT live seat events; must never enter occupancy reconciliation. Count records where shared==true over total to re-derive the co-seating rates in relationships.json: CL-001 (P-198/199/200) = 14/18 (0.778); household H-01 (P-192/P-193) = 2/22 (0.091). These rates are historical and intentionally cannot fit inside the 8-hour live window (players sit ~100 min/table), which is why they live here, not in `events`.",
   "events": [
     {
-      "_section": "CASE PLAYER EVENTS — P-104 new-player case"
+      "_section": "CASE PLAYER EVENTS \u2014 P-104 new-player case"
     },
     {
       "event_id": "SE-0001",
@@ -51,7 +51,7 @@
       "case_ref": "new-player"
     },
     {
-      "_section": "CASE PLAYER EVENTS — P-200 cluster-C third-seat case"
+      "_section": "CASE PLAYER EVENTS \u2014 P-200 cluster-C third-seat case"
     },
     {
       "event_id": "SE-0005",
@@ -74,7 +74,7 @@
       "hour": 2,
       "offset_min": 10,
       "case_ref": "coordinated-cluster",
-      "hold_reason": "pit_boss_review_pending — A/B/C repeated co-seating pattern flagged"
+      "hold_reason": "pit_boss_review_pending \u2014 A/B/C repeated co-seating pattern flagged"
     },
     {
       "event_id": "SE-0007",
@@ -88,7 +88,7 @@
       "case_ref": "coordinated-cluster"
     },
     {
-      "_section": "CASE PLAYER EVENTS — Cluster A and B pre-sim joins (T-11)"
+      "_section": "CASE PLAYER EVENTS \u2014 Cluster A and B pre-sim joins (T-11)"
     },
     {
       "event_id": "SE-0008",
@@ -113,7 +113,7 @@
       "case_ref": "coordinated-cluster"
     },
     {
-      "_section": "CASE PLAYER EVENTS — Household H1/H2 (shared-device false-positive case)"
+      "_section": "CASE PLAYER EVENTS \u2014 Household H1/H2 (shared-device false-positive case)"
     },
     {
       "event_id": "SE-0010",
@@ -138,7 +138,7 @@
       "case_ref": "shared-device-fp"
     },
     {
-      "_section": "ROOM-CHANGE EVENTS — key transitions driving room_state_hourly.json"
+      "_section": "ROOM-CHANGE EVENTS \u2014 key transitions driving room_state_hourly.json"
     },
     {
       "event_id": "SE-0020",
@@ -363,80 +363,2269 @@
     {
       "event_id": "SE-0040",
       "session_id": "SES-0096",
-      "player_id": "P-217",
+      "player_id": "P-216",
       "table_id": "T-15",
       "event_type": "join",
       "scenario": "both",
       "hour": 8,
       "offset_min": 25,
-      "case_ref": null
+      "case_ref": null,
+      "fix_note": "P2b correction: was P-217 (already seated since hour -1 via SE-0186, a no-op duplicate join). Retargeted to P-216, who left at hour 5 (SE-0032) and returns from break at hour 8 per room_state_hourly narrative -- makes T-15 reconcile under both set and counter occupancy semantics."
     },
     {
-      "_section": "BACKGROUND PRE-SIM JOINS — all players seated at hour 0 (start_hour: -1)"
+      "_section": "BACKGROUND PRE-SIM JOINS \u2014 all players seated at hour 0 (start_hour: -1)"
     },
-    {"event_id": "SE-0100", "session_id": "SES-0010", "player_id": "P-201", "table_id": "T-1",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0101", "session_id": "SES-0011", "player_id": "P-202", "table_id": "T-1",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0102", "session_id": "SES-0012", "player_id": "P-203", "table_id": "T-1",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0103", "session_id": "SES-0013", "player_id": "P-204", "table_id": "T-1",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0104", "session_id": "SES-0014", "player_id": "P-205", "table_id": "T-1",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0105", "session_id": "SES-0015", "player_id": "P-206", "table_id": "T-1",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0106", "session_id": "SES-0016", "player_id": "P-207", "table_id": "T-1",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0107", "session_id": "SES-0017", "player_id": "P-208", "table_id": "T-1",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0110", "session_id": "SES-0020", "player_id": "P-101", "table_id": "T-3",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0111", "session_id": "SES-0021", "player_id": "P-102", "table_id": "T-3",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0112", "session_id": "SES-0022", "player_id": "P-103", "table_id": "T-3",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0113", "session_id": "SES-0023", "player_id": "P-105", "table_id": "T-3",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0114", "session_id": "SES-0024", "player_id": "P-106", "table_id": "T-3",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0120", "session_id": "SES-0030", "player_id": "P-151", "table_id": "T-5",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0121", "session_id": "SES-0031", "player_id": "P-152", "table_id": "T-5",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0122", "session_id": "SES-0032", "player_id": "P-153", "table_id": "T-5",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0123", "session_id": "SES-0033", "player_id": "P-154", "table_id": "T-5",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0130", "session_id": "SES-0040", "player_id": "P-108", "table_id": "T-7",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0131", "session_id": "SES-0041", "player_id": "P-109", "table_id": "T-7",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0132", "session_id": "SES-0042", "player_id": "P-110", "table_id": "T-7",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0133", "session_id": "SES-0043", "player_id": "P-111", "table_id": "T-7",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0134", "session_id": "SES-0044", "player_id": "P-112", "table_id": "T-7",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0135", "session_id": "SES-0045", "player_id": "P-113", "table_id": "T-7",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0136", "session_id": "SES-0046", "player_id": "P-114", "table_id": "T-7",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0140", "session_id": "SES-0050", "player_id": "P-116", "table_id": "T-8",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0141", "session_id": "SES-0051", "player_id": "P-117", "table_id": "T-8",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0142", "session_id": "SES-0052", "player_id": "P-118", "table_id": "T-8",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0143", "session_id": "SES-0053", "player_id": "P-119", "table_id": "T-8",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0144", "session_id": "SES-0054", "player_id": "P-120", "table_id": "T-8",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0145", "session_id": "SES-0055", "player_id": "P-121", "table_id": "T-8",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0146", "session_id": "SES-0056", "player_id": "P-122", "table_id": "T-8",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0150", "session_id": "SES-0060", "player_id": "P-161", "table_id": "T-9",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0151", "session_id": "SES-0061", "player_id": "P-162", "table_id": "T-9",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0152", "session_id": "SES-0062", "player_id": "P-163", "table_id": "T-9",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0153", "session_id": "SES-0063", "player_id": "P-164", "table_id": "T-9",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0154", "session_id": "SES-0064", "player_id": "P-165", "table_id": "T-9",  "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0160", "session_id": "SES-0070", "player_id": "P-171", "table_id": "T-11", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0161", "session_id": "SES-0071", "player_id": "P-172", "table_id": "T-11", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0170", "session_id": "SES-0080", "player_id": "P-141", "table_id": "T-14", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0171", "session_id": "SES-0081", "player_id": "P-142", "table_id": "T-14", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0172", "session_id": "SES-0082", "player_id": "P-143", "table_id": "T-14", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0173", "session_id": "SES-0083", "player_id": "P-144", "table_id": "T-14", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0174", "session_id": "SES-0084", "player_id": "P-145", "table_id": "T-14", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0180", "session_id": "SES-0090", "player_id": "P-211", "table_id": "T-15", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0181", "session_id": "SES-0091", "player_id": "P-212", "table_id": "T-15", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0182", "session_id": "SES-0092", "player_id": "P-213", "table_id": "T-15", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0183", "session_id": "SES-0093", "player_id": "P-214", "table_id": "T-15", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0184", "session_id": "SES-0094", "player_id": "P-215", "table_id": "T-15", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0185", "session_id": "SES-0095", "player_id": "P-216", "table_id": "T-15", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0186", "session_id": "SES-0096", "player_id": "P-217", "table_id": "T-15", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0190", "session_id": "SES-0100", "player_id": "P-186", "table_id": "T-18", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0191", "session_id": "SES-0101", "player_id": "P-187", "table_id": "T-18", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0192", "session_id": "SES-0102", "player_id": "P-188", "table_id": "T-18", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0193", "session_id": "SES-0103", "player_id": "P-189", "table_id": "T-18", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0194", "session_id": "SES-0104", "player_id": "P-190", "table_id": "T-18", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0195", "session_id": "SES-0105", "player_id": "P-191", "table_id": "T-18", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0200", "session_id": "SES-0110", "player_id": "P-176", "table_id": "T-22", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0201", "session_id": "SES-0111", "player_id": "P-177", "table_id": "T-22", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0202", "session_id": "SES-0112", "player_id": "P-185", "table_id": "T-22", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0210", "session_id": "SES-0120", "player_id": "P-131", "table_id": "T-25", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0211", "session_id": "SES-0121", "player_id": "P-132", "table_id": "T-25", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0212", "session_id": "SES-0122", "player_id": "P-133", "table_id": "T-25", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0213", "session_id": "SES-0123", "player_id": "P-134", "table_id": "T-25", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0},
-    {"event_id": "SE-0214", "session_id": "SES-0124", "player_id": "P-135", "table_id": "T-25", "event_type": "join", "scenario": "both", "hour": -1, "offset_min": 0}
+    {
+      "event_id": "SE-0100",
+      "session_id": "SES-0010",
+      "player_id": "P-201",
+      "table_id": "T-1",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0101",
+      "session_id": "SES-0011",
+      "player_id": "P-202",
+      "table_id": "T-1",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0102",
+      "session_id": "SES-0012",
+      "player_id": "P-203",
+      "table_id": "T-1",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0103",
+      "session_id": "SES-0013",
+      "player_id": "P-204",
+      "table_id": "T-1",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0104",
+      "session_id": "SES-0014",
+      "player_id": "P-205",
+      "table_id": "T-1",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0105",
+      "session_id": "SES-0015",
+      "player_id": "P-206",
+      "table_id": "T-1",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0106",
+      "session_id": "SES-0016",
+      "player_id": "P-207",
+      "table_id": "T-1",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0107",
+      "session_id": "SES-0017",
+      "player_id": "P-208",
+      "table_id": "T-1",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0110",
+      "session_id": "SES-0020",
+      "player_id": "P-101",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0111",
+      "session_id": "SES-0021",
+      "player_id": "P-102",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0112",
+      "session_id": "SES-0022",
+      "player_id": "P-103",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0113",
+      "session_id": "SES-0023",
+      "player_id": "P-105",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0114",
+      "session_id": "SES-0024",
+      "player_id": "P-106",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0120",
+      "session_id": "SES-0030",
+      "player_id": "P-151",
+      "table_id": "T-5",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0121",
+      "session_id": "SES-0031",
+      "player_id": "P-152",
+      "table_id": "T-5",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0122",
+      "session_id": "SES-0032",
+      "player_id": "P-153",
+      "table_id": "T-5",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0123",
+      "session_id": "SES-0033",
+      "player_id": "P-154",
+      "table_id": "T-5",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0130",
+      "session_id": "SES-0040",
+      "player_id": "P-108",
+      "table_id": "T-7",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0131",
+      "session_id": "SES-0041",
+      "player_id": "P-109",
+      "table_id": "T-7",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0132",
+      "session_id": "SES-0042",
+      "player_id": "P-110",
+      "table_id": "T-7",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0133",
+      "session_id": "SES-0043",
+      "player_id": "P-111",
+      "table_id": "T-7",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0134",
+      "session_id": "SES-0044",
+      "player_id": "P-112",
+      "table_id": "T-7",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0135",
+      "session_id": "SES-0045",
+      "player_id": "P-113",
+      "table_id": "T-7",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0136",
+      "session_id": "SES-0046",
+      "player_id": "P-114",
+      "table_id": "T-7",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0140",
+      "session_id": "SES-0050",
+      "player_id": "P-116",
+      "table_id": "T-8",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0141",
+      "session_id": "SES-0051",
+      "player_id": "P-117",
+      "table_id": "T-8",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0142",
+      "session_id": "SES-0052",
+      "player_id": "P-118",
+      "table_id": "T-8",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0143",
+      "session_id": "SES-0053",
+      "player_id": "P-119",
+      "table_id": "T-8",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0144",
+      "session_id": "SES-0054",
+      "player_id": "P-120",
+      "table_id": "T-8",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0145",
+      "session_id": "SES-0055",
+      "player_id": "P-121",
+      "table_id": "T-8",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0146",
+      "session_id": "SES-0056",
+      "player_id": "P-122",
+      "table_id": "T-8",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0150",
+      "session_id": "SES-0060",
+      "player_id": "P-161",
+      "table_id": "T-9",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0151",
+      "session_id": "SES-0061",
+      "player_id": "P-162",
+      "table_id": "T-9",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0152",
+      "session_id": "SES-0062",
+      "player_id": "P-163",
+      "table_id": "T-9",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0153",
+      "session_id": "SES-0063",
+      "player_id": "P-164",
+      "table_id": "T-9",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0154",
+      "session_id": "SES-0064",
+      "player_id": "P-165",
+      "table_id": "T-9",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0160",
+      "session_id": "SES-0070",
+      "player_id": "P-171",
+      "table_id": "T-11",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0161",
+      "session_id": "SES-0071",
+      "player_id": "P-172",
+      "table_id": "T-11",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0170",
+      "session_id": "SES-0080",
+      "player_id": "P-141",
+      "table_id": "T-14",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0171",
+      "session_id": "SES-0081",
+      "player_id": "P-142",
+      "table_id": "T-14",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0172",
+      "session_id": "SES-0082",
+      "player_id": "P-143",
+      "table_id": "T-14",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0173",
+      "session_id": "SES-0083",
+      "player_id": "P-144",
+      "table_id": "T-14",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0174",
+      "session_id": "SES-0084",
+      "player_id": "P-145",
+      "table_id": "T-14",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0180",
+      "session_id": "SES-0090",
+      "player_id": "P-211",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0181",
+      "session_id": "SES-0091",
+      "player_id": "P-212",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0182",
+      "session_id": "SES-0092",
+      "player_id": "P-213",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0183",
+      "session_id": "SES-0093",
+      "player_id": "P-214",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0184",
+      "session_id": "SES-0094",
+      "player_id": "P-215",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0185",
+      "session_id": "SES-0095",
+      "player_id": "P-216",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0186",
+      "session_id": "SES-0096",
+      "player_id": "P-217",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0190",
+      "session_id": "SES-0100",
+      "player_id": "P-186",
+      "table_id": "T-18",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0191",
+      "session_id": "SES-0101",
+      "player_id": "P-187",
+      "table_id": "T-18",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0192",
+      "session_id": "SES-0102",
+      "player_id": "P-188",
+      "table_id": "T-18",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0193",
+      "session_id": "SES-0103",
+      "player_id": "P-189",
+      "table_id": "T-18",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0194",
+      "session_id": "SES-0104",
+      "player_id": "P-190",
+      "table_id": "T-18",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0195",
+      "session_id": "SES-0105",
+      "player_id": "P-191",
+      "table_id": "T-18",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0200",
+      "session_id": "SES-0110",
+      "player_id": "P-176",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0201",
+      "session_id": "SES-0111",
+      "player_id": "P-177",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0202",
+      "session_id": "SES-0112",
+      "player_id": "P-185",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0210",
+      "session_id": "SES-0120",
+      "player_id": "P-131",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0211",
+      "session_id": "SES-0121",
+      "player_id": "P-132",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0212",
+      "session_id": "SES-0122",
+      "player_id": "P-133",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0213",
+      "session_id": "SES-0123",
+      "player_id": "P-134",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "event_id": "SE-0214",
+      "session_id": "SES-0124",
+      "player_id": "P-135",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": -1,
+      "offset_min": 0
+    },
+    {
+      "_section": "BACKGROUND LIVE COVERAGE -- every remaining player gets a live event. background_replacement = a persistent join realizing an arrival room_state_hourly.json already narrates; background_transient = a within-hour join+leave that nets to zero at end-of-hour, changing NO seated_count in room_state_hourly.json."
+    },
+    {
+      "event_id": "SE-0290",
+      "session_id": null,
+      "player_id": "P-100",
+      "table_id": "T-14",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 35,
+      "case_ref": null,
+      "coverage": "background_replacement",
+      "note": "replacement join room_state_hourly hour-4 narrates ('T-14: replacement player joined'); persistent to end of sim."
+    },
+    {
+      "event_id": "SE-0300",
+      "session_id": null,
+      "player_id": "P-115",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 11,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0301",
+      "session_id": null,
+      "player_id": "P-115",
+      "table_id": "T-25",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 28,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0302",
+      "session_id": null,
+      "player_id": "P-124",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 14,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0303",
+      "session_id": null,
+      "player_id": "P-124",
+      "table_id": "T-3",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 26,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0304",
+      "session_id": null,
+      "player_id": "P-125",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 21,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0305",
+      "session_id": null,
+      "player_id": "P-125",
+      "table_id": "T-22",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 40,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0306",
+      "session_id": null,
+      "player_id": "P-126",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 8,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0307",
+      "session_id": null,
+      "player_id": "P-126",
+      "table_id": "T-3",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 22,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0308",
+      "session_id": null,
+      "player_id": "P-127",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 5,
+      "offset_min": 15,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0309",
+      "session_id": null,
+      "player_id": "P-127",
+      "table_id": "T-3",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 5,
+      "offset_min": 28,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0310",
+      "session_id": null,
+      "player_id": "P-128",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 6,
+      "offset_min": 22,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0311",
+      "session_id": null,
+      "player_id": "P-128",
+      "table_id": "T-22",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 6,
+      "offset_min": 34,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0312",
+      "session_id": null,
+      "player_id": "P-129",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 7,
+      "offset_min": 9,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0313",
+      "session_id": null,
+      "player_id": "P-129",
+      "table_id": "T-15",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 7,
+      "offset_min": 24,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0314",
+      "session_id": null,
+      "player_id": "P-130",
+      "table_id": "T-9",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 8,
+      "offset_min": 16,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0315",
+      "session_id": null,
+      "player_id": "P-130",
+      "table_id": "T-9",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 8,
+      "offset_min": 30,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0316",
+      "session_id": null,
+      "player_id": "P-137",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 25,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0317",
+      "session_id": null,
+      "player_id": "P-137",
+      "table_id": "T-22",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 40,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0318",
+      "session_id": null,
+      "player_id": "P-138",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 12,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0319",
+      "session_id": null,
+      "player_id": "P-138",
+      "table_id": "T-22",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 30,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0320",
+      "session_id": null,
+      "player_id": "P-139",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 19,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0321",
+      "session_id": null,
+      "player_id": "P-139",
+      "table_id": "T-3",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 36,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0322",
+      "session_id": null,
+      "player_id": "P-140",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 6,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0323",
+      "session_id": null,
+      "player_id": "P-140",
+      "table_id": "T-22",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 18,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0324",
+      "session_id": null,
+      "player_id": "P-146",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 5,
+      "offset_min": 8,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0325",
+      "session_id": null,
+      "player_id": "P-146",
+      "table_id": "T-15",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 5,
+      "offset_min": 22,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0326",
+      "session_id": null,
+      "player_id": "P-147",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 6,
+      "offset_min": 15,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0327",
+      "session_id": null,
+      "player_id": "P-147",
+      "table_id": "T-15",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 6,
+      "offset_min": 28,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0328",
+      "session_id": null,
+      "player_id": "P-148",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 7,
+      "offset_min": 22,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0329",
+      "session_id": null,
+      "player_id": "P-148",
+      "table_id": "T-22",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 7,
+      "offset_min": 34,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0330",
+      "session_id": null,
+      "player_id": "P-149",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 8,
+      "offset_min": 9,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0331",
+      "session_id": null,
+      "player_id": "P-149",
+      "table_id": "T-22",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 8,
+      "offset_min": 24,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0332",
+      "session_id": null,
+      "player_id": "P-150",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 16,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0333",
+      "session_id": null,
+      "player_id": "P-150",
+      "table_id": "T-25",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 30,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0334",
+      "session_id": null,
+      "player_id": "P-156",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 18,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0335",
+      "session_id": null,
+      "player_id": "P-156",
+      "table_id": "T-25",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 34,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0336",
+      "session_id": null,
+      "player_id": "P-157",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 25,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0337",
+      "session_id": null,
+      "player_id": "P-157",
+      "table_id": "T-22",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 40,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0338",
+      "session_id": null,
+      "player_id": "P-158",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 12,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0339",
+      "session_id": null,
+      "player_id": "P-158",
+      "table_id": "T-25",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 30,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0340",
+      "session_id": null,
+      "player_id": "P-159",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 5,
+      "offset_min": 19,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0341",
+      "session_id": null,
+      "player_id": "P-159",
+      "table_id": "T-22",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 5,
+      "offset_min": 36,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0342",
+      "session_id": null,
+      "player_id": "P-160",
+      "table_id": "T-22",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 6,
+      "offset_min": 6,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0343",
+      "session_id": null,
+      "player_id": "P-160",
+      "table_id": "T-22",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 6,
+      "offset_min": 18,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0344",
+      "session_id": null,
+      "player_id": "P-166",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 7,
+      "offset_min": 8,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0345",
+      "session_id": null,
+      "player_id": "P-166",
+      "table_id": "T-25",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 7,
+      "offset_min": 22,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0346",
+      "session_id": null,
+      "player_id": "P-167",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 8,
+      "offset_min": 15,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0347",
+      "session_id": null,
+      "player_id": "P-167",
+      "table_id": "T-25",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 8,
+      "offset_min": 28,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0348",
+      "session_id": null,
+      "player_id": "P-168",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 22,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0349",
+      "session_id": null,
+      "player_id": "P-168",
+      "table_id": "T-3",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 34,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0350",
+      "session_id": null,
+      "player_id": "P-169",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 9,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0351",
+      "session_id": null,
+      "player_id": "P-169",
+      "table_id": "T-3",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 24,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0352",
+      "session_id": null,
+      "player_id": "P-170",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 16,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0353",
+      "session_id": null,
+      "player_id": "P-170",
+      "table_id": "T-25",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 30,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0354",
+      "session_id": null,
+      "player_id": "P-173",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 17,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0355",
+      "session_id": null,
+      "player_id": "P-173",
+      "table_id": "T-3",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 32,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0356",
+      "session_id": null,
+      "player_id": "P-174",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 5,
+      "offset_min": 24,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0357",
+      "session_id": null,
+      "player_id": "P-174",
+      "table_id": "T-25",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 5,
+      "offset_min": 38,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0358",
+      "session_id": null,
+      "player_id": "P-175",
+      "table_id": "T-25",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 6,
+      "offset_min": 11,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0359",
+      "session_id": null,
+      "player_id": "P-175",
+      "table_id": "T-25",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 6,
+      "offset_min": 28,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0360",
+      "session_id": null,
+      "player_id": "P-178",
+      "table_id": "T-7",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 7,
+      "offset_min": 12,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0361",
+      "session_id": null,
+      "player_id": "P-178",
+      "table_id": "T-7",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 7,
+      "offset_min": 30,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0362",
+      "session_id": null,
+      "player_id": "P-179",
+      "table_id": "T-7",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 8,
+      "offset_min": 19,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0363",
+      "session_id": null,
+      "player_id": "P-179",
+      "table_id": "T-7",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 8,
+      "offset_min": 36,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0364",
+      "session_id": null,
+      "player_id": "P-180",
+      "table_id": "T-11",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 6,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0365",
+      "session_id": null,
+      "player_id": "P-180",
+      "table_id": "T-11",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 18,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0366",
+      "session_id": null,
+      "player_id": "P-181",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 13,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0367",
+      "session_id": null,
+      "player_id": "P-181",
+      "table_id": "T-15",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 32,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0368",
+      "session_id": null,
+      "player_id": "P-182",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 20,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0369",
+      "session_id": null,
+      "player_id": "P-182",
+      "table_id": "T-3",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 38,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0370",
+      "session_id": null,
+      "player_id": "P-183",
+      "table_id": "T-7",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 7,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0371",
+      "session_id": null,
+      "player_id": "P-183",
+      "table_id": "T-7",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 20,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0372",
+      "session_id": null,
+      "player_id": "P-184",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 5,
+      "offset_min": 14,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0373",
+      "session_id": null,
+      "player_id": "P-184",
+      "table_id": "T-3",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 5,
+      "offset_min": 26,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0374",
+      "session_id": null,
+      "player_id": "P-196",
+      "table_id": "T-3",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 6,
+      "offset_min": 18,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0375",
+      "session_id": null,
+      "player_id": "P-196",
+      "table_id": "T-3",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 6,
+      "offset_min": 34,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0376",
+      "session_id": null,
+      "player_id": "P-197",
+      "table_id": "T-9",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 7,
+      "offset_min": 25,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0377",
+      "session_id": null,
+      "player_id": "P-197",
+      "table_id": "T-9",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 7,
+      "offset_min": 40,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0378",
+      "session_id": null,
+      "player_id": "P-210",
+      "table_id": "T-9",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 8,
+      "offset_min": 16,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0379",
+      "session_id": null,
+      "player_id": "P-210",
+      "table_id": "T-9",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 8,
+      "offset_min": 30,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0380",
+      "session_id": null,
+      "player_id": "P-218",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 12,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0381",
+      "session_id": null,
+      "player_id": "P-218",
+      "table_id": "T-15",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 1,
+      "offset_min": 30,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0382",
+      "session_id": null,
+      "player_id": "P-219",
+      "table_id": "T-18",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 19,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0383",
+      "session_id": null,
+      "player_id": "P-219",
+      "table_id": "T-18",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 2,
+      "offset_min": 36,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0384",
+      "session_id": null,
+      "player_id": "P-220",
+      "table_id": "T-14",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 6,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0385",
+      "session_id": null,
+      "player_id": "P-220",
+      "table_id": "T-14",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 3,
+      "offset_min": 18,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0386",
+      "session_id": null,
+      "player_id": "P-221",
+      "table_id": "T-15",
+      "event_type": "join",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 13,
+      "case_ref": null,
+      "coverage": "background_transient"
+    },
+    {
+      "event_id": "SE-0387",
+      "session_id": null,
+      "player_id": "P-221",
+      "table_id": "T-15",
+      "event_type": "leave",
+      "scenario": "both",
+      "hour": 4,
+      "offset_min": 32,
+      "case_ref": null,
+      "coverage": "background_transient"
+    }
+  ],
+  "co_seating_history": [
+    {
+      "co_seat_id": "CSH-CL001-01",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-01",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-02",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-02",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-03",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-03",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-04",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-04",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-05",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-05",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-06",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-06",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-07",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-07",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-08",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-08",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-09",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-09",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-10",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-10",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-11",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-11",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-12",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-12",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-13",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-13",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-14",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-14",
+      "shared": true,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-15",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-15",
+      "shared": false,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-16",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-16",
+      "shared": false,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-17",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-17",
+      "shared": false,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-CL001-18",
+      "window": "history",
+      "group_kind": "cluster",
+      "group_id": "CL-001",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "prior_table_label": "HIST-CL-001-18",
+      "shared": false,
+      "case_ref": "CASE-C"
+    },
+    {
+      "co_seat_id": "CSH-H01-01",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-01",
+      "shared": true,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-02",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-02",
+      "shared": true,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-03",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-03",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-04",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-04",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-05",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-05",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-06",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-06",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-07",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-07",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-08",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-08",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-09",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-09",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-10",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-10",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-11",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-11",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-12",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-12",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-13",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-13",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-14",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-14",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-15",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-15",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-16",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-16",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-17",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-17",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-18",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-18",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-19",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-19",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-20",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-20",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-21",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-21",
+      "shared": false,
+      "case_ref": "CASE-E"
+    },
+    {
+      "co_seat_id": "CSH-H01-22",
+      "window": "history",
+      "group_kind": "household",
+      "group_id": "H-01",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "prior_table_label": "HIST-H-01-22",
+      "shared": false,
+      "case_ref": "CASE-E"
+    }
   ]
 }
