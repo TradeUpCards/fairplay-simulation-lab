@@ -57,9 +57,8 @@ nav a.active{color:var(--gold);border-left-color:var(--gold);background:var(--go
 .sec h2{font-size:clamp(18px,2.4vw,24px);font-weight:800;margin-bottom:8px;letter-spacing:-.01em}
 .sec .lede{color:var(--muted);font-size:15px;margin-bottom:22px;max-width:760px}
 
-.row{display:grid;grid-template-columns:48px 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
-.row-n{background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;font-weight:700;color:var(--gold2);font-size:14px}
-.row-step{grid-column:1 / -1;background:var(--bg2);padding:10px 16px;font-weight:700;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.row-step{grid-column:1 / -1;background:var(--bg2);padding:11px 18px;font-weight:700;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
 .samediff{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:2px 8px;border-radius:4px;margin-left:auto}
 .same{background:rgba(70,201,139,.12);color:var(--green)}
 .diff{background:rgba(245,183,67,.14);color:var(--amber)}
@@ -82,7 +81,7 @@ nav a.active{color:var(--gold);border-left-color:var(--gold);background:var(--go
 .rec{margin-top:20px;border-left:3px solid var(--gold);background:var(--gold-bg);border-radius:0 8px 8px 0;padding:14px 18px;font-size:14.5px;color:var(--muted)}
 .rec b{color:var(--text)}
 
-@media(max-width:820px){.bigidea,.pick{grid-template-columns:1fr}.row{grid-template-columns:36px 1fr}.cell.ovr{grid-column:1 / -1;border-top:1px solid var(--border)}.cell.mn{border-right:none}}
+@media(max-width:820px){.bigidea,.pick{grid-template-columns:1fr}.row{grid-template-columns:1fr}.cell.mn{border-right:none;border-bottom:1px solid var(--border)}}
 @media(max-width:1000px){#hbg{display:flex}#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#overlay.open{display:block}#main{margin-left:0;padding-top:64px}}
 </style>
 </head>
