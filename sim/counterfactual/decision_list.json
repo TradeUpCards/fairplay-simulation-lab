@@ -39,11 +39,11 @@
       "id": "cluster-third-seat",
       "hour": 2,
       "case_ref": "coordinated-cluster",
-      "trigger": "P-CC requests the open seat at T-11 where P-CA and P-CB are already seated",
+      "trigger": "P-200 requests the open seat at T-11 where P-198 and P-199 are already seated",
       "standard": {
         "action": "seat",
         "table": "T-11",
-        "rationale": "completes P-CA/P-CB/P-CC co-seating formation"
+        "rationale": "completes P-198/P-199/P-200 co-seating formation"
       },
       "fairplay": {
         "action": "hold_for_review",
@@ -56,14 +56,14 @@
       "id": "cluster-pit-boss-accept",
       "hour": 3,
       "case_ref": "coordinated-cluster",
-      "trigger": "pit boss reviews the held P-CC seat at T-11 (FairPlay path only; Standard path has no pending review)",
+      "trigger": "pit boss reviews the held P-200 seat at T-11 (FairPlay path only; Standard path has no pending review)",
       "standard": {
         "action": "none",
-        "rationale": "P-CA/P-CB/P-CC formation completed at hour 2; no review pending"
+        "rationale": "P-198/P-199/P-200 formation completed at hour 2; no review pending"
       },
       "fairplay": {
         "action": "accept_containment",
-        "rationale": "pit boss accepts hold — P-CA/P-CB/P-CC cannot co-seat; P-CC re-routed to a separate table",
+        "rationale": "pit boss accepts hold — P-198/P-199/P-200 cannot co-seat; P-200 re-routed to a separate table",
         "reason_codes": ["pit_boss_intervention", "cluster_formation_blocked"]
       }
     },

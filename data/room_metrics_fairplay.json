@@ -7,7 +7,7 @@
     "horizon_hours": 8,
     "counterfactual_decisions_ref": "sim/counterfactual/decision_list.json",
     "room_state_ref": "data/room_state_hourly.json",
-    "fixture_note": "Static Day-2 fixture. FairPlay path: all four FairPlay decisions applied. P-104 routed to T-8 (hour 1, 42-min session). T-22 suppressed from new/rec lobby (hour 0). Cluster P-CC seat held for review at T-11 (hour 2); pit boss accepts containment (hour 3), P-CC re-routed. H1/H2 monitored only (no escalation). All divergence from standard path is traceable to decisions in decision_list.json.",
+    "fixture_note": "Static Day-2 fixture. FairPlay path: all four FairPlay decisions applied. P-104 routed to T-8 (hour 1, 42-min session). T-22 suppressed from new/rec lobby (hour 0). Cluster P-200 seat held for review at T-11 (hour 2); pit boss accepts containment (hour 3), P-200 re-routed. H1/H2 monitored only (no escalation). All divergence from standard path is traceable to decisions in decision_list.json.",
     "field_glossary": {
       "hour": "Simulation hour (1–8). Hour 0 start state is in room_state_hourly.json.",
       "cumulative_paid_seat_time_minutes": "Running total of all player-minutes at active tables from hour 0 to end of this hour.",
@@ -33,7 +33,7 @@
       "projected_eod_paid_seat_time_minutes": 32500,
       "reward_fee_ratio": 0.27,
       "high_risk_seating_formations": 1,
-      "hour_note": "P-104 routed to T-8 (balanced); 42-min session, still active at hour end. T-22 suppressed from new/rec lobby — no predatory-mix recruitment. One natural table break (T-7 organic attrition). Cluster A/B (P-CA/P-CB) still flagged at T-11 but no third seat yet — partial formation only."
+      "hour_note": "P-104 routed to T-8 (balanced); 42-min session, still active at hour end. T-22 suppressed from new/rec lobby — no predatory-mix recruitment. One natural table break (T-7 organic attrition). Cluster A/B (P-198/P-199) still flagged at T-11 but no third seat yet — partial formation only."
     },
     {
       "hour": 2,
@@ -46,7 +46,7 @@
       "projected_eod_paid_seat_time_minutes": 32000,
       "reward_fee_ratio": 0.28,
       "high_risk_seating_formations": 1,
-      "hour_note": "P-CC requests open seat at T-11 — held for pit-boss review. A/B/C formation incomplete; casual players at T-11 remain. T-22 stays short-handed (no lobby promotion to new/rec); no additional early exits. Active healthy tables improve to 11 as T-22 stops being a churn source."
+      "hour_note": "P-200 requests open seat at T-11 — held for pit-boss review. A/B/C formation incomplete; casual players at T-11 remain. T-22 stays short-handed (no lobby promotion to new/rec); no additional early exits. Active healthy tables improve to 11 as T-22 stops being a churn source."
     },
     {
       "hour": 3,
@@ -59,7 +59,7 @@
       "projected_eod_paid_seat_time_minutes": 32000,
       "reward_fee_ratio": 0.29,
       "high_risk_seating_formations": 1,
-      "hour_note": "Pit boss accepts cluster containment: P-CC re-routed to a separate table. P-CA/P-CB remain at T-11 but formation is blocked — casual players at T-11 stay. Same-device flag (H1/H2) surfaces; FairPlay path monitors only — no escalation. One additional early break (organic). Healthy tables reach 12."
+      "hour_note": "Pit boss accepts cluster containment: P-200 re-routed to a separate table. P-198/P-199 remain at T-11 but formation is blocked — casual players at T-11 stay. Same-device flag (H1/H2) surfaces; FairPlay path monitors only — no escalation. One additional early break (organic). Healthy tables reach 12."
     },
     {
       "hour": 4,
@@ -124,7 +124,7 @@
       "projected_eod_paid_seat_time_minutes": 31500,
       "reward_fee_ratio": 0.31,
       "high_risk_seating_formations": 1,
-      "hour_note": "End of 8-hour simulation. FairPlay path result: 11 healthy tables (of 12 active), 42% new-player retention, 38-min avg casual session, 1 active formation (P-CA/P-CB monitored, P-CC contained), 31,500 total paid seat-minutes. Delta vs Standard: +22.6% paid seat-time, +16pp retention, +4 healthy tables, -5 early breaks, -2 formations."
+      "hour_note": "End of 8-hour simulation. FairPlay path result: 11 healthy tables (of 12 active), 42% new-player retention, 38-min avg casual session, 1 active formation (P-198/P-199 monitored, P-200 contained), 31,500 total paid seat-minutes. Delta vs Standard: +22.6% paid seat-time, +16pp retention, +4 healthy tables, -5 early breaks, -2 formations."
     }
   ]
 }
