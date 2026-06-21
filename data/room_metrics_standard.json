@@ -7,7 +7,7 @@
     "horizon_hours": 8,
     "counterfactual_decisions_ref": "sim/counterfactual/decision_list.json",
     "room_state_ref": "data/room_state_hourly.json",
-    "fixture_note": "Static Day-2 fixture. Standard path: no FairPlay interventions. P-104 seated at T-22 (hour 1, 12-min session, early exit). Cluster P-CC completes formation at T-11 (hour 2). No pit-boss intervention. T-22 promoted normally to new/rec players. All divergence from fairplay path is traceable to decisions in decision_list.json.",
+    "fixture_note": "Static Day-2 fixture. Standard path: no FairPlay interventions. P-104 seated at T-22 (hour 1, 12-min session, early exit). Cluster P-200 completes formation at T-11 (hour 2). No pit-boss intervention. T-22 promoted normally to new/rec players. All divergence from fairplay path is traceable to decisions in decision_list.json.",
     "field_glossary": {
       "hour": "Simulation hour (1–8). Hour 0 start state is in room_state_hourly.json.",
       "cumulative_paid_seat_time_minutes": "Running total of all player-minutes at active tables from hour 0 to end of this hour.",
@@ -33,7 +33,7 @@
       "projected_eod_paid_seat_time_minutes": 30200,
       "reward_fee_ratio": 0.27,
       "high_risk_seating_formations": 1,
-      "hour_note": "P-104 seated at T-22 (+5 min); exits after 12-min session (+17 min). T-22 short-handed but retained by P-183/P-184/P-185. Cluster A/B (P-CA/P-CB) active at T-11 — partial formation flagged."
+      "hour_note": "P-104 seated at T-22 (+5 min); exits after 12-min session (+17 min). T-22 short-handed but retained by P-183/P-184/P-185. Cluster A/B (P-198/P-199) active at T-11 — partial formation flagged."
     },
     {
       "hour": 2,
@@ -46,7 +46,7 @@
       "projected_eod_paid_seat_time_minutes": 29100,
       "reward_fee_ratio": 0.26,
       "high_risk_seating_formations": 2,
-      "hour_note": "P-CC seats at T-11 — A/B/C co-seating formation complete. T-22 promotion continues attracting 1 new/rec player who exits within 20 min (second early break). Retention drops as T-22 churn accumulates."
+      "hour_note": "P-200 seats at T-11 — A/B/C co-seating formation complete. T-22 promotion continues attracting 1 new/rec player who exits within 20 min (second early break). Retention drops as T-22 churn accumulates."
     },
     {
       "hour": 3,
@@ -59,7 +59,7 @@
       "projected_eod_paid_seat_time_minutes": 27800,
       "reward_fee_ratio": 0.25,
       "high_risk_seating_formations": 2,
-      "hour_note": "Casual players at T-11 begin exiting under cluster pressure. T-22 flagged fragile/beginner-unfriendly; two more early table breaks. H1/H2 same-device flag (P-H1/P-H2) surfaces — no action in standard path."
+      "hour_note": "Casual players at T-11 begin exiting under cluster pressure. T-22 flagged fragile/beginner-unfriendly; two more early table breaks. H1/H2 same-device flag (P-192/P-193) surfaces — no action in standard path."
     },
     {
       "hour": 4,

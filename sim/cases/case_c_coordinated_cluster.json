@@ -77,8 +77,6 @@
   "lens_separation_guard": "This case is INTEGRITY_RISK. It is the true-positive integrity case and must rank ABOVE the false-positive traps (CASE-D regular overlap, CASE-E shared device). It must use uncertainty language and never state collusion as fact.",
 
   "id_reconciliation": [
-    "Canonical cluster IDs are P-198/P-199/P-200 (agree across players.json + seeded_case_labels.json).",
-    "table_roster.json T-11 seated_player_ids currently show P-CA/P-CB (Bram placeholder namespace) instead of P-198/P-199 — Bram must reconcile the roster seating to the canonical P-19x IDs. Flagged to Tate.",
-    "My decision_list.json was patched to P-CA/P-CB/P-CC from the roster; once the namespace is canonicalized to P-19x, decision_list triggers should be re-patched to match. Tracked in cleo-handoff."
+    "Canonical cluster IDs are P-198/P-199/P-200 — consistent across players.json, seeded_case_labels.json, table_roster.json (Bram migrated the roster, PR #8), and decision_list.json. No outstanding conflicts."
   ]
 }

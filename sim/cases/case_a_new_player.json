@@ -23,9 +23,9 @@
   "narrative": "P-104 is a 4-day-old new player (31 lifetime hands). On a seat request the room can route them to T-22 (short-handed 3/6, high-volatility, two aggressive/high-volume regulars P-176/P-177) or to a balanced table. T-22 is statistically beginner-unfriendly: new players seated there churn fast (~12-min sessions vs ~42 min at a healthy table). This is a TABLE-HEALTH risk, not an integrity risk — no collusion, no device link, no cluster. The harm is silent churn, not cheating.",
 
   "demo_spine": {
-    "lobby": "Player lobby shows neutral copy only. FairPlay path: T-08 'Recommended for you', T-14 'Good fit', T-22 'Available' (de-prioritized internally — never labeled predatory player-side).",
+    "lobby": "Player lobby shows neutral copy only. FairPlay path: T-8 'Recommended for you', T-14 'Good fit', T-22 'Available' (de-prioritized internally — never labeled predatory player-side).",
     "pit_boss": "Operator console surfaces table-health score, new-player seating risk, composition, reason codes, and the alternative route. Operator can accept reroute / override / suppress T-22 for new players.",
-    "simulator": "Room Impact Simulator contrasts P-104 churning at T-22 (Standard) vs retained at T-08 (FairPlay).",
+    "simulator": "Room Impact Simulator contrasts P-104 churning at T-22 (Standard) vs retained at T-8 (FairPlay).",
     "eval": "Eval A checks the case is classed beginner_unfriendly (table_health), rerouted, and NOT conflated with integrity risk."
   },
 
@@ -42,13 +42,13 @@
       "decision_list_ref": "sim/counterfactual/decision_list.json#new-player-route",
       "hour": 1,
       "standard": "P-104 seated at T-22 (no risk-aware routing) → ~12-min session, early exit",
-      "fairplay": "P-104 routed to T-08 (balanced) → ~42-min session, retained"
+      "fairplay": "P-104 routed to T-8 (balanced) → ~42-min session, retained"
     }
   ],
 
   "expected_outcome": {
     "standard": "P-104 churns; T-22 trends fragile/beginner-unfriendly; contributes to lower new-player retention.",
-    "fairplay": "P-104 retained at T-08; new-player retention preserved.",
+    "fairplay": "P-104 retained at T-8; new-player retention preserved.",
     "metrics_ref": {
       "standard": "data/room_metrics_standard.json (hours 1-8: new_player_retention_pct 72→26, avg_casual_session 44→22)",
       "fairplay": "data/room_metrics_fairplay.json (hours 1-8: new_player_retention_pct 75→42, avg_casual_session 46→38)"

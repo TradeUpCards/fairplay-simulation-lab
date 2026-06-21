@@ -9,7 +9,7 @@ Contract-1 data. P2 supplies the scenario and the ground-truth seeds; P3/P4 supp
 
 | File | case_id | demo_role | risk_lens | trap? | One-line |
 |------|---------|-----------|-----------|-------|----------|
-| `case_a_new_player.json` | CASE-A | `table_health` | `table_health` | no | New player (P-104) churns at predatory T-22; reroute to balanced T-08. |
+| `case_a_new_player.json` | CASE-A | `table_health` | `table_health` | no | New player (P-104) churns at predatory T-22; reroute to balanced T-8. |
 | `case_c_coordinated_cluster.json` | CASE-C | `integrity` | `integrity_risk` | no | Cluster A/B/C (P-198/199/200) converge at T-11; hold 3rd seat for review. |
 | `case_e_shared_device_fp.json` | CASE-E | `false_positive` | `integrity_risk` | **yes** | Household H1/H2 (P-192/193) share a device but nothing else; monitor only. |
 
@@ -44,18 +44,15 @@ confused with.
 - **Outcome metrics:** `data/room_metrics_{standard,fairplay}.json` (Cleo).
 - **Consumers:** P3 (scores/evidence packet), P4 (AI summaries/evals), P1 (UI states).
 
-## Known cross-workstream reconciliation (flagged to Tate)
+## Cross-workstream reconciliation — RESOLVED
 
-**Player-ID convention is pending a Tate decision** (Contract-1 seam). Two conventions live on
-`main`: Aria's `players.json` + `seeded_case_labels.json` use **P-198/P-199/P-200** (cluster) and
-**P-192/P-193** (household); Bram's roster + Cleo's `decision_list.json` use **P-CA/P-CB/P-CC** and
-**P-H1/P-H2**. These `sim/cases/**` files adopt the **answer-key convention (P-198/199/200,
-P-192/193)** since the cases mirror the eval answer key. Once Tate ratifies, `decision_list.json`
-trigger text re-patches to match. The CASE-C `id_reconciliation` block tracks this; CASE-A and CASE-E
-have no player-ID conflicts.
+**Player-ID convention is canonical and consistent.** All P2 files use the answer-key namespace:
+cluster **P-198/P-199/P-200**, household **P-192/P-193**. Bram migrated his roster/sessions/seat
+events to these IDs (PR #8) and Cleo's `decision_list.json` + `room_metrics_*.json` were re-patched
+off the earlier placeholder namespace to match. No outstanding player-ID conflicts.
 
-Table labels are **RESOLVED** (Aria, branch `sim/aria-case-c-table-id`): canonical is `T-8` (no
-leading zero) and `T-11` for the cluster — adopted in CASE-A/C here.
+**Table labels** are likewise canonical: `T-8` (no leading zero), `T-11` for the cluster (Aria's
+join-key fix, PR #5) — adopted across CASE-A/C here.
 
 ## Not in scope here
 
