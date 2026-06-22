@@ -4,6 +4,7 @@ import { useResource } from './state/useResource'
 import { loadHealth, loadRouterLobby } from './data/shim'
 import { ResourceBoundary } from './components/ResourceBoundary'
 import { Simulator } from './views/Simulator'
+import { PitBossIndex } from './views/PitBossIndex'
 import { PlayerLobby } from './views/PlayerLobby'
 import './styles.css'
 
@@ -64,6 +65,7 @@ export function App() {
       </section>
 
       <Simulator />
+      <PitBossIndex />
       <PlayerLobby />
     </main>
   )

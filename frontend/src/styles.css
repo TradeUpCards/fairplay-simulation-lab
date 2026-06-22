@@ -358,3 +358,155 @@ button:hover {
 .hour-notes strong {
   color: #c3c9d6;
 }
+
+/* ── Pit-boss index (Back of House — operator table list) ──────────────────── */
+.pit-index {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #232a36;
+}
+
+.pit-index-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.pit-index-note {
+  margin: 0.2rem 0 1rem;
+  font-size: 0.78rem;
+  color: #6b7283;
+}
+
+.pit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.pit-row {
+  border: 1px solid #232a36;
+  border-radius: 9px;
+  background: #161b24;
+  overflow: hidden;
+}
+
+.pit-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 0.6rem 0.8rem;
+}
+
+.pit-row-main:hover {
+  background: #1b2230;
+}
+
+.pit-rank {
+  color: #6b7283;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  min-width: 1.8rem;
+}
+
+.pit-table-id {
+  font-weight: 600;
+  min-width: 2.5rem;
+}
+
+.pit-health {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  font-weight: 600;
+  min-width: 2rem;
+}
+
+.band-chip {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.band-healthy {
+  background: #16341f;
+  border-color: #2f7d4a;
+  color: #8be3a7;
+}
+
+.band-fragile {
+  background: #33301a;
+  border-color: #8a7a2f;
+  color: #e3d28b;
+}
+
+.band-beginner {
+  background: #3a2a1a;
+  border-color: #8a5f2f;
+  color: #efc28f;
+}
+
+.band-collapsed {
+  background: #3a1a1f;
+  border-color: #8a2f3f;
+  color: #ef8f9b;
+}
+
+.review-flag {
+  margin-left: auto;
+  font-size: 0.72rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: #3a1a1f;
+  border: 1px solid #b3455a;
+  color: #ff9b9b;
+  font-weight: 600;
+}
+
+.pit-terms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0 0.8rem 0.5rem;
+  font-size: 0.72rem;
+  color: #8b93a7;
+}
+
+.term {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.term-bar {
+  display: inline-block;
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  background: #232a36;
+  overflow: hidden;
+}
+
+.term-fill {
+  display: block;
+  height: 100%;
+  background: #5f7fd9;
+}
+
+.term-val {
+  font-variant-numeric: tabular-nums;
+  color: #c3c9d6;
+}
+
+.pit-why {
+  margin: 0;
+  padding: 0 0.8rem 0.7rem;
+  font-size: 0.8rem;
+  color: #9aa2b3;
+}
