@@ -1,0 +1,6 @@
+# Dependencies for the ML challengers (ml/) and the champion-vs-challenger panel.
+# The stdlib-only scoring core (scoring/) does NOT need these.
+#   pip install -r ml/requirements.txt
+scikit-learn>=1.4
+pandas>=2.0
+numpy>=1.26

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Champion vs Challenger — Classification ①</title>
+<style>
+:root{--bg:#060e08;--bg2:#0a1409;--border:#182d1c;--border2:#1f3c25;--text:#d8ecda;
+--muted:#7a9c80;--dim:#3a553f;--gold:#c9a84c;--gold2:#a8882e;--blue:#4f8ef7;--blue2:#7fb0ff;
+--green:#3fcc6a;--red:#e05c4a;--amber:#f5a623;--mono:'SF Mono','JetBrains Mono','Courier New',monospace;--r:9px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(900px 500px at 85% -10%,rgba(201,168,76,.06),transparent 60%),var(--bg);
+color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+line-height:1.65;padding:clamp(20px,4vw,60px);max-width:1100px;margin:0 auto}
+h1{font-size:clamp(24px,3.6vw,36px);font-weight:850;letter-spacing:-.02em}
+h2{font-size:20px;font-weight:800;margin:0 0 4px} h4{font-size:12px;color:var(--gold)}
+.kicker{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold2);font-weight:800}
+.lede{color:var(--muted);max-width:75ch;margin-top:12px;font-size:14.5px}
+.mono{font-family:var(--mono)} .dim{color:var(--dim)}
+section{margin-top:40px} .sh{border-bottom:1px solid var(--border);padding-bottom:9px;margin-bottom:16px}
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px}
+@media(max-width:640px){.gauges{grid-template-columns:1fr}}
+.g{border:1px solid var(--border2);border-radius:var(--r);padding:20px 22px;background:var(--bg2);position:relative}
+.g.champ{border-color:rgba(201,168,76,.32)} .g.chall{border-color:rgba(79,142,247,.32)}
+.g .lab{font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800}
+.g.champ .lab{color:var(--gold)} .g.chall .lab{color:var(--blue2)}
+.g .acc{font-size:46px;font-weight:850;line-height:1;margin:8px 0 2px}
+.g .sub{font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+.g .meth{font-size:11px;color:var(--dim);margin-top:8px}
+.verdict{margin-top:16px;border:1px solid var(--border2);border-left:3px solid var(--gold);
+border-radius:var(--r);background:var(--bg2);padding:15px 18px;font-size:13.5px}
+.verdict b{color:var(--text)}
+.method{margin-top:20px;border:1px solid var(--border2);border-left:3px solid var(--blue);
+border-radius:var(--r);background:rgba(79,142,247,.05);padding:15px 18px}
+.method h4{font-size:12.5px;color:var(--blue2);letter-spacing:.02em;margin-bottom:8px}
+.method ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+.method li{font-size:12.5px;color:var(--muted);padding-left:15px;position:relative;line-height:1.55}
+.method li::before{content:'›';position:absolute;left:0;color:var(--blue2)}
+.method b{color:var(--text)}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--gold2);font-weight:800}
+.kind{font-size:9px;padding:1px 6px;border-radius:4px;font-family:var(--mono);margin-left:6px;text-transform:uppercase}
+.kind.struct{background:rgba(201,168,76,.13);color:var(--gold)}
+.kind.behav{background:rgba(79,142,247,.13);color:var(--blue2)}
+.bar{position:relative;height:18px;background:#0e1c12;border-radius:4px;overflow:hidden;min-width:120px}
+.fill{height:100%;border-radius:4px}
+.bv{position:absolute;right:7px;top:0;font-size:10.5px;line-height:18px;font-family:var(--mono);color:var(--text)}
+.lead-c{color:var(--gold);font-weight:700} .lead-l{color:var(--blue2);font-weight:700} .lead-t{color:var(--dim)}
+td.ok{color:var(--green)} td.no{color:var(--red)}
+.ccards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}
+@media(max-width:720px){.ccards{grid-template-columns:1fr 1fr}}
+.ccard{border:1px solid var(--border2);border-radius:var(--r);background:var(--bg2);padding:12px 14px}
+.ccard ul{list-style:none;margin-top:6px} .ccard li{display:flex;justify-content:space-between;font-size:11.5px;padding:2px 0;font-family:var(--mono)}
+.cf{color:var(--muted)} .cw.pos{color:var(--green)} .cw.neg{color:var(--red)}
+.note{font-size:11.5px;color:var(--dim);margin-top:10px}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:middle}
+.footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);font-size:11px;color:var(--dim)}
+</style></head><body>
+
+<div class="kicker">FairPlay IQ · Score ① · the "ML in perception" reveal</div>
+<h1>Champion vs Challenger</h1>
+<p class="lede">The classifier ships as deterministic <b>threshold rules</b> (champion). The interpretable
+<b>one-vs-rest logistic</b> challenger learns from the 9 behavioral features alone. Who's more accurate —
+and <i>where</i>?</p>
+
+<div class="gauges">
+  <div class="g champ"><div class="lab">◆ Champion · rules</div>
+    <div class="acc" style="color:var(--gold)">88.5%</div>
+    <div class="sub">108/122 correct</div>
+    <div class="meth">Threshold cascade. Uses structural fields (cluster_id, household_id, bot score) as hard rules.</div></div>
+  <div class="g chall"><div class="lab">▲ Challenger · ML</div>
+    <div class="acc" style="color:var(--blue2)">85.2%</div>
+    <div class="sub">104/122 correct · leave-one-out</div>
+    <div class="meth">One-vs-rest: 10 binary logistic models (one per archetype) on 9 behavioral features only.
+    Coefficients = reason codes.</div></div>
+</div>
+
+<div class="method">
+  <h4>⚖ How to read this — the two are NOT scored on equal footing</h4>
+  <ul>
+    <li><b>Answer key:</b> each player's true archetype is the type P2's generator built it as (documented ID
+      ranges). Both approaches are scored against this same key.</li>
+    <li><b>Champion (rules):</b> threshold rules reverse-engineered from that <i>same generator</i>, and allowed to
+      read the structural fields (cluster_id, household_id, bot score) that <i>define</i> the rare classes. Scored
+      <b>in-sample</b> — it largely <i>recites</i> the generator rather than learning it.</li>
+    <li><b>Challenger (ML):</b> one-vs-rest logistic on the 9 <i>behavioral</i> features only (no structural
+      fields), scored <b>out-of-sample</b> by leave-one-out — each player predicted by a model that never saw it.
+      It has to <i>generalize</i>.</li>
+    <li><b>So "accuracy" here isn't a clean benchmark.</b> The honest read: a model learning from behavior alone
+      lands within ~3 pts of rules that have the answer key baked in. On synthetic rule-generated data this is
+      partly circular; on <i>real</i> data (noisy/missing structural fields, no clean generative rule) the ML's
+      relative value would likely be higher.</li>
+  </ul>
+</div>
+
+<div class="verdict">
+  <b>Verdict — rules reproduce the generator; the ML generalizes.</b> Overall the rules edge ahead
+  (88.5% vs 85.2%) — but mostly because they get the rare <b>structural</b> classes (new, bot_like,
+  household, cluster) as near-free lookups of the fields that define them, while the ML must infer them from
+  behavior alone and can't learn a 1-example class out-of-sample. On the fuzzy <b>behavioral boundary</b>, where
+  the rule thresholds are arbitrary cuts on a continuum, the ML <b>generalizes better</b>:
+  <b style="color:var(--blue2)">81/86</b> vs
+  <b style="color:var(--gold)">72/86</b> across
+  recreational/regular/grinder/healthy_anchor. That's the real takeaway — <b>rules for structure, ML for
+  nuance</b> — and why the champion ships the demo while the challenger is promoted only where it measurably helps.
+  The two agree on <b>79%</b> of players.
+</div>
+
+<section><div class="sh"><h2>Per-class accuracy</h2></div>
+  <div class="legend"><span><i style="background:var(--gold)"></i>champion (rules)</span>
+    <span><i style="background:var(--blue)"></i>challenger (ML)</span>
+    <span><span class="kind struct">structural</span> rules' home turf</span>
+    <span><span class="kind behav">behavioral</span> ML's edge</span></div>
+  <table><thead><tr><th>Archetype</th><th>n</th><th>Champion ◆</th><th>Challenger ▲</th><th>Leads</th></tr></thead>
+  <tbody><tr class="struct"><td><b>aggressive_predatory</b> <span class="kind struct">structural</span></td><td>8</td><td><div class="bar"><div class="fill" style="width:100%;background:var(--gold)"></div><span class="bv">8/8</span></div></td><td><div class="bar"><div class="fill" style="width:100%;background:var(--blue)"></div><span class="bv">8/8</span></div></td><td class="lead-t">tie</td></tr><tr class="struct"><td><b>bot_like</b> <span class="kind struct">structural</span></td><td>1</td><td><div class="bar"><div class="fill" style="width:100%;background:var(--gold)"></div><span class="bv">1/1</span></div></td><td><div class="bar"><div class="fill" style="width:0%;background:var(--blue)"></div><span class="bv">0/1</span></div></td><td class="lead-c">rules</td></tr><tr class="struct"><td><b>cluster_member</b> <span class="kind struct">structural</span></td><td>5</td><td><div class="bar"><div class="fill" style="width:100%;background:var(--gold)"></div><span class="bv">5/5</span></div></td><td><div class="bar"><div class="fill" style="width:60%;background:var(--blue)"></div><span class="bv">3/5</span></div></td><td class="lead-c">rules</td></tr><tr class="behav"><td><b>grinder</b> <span class="kind behav">behavioral</span></td><td>12</td><td><div class="bar"><div class="fill" style="width:100%;background:var(--gold)"></div><span class="bv">12/12</span></div></td><td><div class="bar"><div class="fill" style="width:100%;background:var(--blue)"></div><span class="bv">12/12</span></div></td><td class="lead-t">tie</td></tr><tr class="behav"><td><b>healthy_anchor</b> <span class="kind behav">behavioral</span></td><td>18</td><td><div class="bar"><div class="fill" style="width:100%;background:var(--gold)"></div><span class="bv">18/18</span></div></td><td><div class="bar"><div class="fill" style="width:100%;background:var(--blue)"></div><span class="bv">18/18</span></div></td><td class="lead-t">tie</td></tr><tr class="struct"><td><b>new</b> <span class="kind struct">structural</span></td><td>8</td><td><div class="bar"><div class="fill" style="width:100%;background:var(--gold)"></div><span class="bv">8/8</span></div></td><td><div class="bar"><div class="fill" style="width:25%;background:var(--blue)"></div><span class="bv">2/8</span></div></td><td class="lead-c">rules</td></tr><tr class="struct"><td><b>promo_hunter</b> <span class="kind struct">structural</span></td><td>8</td><td><div class="bar"><div class="fill" style="width:100%;background:var(--gold)"></div><span class="bv">8/8</span></div></td><td><div class="bar"><div class="fill" style="width:100%;background:var(--blue)"></div><span class="bv">8/8</span></div></td><td class="lead-t">tie</td></tr><tr class="behav"><td><b>recreational</b> <span class="kind behav">behavioral</span></td><td>34</td><td><div class="bar"><div class="fill" style="width:76%;background:var(--gold)"></div><span class="bv">26/34</span></div></td><td><div class="bar"><div class="fill" style="width:88%;background:var(--blue)"></div><span class="bv">30/34</span></div></td><td class="lead-l">ML</td></tr><tr class="behav"><td><b>regular</b> <span class="kind behav">behavioral</span></td><td>22</td><td><div class="bar"><div class="fill" style="width:73%;background:var(--gold)"></div><span class="bv">16/22</span></div></td><td><div class="bar"><div class="fill" style="width:95%;background:var(--blue)"></div><span class="bv">21/22</span></div></td><td class="lead-l">ML</td></tr><tr class="struct"><td><b>shared_device_household</b> <span class="kind struct">structural</span></td><td>6</td><td><div class="bar"><div class="fill" style="width:100%;background:var(--gold)"></div><span class="bv">6/6</span></div></td><td><div class="bar"><div class="fill" style="width:33%;background:var(--blue)"></div><span class="bv">2/6</span></div></td><td class="lead-c">rules</td></tr></tbody></table>
+</section>
+
+<section><div class="sh"><h2>Where they disagree <span class="dim" style="font-size:13px;font-weight:400">· 26 players</span></h2></div>
+  <table><thead><tr><th>Player</th><th>Truth</th><th>Champion ◆</th><th>Challenger ▲</th><th>Features</th></tr></thead>
+  <tbody><tr><td class="mono">P-101</td><td><b>new</b></td><td class="ok">new</td><td class="no">recreational</td><td class="mono dim">reg 7d · 28h · 21m · vpip 0.42 · AF 0.9</td></tr><tr><td class="mono">P-102</td><td><b>new</b></td><td class="ok">new</td><td class="no">recreational</td><td class="mono dim">reg 11d · 45h · 24m · vpip 0.35 · AF 0.8</td></tr><tr><td class="mono">P-103</td><td><b>new</b></td><td class="ok">new</td><td class="no">recreational</td><td class="mono dim">reg 3d · 19h · 20m · vpip 0.4 · AF 0.95</td></tr><tr><td class="mono">P-104</td><td><b>new</b></td><td class="ok">new</td><td class="no">recreational</td><td class="mono dim">reg 4d · 31h · 18m · vpip 0.35 · AF 0.9</td></tr><tr><td class="mono">P-105</td><td><b>new</b></td><td class="ok">new</td><td class="no">recreational</td><td class="mono dim">reg 8d · 52h · 22m · vpip 0.33 · AF 0.88</td></tr><tr><td class="mono">P-106</td><td><b>new</b></td><td class="ok">new</td><td class="no">recreational</td><td class="mono dim">reg 13d · 58h · 26m · vpip 0.44 · AF 1.05</td></tr><tr><td class="mono">P-118</td><td><b>recreational</b></td><td class="no">regular</td><td class="ok">recreational</td><td class="mono dim">reg 300d · 1,850h · 95m · vpip 0.3 · AF 1.4</td></tr><tr><td class="mono">P-121</td><td><b>recreational</b></td><td class="no">regular</td><td class="ok">recreational</td><td class="mono dim">reg 400d · 2,400h · 88m · vpip 0.33 · AF 1.28</td></tr><tr><td class="mono">P-126</td><td><b>recreational</b></td><td class="no">regular</td><td class="no">shared_device_household</td><td class="mono dim">reg 500d · 3,100h · 105m · vpip 0.29 · AF 1.52</td></tr><tr><td class="mono">P-129</td><td><b>recreational</b></td><td class="no">regular</td><td class="no">shared_device_household</td><td class="mono dim">reg 730d · 4,500h · 110m · vpip 0.28 · AF 1.6</td></tr><tr><td class="mono">P-135</td><td><b>recreational</b></td><td class="no">regular</td><td class="ok">recreational</td><td class="mono dim">reg 280d · 1,720h · 95m · vpip 0.31 · AF 1.42</td></tr><tr><td class="mono">P-140</td><td><b>recreational</b></td><td class="no">regular</td><td class="ok">recreational</td><td class="mono dim">reg 190d · 1,180h · 90m · vpip 0.33 · AF 1.35</td></tr><tr><td class="mono">P-146</td><td><b>regular</b></td><td class="no">healthy_anchor</td><td class="ok">regular</td><td class="mono dim">reg 650d · 13,000h · 168m · vpip 0.24 · AF 2.3</td></tr><tr><td class="mono">P-148</td><td><b>regular</b></td><td class="no">healthy_anchor</td><td class="ok">regular</td><td class="mono dim">reg 720d · 14,500h · 172m · vpip 0.23 · AF 2.35</td></tr><tr><td class="mono">P-150</td><td><b>regular</b></td><td class="ok">regular</td><td class="no">recreational</td><td class="mono dim">reg 95d · 1,900h · 95m · vpip 0.35 · AF 1.6</td></tr><tr><td class="mono">P-153</td><td><b>regular</b></td><td class="no">healthy_anchor</td><td class="ok">regular</td><td class="mono dim">reg 590d · 11,800h · 160m · vpip 0.25 · AF 2.25</td></tr><tr><td class="mono">P-155</td><td><b>regular</b></td><td class="no">healthy_anchor</td><td class="ok">regular</td><td class="mono dim">reg 820d · 16,400h · 180m · vpip 0.22 · AF 2.42</td></tr><tr><td class="mono">P-159</td><td><b>regular</b></td><td class="no">healthy_anchor</td><td class="ok">regular</td><td class="mono dim">reg 680d · 13,600h · 170m · vpip 0.24 · AF 2.32</td></tr><tr><td class="mono">P-163</td><td><b>regular</b></td><td class="no">healthy_anchor</td><td class="ok">regular</td><td class="mono dim">reg 760d · 15,200h · 175m · vpip 0.23 · AF 2.38</td></tr><tr><td class="mono">P-192</td><td><b>shared_device_household</b></td><td class="ok">shared_device_household</td><td class="no">regular</td><td class="mono dim">reg 520d · 9,200h · 145m · vpip 0.27 · AF 1.85</td></tr><tr><td class="mono">P-194</td><td><b>shared_device_household</b></td><td class="ok">shared_device_household</td><td class="no">recreational</td><td class="mono dim">reg 280d · 4,500h · 95m · vpip 0.38 · AF 1.25</td></tr><tr><td class="mono">P-195</td><td><b>shared_device_household</b></td><td class="ok">shared_device_household</td><td class="no">recreational</td><td class="mono dim">reg 150d · 2,800h · 72m · vpip 0.42 · AF 1.05</td></tr><tr><td class="mono">P-196</td><td><b>shared_device_household</b></td><td class="ok">shared_device_household</td><td class="no">regular</td><td class="mono dim">reg 640d · 11,000h · 162m · vpip 0.24 · AF 2.12</td></tr><tr><td class="mono">P-201</td><td><b>cluster_member</b></td><td class="ok">cluster_member</td><td class="no">regular</td><td class="mono dim">reg 420d · 15,000h · 155m · vpip 0.28 · AF 2.05</td></tr><tr><td class="mono">P-202</td><td><b>cluster_member</b></td><td class="ok">cluster_member</td><td class="no">regular</td><td class="mono dim">reg 380d · 12,500h · 145m · vpip 0.3 · AF 1.98</td></tr><tr><td class="mono">P-221</td><td><b>bot_like</b></td><td class="ok">bot_like</td><td class="no">cluster_member</td><td class="mono dim">reg 95d · 8,500h · 182m · vpip 0.24 · AF 2.05</td></tr></tbody></table>
+  <p class="note">Green = matched the truth, red = missed. Most disagreements sit on the
+  recreational↔regular volume boundary — the genuinely ambiguous tier.</p>
+</section>
+
+<section><div class="sh"><h2>What the challenger learned <span class="dim" style="font-size:13px;font-weight:400">· coefficients = reason codes</span></h2></div>
+  <p class="note" style="margin-bottom:12px">Top signed weights per class (+ pushes toward the class). This interpretability
+  is <i>why</i> we use logistic regression for the challenger — not a black box.</p>
+  <div class="ccards"><div class="ccard"><h4>recreational</h4><ul><li><span class="cf">aggression_factor</span><span class="cw neg">-1.46</span></li><li><span class="cf">sessions_last_30d</span><span class="cw neg">-0.95</span></li><li><span class="cf">lifetime_hands</span><span class="cw neg">-0.89</span></li><li><span class="cf">vpip</span><span class="cw pos">+0.52</span></li></ul></div><div class="ccard"><h4>regular</h4><ul><li><span class="cf">vpip</span><span class="cw neg">-2.42</span></li><li><span class="cf">registered_days_ago</span><span class="cw neg">-1.81</span></li><li><span class="cf">aggression_factor</span><span class="cw pos">+1.54</span></li><li><span class="cf">lifetime_hands</span><span class="cw neg">-1.54</span></li></ul></div><div class="ccard"><h4>grinder</h4><ul><li><span class="cf">avg_session_minutes</span><span class="cw pos">+1.72</span></li><li><span class="cf">vpip</span><span class="cw neg">-1.59</span></li><li><span class="cf">lifetime_hands</span><span class="cw pos">+1.57</span></li><li><span class="cf">registered_days_ago</span><span class="cw neg">-1.09</span></li></ul></div><div class="ccard"><h4>new</h4><ul><li><span class="cf">sessions_last_30d</span><span class="cw neg">-2.06</span></li><li><span class="cf">avg_session_minutes</span><span class="cw neg">-1.84</span></li><li><span class="cf">promo_redemptions_30d</span><span class="cw neg">-1.61</span></li><li><span class="cf">pfr</span><span class="cw neg">-0.82</span></li></ul></div></div>
+</section>
+
+<div class="footer">Challenger trains ONLY on the 9 numeric behavioral features (never structural fields). Leave-one-out: each player predicted by a model trained on the other 121, so a class with one example (bot_like) is unlearnable when held out — an honest limit, surfaced.<br>
+Regenerate: <span class="mono">python scripts/build_champion_challenger.py</span> ·
+Data: <span class="mono">data/derived/champion_vs_challenger.json</span> ·
+Champion: <span class="mono">scoring/classify.py</span> · Challenger: <span class="mono">ml/challenger.py</span></div>
+</body></html>
