@@ -198,10 +198,10 @@ filtering happening **silently / pit-boss-side**. The lobby never explains *why*
 
 ---
 
-## D7 — Canonical 9-archetype classification list 🟠  ⬜ OPEN
+## D7 — Canonical archetype classification list ✅ LOCKED
 **Affects:** P2 (seeded labels), P3 (classifier). **Owner:** P3, with P2.
 
-PRD §2 and §5.3 list the nine player archetypes with drifting names: "coordinated-cluster member" vs "cluster candidate";
+PRD §2 and §5.3 list the player archetypes with drifting names: "coordinated-cluster member" vs "cluster candidate";
 "shared-device household" vs "shared-device low-risk". P2 needs one canonical list for `seeded_case_labels.json`; P3 needs
 it for the classifier.
 
@@ -209,7 +209,12 @@ it for the classifier.
 Proposed canonical set:
 `new · recreational · regular · grinder · aggressive_predatory · promo_hunter · cluster_member · shared_device_household · healthy_anchor`.
 
-**Decision:** _______________________
+**Decision (2026-06-22, ratified by P2/P3):** **TEN** canonical archetypes — the proposed nine **plus `bot_like`**:
+`new · recreational · regular · grinder · aggressive_predatory · promo_hunter · cluster_member · shared_device_household · healthy_anchor · bot_like`.
+The proposed list omitted `bot_like`, but kickoff §8 pins `P-221 = bot_like` as an acceptance test and Eval G (CASE-G)
+needs the label, so it is a first-class archetype. It routes to its own account-level **bot review queue** (integrity band
+`manual_review`) and is kept **out** of the coordinated-cluster/collusion path. This matches the shipped classifier
+(`scoring/classify.py` `ARCHETYPES`) and `seeded_case_labels.json`.
 
 ---
 

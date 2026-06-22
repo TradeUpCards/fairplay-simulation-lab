@@ -31,10 +31,10 @@ given (``registered_days_ago<=14``, ``vpip>=0.54 & pfr>=0.40``,
 the per-archetype distributions in the committed fixture (see
 ``scripts/validate_classify.py``).
 
-Open decision: **D7** proposes a canonical *9*-archetype list that omits
-``bot_like``, but kickoff §8 pins ``P-221=bot_like`` as an acceptance test and
-Eval G needs the label, so the champion emits 10 labels. Flagged for P3 to
-ratify with P2.
+Decision **D7 (LOCKED 2026-06-22)**: the canonical set is **10** archetypes —
+the nine behavioral/structural types plus ``bot_like`` (kickoff §8 pins
+``P-221=bot_like`` and Eval G needs it). ``bot_like`` routes to its own
+account-level bot review queue, kept out of the coordinated-cluster path.
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ from __future__ import annotations
 from typing import Any, Mapping, NamedTuple
 
 
-# Canonical labels. ``bot_like`` retained pending D7 ratification (see module docstring).
+# Canonical labels (D7 LOCKED — 10 archetypes incl. ``bot_like``).
 ARCHETYPES = (
     "new",
     "recreational",
