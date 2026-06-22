@@ -6,6 +6,7 @@ import { ResourceBoundary } from './components/ResourceBoundary'
 import { Simulator } from './views/Simulator'
 import { PitBossIndex } from './views/PitBossIndex'
 import { PlayerLobby } from './views/PlayerLobby'
+import { EvalPanel } from './views/EvalPanel'
 import './styles.css'
 
 function useSimState() {
@@ -67,6 +68,7 @@ export function App() {
       <Simulator />
       <PitBossIndex />
       <PlayerLobby />
+      <EvalPanel />
     </main>
   )
 }

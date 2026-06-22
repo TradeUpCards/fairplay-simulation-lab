@@ -36,3 +36,39 @@ export interface RoomMetricsFile {
 
 /** Which counterfactual path the simulator is showing. 0% adherence ≡ standard, 100% ≡ fairplay. */
 export type SimPath = 'standard' | 'fairplay'
+
+// ── Eval answer key (data/seeded_case_labels.json) ───────────────────────────
+// OPERATOR-FACING ONLY — the P4 eval harness ground truth. Never bind a
+// player-facing screen to this; only the operator eval panel reads it.
+
+export type RiskLens = 'table_health' | 'integrity_risk'
+
+export interface SeededCase {
+  case_id: string
+  eval_scenario: string
+  prd_label: string
+  prd_ref?: string
+  mandatory_demo_case?: boolean
+  seeded_entities: Record<string, string | string[]>
+  expected_category: string
+  expected_risk_lens: RiskLens
+  expected_seating_action: string
+  is_false_positive_trap: boolean
+  pit_boss_evidence_seed?: Record<string, string | number>
+  eval_checks: string[]
+  counterfactual?: Record<string, string>
+}
+
+export interface EvalSummary {
+  total_cases: number
+  true_risk_cases: string[]
+  false_positive_traps: string[]
+  mandatory_demo_cases: string[]
+  eval_invariant: string
+}
+
+export interface SeededCaseLabelsFile {
+  meta: Record<string, unknown>
+  cases: SeededCase[]
+  eval_summary: EvalSummary
+}

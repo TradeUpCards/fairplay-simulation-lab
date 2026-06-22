@@ -510,3 +510,169 @@ button:hover {
   font-size: 0.8rem;
   color: #9aa2b3;
 }
+
+/* ── Eval / proof panel (Back of House — answer key vs computed) ────────────── */
+.eval-panel {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #232a36;
+}
+
+.eval-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.eval-invariant {
+  margin: 0.25rem 0 1rem;
+  font-size: 0.8rem;
+  color: #8b93a7;
+}
+
+.eval-group-title {
+  font-size: 0.85rem;
+  margin: 0.75rem 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.eval-group-title.true-risk {
+  color: #8be3a7;
+}
+
+.eval-group-title.traps {
+  color: #efc28f;
+}
+
+.eval-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.eval-case {
+  border: 1px solid #232a36;
+  border-radius: 9px;
+  background: #161b24;
+  padding: 0.7rem 0.85rem;
+}
+
+.eval-case-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.case-id {
+  font-weight: 600;
+}
+
+.case-label {
+  color: #9aa2b3;
+  font-size: 0.85rem;
+}
+
+.trap-chip {
+  margin-left: auto;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: #33301a;
+  border: 1px solid #8a7a2f;
+  color: #e3d28b;
+}
+
+.eval-expected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+}
+
+.eval-expected > div {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.eval-expected dt {
+  color: #8b93a7;
+}
+
+.eval-expected dd {
+  margin: 0;
+}
+
+.eval-predicted {
+  margin-top: 0.6rem;
+  border-top: 1px dashed #232a36;
+  padding-top: 0.5rem;
+}
+
+.predicted-line {
+  margin: 0 0 0.4rem;
+  font-size: 0.82rem;
+}
+
+.predicted-label {
+  color: #8b93a7;
+}
+
+.predicted-band {
+  font-weight: 600;
+  padding: 0.05rem 0.4rem;
+  border-radius: 5px;
+}
+
+.predicted-band.agree {
+  color: #8be3a7;
+  background: #16341f;
+}
+
+.predicted-band.disagree {
+  color: #ff9b9b;
+  background: #3a1a1f;
+}
+
+.predicted-detail {
+  color: #6b7283;
+  font-size: 0.78rem;
+}
+
+.verdict {
+  font-size: 0.78rem;
+  color: #8b93a7;
+}
+
+.eval-checks {
+  margin: 0.3rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.78rem;
+  color: #9aa2b3;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.eval-pending {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #6b7283;
+  font-style: italic;
+}
+
+.risk-separator {
+  border: none;
+  border-top: 2px dashed #3a4757;
+  margin: 1rem 0 0.25rem;
+}
+
+.separator-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  color: #6b7283;
+  text-align: center;
+}
