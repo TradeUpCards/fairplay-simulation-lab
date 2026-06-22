@@ -1,5 +1,4 @@
 import pokerTable from '../assets/poker-table.png'
-import logoWatermark from '../assets/fairplay-iq-logo-black.svg'
 import type { TableRosterEntry } from '../data/types'
 import { ARCHETYPE_LABEL, ptlTone, type SeatInfo } from '../lib/table'
 
@@ -14,13 +13,6 @@ export function SeatRing({ table, seats }: { table: TableRosterEntry; seats: Sea
   return (
     <div className="seat-ring" aria-label={`seat ring for ${table.table_id}`}>
       <img className="seat-ring-felt" src={pokerTable} alt="" aria-hidden="true" />
-      <img
-        className="seat-ring-watermark"
-        src={logoWatermark}
-        alt=""
-        aria-hidden="true"
-        data-testid="table-watermark"
-      />
       <div className="seat-ring-center">
         <span className="ring-table-id">{table.table_id}</span>
         <span className="ring-occupancy">

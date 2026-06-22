@@ -2,7 +2,12 @@
    House" design direction lands with the real views (U3–U7). */
 :root {
   color-scheme: dark;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
 }
 
 body {
@@ -302,7 +307,7 @@ button:hover {
   text-align: right;
 }
 
-.kpi-table th[scope='row'] {
+.kpi-table th[scope="row"] {
   text-align: left;
   font-weight: 500;
   color: #c3c9d6;
@@ -800,20 +805,6 @@ button:hover {
   height: 100%;
   object-fit: contain;
   opacity: 0.92;
-}
-
-/* Centered brand watermark — sits above the felt but below the label + seats.
-   Tune --watermark-opacity for the final art (black mark on a dark felt is
-   intentionally faint). */
-.seat-ring-watermark {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 38%;
-  opacity: var(--watermark-opacity, 0.1);
-  pointer-events: none;
-  user-select: none;
 }
 
 .seat-ring-center {
