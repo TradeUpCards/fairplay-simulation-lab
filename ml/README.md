@@ -29,9 +29,12 @@ pip install -r ml/requirements.txt
    see the 10 scorecards argmax into the OvR classifier (with a leave-one-out
    button for the honest accuracy):
    ```bash
-   streamlit run ml/scorecard_app.py
+   python -m streamlit run ml/scorecard_app.py
    ```
-   Opens in your browser at http://localhost:8501.
+   Opens in your browser at http://localhost:8501 (stop with Ctrl+C). Use the
+   `python -m streamlit` form rather than a bare `streamlit` — on Windows the
+   `streamlit` console script often isn't on PATH even after a successful
+   install. No virtualenv required.
 3. **Regenerate the frozen artifacts** after a data/model change:
    ```bash
    python scripts/build_champion_challenger.py

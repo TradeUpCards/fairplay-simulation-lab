@@ -8,7 +8,9 @@ mode to see how the per-class scorecards argmax together into the OvR classifier
 
 Run it:
     pip install -r ml/requirements.txt
-    streamlit run ml/scorecard_app.py
+    python -m streamlit run ml/scorecard_app.py
+    # use `python -m streamlit` (not bare `streamlit`) — the console script is
+    # often not on PATH on Windows. No virtualenv required. Opens localhost:8501.
 
 This is a *workbench* for exploring the challenger — not part of the deterministic
 demo path. The frozen panels (docs/scorecard.html, docs/champion-vs-challenger.html)
