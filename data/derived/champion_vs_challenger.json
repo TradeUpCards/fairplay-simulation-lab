@@ -1,0 +1,694 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "title": "Classification \u2460 \u2014 Champion vs Challenger",
+    "champion": "threshold rules (scoring/classify.py) \u2014 deterministic, stdlib",
+    "challenger": "one-vs-rest logistic, leave-one-out (ml/challenger.py) \u2014 9 behavioral features",
+    "method_note": "Challenger trains ONLY on the 9 numeric behavioral features (never structural fields). Leave-one-out: each player predicted by a model trained on the other 121, so a class with one example (bot_like) is unlearnable when held out \u2014 an honest limit, surfaced."
+  },
+  "summary": {
+    "total": 122,
+    "champion_accuracy": 0.885,
+    "challenger_accuracy": 0.852,
+    "champion_correct": 108,
+    "challenger_correct": 104,
+    "agreement": 0.787,
+    "behavioral_boundary": {
+      "n": 86,
+      "champion_correct": 72,
+      "challenger_correct": 81
+    }
+  },
+  "per_class": [
+    {
+      "archetype": "aggressive_predatory",
+      "n": 8,
+      "champion_correct": 8,
+      "challenger_correct": 8,
+      "kind": "structural"
+    },
+    {
+      "archetype": "bot_like",
+      "n": 1,
+      "champion_correct": 1,
+      "challenger_correct": 0,
+      "kind": "structural"
+    },
+    {
+      "archetype": "cluster_member",
+      "n": 5,
+      "champion_correct": 5,
+      "challenger_correct": 3,
+      "kind": "structural"
+    },
+    {
+      "archetype": "grinder",
+      "n": 12,
+      "champion_correct": 12,
+      "challenger_correct": 12,
+      "kind": "behavioral"
+    },
+    {
+      "archetype": "healthy_anchor",
+      "n": 18,
+      "champion_correct": 18,
+      "challenger_correct": 18,
+      "kind": "behavioral"
+    },
+    {
+      "archetype": "new",
+      "n": 8,
+      "champion_correct": 8,
+      "challenger_correct": 2,
+      "kind": "structural"
+    },
+    {
+      "archetype": "promo_hunter",
+      "n": 8,
+      "champion_correct": 8,
+      "challenger_correct": 8,
+      "kind": "structural"
+    },
+    {
+      "archetype": "recreational",
+      "n": 34,
+      "champion_correct": 26,
+      "challenger_correct": 30,
+      "kind": "behavioral"
+    },
+    {
+      "archetype": "regular",
+      "n": 22,
+      "champion_correct": 16,
+      "challenger_correct": 21,
+      "kind": "behavioral"
+    },
+    {
+      "archetype": "shared_device_household",
+      "n": 6,
+      "champion_correct": 6,
+      "challenger_correct": 2,
+      "kind": "structural"
+    }
+  ],
+  "disagreements": [
+    {
+      "player_id": "P-101",
+      "truth": "new",
+      "champion": "new",
+      "challenger": "recreational",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 7,
+        "lifetime_hands": 28,
+        "avg_session_minutes": 21.0,
+        "sessions_last_30d": 4,
+        "vpip": 0.42,
+        "aggression_factor": 0.9
+      }
+    },
+    {
+      "player_id": "P-102",
+      "truth": "new",
+      "champion": "new",
+      "challenger": "recreational",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 11,
+        "lifetime_hands": 45,
+        "avg_session_minutes": 24.0,
+        "sessions_last_30d": 5,
+        "vpip": 0.35,
+        "aggression_factor": 0.8
+      }
+    },
+    {
+      "player_id": "P-103",
+      "truth": "new",
+      "champion": "new",
+      "challenger": "recreational",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 3,
+        "lifetime_hands": 19,
+        "avg_session_minutes": 20.0,
+        "sessions_last_30d": 3,
+        "vpip": 0.4,
+        "aggression_factor": 0.95
+      }
+    },
+    {
+      "player_id": "P-104",
+      "truth": "new",
+      "champion": "new",
+      "challenger": "recreational",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 4,
+        "lifetime_hands": 31,
+        "avg_session_minutes": 18.0,
+        "sessions_last_30d": 5,
+        "vpip": 0.35,
+        "aggression_factor": 0.9
+      }
+    },
+    {
+      "player_id": "P-105",
+      "truth": "new",
+      "champion": "new",
+      "challenger": "recreational",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 8,
+        "lifetime_hands": 52,
+        "avg_session_minutes": 22.0,
+        "sessions_last_30d": 6,
+        "vpip": 0.33,
+        "aggression_factor": 0.88
+      }
+    },
+    {
+      "player_id": "P-106",
+      "truth": "new",
+      "champion": "new",
+      "challenger": "recreational",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 13,
+        "lifetime_hands": 58,
+        "avg_session_minutes": 26.0,
+        "sessions_last_30d": 5,
+        "vpip": 0.44,
+        "aggression_factor": 1.05
+      }
+    },
+    {
+      "player_id": "P-118",
+      "truth": "recreational",
+      "champion": "regular",
+      "challenger": "recreational",
+      "champion_right": false,
+      "challenger_right": true,
+      "features": {
+        "registered_days_ago": 300,
+        "lifetime_hands": 1850,
+        "avg_session_minutes": 95.0,
+        "sessions_last_30d": 12,
+        "vpip": 0.3,
+        "aggression_factor": 1.4
+      }
+    },
+    {
+      "player_id": "P-121",
+      "truth": "recreational",
+      "champion": "regular",
+      "challenger": "recreational",
+      "champion_right": false,
+      "challenger_right": true,
+      "features": {
+        "registered_days_ago": 400,
+        "lifetime_hands": 2400,
+        "avg_session_minutes": 88.0,
+        "sessions_last_30d": 11,
+        "vpip": 0.33,
+        "aggression_factor": 1.28
+      }
+    },
+    {
+      "player_id": "P-126",
+      "truth": "recreational",
+      "champion": "regular",
+      "challenger": "shared_device_household",
+      "champion_right": false,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 500,
+        "lifetime_hands": 3100,
+        "avg_session_minutes": 105.0,
+        "sessions_last_30d": 13,
+        "vpip": 0.29,
+        "aggression_factor": 1.52
+      }
+    },
+    {
+      "player_id": "P-129",
+      "truth": "recreational",
+      "champion": "regular",
+      "challenger": "shared_device_household",
+      "champion_right": false,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 730,
+        "lifetime_hands": 4500,
+        "avg_session_minutes": 110.0,
+        "sessions_last_30d": 14,
+        "vpip": 0.28,
+        "aggression_factor": 1.6
+      }
+    },
+    {
+      "player_id": "P-135",
+      "truth": "recreational",
+      "champion": "regular",
+      "challenger": "recreational",
+      "champion_right": false,
+      "challenger_right": true,
+      "features": {
+        "registered_days_ago": 280,
+        "lifetime_hands": 1720,
+        "avg_session_minutes": 95.0,
+        "sessions_last_30d": 12,
+        "vpip": 0.31,
+        "aggression_factor": 1.42
+      }
+    },
+    {
+      "player_id": "P-140",
+      "truth": "recreational",
+      "champion": "regular",
+      "challenger": "recreational",
+      "champion_right": false,
+      "challenger_right": true,
+      "features": {
+        "registered_days_ago": 190,
+        "lifetime_hands": 1180,
+        "avg_session_minutes": 90.0,
+        "sessions_last_30d": 12,
+        "vpip": 0.33,
+        "aggression_factor": 1.35
+      }
+    },
+    {
+      "player_id": "P-146",
+      "truth": "regular",
+      "champion": "healthy_anchor",
+      "challenger": "regular",
+      "champion_right": false,
+      "challenger_right": true,
+      "features": {
+        "registered_days_ago": 650,
+        "lifetime_hands": 13000,
+        "avg_session_minutes": 168.0,
+        "sessions_last_30d": 19,
+        "vpip": 0.24,
+        "aggression_factor": 2.3
+      }
+    },
+    {
+      "player_id": "P-148",
+      "truth": "regular",
+      "champion": "healthy_anchor",
+      "challenger": "regular",
+      "champion_right": false,
+      "challenger_right": true,
+      "features": {
+        "registered_days_ago": 720,
+        "lifetime_hands": 14500,
+        "avg_session_minutes": 172.0,
+        "sessions_last_30d": 20,
+        "vpip": 0.23,
+        "aggression_factor": 2.35
+      }
+    },
+    {
+      "player_id": "P-150",
+      "truth": "regular",
+      "champion": "regular",
+      "challenger": "recreational",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 95,
+        "lifetime_hands": 1900,
+        "avg_session_minutes": 95.0,
+        "sessions_last_30d": 12,
+        "vpip": 0.35,
+        "aggression_factor": 1.6
+      }
+    },
+    {
+      "player_id": "P-153",
+      "truth": "regular",
+      "champion": "healthy_anchor",
+      "challenger": "regular",
+      "champion_right": false,
+      "challenger_right": true,
+      "features": {
+        "registered_days_ago": 590,
+        "lifetime_hands": 11800,
+        "avg_session_minutes": 160.0,
+        "sessions_last_30d": 18,
+        "vpip": 0.25,
+        "aggression_factor": 2.25
+      }
+    },
+    {
+      "player_id": "P-155",
+      "truth": "regular",
+      "champion": "healthy_anchor",
+      "challenger": "regular",
+      "champion_right": false,
+      "challenger_right": true,
+      "features": {
+        "registered_days_ago": 820,
+        "lifetime_hands": 16400,
+        "avg_session_minutes": 180.0,
+        "sessions_last_30d": 21,
+        "vpip": 0.22,
+        "aggression_factor": 2.42
+      }
+    },
+    {
+      "player_id": "P-159",
+      "truth": "regular",
+      "champion": "healthy_anchor",
+      "challenger": "regular",
+      "champion_right": false,
+      "challenger_right": true,
+      "features": {
+        "registered_days_ago": 680,
+        "lifetime_hands": 13600,
+        "avg_session_minutes": 170.0,
+        "sessions_last_30d": 20,
+        "vpip": 0.24,
+        "aggression_factor": 2.32
+      }
+    },
+    {
+      "player_id": "P-163",
+      "truth": "regular",
+      "champion": "healthy_anchor",
+      "challenger": "regular",
+      "champion_right": false,
+      "challenger_right": true,
+      "features": {
+        "registered_days_ago": 760,
+        "lifetime_hands": 15200,
+        "avg_session_minutes": 175.0,
+        "sessions_last_30d": 20,
+        "vpip": 0.23,
+        "aggression_factor": 2.38
+      }
+    },
+    {
+      "player_id": "P-192",
+      "truth": "shared_device_household",
+      "champion": "shared_device_household",
+      "challenger": "regular",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 520,
+        "lifetime_hands": 9200,
+        "avg_session_minutes": 145.0,
+        "sessions_last_30d": 14,
+        "vpip": 0.27,
+        "aggression_factor": 1.85
+      }
+    },
+    {
+      "player_id": "P-194",
+      "truth": "shared_device_household",
+      "champion": "shared_device_household",
+      "challenger": "recreational",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 280,
+        "lifetime_hands": 4500,
+        "avg_session_minutes": 95.0,
+        "sessions_last_30d": 11,
+        "vpip": 0.38,
+        "aggression_factor": 1.25
+      }
+    },
+    {
+      "player_id": "P-195",
+      "truth": "shared_device_household",
+      "champion": "shared_device_household",
+      "challenger": "recreational",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 150,
+        "lifetime_hands": 2800,
+        "avg_session_minutes": 72.0,
+        "sessions_last_30d": 10,
+        "vpip": 0.42,
+        "aggression_factor": 1.05
+      }
+    },
+    {
+      "player_id": "P-196",
+      "truth": "shared_device_household",
+      "champion": "shared_device_household",
+      "challenger": "regular",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 640,
+        "lifetime_hands": 11000,
+        "avg_session_minutes": 162.0,
+        "sessions_last_30d": 15,
+        "vpip": 0.24,
+        "aggression_factor": 2.12
+      }
+    },
+    {
+      "player_id": "P-201",
+      "truth": "cluster_member",
+      "champion": "cluster_member",
+      "challenger": "regular",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 420,
+        "lifetime_hands": 15000,
+        "avg_session_minutes": 155.0,
+        "sessions_last_30d": 18,
+        "vpip": 0.28,
+        "aggression_factor": 2.05
+      }
+    },
+    {
+      "player_id": "P-202",
+      "truth": "cluster_member",
+      "champion": "cluster_member",
+      "challenger": "regular",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 380,
+        "lifetime_hands": 12500,
+        "avg_session_minutes": 145.0,
+        "sessions_last_30d": 17,
+        "vpip": 0.3,
+        "aggression_factor": 1.98
+      }
+    },
+    {
+      "player_id": "P-221",
+      "truth": "bot_like",
+      "champion": "bot_like",
+      "challenger": "cluster_member",
+      "champion_right": true,
+      "challenger_right": false,
+      "features": {
+        "registered_days_ago": 95,
+        "lifetime_hands": 8500,
+        "avg_session_minutes": 182.0,
+        "sessions_last_30d": 28,
+        "vpip": 0.24,
+        "aggression_factor": 2.05
+      }
+    }
+  ],
+  "challenger_coefficients": {
+    "aggressive_predatory": [
+      {
+        "feature": "vpip",
+        "weight": 1.11
+      },
+      {
+        "feature": "pfr",
+        "weight": 0.93
+      },
+      {
+        "feature": "aggression_factor",
+        "weight": 0.81
+      },
+      {
+        "feature": "avg_pot_size_bb",
+        "weight": 0.8
+      }
+    ],
+    "bot_like": [
+      {
+        "feature": "sessions_last_30d",
+        "weight": 2.56
+      },
+      {
+        "feature": "registered_days_ago",
+        "weight": -1.91
+      },
+      {
+        "feature": "vpip",
+        "weight": -0.74
+      },
+      {
+        "feature": "promo_redemptions_30d",
+        "weight": -0.7
+      }
+    ],
+    "cluster_member": [
+      {
+        "feature": "sessions_last_30d",
+        "weight": 2.84
+      },
+      {
+        "feature": "registered_days_ago",
+        "weight": -1.64
+      },
+      {
+        "feature": "lifetime_hands",
+        "weight": -1.43
+      },
+      {
+        "feature": "promo_redemptions_30d",
+        "weight": -1.36
+      }
+    ],
+    "grinder": [
+      {
+        "feature": "avg_session_minutes",
+        "weight": 1.72
+      },
+      {
+        "feature": "vpip",
+        "weight": -1.59
+      },
+      {
+        "feature": "lifetime_hands",
+        "weight": 1.57
+      },
+      {
+        "feature": "registered_days_ago",
+        "weight": -1.09
+      }
+    ],
+    "healthy_anchor": [
+      {
+        "feature": "lifetime_hands",
+        "weight": -2.45
+      },
+      {
+        "feature": "avg_session_minutes",
+        "weight": 2.32
+      },
+      {
+        "feature": "avg_pot_size_bb",
+        "weight": -1.43
+      },
+      {
+        "feature": "sessions_last_30d",
+        "weight": 1.32
+      }
+    ],
+    "new": [
+      {
+        "feature": "sessions_last_30d",
+        "weight": -2.06
+      },
+      {
+        "feature": "avg_session_minutes",
+        "weight": -1.84
+      },
+      {
+        "feature": "promo_redemptions_30d",
+        "weight": -1.61
+      },
+      {
+        "feature": "pfr",
+        "weight": -0.82
+      }
+    ],
+    "promo_hunter": [
+      {
+        "feature": "promo_redemptions_30d",
+        "weight": 2.11
+      },
+      {
+        "feature": "sessions_last_30d",
+        "weight": 1.31
+      },
+      {
+        "feature": "avg_session_minutes",
+        "weight": -0.74
+      },
+      {
+        "feature": "aggression_factor",
+        "weight": -0.41
+      }
+    ],
+    "recreational": [
+      {
+        "feature": "aggression_factor",
+        "weight": -1.46
+      },
+      {
+        "feature": "sessions_last_30d",
+        "weight": -0.95
+      },
+      {
+        "feature": "lifetime_hands",
+        "weight": -0.89
+      },
+      {
+        "feature": "vpip",
+        "weight": 0.52
+      }
+    ],
+    "regular": [
+      {
+        "feature": "vpip",
+        "weight": -2.42
+      },
+      {
+        "feature": "registered_days_ago",
+        "weight": -1.81
+      },
+      {
+        "feature": "aggression_factor",
+        "weight": 1.54
+      },
+      {
+        "feature": "lifetime_hands",
+        "weight": -1.54
+      }
+    ],
+    "shared_device_household": [
+      {
+        "feature": "sessions_last_30d",
+        "weight": -2.5
+      },
+      {
+        "feature": "lifetime_hands",
+        "weight": -2.07
+      },
+      {
+        "feature": "avg_session_minutes",
+        "weight": 1.44
+      },
+      {
+        "feature": "registered_days_ago",
+        "weight": 1.35
+      }
+    ]
+  }
+}
