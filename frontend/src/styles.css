@@ -30,12 +30,17 @@
 
 body {
   margin: 0;
-  background: var(--ink);
   color: var(--text);
+  background-color: #0d0a07;
+  background-image: url("./assets/carpet-tile.jpg");
+  background-repeat: repeat;
+  background-size: 300px auto;
 }
 
 .app {
   min-height: 100vh;
+  /* dark scrim over the carpet so the operator console stays legible */
+  background: rgba(11, 8, 5, 0.82);
 }
 
 /* ── Header: the brass rail atop the operator console ──────────────────────── */
@@ -157,14 +162,11 @@ body {
 
 /* ── Front of House: the card-room floor — dark, lit tables ────────────────── */
 .app.is-player {
-  /* --floor-art: drop the carpet texture here later, e.g. url("../assets/carpet.png") */
-  --floor: #14100b;
-  background-color: var(--floor);
-  background-image:
-    var(--floor-art, none),
-    radial-gradient(140% 100% at 50% -25%, rgba(74, 58, 38, 0.42), transparent 55%);
-  background-size: cover;
-  background-position: center top;
+  /* lighter scrim than operator so the carpet reads as a floor, plus a warm
+     top vignette for depth — kept dim so the table spotlights still pop */
+  background:
+    radial-gradient(140% 100% at 50% -20%, rgba(82, 63, 40, 0.34), transparent 55%),
+    rgba(9, 7, 4, 0.5);
 }
 
 .is-player .app-main {
