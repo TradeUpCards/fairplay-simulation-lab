@@ -1,6 +1,10 @@
-# Dependencies for the ML challengers (ml/) and the champion-vs-challenger panel.
-# The stdlib-only scoring core (scoring/) does NOT need these.
+# Dependencies for the ML challengers (ml/), the frozen panels, and the
+# interactive scorecard workbench. The stdlib-only scoring core (scoring/) does
+# NOT need these.
 #   pip install -r ml/requirements.txt
 scikit-learn>=1.4
 pandas>=2.0
 numpy>=1.26
+# Interactive workbench (streamlit run ml/scorecard_app.py):
+streamlit>=1.40
+altair>=5.0
