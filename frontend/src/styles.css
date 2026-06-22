@@ -32,9 +32,9 @@ body {
   margin: 0;
   color: var(--text);
   background-color: #0d0a07;
-  background-image: url("./assets/carpet-tile.jpg");
+  background-image: url("./assets/carpet-tile.png");
   background-repeat: repeat;
-  background-size: 300px auto;
+  background-size: 150px auto;
 }
 
 .app {
