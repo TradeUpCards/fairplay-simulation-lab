@@ -18,6 +18,7 @@ import type {
   RouterLobbyFile,
   RoomMetricsFile,
   SeededCaseLabelsFile,
+  TableRosterFile,
   SimPath,
 } from './types'
 
@@ -29,6 +30,7 @@ import routerRaw from '../../../data/derived/router_lobby.json'
 import roomStandardRaw from '../../../data/room_metrics_standard.json'
 import roomFairplayRaw from '../../../data/room_metrics_fairplay.json'
 import seededCasesRaw from '../../../data/seeded_case_labels.json'
+import tableRosterRaw from '../../../data/table_roster.json'
 
 /** Assert a frozen JSON artifact into its Contract-2 type at the trust boundary. */
 const asType = <T>(raw: unknown): T => raw as T
@@ -60,6 +62,11 @@ export async function loadRoomMetrics(path: SimPath): Promise<RoomMetricsFile> {
 /** OPERATOR-ONLY eval answer key — never load this from a player-facing screen. */
 export async function loadSeededCases(): Promise<SeededCaseLabelsFile> {
   return asType(seededCasesRaw)
+}
+
+/** Table roster (P2 Contract-1) — composition for the pit-boss seat-ring. Operator-side. */
+export async function loadTableRoster(): Promise<TableRosterFile> {
+  return asType(tableRosterRaw)
 }
 
 // Re-export the shared load-state helper so views import the data layer in one place.

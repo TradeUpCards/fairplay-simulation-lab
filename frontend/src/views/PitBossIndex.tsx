@@ -23,11 +23,23 @@ const TERMS: { key: TermKey; label: string }[] = [
  * snapshot. `rankTables` re-sorts whatever it's handed, so a per-hour series
  * drops in without changing this view.
  */
-export function PitBossIndex({ onSelectTable }: { onSelectTable?: (tableId: string) => void }) {
+export function PitBossIndex({
+  onSelectTable,
+  selectedTableId,
+}: {
+  onSelectTable?: (tableId: string) => void
+  selectedTableId?: string
+}) {
   const health = useResource(loadHealth, (d) => d.health_scores.length === 0)
   return (
     <ResourceBoundary state={health} label="table health">
-      {(data: HealthScoresFile) => <PitBossIndexView scores={data.health_scores} onSelectTable={onSelectTable} />}
+      {(data: HealthScoresFile) => (
+        <PitBossIndexView
+          scores={data.health_scores}
+          onSelectTable={onSelectTable}
+          selectedTableId={selectedTableId}
+        />
+      )}
     </ResourceBoundary>
   )
 }
@@ -36,9 +48,11 @@ export function PitBossIndex({ onSelectTable }: { onSelectTable?: (tableId: stri
 export function PitBossIndexView({
   scores,
   onSelectTable,
+  selectedTableId,
 }: {
   scores: HealthScore[]
   onSelectTable?: (tableId: string) => void
+  selectedTableId?: string
 }) {
   const ranked = rankTables(scores)
   return (
@@ -49,7 +63,13 @@ export function PitBossIndexView({
       </header>
       <ol className="pit-list">
         {ranked.map((table, i) => (
-          <PitRow key={table.table_id} rank={i + 1} table={table} onSelect={onSelectTable} />
+          <PitRow
+            key={table.table_id}
+            rank={i + 1}
+            table={table}
+            onSelect={onSelectTable}
+            selected={table.table_id === selectedTableId}
+          />
         ))}
       </ol>
     </section>
@@ -60,19 +80,22 @@ function PitRow({
   rank,
   table,
   onSelect,
+  selected = false,
 }: {
   rank: number
   table: HealthScore
   onSelect?: (tableId: string) => void
+  selected?: boolean
 }) {
   const band = BAND_META[table.band]
   const why = table.reason_codes[0]?.detail
   return (
-    <li className="pit-row">
+    <li className={`pit-row${selected ? ' pit-row-selected' : ''}`}>
       <button
         type="button"
         className="pit-row-main"
         aria-label={`open table ${table.table_id}`}
+        aria-current={selected ? 'true' : undefined}
         onClick={() => onSelect?.(table.table_id)}
       >
         <span className="pit-rank">#{rank}</span>

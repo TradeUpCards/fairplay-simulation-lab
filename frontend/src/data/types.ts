@@ -37,6 +37,32 @@ export interface RoomMetricsFile {
 /** Which counterfactual path the simulator is showing. 0% adherence ≡ standard, 100% ≡ fairplay. */
 export type SimPath = 'standard' | 'fairplay'
 
+// ── Table roster (data/table_roster.json — P2 Contract-1) ────────────────────
+
+export interface TableRosterEntry {
+  table_id: string
+  stakes: string
+  game_type: string
+  max_seats: number
+  seated_count: number
+  open_seats: number
+  seated_player_ids: string[]
+  running_time_min: number
+  avg_pot_size_usd: number
+  avg_session_length_min: number
+  hands_per_hour: number
+  pace_label: string
+  style_volatility_label: string
+  paid_seat_time_trend: string
+}
+
+export interface TableRosterFile {
+  schema_version: string
+  generated: string
+  fixture_note?: string
+  tables: TableRosterEntry[]
+}
+
 // ── Eval answer key (data/seeded_case_labels.json) ───────────────────────────
 // OPERATOR-FACING ONLY — the P4 eval harness ground truth. Never bind a
 // player-facing screen to this; only the operator eval panel reads it.
