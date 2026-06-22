@@ -3,6 +3,7 @@ import { simStore } from './state/simStore'
 import { useResource } from './state/useResource'
 import { loadHealth, loadRouterLobby } from './data/shim'
 import { ResourceBoundary } from './components/ResourceBoundary'
+import { Simulator } from './views/Simulator'
 import { PlayerLobby } from './views/PlayerLobby'
 import './styles.css'
 
@@ -62,6 +63,7 @@ export function App() {
         </ResourceBoundary>
       </section>
 
+      <Simulator />
       <PlayerLobby />
     </main>
   )

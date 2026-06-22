@@ -184,3 +184,177 @@ button:hover {
 .lobby-facts dd {
   margin: 0;
 }
+
+/* ── Simulator (Back of House — instrument frame) ──────────────────────────── */
+.simulator {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #232a36;
+}
+
+.sim-frame-header h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+.sim-frame-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: #8b93a7;
+}
+
+.sim-frame-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sim-body {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.divergence {
+  margin: 0;
+}
+
+.divergence figcaption {
+  font-size: 0.8rem;
+  color: #8b93a7;
+  margin-bottom: 0.25rem;
+}
+
+.divergence svg {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  background: #11161f;
+  border: 1px solid #232a36;
+  border-radius: 8px;
+}
+
+.line-standard {
+  stroke: #d98c5f;
+  stroke-width: 2;
+}
+
+.line-fairplay {
+  stroke: #5fb0d9;
+  stroke-width: 2;
+}
+
+.chart-marker {
+  stroke: #4a5466;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.hour-tick {
+  fill: #6b7283;
+  font-size: 9px;
+}
+
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: #8b93a7;
+  margin-top: 0.4rem;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  margin-left: 0.6rem;
+}
+
+.sw-standard {
+  background: #d98c5f;
+}
+
+.sw-fairplay {
+  background: #5fb0d9;
+}
+
+.kpi-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.kpi-table caption {
+  text-align: left;
+  color: #8b93a7;
+  font-size: 0.78rem;
+  margin-bottom: 0.4rem;
+}
+
+.kpi-table th,
+.kpi-table td {
+  border-bottom: 1px solid #232a36;
+  padding: 0.35rem 0.5rem;
+  text-align: right;
+}
+
+.kpi-table th[scope='row'] {
+  text-align: left;
+  font-weight: 500;
+  color: #c3c9d6;
+}
+
+.kpi-table thead th {
+  color: #8b93a7;
+  font-weight: 600;
+}
+
+.kpi-projected {
+  color: #7fd1ff;
+}
+
+.integrity-outcome {
+  border: 1px solid #232a36;
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  background: #161b24;
+}
+
+.integrity-outcome h3 {
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+}
+
+.integrity-outcome .outcome-label {
+  margin: 0;
+  font-weight: 600;
+}
+
+.outcome-cluster_forms .outcome-label {
+  color: #ff9b9b;
+}
+
+.outcome-seat_held .outcome-label {
+  color: #8be3a7;
+}
+
+.integrity-outcome .outcome-note {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: #8b93a7;
+}
+
+.hour-notes {
+  font-size: 0.8rem;
+  color: #9aa2b3;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.hour-notes strong {
+  color: #c3c9d6;
+}
