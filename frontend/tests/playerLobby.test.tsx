@@ -26,7 +26,7 @@ describe('PlayerLobby — personalized, score-free (origin AE2)', () => {
     expect(screen.queryByText('T-11')).toBeNull()
   })
 
-  it('shows neutral table facts (stakes, game, seats, pace) for each card', async () => {
+  it('shows neutral table facts (stakes, seats, pace) for each card', async () => {
     const file = await loadRouterLobby()
     render(<PlayerLobbyView data={file} />)
     const card = badgeWithin('T-8')

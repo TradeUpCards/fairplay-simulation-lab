@@ -95,10 +95,6 @@ function LobbyCard({ table }: { table: LobbyTable }) {
             <dd>{table.stakes}</dd>
           </div>
           <div>
-            <dt>Game</dt>
-            <dd>{table.game_type}</dd>
-          </div>
-          <div>
             <dt>Seats</dt>
             <dd>
               {table.seated_count}/{table.max_seats} · {table.open_seats} open
