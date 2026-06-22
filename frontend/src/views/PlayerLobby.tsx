@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import pokerTable from '../assets/poker-table.png'
 import type { LobbyTable, RouterLobbyFile } from '../data/types'
 import { loadRouterLobby } from '../data/shim'
 import { useResource } from '../state/useResource'
@@ -86,30 +87,33 @@ export function PlayerLobbyView({
 function LobbyCard({ table }: { table: LobbyTable }) {
   return (
     <li className="lobby-card">
-      <div className="lobby-card-head">
-        <span className="lobby-table-id">{table.table_id}</span>
+      <div className="table-stage">
+        <img className="table-art" src={pokerTable} alt="" aria-hidden="true" />
         <span className={`lobby-badge ${BADGE_TONE[table.badge]}`}>{table.badge_label}</span>
+        <span className="table-stage-id">{table.table_id}</span>
       </div>
-      <dl className="lobby-facts">
-        <div>
-          <dt>Stakes</dt>
-          <dd>{table.stakes}</dd>
-        </div>
-        <div>
-          <dt>Game</dt>
-          <dd>{table.game_type}</dd>
-        </div>
-        <div>
-          <dt>Seats</dt>
-          <dd>
-            {table.seated_count}/{table.max_seats} · {table.open_seats} open
-          </dd>
-        </div>
-        <div>
-          <dt>Pace</dt>
-          <dd>{table.pace_label}</dd>
-        </div>
-      </dl>
+      <div className="lobby-card-body">
+        <dl className="lobby-facts">
+          <div>
+            <dt>Stakes</dt>
+            <dd>{table.stakes}</dd>
+          </div>
+          <div>
+            <dt>Game</dt>
+            <dd>{table.game_type}</dd>
+          </div>
+          <div>
+            <dt>Seats</dt>
+            <dd>
+              {table.seated_count}/{table.max_seats} · {table.open_seats} open
+            </dd>
+          </div>
+          <div>
+            <dt>Pace</dt>
+            <dd>{table.pace_label}</dd>
+          </div>
+        </dl>
+      </div>
     </li>
   )
 }

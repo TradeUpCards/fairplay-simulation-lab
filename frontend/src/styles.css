@@ -155,9 +155,16 @@ body {
   font-weight: 600;
 }
 
-/* ── Front of House: the warm, light player surface ────────────────────────── */
+/* ── Front of House: the card-room floor — dark, lit tables ────────────────── */
 .app.is-player {
-  background: #ece4d3;
+  /* --floor-art: drop the carpet texture here later, e.g. url("../assets/carpet.png") */
+  --floor: #14100b;
+  background-color: var(--floor);
+  background-image:
+    var(--floor-art, none),
+    radial-gradient(140% 100% at 50% -25%, rgba(74, 58, 38, 0.42), transparent 55%);
+  background-size: cover;
+  background-position: center top;
 }
 
 .is-player .app-main {
@@ -171,61 +178,189 @@ body {
 }
 
 .is-player .lobby-header h2 {
-  color: #2b2620;
+  color: #f3ece0;
 }
 
 .is-player .player-select {
-  color: #6f6656;
+  color: #b8ab95;
 }
 
 .is-player .player-select select {
-  background: #fffdf8;
-  color: #2b2620;
-  border-color: #d8cdb8;
+  background: rgba(0, 0, 0, 0.3);
+  color: #f3ece0;
+  border-color: #3a3024;
 }
 
+/* responsive grid — at most 3 columns */
+.is-player .lobby-list {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 880px) {
+  .is-player .lobby-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .is-player .lobby-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* a table sitting on the dark floor — image-led, lit on hover */
 .is-player .lobby-card {
-  background: #fdfbf6;
-  border-color: #ddd2bd;
-  box-shadow: 0 1px 2px rgba(43, 38, 32, 0.06);
+  position: relative;
+  background: transparent;
+  border: none;
+  border-radius: 14px;
+  padding: 0;
+  overflow: visible;
+  transition: transform 280ms ease;
 }
 
-.is-player .lobby-table-id {
-  color: #2b2620;
+/* the light that spills onto the floor/carpet around a hovered table */
+.is-player .lobby-card::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4%;
+  width: 156%;
+  height: 132%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    48% 42% at 50% 38%,
+    rgba(255, 224, 170, 0.34),
+    rgba(255, 208, 150, 0.12) 46%,
+    transparent 72%
+  );
+  filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 320ms ease;
+}
+
+.is-player .lobby-card:hover,
+.is-player .lobby-card:focus-within {
+  transform: translateY(-4px);
+}
+
+.is-player .lobby-card:hover::before,
+.is-player .lobby-card:focus-within::before {
+  opacity: 1;
+}
+
+/* the table image — the hero of the card */
+.is-player .table-stage {
+  position: relative;
+  z-index: 1;
+  aspect-ratio: 3 / 2;
+  border-radius: 14px 14px 0 0;
+  overflow: hidden;
+  background: #0c0a07;
+}
+
+.is-player .table-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: brightness(0.6) saturate(0.92);
+  transition:
+    filter 320ms ease,
+    transform 320ms ease;
+}
+
+.is-player .lobby-card:hover .table-art,
+.is-player .lobby-card:focus-within .table-art {
+  filter: brightness(1.06) saturate(1.05);
+  transform: scale(1.03);
+}
+
+/* spotlight beam hitting the felt from above */
+.is-player .table-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    58% 54% at 50% 20%,
+    rgba(255, 240, 212, 0.55),
+    rgba(255, 230, 190, 0.12) 40%,
+    transparent 68%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 320ms ease;
+}
+
+.is-player .lobby-card:hover .table-stage::after,
+.is-player .lobby-card:focus-within .table-stage::after {
+  opacity: 1;
+}
+
+.is-player .table-stage-id {
+  position: absolute;
+  left: 0.7rem;
+  bottom: 0.55rem;
+  z-index: 2;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #f6efe2;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+
+.is-player .table-stage .lobby-badge {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+}
+
+/* info plinth under the table */
+.is-player .lobby-card-body {
+  position: relative;
+  z-index: 1;
+  background: rgba(18, 14, 9, 0.72);
+  border: 1px solid #2a2218;
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+  padding: 0.7rem 0.85rem 0.8rem;
 }
 
 .is-player .lobby-facts {
-  color: #4a4438;
+  margin: 0;
+  color: #b8ab95;
 }
 
 .is-player .lobby-facts dt {
-  color: #9b9281;
+  color: #7d735f;
 }
 
 .is-player .lobby-facts dd {
-  color: #4a4438;
-}
-
-.is-player .lobby-badge.is-recommended {
-  background: #e2f0e4;
-  border-color: #2f8f5b;
-  color: #1f6f43;
-}
-
-.is-player .lobby-badge.is-good-fit {
-  background: #e3edf4;
-  border-color: #4a86a8;
-  color: #2c6080;
-}
-
-.is-player .lobby-badge.is-available {
-  background: #efe7d6;
-  border-color: #cdbfa3;
-  color: #6f6656;
+  color: #d8cdb8;
 }
 
 .is-player .rb-empty {
-  color: #6f6656;
+  color: #b8ab95;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-player .lobby-card,
+  .is-player .table-art {
+    transition: opacity 320ms ease;
+  }
+  .is-player .lobby-card:hover,
+  .is-player .lobby-card:focus-within {
+    transform: none;
+  }
+  .is-player .lobby-card:hover .table-art,
+  .is-player .lobby-card:focus-within .table-art {
+    transform: none;
+  }
 }
 
 button {
