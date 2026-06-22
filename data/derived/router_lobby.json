@@ -1,0 +1,283 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "contract": "Contract 2 \u2014 scores + recommendations (P3)",
+    "score": "8. router (frozen policy: Rank = 0.30\u00b7Fit + 0.40\u00b7Health + 0.30\u00b7\u0394Health)",
+    "sources": [
+      "data/table_roster.json",
+      "data/players.json",
+      "data/relationships.json",
+      "data/sessions.json"
+    ],
+    "note": "Deterministic, no-model routing policy with integrity hard-gate first and a vulnerable-protection gate (promotion requires LOW seating-risk). Each seeking player has TWO views: 'operator_view' (OPERATOR-FACING \u2014 full rank/score/risk breakdown for the pit-boss console) and 'player_lobby' (PLAYER-FACING \u2014 neutral badges + safe table facts only; NO scores, risk, or integrity language). The lobby view is the only player-visible output."
+  },
+  "routed": [
+    {
+      "player_id": "P-104",
+      "policy": {
+        "w_fit": 0.3,
+        "w_health": 0.4,
+        "w_delta": 0.3,
+        "rec_rank_min": 58.0,
+        "goodfit_rank_min": 40.0
+      },
+      "operator_view": [
+        {
+          "table_id": "T-1",
+          "rank": 65.7,
+          "badge": "recommended",
+          "fit": 90.0,
+          "health": 94.0,
+          "health_band": "healthy",
+          "delta_health": 3.6,
+          "seating_risk": "low",
+          "integrity_gated": false
+        },
+        {
+          "table_id": "T-15",
+          "rank": 63.8,
+          "badge": "recommended",
+          "fit": 85.0,
+          "health": 93.3,
+          "health_band": "healthy",
+          "delta_health": 3.3,
+          "seating_risk": "low",
+          "integrity_gated": false
+        },
+        {
+          "table_id": "T-7",
+          "rank": 63.7,
+          "badge": "recommended",
+          "fit": 80.0,
+          "health": 96.7,
+          "health_band": "healthy",
+          "delta_health": 3.3,
+          "seating_risk": "low",
+          "integrity_gated": false
+        },
+        {
+          "table_id": "T-18",
+          "rank": 61.3,
+          "badge": "recommended",
+          "fit": 80.0,
+          "health": 90.5,
+          "health_band": "healthy",
+          "delta_health": 3.8,
+          "seating_risk": "low",
+          "integrity_gated": false
+        },
+        {
+          "table_id": "T-8",
+          "rank": 60.5,
+          "badge": "recommended",
+          "fit": 74.0,
+          "health": 93.3,
+          "health_band": "healthy",
+          "delta_health": 3.3,
+          "seating_risk": "low",
+          "integrity_gated": false
+        },
+        {
+          "table_id": "T-3",
+          "rank": 60.2,
+          "badge": "recommended",
+          "fit": 80.0,
+          "health": 88.0,
+          "health_band": "healthy",
+          "delta_health": 3.3,
+          "seating_risk": "low",
+          "integrity_gated": false
+        },
+        {
+          "table_id": "T-14",
+          "rank": 56.1,
+          "badge": "good_fit",
+          "fit": 58.0,
+          "health": 93.0,
+          "health_band": "healthy",
+          "delta_health": 5.0,
+          "seating_risk": "low",
+          "integrity_gated": false
+        },
+        {
+          "table_id": "T-25",
+          "rank": 54.4,
+          "badge": "good_fit",
+          "fit": 65.0,
+          "health": 84.7,
+          "health_band": "healthy",
+          "delta_health": 3.3,
+          "seating_risk": "low",
+          "integrity_gated": false
+        },
+        {
+          "table_id": "T-5",
+          "rank": 46.5,
+          "badge": "good_fit",
+          "fit": 30.0,
+          "health": 90.0,
+          "health_band": "healthy",
+          "delta_health": 5.0,
+          "seating_risk": "low",
+          "integrity_gated": false
+        },
+        {
+          "table_id": "T-9",
+          "rank": 42.0,
+          "badge": "available",
+          "fit": 40.0,
+          "health": 63.9,
+          "health_band": "fragile",
+          "delta_health": 14.8,
+          "seating_risk": "medium",
+          "integrity_gated": false
+        },
+        {
+          "table_id": "T-22",
+          "rank": 26.3,
+          "badge": "available",
+          "fit": 22.0,
+          "health": 38.0,
+          "health_band": "beginner_unfriendly",
+          "delta_health": 15.0,
+          "seating_risk": "high",
+          "integrity_gated": false
+        },
+        {
+          "table_id": "T-11",
+          "rank": 36.4,
+          "badge": "hidden_gated",
+          "fit": 45.0,
+          "health": 43.9,
+          "health_band": "beginner_unfriendly",
+          "delta_health": 17.8,
+          "seating_risk": "high",
+          "integrity_gated": true
+        }
+      ],
+      "player_lobby": [
+        {
+          "table_id": "T-1",
+          "stakes": "0.25/0.50",
+          "game_type": "NL Hold'em",
+          "max_seats": 9,
+          "seated_count": 8,
+          "open_seats": 1,
+          "pace_label": "moderate",
+          "badge": "recommended",
+          "badge_label": "Recommended for you"
+        },
+        {
+          "table_id": "T-15",
+          "stakes": "0.25/0.50",
+          "game_type": "NL Hold'em",
+          "max_seats": 9,
+          "seated_count": 7,
+          "open_seats": 2,
+          "pace_label": "fast",
+          "badge": "recommended",
+          "badge_label": "Recommended for you"
+        },
+        {
+          "table_id": "T-7",
+          "stakes": "1/2",
+          "game_type": "NL Hold'em",
+          "max_seats": 9,
+          "seated_count": 8,
+          "open_seats": 1,
+          "pace_label": "moderate",
+          "badge": "recommended",
+          "badge_label": "Recommended for you"
+        },
+        {
+          "table_id": "T-18",
+          "stakes": "3/6",
+          "game_type": "NL Hold'em",
+          "max_seats": 8,
+          "seated_count": 6,
+          "open_seats": 2,
+          "pace_label": "moderate",
+          "badge": "recommended",
+          "badge_label": "Recommended for you"
+        },
+        {
+          "table_id": "T-8",
+          "stakes": "1/2",
+          "game_type": "NL Hold'em",
+          "max_seats": 9,
+          "seated_count": 7,
+          "open_seats": 2,
+          "pace_label": "moderate",
+          "badge": "recommended",
+          "badge_label": "Recommended for you"
+        },
+        {
+          "table_id": "T-3",
+          "stakes": "1/2",
+          "game_type": "NL Hold'em",
+          "max_seats": 9,
+          "seated_count": 6,
+          "open_seats": 3,
+          "pace_label": "moderate",
+          "badge": "recommended",
+          "badge_label": "Recommended for you"
+        },
+        {
+          "table_id": "T-14",
+          "stakes": "2/5",
+          "game_type": "NL Hold'em",
+          "max_seats": 6,
+          "seated_count": 5,
+          "open_seats": 1,
+          "pace_label": "moderate",
+          "badge": "good_fit",
+          "badge_label": "Good fit"
+        },
+        {
+          "table_id": "T-25",
+          "stakes": "1/2",
+          "game_type": "NL Hold'em",
+          "max_seats": 9,
+          "seated_count": 5,
+          "open_seats": 4,
+          "pace_label": "moderate",
+          "badge": "good_fit",
+          "badge_label": "Good fit"
+        },
+        {
+          "table_id": "T-5",
+          "stakes": "5/10",
+          "game_type": "NL Hold'em",
+          "max_seats": 6,
+          "seated_count": 4,
+          "open_seats": 2,
+          "pace_label": "moderate",
+          "badge": "good_fit",
+          "badge_label": "Good fit"
+        },
+        {
+          "table_id": "T-9",
+          "stakes": "2/5",
+          "game_type": "NL Hold'em",
+          "max_seats": 6,
+          "seated_count": 5,
+          "open_seats": 1,
+          "pace_label": "moderate",
+          "badge": "available",
+          "badge_label": "Available"
+        },
+        {
+          "table_id": "T-22",
+          "stakes": "3/6",
+          "game_type": "NL Hold'em",
+          "max_seats": 6,
+          "seated_count": 3,
+          "open_seats": 3,
+          "pace_label": "slow",
+          "badge": "available",
+          "badge_label": "Available"
+        }
+      ]
+    }
+  ]
+}

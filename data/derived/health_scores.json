@@ -1,0 +1,618 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "contract": "Contract 2 \u2014 scores + recommendations (P3)",
+    "score": "3-6. table health (champion: Health(T) = 100 - P_pred - P_frag - P_clus - P_bleed)",
+    "sources": [
+      "data/table_roster.json",
+      "data/players.json",
+      "data/relationships.json",
+      "data/sessions.json"
+    ],
+    "bands": [
+      "healthy",
+      "fragile",
+      "beginner_unfriendly",
+      "collapsed"
+    ],
+    "note": "Per-table health. Composition terms (P_pred/P_frag/P_clus) lead; observed P_bleed lags and is 0 in this static snapshot. integrity_candidate flags a seated high-band cluster for the pit-boss queue regardless of numeric health. OPERATOR-FACING: numeric health scores must NEVER appear in the player lobby \u2014 the lobby shows only neutral badges derived from the band.",
+    "total_tables": 12
+  },
+  "health_scores": [
+    {
+      "table_id": "T-1",
+      "health": 94.0,
+      "band": "healthy",
+      "integrity_candidate": false,
+      "terms": {
+        "P_pred": 0.0,
+        "P_frag": 3.33,
+        "P_clus": 2.62,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 0/45 \u2014 skill-weighted aggressor load 0.0 against 0 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 0.0,
+            "vulnerable": 0,
+            "pressure": 0.0
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 3/25 \u2014 8/9 seats, paid-seat-time trend 'growing'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.889,
+            "trend": "growing",
+            "trend_penalty": 0.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "Active-cluster severity 3/30 from seated flagged cluster(s).",
+          "signals": {
+            "clusters": {
+              "CL-002": {
+                "band": "neutral",
+                "seats": 2,
+                "fraction": 0.25,
+                "penalty": 2.62
+              }
+            }
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        }
+      ]
+    },
+    {
+      "table_id": "T-3",
+      "health": 88.0,
+      "band": "healthy",
+      "integrity_candidate": false,
+      "terms": {
+        "P_pred": 0.0,
+        "P_frag": 12.0,
+        "P_clus": 0.0,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 0/45 \u2014 skill-weighted aggressor load 0.0 against 5 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 0.0,
+            "vulnerable": 5,
+            "pressure": 0.0
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 12/25 \u2014 6/9 seats, paid-seat-time trend 'stable'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.667,
+            "trend": "stable",
+            "trend_penalty": 2.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "No flagged cluster actively seated (P_clus 0).",
+          "signals": {
+            "clusters": {}
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        }
+      ]
+    },
+    {
+      "table_id": "T-5",
+      "health": 90.0,
+      "band": "healthy",
+      "integrity_candidate": false,
+      "terms": {
+        "P_pred": 0.0,
+        "P_frag": 10.0,
+        "P_clus": 0.0,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 0/45 \u2014 skill-weighted aggressor load 0.0 against 0 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 0.0,
+            "vulnerable": 0,
+            "pressure": 0.0
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 10/25 \u2014 4/6 seats, paid-seat-time trend 'growing'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.667,
+            "trend": "growing",
+            "trend_penalty": 0.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "No flagged cluster actively seated (P_clus 0).",
+          "signals": {
+            "clusters": {}
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        }
+      ]
+    },
+    {
+      "table_id": "T-7",
+      "health": 96.7,
+      "band": "healthy",
+      "integrity_candidate": false,
+      "terms": {
+        "P_pred": 0.0,
+        "P_frag": 3.33,
+        "P_clus": 0.0,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 0/45 \u2014 skill-weighted aggressor load 0.0 against 7 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 0.0,
+            "vulnerable": 7,
+            "pressure": 0.0
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 3/25 \u2014 8/9 seats, paid-seat-time trend 'growing'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.889,
+            "trend": "growing",
+            "trend_penalty": 0.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "No flagged cluster actively seated (P_clus 0).",
+          "signals": {
+            "clusters": {}
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        }
+      ]
+    },
+    {
+      "table_id": "T-8",
+      "health": 93.3,
+      "band": "healthy",
+      "integrity_candidate": false,
+      "terms": {
+        "P_pred": 0.0,
+        "P_frag": 6.67,
+        "P_clus": 0.0,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 0/45 \u2014 skill-weighted aggressor load 0.0 against 5 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 0.0,
+            "vulnerable": 5,
+            "pressure": 0.0
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 7/25 \u2014 7/9 seats, paid-seat-time trend 'growing'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.778,
+            "trend": "growing",
+            "trend_penalty": 0.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "No flagged cluster actively seated (P_clus 0).",
+          "signals": {
+            "clusters": {}
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        }
+      ]
+    },
+    {
+      "table_id": "T-9",
+      "health": 63.9,
+      "band": "fragile",
+      "integrity_candidate": false,
+      "terms": {
+        "P_pred": 24.14,
+        "P_frag": 12.0,
+        "P_clus": 0.0,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 24/45 \u2014 skill-weighted aggressor load 0.7 against 0 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 0.7,
+            "vulnerable": 0,
+            "pressure": 0.7
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 12/25 \u2014 5/6 seats, paid-seat-time trend 'flat'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.833,
+            "trend": "flat",
+            "trend_penalty": 7.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "No flagged cluster actively seated (P_clus 0).",
+          "signals": {
+            "clusters": {}
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        }
+      ]
+    },
+    {
+      "table_id": "T-11",
+      "health": 43.9,
+      "band": "beginner_unfriendly",
+      "integrity_candidate": true,
+      "terms": {
+        "P_pred": 24.14,
+        "P_frag": 17.0,
+        "P_clus": 15.0,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 24/45 \u2014 skill-weighted aggressor load 0.7 against 0 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 0.7,
+            "vulnerable": 0,
+            "pressure": 0.7
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 17/25 \u2014 4/6 seats, paid-seat-time trend 'flat'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.667,
+            "trend": "flat",
+            "trend_penalty": 7.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "Active-cluster severity 15/30 from seated flagged cluster(s).",
+          "signals": {
+            "clusters": {
+              "CL-001": {
+                "band": "high",
+                "seats": 2,
+                "fraction": 0.5,
+                "penalty": 15.0
+              }
+            }
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        },
+        {
+          "code": "integrity_candidate",
+          "detail": "A high-band coordinated cluster is actively seated \u2014 surface to the pit-boss review queue regardless of numeric health. Recommend review, not a verdict.",
+          "signals": {}
+        }
+      ]
+    },
+    {
+      "table_id": "T-14",
+      "health": 93.0,
+      "band": "healthy",
+      "integrity_candidate": false,
+      "terms": {
+        "P_pred": 0.0,
+        "P_frag": 7.0,
+        "P_clus": 0.0,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 0/45 \u2014 skill-weighted aggressor load 0.0 against 1 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 0.0,
+            "vulnerable": 1,
+            "pressure": 0.0
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 7/25 \u2014 5/6 seats, paid-seat-time trend 'stable'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.833,
+            "trend": "stable",
+            "trend_penalty": 2.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "No flagged cluster actively seated (P_clus 0).",
+          "signals": {
+            "clusters": {}
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        }
+      ]
+    },
+    {
+      "table_id": "T-15",
+      "health": 93.3,
+      "band": "healthy",
+      "integrity_candidate": false,
+      "terms": {
+        "P_pred": 0.0,
+        "P_frag": 6.67,
+        "P_clus": 0.0,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 0/45 \u2014 skill-weighted aggressor load 0.0 against 0 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 0.0,
+            "vulnerable": 0,
+            "pressure": 0.0
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 7/25 \u2014 7/9 seats, paid-seat-time trend 'growing'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.778,
+            "trend": "growing",
+            "trend_penalty": 0.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "No flagged cluster actively seated (P_clus 0).",
+          "signals": {
+            "clusters": {}
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        }
+      ]
+    },
+    {
+      "table_id": "T-18",
+      "health": 90.5,
+      "band": "healthy",
+      "integrity_candidate": false,
+      "terms": {
+        "P_pred": 0.0,
+        "P_frag": 9.5,
+        "P_clus": 0.0,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 0/45 \u2014 skill-weighted aggressor load 0.0 against 0 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 0.0,
+            "vulnerable": 0,
+            "pressure": 0.0
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 10/25 \u2014 6/8 seats, paid-seat-time trend 'stable'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.75,
+            "trend": "stable",
+            "trend_penalty": 2.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "No flagged cluster actively seated (P_clus 0).",
+          "signals": {
+            "clusters": {}
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        }
+      ]
+    },
+    {
+      "table_id": "T-22",
+      "health": 38.0,
+      "band": "beginner_unfriendly",
+      "integrity_candidate": false,
+      "terms": {
+        "P_pred": 40.0,
+        "P_frag": 22.0,
+        "P_clus": 0.0,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 40/45 \u2014 skill-weighted aggressor load 2.0 against 0 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 2.0,
+            "vulnerable": 0,
+            "pressure": 2.0
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 22/25 \u2014 3/6 seats, paid-seat-time trend 'flat'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.5,
+            "trend": "flat",
+            "trend_penalty": 7.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "No flagged cluster actively seated (P_clus 0).",
+          "signals": {
+            "clusters": {}
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        }
+      ]
+    },
+    {
+      "table_id": "T-25",
+      "health": 84.7,
+      "band": "healthy",
+      "integrity_candidate": false,
+      "terms": {
+        "P_pred": 0.0,
+        "P_frag": 15.33,
+        "P_clus": 0.0,
+        "P_bleed": 0.0
+      },
+      "reason_codes": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 0/45 \u2014 skill-weighted aggressor load 0.0 against 4 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 0.0,
+            "vulnerable": 4,
+            "pressure": 0.0
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 15/25 \u2014 5/9 seats, paid-seat-time trend 'stable'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.556,
+            "trend": "stable",
+            "trend_penalty": 2.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "No flagged cluster actively seated (P_clus 0).",
+          "signals": {
+            "clusters": {}
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        }
+      ]
+    }
+  ]
+}
