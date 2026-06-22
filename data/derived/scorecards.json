@@ -1,0 +1,3439 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "title": "Classification \u2460 \u2014 Scorecards (one-vs-rest)",
+    "pdo": 20.0,
+    "development_note": "In-sample development view on all 122 players (how scorecards are built). The honest out-of-sample accuracy vs the rule champion is the leave-one-out 85.2% in champion-vs-challenger.html.",
+    "synthetic_caveat": "IVs are extreme (>2) and KS/AUC ~1.0 because the synthetic data has near-perfectly separable classes. On real data IV is typically 0.1\u20130.5 and KS 0.3\u20130.6."
+  },
+  "scorecards": [
+    {
+      "archetype": "aggressive_predatory",
+      "n_positive": 8,
+      "low_confidence": false,
+      "base_points": 437,
+      "ks": 1.0,
+      "auc": 1.0,
+      "features": [
+        {
+          "feature": "pfr",
+          "iv": 2.087,
+          "strength": "very strong",
+          "coef": 0.68,
+          "bins": [
+            {
+              "range": "(0.059, 0.13]",
+              "n": 37,
+              "pos": 0,
+              "woe": -1.87,
+              "points": -36
+            },
+            {
+              "range": "(0.13, 0.18]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -33
+            },
+            {
+              "range": "(0.18, 0.21]",
+              "n": 24,
+              "pos": 0,
+              "woe": -1.44,
+              "points": -28
+            },
+            {
+              "range": "(0.21, 0.5]",
+              "n": 30,
+              "pos": 8,
+              "woe": 1.48,
+              "points": 29
+            }
+          ]
+        },
+        {
+          "feature": "aggression_factor",
+          "iv": 2.073,
+          "strength": "very strong",
+          "coef": 0.43,
+          "bins": [
+            {
+              "range": "(0.719, 1.15]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.72,
+              "points": -21
+            },
+            {
+              "range": "(1.15, 1.79]",
+              "n": 29,
+              "pos": 0,
+              "woe": -1.63,
+              "points": -20
+            },
+            {
+              "range": "(1.79, 2.15]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -21
+            },
+            {
+              "range": "(2.15, 4.85]",
+              "n": 30,
+              "pos": 8,
+              "woe": 1.48,
+              "points": 18
+            }
+          ]
+        },
+        {
+          "feature": "vpip",
+          "iv": 2.02,
+          "strength": "very strong",
+          "coef": 1.94,
+          "bins": [
+            {
+              "range": "(0.199, 0.27]",
+              "n": 36,
+              "pos": 0,
+              "woe": -1.84,
+              "points": -103
+            },
+            {
+              "range": "(0.27, 0.31]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -93
+            },
+            {
+              "range": "(0.31, 0.378]",
+              "n": 25,
+              "pos": 0,
+              "woe": -1.48,
+              "points": -83
+            },
+            {
+              "range": "(0.378, 0.65]",
+              "n": 31,
+              "pos": 8,
+              "woe": 1.43,
+              "points": 80
+            }
+          ]
+        },
+        {
+          "feature": "lifetime_hands",
+          "iv": 2.011,
+          "strength": "very strong",
+          "coef": 0.6,
+          "bins": [
+            {
+              "range": "(8.999, 980.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.72,
+              "points": -30
+            },
+            {
+              "range": "(980.0, 6500.0]",
+              "n": 29,
+              "pos": 0,
+              "woe": -1.63,
+              "points": -28
+            },
+            {
+              "range": "(6500.0, 30750.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -29
+            },
+            {
+              "range": "(30750.0, 580000.0]",
+              "n": 31,
+              "pos": 8,
+              "woe": 1.43,
+              "points": 25
+            }
+          ]
+        },
+        {
+          "feature": "avg_pot_size_bb",
+          "iv": 2.011,
+          "strength": "very strong",
+          "coef": 0.42,
+          "bins": [
+            {
+              "range": "(5.7989999999999995, 10.8]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.72,
+              "points": -21
+            },
+            {
+              "range": "(10.8, 16.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -20
+            },
+            {
+              "range": "(16.5, 19.95]",
+              "n": 29,
+              "pos": 0,
+              "woe": -1.63,
+              "points": -20
+            },
+            {
+              "range": "(19.95, 52.0]",
+              "n": 31,
+              "pos": 8,
+              "woe": 1.43,
+              "points": 17
+            }
+          ]
+        },
+        {
+          "feature": "avg_session_minutes",
+          "iv": 1.508,
+          "strength": "very strong",
+          "coef": 0.28,
+          "bins": [
+            {
+              "range": "(14.999, 70.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -14
+            },
+            {
+              "range": "(70.5, 122.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -14
+            },
+            {
+              "range": "(122.5, 195.0]",
+              "n": 31,
+              "pos": 1,
+              "woe": -0.56,
+              "points": -5
+            },
+            {
+              "range": "(195.0, 420.0]",
+              "n": 30,
+              "pos": 7,
+              "woe": 1.31,
+              "points": 11
+            }
+          ]
+        },
+        {
+          "feature": "registered_days_ago",
+          "iv": 1.24,
+          "strength": "very strong",
+          "coef": 0.24,
+          "bins": [
+            {
+              "range": "(0.999, 112.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -12
+            },
+            {
+              "range": "(112.5, 380.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.72,
+              "points": -12
+            },
+            {
+              "range": "(380.0, 727.5]",
+              "n": 28,
+              "pos": 2,
+              "woe": 0.09,
+              "points": 1
+            },
+            {
+              "range": "(727.5, 3000.0]",
+              "n": 31,
+              "pos": 6,
+              "woe": 1.08,
+              "points": 8
+            }
+          ]
+        },
+        {
+          "feature": "sessions_last_30d",
+          "iv": 1.051,
+          "strength": "very strong",
+          "coef": 0.31,
+          "bins": [
+            {
+              "range": "(1.999, 10.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.72,
+              "points": -15
+            },
+            {
+              "range": "(10.0, 16.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -15
+            },
+            {
+              "range": "(16.0, 20.75]",
+              "n": 29,
+              "pos": 4,
+              "woe": 0.72,
+              "points": 6
+            },
+            {
+              "range": "(20.75, 28.0]",
+              "n": 31,
+              "pos": 4,
+              "woe": 0.64,
+              "points": 6
+            }
+          ]
+        },
+        {
+          "feature": "promo_redemptions_30d",
+          "iv": 0.387,
+          "strength": "strong",
+          "coef": 0.12,
+          "bins": [
+            {
+              "range": "(-0.001, 1.0]",
+              "n": 82,
+              "pos": 8,
+              "woe": 0.33,
+              "points": 1
+            },
+            {
+              "range": "(1.0, 2.0]",
+              "n": 18,
+              "pos": 0,
+              "woe": -1.11,
+              "points": -4
+            },
+            {
+              "range": "(2.0, 21.0]",
+              "n": 22,
+              "pos": 0,
+              "woe": -1.31,
+              "points": -5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "archetype": "bot_like",
+      "n_positive": 1,
+      "low_confidence": true,
+      "base_points": 407,
+      "ks": null,
+      "auc": null,
+      "features": [
+        {
+          "feature": "pfr",
+          "iv": 0.451,
+          "strength": "strong",
+          "coef": 1.2,
+          "bins": [
+            {
+              "range": "(0.059, 0.13]",
+              "n": 37,
+              "pos": 0,
+              "woe": -0.6,
+              "points": -21
+            },
+            {
+              "range": "(0.13, 0.18]",
+              "n": 31,
+              "pos": 0,
+              "woe": -0.43,
+              "points": -15
+            },
+            {
+              "range": "(0.18, 0.21]",
+              "n": 24,
+              "pos": 1,
+              "woe": 0.96,
+              "points": 33
+            },
+            {
+              "range": "(0.21, 0.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -0.4,
+              "points": -14
+            }
+          ]
+        },
+        {
+          "feature": "avg_pot_size_bb",
+          "iv": 0.322,
+          "strength": "strong",
+          "coef": 0.74,
+          "bins": [
+            {
+              "range": "(5.7989999999999995, 10.8]",
+              "n": 32,
+              "pos": 0,
+              "woe": -0.46,
+              "points": -10
+            },
+            {
+              "range": "(10.8, 16.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -0.4,
+              "points": -9
+            },
+            {
+              "range": "(16.5, 19.95]",
+              "n": 29,
+              "pos": 1,
+              "woe": 0.77,
+              "points": 16
+            },
+            {
+              "range": "(19.95, 52.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -0.43,
+              "points": -9
+            }
+          ]
+        },
+        {
+          "feature": "lifetime_hands",
+          "iv": 0.301,
+          "strength": "strong",
+          "coef": 1.04,
+          "bins": [
+            {
+              "range": "(8.999, 980.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -0.46,
+              "points": -14
+            },
+            {
+              "range": "(980.0, 6500.0]",
+              "n": 29,
+              "pos": 0,
+              "woe": -0.36,
+              "points": -11
+            },
+            {
+              "range": "(6500.0, 30750.0]",
+              "n": 30,
+              "pos": 1,
+              "woe": 0.73,
+              "points": 22
+            },
+            {
+              "range": "(30750.0, 580000.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -0.43,
+              "points": -13
+            }
+          ]
+        },
+        {
+          "feature": "registered_days_ago",
+          "iv": 0.282,
+          "strength": "medium",
+          "coef": 2.15,
+          "bins": [
+            {
+              "range": "(0.999, 112.5]",
+              "n": 31,
+              "pos": 1,
+              "woe": 0.7,
+              "points": 44
+            },
+            {
+              "range": "(112.5, 380.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -0.46,
+              "points": -29
+            },
+            {
+              "range": "(380.0, 727.5]",
+              "n": 28,
+              "pos": 0,
+              "woe": -0.33,
+              "points": -20
+            },
+            {
+              "range": "(727.5, 3000.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -0.43,
+              "points": -27
+            }
+          ]
+        },
+        {
+          "feature": "sessions_last_30d",
+          "iv": 0.281,
+          "strength": "medium",
+          "coef": 1.4,
+          "bins": [
+            {
+              "range": "(1.999, 10.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -0.46,
+              "points": -19
+            },
+            {
+              "range": "(10.0, 16.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -0.4,
+              "points": -16
+            },
+            {
+              "range": "(16.0, 20.75]",
+              "n": 29,
+              "pos": 0,
+              "woe": -0.36,
+              "points": -15
+            },
+            {
+              "range": "(20.75, 28.0]",
+              "n": 31,
+              "pos": 1,
+              "woe": 0.7,
+              "points": 28
+            }
+          ]
+        },
+        {
+          "feature": "aggression_factor",
+          "iv": 0.281,
+          "strength": "medium",
+          "coef": 0.62,
+          "bins": [
+            {
+              "range": "(0.719, 1.15]",
+              "n": 32,
+              "pos": 0,
+              "woe": -0.46,
+              "points": -8
+            },
+            {
+              "range": "(1.15, 1.79]",
+              "n": 29,
+              "pos": 0,
+              "woe": -0.36,
+              "points": -7
+            },
+            {
+              "range": "(1.79, 2.15]",
+              "n": 31,
+              "pos": 1,
+              "woe": 0.7,
+              "points": 13
+            },
+            {
+              "range": "(2.15, 4.85]",
+              "n": 30,
+              "pos": 0,
+              "woe": -0.4,
+              "points": -7
+            }
+          ]
+        },
+        {
+          "feature": "avg_session_minutes",
+          "iv": 0.28,
+          "strength": "medium",
+          "coef": 1.05,
+          "bins": [
+            {
+              "range": "(14.999, 70.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -0.43,
+              "points": -13
+            },
+            {
+              "range": "(70.5, 122.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -0.4,
+              "points": -12
+            },
+            {
+              "range": "(122.5, 195.0]",
+              "n": 31,
+              "pos": 1,
+              "woe": 0.7,
+              "points": 21
+            },
+            {
+              "range": "(195.0, 420.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -0.4,
+              "points": -12
+            }
+          ]
+        },
+        {
+          "feature": "vpip",
+          "iv": 0.196,
+          "strength": "medium",
+          "coef": 0.75,
+          "bins": [
+            {
+              "range": "(0.199, 0.27]",
+              "n": 36,
+              "pos": 1,
+              "woe": 0.55,
+              "points": 12
+            },
+            {
+              "range": "(0.27, 0.31]",
+              "n": 30,
+              "pos": 0,
+              "woe": -0.4,
+              "points": -9
+            },
+            {
+              "range": "(0.31, 0.378]",
+              "n": 25,
+              "pos": 0,
+              "woe": -0.22,
+              "points": -5
+            },
+            {
+              "range": "(0.378, 0.65]",
+              "n": 31,
+              "pos": 0,
+              "woe": -0.43,
+              "points": -9
+            }
+          ]
+        },
+        {
+          "feature": "promo_redemptions_30d",
+          "iv": 0.022,
+          "strength": "weak",
+          "coef": -0.03,
+          "bins": [
+            {
+              "range": "(-0.001, 1.0]",
+              "n": 82,
+              "pos": 1,
+              "woe": -0.1,
+              "points": 0
+            },
+            {
+              "range": "(1.0, 2.0]",
+              "n": 18,
+              "pos": 0,
+              "woe": 0.28,
+              "points": 0
+            },
+            {
+              "range": "(2.0, 21.0]",
+              "n": 22,
+              "pos": 0,
+              "woe": 0.09,
+              "points": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "archetype": "cluster_member",
+      "n_positive": 5,
+      "low_confidence": false,
+      "base_points": 415,
+      "ks": 1.0,
+      "auc": 1.0,
+      "features": [
+        {
+          "feature": "avg_session_minutes",
+          "iv": 1.435,
+          "strength": "very strong",
+          "coef": 0.99,
+          "bins": [
+            {
+              "range": "(14.999, 70.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.31,
+              "points": -38
+            },
+            {
+              "range": "(70.5, 122.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.28,
+              "points": -37
+            },
+            {
+              "range": "(122.5, 195.0]",
+              "n": 31,
+              "pos": 5,
+              "woe": 1.26,
+              "points": 36
+            },
+            {
+              "range": "(195.0, 420.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.28,
+              "points": -37
+            }
+          ]
+        },
+        {
+          "feature": "pfr",
+          "iv": 1.062,
+          "strength": "very strong",
+          "coef": 1.54,
+          "bins": [
+            {
+              "range": "(0.059, 0.13]",
+              "n": 37,
+              "pos": 0,
+              "woe": -1.48,
+              "points": -66
+            },
+            {
+              "range": "(0.13, 0.18]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.31,
+              "points": -58
+            },
+            {
+              "range": "(0.18, 0.21]",
+              "n": 24,
+              "pos": 1,
+              "woe": 0.08,
+              "points": 4
+            },
+            {
+              "range": "(0.21, 0.5]",
+              "n": 30,
+              "pos": 4,
+              "woe": 1.06,
+              "points": 47
+            }
+          ]
+        },
+        {
+          "feature": "registered_days_ago",
+          "iv": 1.015,
+          "strength": "very strong",
+          "coef": -0.03,
+          "bins": [
+            {
+              "range": "(0.999, 112.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.31,
+              "points": 1
+            },
+            {
+              "range": "(112.5, 380.0]",
+              "n": 32,
+              "pos": 1,
+              "woe": -0.21,
+              "points": 0
+            },
+            {
+              "range": "(380.0, 727.5]",
+              "n": 28,
+              "pos": 4,
+              "woe": 1.14,
+              "points": -1
+            },
+            {
+              "range": "(727.5, 3000.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.31,
+              "points": 1
+            }
+          ]
+        },
+        {
+          "feature": "lifetime_hands",
+          "iv": 0.943,
+          "strength": "very strong",
+          "coef": 0.47,
+          "bins": [
+            {
+              "range": "(8.999, 980.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.34,
+              "points": -18
+            },
+            {
+              "range": "(980.0, 6500.0]",
+              "n": 29,
+              "pos": 0,
+              "woe": -1.24,
+              "points": -17
+            },
+            {
+              "range": "(6500.0, 30750.0]",
+              "n": 30,
+              "pos": 4,
+              "woe": 1.06,
+              "points": 14
+            },
+            {
+              "range": "(30750.0, 580000.0]",
+              "n": 31,
+              "pos": 1,
+              "woe": -0.18,
+              "points": -2
+            }
+          ]
+        },
+        {
+          "feature": "vpip",
+          "iv": 0.898,
+          "strength": "very strong",
+          "coef": 2.26,
+          "bins": [
+            {
+              "range": "(0.199, 0.27]",
+              "n": 36,
+              "pos": 0,
+              "woe": -1.46,
+              "points": -95
+            },
+            {
+              "range": "(0.27, 0.31]",
+              "n": 30,
+              "pos": 3,
+              "woe": 0.77,
+              "points": 50
+            },
+            {
+              "range": "(0.31, 0.378]",
+              "n": 25,
+              "pos": 2,
+              "woe": 0.59,
+              "points": 39
+            },
+            {
+              "range": "(0.378, 0.65]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.31,
+              "points": -86
+            }
+          ]
+        },
+        {
+          "feature": "sessions_last_30d",
+          "iv": 0.753,
+          "strength": "very strong",
+          "coef": 1.68,
+          "bins": [
+            {
+              "range": "(1.999, 10.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.34,
+              "points": -65
+            },
+            {
+              "range": "(10.0, 16.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.28,
+              "points": -62
+            },
+            {
+              "range": "(16.0, 20.75]",
+              "n": 29,
+              "pos": 2,
+              "woe": 0.44,
+              "points": 21
+            },
+            {
+              "range": "(20.75, 28.0]",
+              "n": 31,
+              "pos": 3,
+              "woe": 0.74,
+              "points": 36
+            }
+          ]
+        },
+        {
+          "feature": "avg_pot_size_bb",
+          "iv": 0.753,
+          "strength": "very strong",
+          "coef": 0.42,
+          "bins": [
+            {
+              "range": "(5.7989999999999995, 10.8]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.34,
+              "points": -16
+            },
+            {
+              "range": "(10.8, 16.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.28,
+              "points": -16
+            },
+            {
+              "range": "(16.5, 19.95]",
+              "n": 29,
+              "pos": 2,
+              "woe": 0.44,
+              "points": 5
+            },
+            {
+              "range": "(19.95, 52.0]",
+              "n": 31,
+              "pos": 3,
+              "woe": 0.74,
+              "points": 9
+            }
+          ]
+        },
+        {
+          "feature": "aggression_factor",
+          "iv": 0.729,
+          "strength": "very strong",
+          "coef": 0.38,
+          "bins": [
+            {
+              "range": "(0.719, 1.15]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.34,
+              "points": -15
+            },
+            {
+              "range": "(1.15, 1.79]",
+              "n": 29,
+              "pos": 0,
+              "woe": -1.24,
+              "points": -14
+            },
+            {
+              "range": "(1.79, 2.15]",
+              "n": 31,
+              "pos": 3,
+              "woe": 0.74,
+              "points": 8
+            },
+            {
+              "range": "(2.15, 4.85]",
+              "n": 30,
+              "pos": 2,
+              "woe": 0.4,
+              "points": 4
+            }
+          ]
+        },
+        {
+          "feature": "promo_redemptions_30d",
+          "iv": 0.208,
+          "strength": "medium",
+          "coef": 0.01,
+          "bins": [
+            {
+              "range": "(-0.001, 1.0]",
+              "n": 82,
+              "pos": 5,
+              "woe": 0.26,
+              "points": 0
+            },
+            {
+              "range": "(1.0, 2.0]",
+              "n": 18,
+              "pos": 0,
+              "woe": -0.71,
+              "points": 0
+            },
+            {
+              "range": "(2.0, 21.0]",
+              "n": 22,
+              "pos": 0,
+              "woe": -0.9,
+              "points": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "archetype": "grinder",
+      "n_positive": 12,
+      "low_confidence": false,
+      "base_points": 361,
+      "ks": 1.0,
+      "auc": 1.0,
+      "features": [
+        {
+          "feature": "aggression_factor",
+          "iv": 2.723,
+          "strength": "very strong",
+          "coef": 0.92,
+          "bins": [
+            {
+              "range": "(0.719, 1.15]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.09,
+              "points": -56
+            },
+            {
+              "range": "(1.15, 1.79]",
+              "n": 29,
+              "pos": 0,
+              "woe": -2.0,
+              "points": -53
+            },
+            {
+              "range": "(1.79, 2.15]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.06,
+              "points": -55
+            },
+            {
+              "range": "(2.15, 4.85]",
+              "n": 30,
+              "pos": 12,
+              "woe": 1.69,
+              "points": 45
+            }
+          ]
+        },
+        {
+          "feature": "avg_session_minutes",
+          "iv": 2.722,
+          "strength": "very strong",
+          "coef": 0.77,
+          "bins": [
+            {
+              "range": "(14.999, 70.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.06,
+              "points": -46
+            },
+            {
+              "range": "(70.5, 122.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -2.03,
+              "points": -45
+            },
+            {
+              "range": "(122.5, 195.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.06,
+              "points": -46
+            },
+            {
+              "range": "(195.0, 420.0]",
+              "n": 30,
+              "pos": 12,
+              "woe": 1.69,
+              "points": 38
+            }
+          ]
+        },
+        {
+          "feature": "lifetime_hands",
+          "iv": 2.644,
+          "strength": "very strong",
+          "coef": 0.73,
+          "bins": [
+            {
+              "range": "(8.999, 980.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.09,
+              "points": -44
+            },
+            {
+              "range": "(980.0, 6500.0]",
+              "n": 29,
+              "pos": 0,
+              "woe": -2.0,
+              "points": -42
+            },
+            {
+              "range": "(6500.0, 30750.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -2.03,
+              "points": -43
+            },
+            {
+              "range": "(30750.0, 580000.0]",
+              "n": 31,
+              "pos": 12,
+              "woe": 1.63,
+              "points": 34
+            }
+          ]
+        },
+        {
+          "feature": "sessions_last_30d",
+          "iv": 2.644,
+          "strength": "very strong",
+          "coef": 0.55,
+          "bins": [
+            {
+              "range": "(1.999, 10.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.09,
+              "points": -33
+            },
+            {
+              "range": "(10.0, 16.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -2.03,
+              "points": -32
+            },
+            {
+              "range": "(16.0, 20.75]",
+              "n": 29,
+              "pos": 0,
+              "woe": -2.0,
+              "points": -32
+            },
+            {
+              "range": "(20.75, 28.0]",
+              "n": 31,
+              "pos": 12,
+              "woe": 1.63,
+              "points": 26
+            }
+          ]
+        },
+        {
+          "feature": "avg_pot_size_bb",
+          "iv": 2.644,
+          "strength": "very strong",
+          "coef": 0.89,
+          "bins": [
+            {
+              "range": "(5.7989999999999995, 10.8]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.09,
+              "points": -54
+            },
+            {
+              "range": "(10.8, 16.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -2.03,
+              "points": -52
+            },
+            {
+              "range": "(16.5, 19.95]",
+              "n": 29,
+              "pos": 0,
+              "woe": -2.0,
+              "points": -51
+            },
+            {
+              "range": "(19.95, 52.0]",
+              "n": 31,
+              "pos": 12,
+              "woe": 1.63,
+              "points": 42
+            }
+          ]
+        },
+        {
+          "feature": "vpip",
+          "iv": 2.291,
+          "strength": "very strong",
+          "coef": 1.61,
+          "bins": [
+            {
+              "range": "(0.199, 0.27]",
+              "n": 36,
+              "pos": 12,
+              "woe": 1.41,
+              "points": 65
+            },
+            {
+              "range": "(0.27, 0.31]",
+              "n": 30,
+              "pos": 0,
+              "woe": -2.03,
+              "points": -94
+            },
+            {
+              "range": "(0.31, 0.378]",
+              "n": 25,
+              "pos": 0,
+              "woe": -1.85,
+              "points": -86
+            },
+            {
+              "range": "(0.378, 0.65]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.06,
+              "points": -96
+            }
+          ]
+        },
+        {
+          "feature": "registered_days_ago",
+          "iv": 2.113,
+          "strength": "very strong",
+          "coef": 0.04,
+          "bins": [
+            {
+              "range": "(0.999, 112.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.06,
+              "points": -2
+            },
+            {
+              "range": "(112.5, 380.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.09,
+              "points": -2
+            },
+            {
+              "range": "(380.0, 727.5]",
+              "n": 28,
+              "pos": 1,
+              "woe": -0.83,
+              "points": -1
+            },
+            {
+              "range": "(727.5, 3000.0]",
+              "n": 31,
+              "pos": 11,
+              "woe": 1.5,
+              "points": 2
+            }
+          ]
+        },
+        {
+          "feature": "pfr",
+          "iv": 1.734,
+          "strength": "very strong",
+          "coef": 0.33,
+          "bins": [
+            {
+              "range": "(0.059, 0.13]",
+              "n": 37,
+              "pos": 0,
+              "woe": -2.24,
+              "points": -21
+            },
+            {
+              "range": "(0.13, 0.18]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.06,
+              "points": -20
+            },
+            {
+              "range": "(0.18, 0.21]",
+              "n": 24,
+              "pos": 7,
+              "woe": 1.23,
+              "points": 12
+            },
+            {
+              "range": "(0.21, 0.5]",
+              "n": 30,
+              "pos": 5,
+              "woe": 0.55,
+              "points": 5
+            }
+          ]
+        },
+        {
+          "feature": "promo_redemptions_30d",
+          "iv": 0.585,
+          "strength": "very strong",
+          "coef": -0.0,
+          "bins": [
+            {
+              "range": "(-0.001, 1.0]",
+              "n": 82,
+              "pos": 12,
+              "woe": 0.38,
+              "points": 0
+            },
+            {
+              "range": "(1.0, 2.0]",
+              "n": 18,
+              "pos": 0,
+              "woe": -1.5,
+              "points": 0
+            },
+            {
+              "range": "(2.0, 21.0]",
+              "n": 22,
+              "pos": 0,
+              "woe": -1.7,
+              "points": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "archetype": "healthy_anchor",
+      "n_positive": 18,
+      "low_confidence": false,
+      "base_points": 461,
+      "ks": 0.95,
+      "auc": 0.99,
+      "features": [
+        {
+          "feature": "avg_pot_size_bb",
+          "iv": 2.52,
+          "strength": "very strong",
+          "coef": 0.52,
+          "bins": [
+            {
+              "range": "(5.7989999999999995, 10.8]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.51,
+              "points": -38
+            },
+            {
+              "range": "(10.8, 16.5]",
+              "n": 30,
+              "pos": 3,
+              "woe": -0.39,
+              "points": -6
+            },
+            {
+              "range": "(16.5, 19.95]",
+              "n": 29,
+              "pos": 15,
+              "woe": 1.73,
+              "points": 26
+            },
+            {
+              "range": "(19.95, 52.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.48,
+              "points": -37
+            }
+          ]
+        },
+        {
+          "feature": "aggression_factor",
+          "iv": 2.369,
+          "strength": "very strong",
+          "coef": 0.63,
+          "bins": [
+            {
+              "range": "(0.719, 1.15]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.51,
+              "points": -45
+            },
+            {
+              "range": "(1.15, 1.79]",
+              "n": 29,
+              "pos": 3,
+              "woe": -0.36,
+              "points": -6
+            },
+            {
+              "range": "(1.79, 2.15]",
+              "n": 31,
+              "pos": 15,
+              "woe": 1.61,
+              "points": 29
+            },
+            {
+              "range": "(2.15, 4.85]",
+              "n": 30,
+              "pos": 0,
+              "woe": -2.44,
+              "points": -44
+            }
+          ]
+        },
+        {
+          "feature": "pfr",
+          "iv": 2.09,
+          "strength": "very strong",
+          "coef": 1.66,
+          "bins": [
+            {
+              "range": "(0.059, 0.13]",
+              "n": 37,
+              "pos": 0,
+              "woe": -2.65,
+              "points": -127
+            },
+            {
+              "range": "(0.13, 0.18]",
+              "n": 31,
+              "pos": 10,
+              "woe": 0.95,
+              "points": 46
+            },
+            {
+              "range": "(0.18, 0.21]",
+              "n": 24,
+              "pos": 8,
+              "woe": 1.0,
+              "points": 48
+            },
+            {
+              "range": "(0.21, 0.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -2.44,
+              "points": -117
+            }
+          ]
+        },
+        {
+          "feature": "avg_session_minutes",
+          "iv": 1.831,
+          "strength": "very strong",
+          "coef": 0.49,
+          "bins": [
+            {
+              "range": "(14.999, 70.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.48,
+              "points": -35
+            },
+            {
+              "range": "(70.5, 122.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -2.44,
+              "points": -34
+            },
+            {
+              "range": "(122.5, 195.0]",
+              "n": 31,
+              "pos": 7,
+              "woe": 0.48,
+              "points": 7
+            },
+            {
+              "range": "(195.0, 420.0]",
+              "n": 30,
+              "pos": 11,
+              "woe": 1.14,
+              "points": 16
+            }
+          ]
+        },
+        {
+          "feature": "lifetime_hands",
+          "iv": 1.77,
+          "strength": "very strong",
+          "coef": 0.63,
+          "bins": [
+            {
+              "range": "(8.999, 980.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.51,
+              "points": -45
+            },
+            {
+              "range": "(980.0, 6500.0]",
+              "n": 29,
+              "pos": 0,
+              "woe": -2.41,
+              "points": -44
+            },
+            {
+              "range": "(6500.0, 30750.0]",
+              "n": 30,
+              "pos": 8,
+              "woe": 0.69,
+              "points": 13
+            },
+            {
+              "range": "(30750.0, 580000.0]",
+              "n": 31,
+              "pos": 10,
+              "woe": 0.95,
+              "points": 17
+            }
+          ]
+        },
+        {
+          "feature": "registered_days_ago",
+          "iv": 1.443,
+          "strength": "very strong",
+          "coef": 0.6,
+          "bins": [
+            {
+              "range": "(0.999, 112.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.48,
+              "points": -43
+            },
+            {
+              "range": "(112.5, 380.0]",
+              "n": 32,
+              "pos": 1,
+              "woe": -1.38,
+              "points": -24
+            },
+            {
+              "range": "(380.0, 727.5]",
+              "n": 28,
+              "pos": 6,
+              "woe": 0.43,
+              "points": 7
+            },
+            {
+              "range": "(727.5, 3000.0]",
+              "n": 31,
+              "pos": 11,
+              "woe": 1.09,
+              "points": 19
+            }
+          ]
+        },
+        {
+          "feature": "sessions_last_30d",
+          "iv": 1.4,
+          "strength": "very strong",
+          "coef": 0.84,
+          "bins": [
+            {
+              "range": "(1.999, 10.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.51,
+              "points": -61
+            },
+            {
+              "range": "(10.0, 16.0]",
+              "n": 30,
+              "pos": 1,
+              "woe": -1.31,
+              "points": -32
+            },
+            {
+              "range": "(16.0, 20.75]",
+              "n": 29,
+              "pos": 10,
+              "woe": 1.05,
+              "points": 25
+            },
+            {
+              "range": "(20.75, 28.0]",
+              "n": 31,
+              "pos": 7,
+              "woe": 0.48,
+              "points": 12
+            }
+          ]
+        },
+        {
+          "feature": "vpip",
+          "iv": 1.128,
+          "strength": "very strong",
+          "coef": -1.2,
+          "bins": [
+            {
+              "range": "(0.199, 0.27]",
+              "n": 36,
+              "pos": 9,
+              "woe": 0.6,
+              "points": -21
+            },
+            {
+              "range": "(0.27, 0.31]",
+              "n": 30,
+              "pos": 8,
+              "woe": 0.69,
+              "points": -24
+            },
+            {
+              "range": "(0.31, 0.378]",
+              "n": 25,
+              "pos": 1,
+              "woe": -1.13,
+              "points": 39
+            },
+            {
+              "range": "(0.378, 0.65]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.48,
+              "points": 86
+            }
+          ]
+        },
+        {
+          "feature": "promo_redemptions_30d",
+          "iv": 0.834,
+          "strength": "very strong",
+          "coef": 0.59,
+          "bins": [
+            {
+              "range": "(-0.001, 1.0]",
+              "n": 82,
+              "pos": 18,
+              "woe": 0.44,
+              "points": 7
+            },
+            {
+              "range": "(1.0, 2.0]",
+              "n": 18,
+              "pos": 0,
+              "woe": -1.92,
+              "points": -33
+            },
+            {
+              "range": "(2.0, 21.0]",
+              "n": 22,
+              "pos": 0,
+              "woe": -2.12,
+              "points": -36
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "archetype": "new",
+      "n_positive": 8,
+      "low_confidence": false,
+      "base_points": 442,
+      "ks": 0.97,
+      "auc": 0.99,
+      "features": [
+        {
+          "feature": "registered_days_ago",
+          "iv": 2.012,
+          "strength": "very strong",
+          "coef": 0.38,
+          "bins": [
+            {
+              "range": "(0.999, 112.5]",
+              "n": 31,
+              "pos": 8,
+              "woe": 1.43,
+              "points": 16
+            },
+            {
+              "range": "(112.5, 380.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.72,
+              "points": -19
+            },
+            {
+              "range": "(380.0, 727.5]",
+              "n": 28,
+              "pos": 0,
+              "woe": -1.59,
+              "points": -18
+            },
+            {
+              "range": "(727.5, 3000.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -19
+            }
+          ]
+        },
+        {
+          "feature": "avg_session_minutes",
+          "iv": 2.01,
+          "strength": "very strong",
+          "coef": 0.51,
+          "bins": [
+            {
+              "range": "(14.999, 70.5]",
+              "n": 31,
+              "pos": 8,
+              "woe": 1.43,
+              "points": 21
+            },
+            {
+              "range": "(70.5, 122.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -24
+            },
+            {
+              "range": "(122.5, 195.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -25
+            },
+            {
+              "range": "(195.0, 420.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -24
+            }
+          ]
+        },
+        {
+          "feature": "lifetime_hands",
+          "iv": 1.95,
+          "strength": "very strong",
+          "coef": 0.41,
+          "bins": [
+            {
+              "range": "(8.999, 980.0]",
+              "n": 32,
+              "pos": 8,
+              "woe": 1.39,
+              "points": 16
+            },
+            {
+              "range": "(980.0, 6500.0]",
+              "n": 29,
+              "pos": 0,
+              "woe": -1.63,
+              "points": -19
+            },
+            {
+              "range": "(6500.0, 30750.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -19
+            },
+            {
+              "range": "(30750.0, 580000.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -20
+            }
+          ]
+        },
+        {
+          "feature": "sessions_last_30d",
+          "iv": 1.95,
+          "strength": "very strong",
+          "coef": 0.51,
+          "bins": [
+            {
+              "range": "(1.999, 10.0]",
+              "n": 32,
+              "pos": 8,
+              "woe": 1.39,
+              "points": 21
+            },
+            {
+              "range": "(10.0, 16.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -25
+            },
+            {
+              "range": "(16.0, 20.75]",
+              "n": 29,
+              "pos": 0,
+              "woe": -1.63,
+              "points": -24
+            },
+            {
+              "range": "(20.75, 28.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -25
+            }
+          ]
+        },
+        {
+          "feature": "aggression_factor",
+          "iv": 1.95,
+          "strength": "very strong",
+          "coef": 0.43,
+          "bins": [
+            {
+              "range": "(0.719, 1.15]",
+              "n": 32,
+              "pos": 8,
+              "woe": 1.39,
+              "points": 17
+            },
+            {
+              "range": "(1.15, 1.79]",
+              "n": 29,
+              "pos": 0,
+              "woe": -1.63,
+              "points": -20
+            },
+            {
+              "range": "(1.79, 2.15]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -21
+            },
+            {
+              "range": "(2.15, 4.85]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -21
+            }
+          ]
+        },
+        {
+          "feature": "avg_pot_size_bb",
+          "iv": 1.95,
+          "strength": "very strong",
+          "coef": 0.39,
+          "bins": [
+            {
+              "range": "(5.7989999999999995, 10.8]",
+              "n": 32,
+              "pos": 8,
+              "woe": 1.39,
+              "points": 16
+            },
+            {
+              "range": "(10.8, 16.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -19
+            },
+            {
+              "range": "(16.5, 19.95]",
+              "n": 29,
+              "pos": 0,
+              "woe": -1.63,
+              "points": -18
+            },
+            {
+              "range": "(19.95, 52.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -19
+            }
+          ]
+        },
+        {
+          "feature": "pfr",
+          "iv": 1.679,
+          "strength": "very strong",
+          "coef": 0.31,
+          "bins": [
+            {
+              "range": "(0.059, 0.13]",
+              "n": 37,
+              "pos": 8,
+              "woe": 1.21,
+              "points": 11
+            },
+            {
+              "range": "(0.13, 0.18]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -15
+            },
+            {
+              "range": "(0.18, 0.21]",
+              "n": 24,
+              "pos": 0,
+              "woe": -1.44,
+              "points": -13
+            },
+            {
+              "range": "(0.21, 0.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -15
+            }
+          ]
+        },
+        {
+          "feature": "vpip",
+          "iv": 0.77,
+          "strength": "very strong",
+          "coef": -0.16,
+          "bins": [
+            {
+              "range": "(0.199, 0.27]",
+              "n": 36,
+              "pos": 0,
+              "woe": -1.84,
+              "points": 9
+            },
+            {
+              "range": "(0.27, 0.31]",
+              "n": 30,
+              "pos": 1,
+              "woe": -0.53,
+              "points": 2
+            },
+            {
+              "range": "(0.31, 0.378]",
+              "n": 25,
+              "pos": 3,
+              "woe": 0.59,
+              "points": -3
+            },
+            {
+              "range": "(0.378, 0.65]",
+              "n": 31,
+              "pos": 4,
+              "woe": 0.64,
+              "points": -3
+            }
+          ]
+        },
+        {
+          "feature": "promo_redemptions_30d",
+          "iv": 0.387,
+          "strength": "strong",
+          "coef": 2.55,
+          "bins": [
+            {
+              "range": "(-0.001, 1.0]",
+              "n": 82,
+              "pos": 8,
+              "woe": 0.33,
+              "points": 24
+            },
+            {
+              "range": "(1.0, 2.0]",
+              "n": 18,
+              "pos": 0,
+              "woe": -1.11,
+              "points": -82
+            },
+            {
+              "range": "(2.0, 21.0]",
+              "n": 22,
+              "pos": 0,
+              "woe": -1.31,
+              "points": -96
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "archetype": "promo_hunter",
+      "n_positive": 8,
+      "low_confidence": false,
+      "base_points": 469,
+      "ks": 1.0,
+      "auc": 1.0,
+      "features": [
+        {
+          "feature": "promo_redemptions_30d",
+          "iv": 3.356,
+          "strength": "very strong",
+          "coef": 0.98,
+          "bins": [
+            {
+              "range": "(-0.001, 1.0]",
+              "n": 82,
+              "pos": 0,
+              "woe": -2.61,
+              "points": -74
+            },
+            {
+              "range": "(1.0, 2.0]",
+              "n": 18,
+              "pos": 0,
+              "woe": -1.11,
+              "points": -31
+            },
+            {
+              "range": "(2.0, 21.0]",
+              "n": 22,
+              "pos": 8,
+              "woe": 1.96,
+              "points": 55
+            }
+          ]
+        },
+        {
+          "feature": "avg_session_minutes",
+          "iv": 2.01,
+          "strength": "very strong",
+          "coef": 1.12,
+          "bins": [
+            {
+              "range": "(14.999, 70.5]",
+              "n": 31,
+              "pos": 8,
+              "woe": 1.43,
+              "points": 46
+            },
+            {
+              "range": "(70.5, 122.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -54
+            },
+            {
+              "range": "(122.5, 195.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -55
+            },
+            {
+              "range": "(195.0, 420.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -54
+            }
+          ]
+        },
+        {
+          "feature": "lifetime_hands",
+          "iv": 1.552,
+          "strength": "very strong",
+          "coef": 0.41,
+          "bins": [
+            {
+              "range": "(8.999, 980.0]",
+              "n": 32,
+              "pos": 1,
+              "woe": -0.59,
+              "points": -7
+            },
+            {
+              "range": "(980.0, 6500.0]",
+              "n": 29,
+              "pos": 7,
+              "woe": 1.35,
+              "points": 16
+            },
+            {
+              "range": "(6500.0, 30750.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -19
+            },
+            {
+              "range": "(30750.0, 580000.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -20
+            }
+          ]
+        },
+        {
+          "feature": "aggression_factor",
+          "iv": 1.426,
+          "strength": "very strong",
+          "coef": 0.67,
+          "bins": [
+            {
+              "range": "(0.719, 1.15]",
+              "n": 32,
+              "pos": 7,
+              "woe": 1.23,
+              "points": 24
+            },
+            {
+              "range": "(1.15, 1.79]",
+              "n": 29,
+              "pos": 1,
+              "woe": -0.49,
+              "points": -9
+            },
+            {
+              "range": "(1.79, 2.15]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -32
+            },
+            {
+              "range": "(2.15, 4.85]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -32
+            }
+          ]
+        },
+        {
+          "feature": "avg_pot_size_bb",
+          "iv": 1.015,
+          "strength": "very strong",
+          "coef": 0.19,
+          "bins": [
+            {
+              "range": "(5.7989999999999995, 10.8]",
+              "n": 32,
+              "pos": 5,
+              "woe": 0.84,
+              "points": 5
+            },
+            {
+              "range": "(10.8, 16.5]",
+              "n": 30,
+              "pos": 3,
+              "woe": 0.39,
+              "points": 2
+            },
+            {
+              "range": "(16.5, 19.95]",
+              "n": 29,
+              "pos": 0,
+              "woe": -1.63,
+              "points": -9
+            },
+            {
+              "range": "(19.95, 52.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -9
+            }
+          ]
+        },
+        {
+          "feature": "pfr",
+          "iv": 0.805,
+          "strength": "very strong",
+          "coef": 0.06,
+          "bins": [
+            {
+              "range": "(0.059, 0.13]",
+              "n": 37,
+              "pos": 5,
+              "woe": 0.67,
+              "points": 1
+            },
+            {
+              "range": "(0.13, 0.18]",
+              "n": 31,
+              "pos": 3,
+              "woe": 0.35,
+              "points": 1
+            },
+            {
+              "range": "(0.18, 0.21]",
+              "n": 24,
+              "pos": 0,
+              "woe": -1.44,
+              "points": -2
+            },
+            {
+              "range": "(0.21, 0.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.66,
+              "points": -3
+            }
+          ]
+        },
+        {
+          "feature": "vpip",
+          "iv": 0.728,
+          "strength": "very strong",
+          "coef": 0.66,
+          "bins": [
+            {
+              "range": "(0.199, 0.27]",
+              "n": 36,
+              "pos": 1,
+              "woe": -0.71,
+              "points": -14
+            },
+            {
+              "range": "(0.27, 0.31]",
+              "n": 30,
+              "pos": 4,
+              "woe": 0.68,
+              "points": 13
+            },
+            {
+              "range": "(0.31, 0.378]",
+              "n": 25,
+              "pos": 3,
+              "woe": 0.59,
+              "points": 11
+            },
+            {
+              "range": "(0.378, 0.65]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": -32
+            }
+          ]
+        },
+        {
+          "feature": "registered_days_ago",
+          "iv": 0.678,
+          "strength": "very strong",
+          "coef": -0.06,
+          "bins": [
+            {
+              "range": "(0.999, 112.5]",
+              "n": 31,
+              "pos": 2,
+              "woe": -0.02,
+              "points": 0
+            },
+            {
+              "range": "(112.5, 380.0]",
+              "n": 32,
+              "pos": 5,
+              "woe": 0.84,
+              "points": -1
+            },
+            {
+              "range": "(380.0, 727.5]",
+              "n": 28,
+              "pos": 1,
+              "woe": -0.46,
+              "points": 1
+            },
+            {
+              "range": "(727.5, 3000.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.69,
+              "points": 3
+            }
+          ]
+        },
+        {
+          "feature": "sessions_last_30d",
+          "iv": 0.654,
+          "strength": "very strong",
+          "coef": 1.67,
+          "bins": [
+            {
+              "range": "(1.999, 10.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.72,
+              "points": -83
+            },
+            {
+              "range": "(10.0, 16.0]",
+              "n": 30,
+              "pos": 1,
+              "woe": -0.53,
+              "points": -25
+            },
+            {
+              "range": "(16.0, 20.75]",
+              "n": 29,
+              "pos": 4,
+              "woe": 0.72,
+              "points": 35
+            },
+            {
+              "range": "(20.75, 28.0]",
+              "n": 31,
+              "pos": 3,
+              "woe": 0.35,
+              "points": 17
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "archetype": "recreational",
+      "n_positive": 34,
+      "low_confidence": false,
+      "base_points": 448,
+      "ks": 0.85,
+      "auc": 0.97,
+      "features": [
+        {
+          "feature": "lifetime_hands",
+          "iv": 3.17,
+          "strength": "very strong",
+          "coef": 0.91,
+          "bins": [
+            {
+              "range": "(8.999, 980.0]",
+              "n": 32,
+              "pos": 23,
+              "woe": 1.82,
+              "points": 48
+            },
+            {
+              "range": "(980.0, 6500.0]",
+              "n": 29,
+              "pos": 11,
+              "woe": 0.44,
+              "points": 12
+            },
+            {
+              "range": "(6500.0, 30750.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -3.19,
+              "points": -84
+            },
+            {
+              "range": "(30750.0, 580000.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -3.23,
+              "points": -85
+            }
+          ]
+        },
+        {
+          "feature": "sessions_last_30d",
+          "iv": 3.114,
+          "strength": "very strong",
+          "coef": 0.92,
+          "bins": [
+            {
+              "range": "(1.999, 10.0]",
+              "n": 32,
+              "pos": 23,
+              "woe": 1.82,
+              "points": 48
+            },
+            {
+              "range": "(10.0, 16.0]",
+              "n": 30,
+              "pos": 11,
+              "woe": 0.39,
+              "points": 10
+            },
+            {
+              "range": "(16.0, 20.75]",
+              "n": 29,
+              "pos": 0,
+              "woe": -3.16,
+              "points": -84
+            },
+            {
+              "range": "(20.75, 28.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -3.23,
+              "points": -86
+            }
+          ]
+        },
+        {
+          "feature": "avg_session_minutes",
+          "iv": 2.932,
+          "strength": "very strong",
+          "coef": 0.68,
+          "bins": [
+            {
+              "range": "(14.999, 70.5]",
+              "n": 31,
+              "pos": 15,
+              "woe": 0.85,
+              "points": 17
+            },
+            {
+              "range": "(70.5, 122.5]",
+              "n": 30,
+              "pos": 19,
+              "woe": 1.44,
+              "points": 28
+            },
+            {
+              "range": "(122.5, 195.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -3.23,
+              "points": -63
+            },
+            {
+              "range": "(195.0, 420.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -3.19,
+              "points": -63
+            }
+          ]
+        },
+        {
+          "feature": "aggression_factor",
+          "iv": 2.912,
+          "strength": "very strong",
+          "coef": 1.1,
+          "bins": [
+            {
+              "range": "(0.719, 1.15]",
+              "n": 32,
+              "pos": 16,
+              "woe": 0.92,
+              "points": 29
+            },
+            {
+              "range": "(1.15, 1.79]",
+              "n": 29,
+              "pos": 18,
+              "woe": 1.39,
+              "points": 44
+            },
+            {
+              "range": "(1.79, 2.15]",
+              "n": 31,
+              "pos": 0,
+              "woe": -3.23,
+              "points": -102
+            },
+            {
+              "range": "(2.15, 4.85]",
+              "n": 30,
+              "pos": 0,
+              "woe": -3.19,
+              "points": -101
+            }
+          ]
+        },
+        {
+          "feature": "avg_pot_size_bb",
+          "iv": 2.797,
+          "strength": "very strong",
+          "coef": 0.18,
+          "bins": [
+            {
+              "range": "(5.7989999999999995, 10.8]",
+              "n": 32,
+              "pos": 18,
+              "woe": 1.16,
+              "points": 6
+            },
+            {
+              "range": "(10.8, 16.5]",
+              "n": 30,
+              "pos": 16,
+              "woe": 1.05,
+              "points": 6
+            },
+            {
+              "range": "(16.5, 19.95]",
+              "n": 29,
+              "pos": 0,
+              "woe": -3.16,
+              "points": -17
+            },
+            {
+              "range": "(19.95, 52.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -3.23,
+              "points": -17
+            }
+          ]
+        },
+        {
+          "feature": "pfr",
+          "iv": 2.056,
+          "strength": "very strong",
+          "coef": -0.85,
+          "bins": [
+            {
+              "range": "(0.059, 0.13]",
+              "n": 37,
+              "pos": 22,
+              "woe": 1.29,
+              "points": -32
+            },
+            {
+              "range": "(0.13, 0.18]",
+              "n": 31,
+              "pos": 11,
+              "woe": 0.34,
+              "points": -8
+            },
+            {
+              "range": "(0.18, 0.21]",
+              "n": 24,
+              "pos": 1,
+              "woe": -1.84,
+              "points": 45
+            },
+            {
+              "range": "(0.21, 0.5]",
+              "n": 30,
+              "pos": 0,
+              "woe": -3.19,
+              "points": 79
+            }
+          ]
+        },
+        {
+          "feature": "vpip",
+          "iv": 1.826,
+          "strength": "very strong",
+          "coef": 0.17,
+          "bins": [
+            {
+              "range": "(0.199, 0.27]",
+              "n": 36,
+              "pos": 0,
+              "woe": -3.37,
+              "points": -16
+            },
+            {
+              "range": "(0.27, 0.31]",
+              "n": 30,
+              "pos": 6,
+              "woe": -0.41,
+              "points": -2
+            },
+            {
+              "range": "(0.31, 0.378]",
+              "n": 25,
+              "pos": 11,
+              "woe": 0.68,
+              "points": 3
+            },
+            {
+              "range": "(0.378, 0.65]",
+              "n": 31,
+              "pos": 17,
+              "woe": 1.1,
+              "points": 5
+            }
+          ]
+        },
+        {
+          "feature": "registered_days_ago",
+          "iv": 1.547,
+          "strength": "very strong",
+          "coef": -0.63,
+          "bins": [
+            {
+              "range": "(0.999, 112.5]",
+              "n": 31,
+              "pos": 19,
+              "woe": 1.36,
+              "points": -25
+            },
+            {
+              "range": "(112.5, 380.0]",
+              "n": 32,
+              "pos": 12,
+              "woe": 0.42,
+              "points": -8
+            },
+            {
+              "range": "(380.0, 727.5]",
+              "n": 28,
+              "pos": 2,
+              "woe": -1.44,
+              "points": 26
+            },
+            {
+              "range": "(727.5, 3000.0]",
+              "n": 31,
+              "pos": 1,
+              "woe": -2.1,
+              "points": 38
+            }
+          ]
+        },
+        {
+          "feature": "promo_redemptions_30d",
+          "iv": 1.28,
+          "strength": "very strong",
+          "coef": 0.27,
+          "bins": [
+            {
+              "range": "(-0.001, 1.0]",
+              "n": 82,
+              "pos": 10,
+              "woe": -1.01,
+              "points": -8
+            },
+            {
+              "range": "(1.0, 2.0]",
+              "n": 18,
+              "pos": 13,
+              "woe": 1.82,
+              "points": 14
+            },
+            {
+              "range": "(2.0, 21.0]",
+              "n": 22,
+              "pos": 11,
+              "woe": 0.92,
+              "points": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "archetype": "regular",
+      "n_positive": 22,
+      "low_confidence": false,
+      "base_points": 455,
+      "ks": 0.89,
+      "auc": 0.96,
+      "features": [
+        {
+          "feature": "lifetime_hands",
+          "iv": 2.185,
+          "strength": "very strong",
+          "coef": 0.65,
+          "bins": [
+            {
+              "range": "(8.999, 980.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.73,
+              "points": -51
+            },
+            {
+              "range": "(980.0, 6500.0]",
+              "n": 29,
+              "pos": 9,
+              "woe": 0.68,
+              "points": 13
+            },
+            {
+              "range": "(6500.0, 30750.0]",
+              "n": 30,
+              "pos": 13,
+              "woe": 1.19,
+              "points": 22
+            },
+            {
+              "range": "(30750.0, 580000.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.7,
+              "points": -51
+            }
+          ]
+        },
+        {
+          "feature": "avg_session_minutes",
+          "iv": 2.125,
+          "strength": "very strong",
+          "coef": 0.46,
+          "bins": [
+            {
+              "range": "(14.999, 70.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.7,
+              "points": -36
+            },
+            {
+              "range": "(70.5, 122.5]",
+              "n": 30,
+              "pos": 8,
+              "woe": 0.47,
+              "points": 6
+            },
+            {
+              "range": "(122.5, 195.0]",
+              "n": 31,
+              "pos": 14,
+              "woe": 1.26,
+              "points": 17
+            },
+            {
+              "range": "(195.0, 420.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -2.66,
+              "points": -36
+            }
+          ]
+        },
+        {
+          "feature": "sessions_last_30d",
+          "iv": 1.673,
+          "strength": "very strong",
+          "coef": 1.13,
+          "bins": [
+            {
+              "range": "(1.999, 10.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.73,
+              "points": -89
+            },
+            {
+              "range": "(10.0, 16.0]",
+              "n": 30,
+              "pos": 12,
+              "woe": 1.05,
+              "points": 34
+            },
+            {
+              "range": "(16.0, 20.75]",
+              "n": 29,
+              "pos": 9,
+              "woe": 0.68,
+              "points": 22
+            },
+            {
+              "range": "(20.75, 28.0]",
+              "n": 31,
+              "pos": 1,
+              "woe": -1.57,
+              "points": -51
+            }
+          ]
+        },
+        {
+          "feature": "pfr",
+          "iv": 1.364,
+          "strength": "very strong",
+          "coef": 1.36,
+          "bins": [
+            {
+              "range": "(0.059, 0.13]",
+              "n": 37,
+              "pos": 0,
+              "woe": -2.87,
+              "points": -113
+            },
+            {
+              "range": "(0.13, 0.18]",
+              "n": 31,
+              "pos": 5,
+              "woe": -0.13,
+              "points": -5
+            },
+            {
+              "range": "(0.18, 0.21]",
+              "n": 24,
+              "pos": 5,
+              "woe": 0.18,
+              "points": 7
+            },
+            {
+              "range": "(0.21, 0.5]",
+              "n": 30,
+              "pos": 12,
+              "woe": 1.05,
+              "points": 42
+            }
+          ]
+        },
+        {
+          "feature": "aggression_factor",
+          "iv": 1.059,
+          "strength": "very strong",
+          "coef": 0.61,
+          "bins": [
+            {
+              "range": "(0.719, 1.15]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.73,
+              "points": -48
+            },
+            {
+              "range": "(1.15, 1.79]",
+              "n": 29,
+              "pos": 4,
+              "woe": -0.29,
+              "points": -5
+            },
+            {
+              "range": "(1.79, 2.15]",
+              "n": 31,
+              "pos": 10,
+              "woe": 0.73,
+              "points": 13
+            },
+            {
+              "range": "(2.15, 4.85]",
+              "n": 30,
+              "pos": 8,
+              "woe": 0.47,
+              "points": 8
+            }
+          ]
+        },
+        {
+          "feature": "avg_pot_size_bb",
+          "iv": 1.037,
+          "strength": "very strong",
+          "coef": -0.05,
+          "bins": [
+            {
+              "range": "(5.7989999999999995, 10.8]",
+              "n": 32,
+              "pos": 0,
+              "woe": -2.73,
+              "points": 4
+            },
+            {
+              "range": "(10.8, 16.5]",
+              "n": 30,
+              "pos": 5,
+              "woe": -0.09,
+              "points": 0
+            },
+            {
+              "range": "(16.5, 19.95]",
+              "n": 29,
+              "pos": 10,
+              "woe": 0.83,
+              "points": -1
+            },
+            {
+              "range": "(19.95, 52.0]",
+              "n": 31,
+              "pos": 7,
+              "woe": 0.26,
+              "points": 0
+            }
+          ]
+        },
+        {
+          "feature": "vpip",
+          "iv": 0.953,
+          "strength": "very strong",
+          "coef": 0.49,
+          "bins": [
+            {
+              "range": "(0.199, 0.27]",
+              "n": 36,
+              "pos": 11,
+              "woe": 0.65,
+              "points": 9
+            },
+            {
+              "range": "(0.27, 0.31]",
+              "n": 30,
+              "pos": 7,
+              "woe": 0.3,
+              "points": 4
+            },
+            {
+              "range": "(0.31, 0.378]",
+              "n": 25,
+              "pos": 4,
+              "woe": -0.12,
+              "points": -2
+            },
+            {
+              "range": "(0.378, 0.65]",
+              "n": 31,
+              "pos": 0,
+              "woe": -2.7,
+              "points": -38
+            }
+          ]
+        },
+        {
+          "feature": "registered_days_ago",
+          "iv": 0.857,
+          "strength": "very strong",
+          "coef": -0.42,
+          "bins": [
+            {
+              "range": "(0.999, 112.5]",
+              "n": 31,
+              "pos": 1,
+              "woe": -1.57,
+              "points": 19
+            },
+            {
+              "range": "(112.5, 380.0]",
+              "n": 32,
+              "pos": 10,
+              "woe": 0.68,
+              "points": -8
+            },
+            {
+              "range": "(380.0, 727.5]",
+              "n": 28,
+              "pos": 9,
+              "woe": 0.73,
+              "points": -9
+            },
+            {
+              "range": "(727.5, 3000.0]",
+              "n": 31,
+              "pos": 2,
+              "woe": -1.02,
+              "points": 12
+            }
+          ]
+        },
+        {
+          "feature": "promo_redemptions_30d",
+          "iv": 0.541,
+          "strength": "very strong",
+          "coef": 1.53,
+          "bins": [
+            {
+              "range": "(-0.001, 1.0]",
+              "n": 82,
+              "pos": 17,
+              "woe": 0.14,
+              "points": 6
+            },
+            {
+              "range": "(1.0, 2.0]",
+              "n": 18,
+              "pos": 5,
+              "woe": 0.57,
+              "points": 25
+            },
+            {
+              "range": "(2.0, 21.0]",
+              "n": 22,
+              "pos": 0,
+              "woe": -2.34,
+              "points": -104
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "archetype": "shared_device_household",
+      "n_positive": 6,
+      "low_confidence": false,
+      "base_points": 444,
+      "ks": 0.96,
+      "auc": 0.99,
+      "features": [
+        {
+          "feature": "sessions_last_30d",
+          "iv": 1.13,
+          "strength": "very strong",
+          "coef": 1.46,
+          "bins": [
+            {
+              "range": "(1.999, 10.0]",
+              "n": 32,
+              "pos": 1,
+              "woe": -0.35,
+              "points": -15
+            },
+            {
+              "range": "(10.0, 16.0]",
+              "n": 30,
+              "pos": 5,
+              "woe": 1.16,
+              "points": 49
+            },
+            {
+              "range": "(16.0, 20.75]",
+              "n": 29,
+              "pos": 0,
+              "woe": -1.39,
+              "points": -58
+            },
+            {
+              "range": "(20.75, 28.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.45,
+              "points": -61
+            }
+          ]
+        },
+        {
+          "feature": "lifetime_hands",
+          "iv": 0.946,
+          "strength": "very strong",
+          "coef": 1.98,
+          "bins": [
+            {
+              "range": "(8.999, 980.0]",
+              "n": 32,
+              "pos": 0,
+              "woe": -1.48,
+              "points": -85
+            },
+            {
+              "range": "(980.0, 6500.0]",
+              "n": 29,
+              "pos": 2,
+              "woe": 0.29,
+              "points": 17
+            },
+            {
+              "range": "(6500.0, 30750.0]",
+              "n": 30,
+              "pos": 4,
+              "woe": 0.92,
+              "points": 52
+            },
+            {
+              "range": "(30750.0, 580000.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.45,
+              "points": -83
+            }
+          ]
+        },
+        {
+          "feature": "registered_days_ago",
+          "iv": 0.855,
+          "strength": "very strong",
+          "coef": 0.69,
+          "bins": [
+            {
+              "range": "(0.999, 112.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.45,
+              "points": -29
+            },
+            {
+              "range": "(112.5, 380.0]",
+              "n": 32,
+              "pos": 3,
+              "woe": 0.56,
+              "points": 11
+            },
+            {
+              "range": "(380.0, 727.5]",
+              "n": 28,
+              "pos": 3,
+              "woe": 0.71,
+              "points": 14
+            },
+            {
+              "range": "(727.5, 3000.0]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.45,
+              "points": -29
+            }
+          ]
+        },
+        {
+          "feature": "avg_session_minutes",
+          "iv": 0.82,
+          "strength": "very strong",
+          "coef": 0.73,
+          "bins": [
+            {
+              "range": "(14.999, 70.5]",
+              "n": 31,
+              "pos": 0,
+              "woe": -1.45,
+              "points": -31
+            },
+            {
+              "range": "(70.5, 122.5]",
+              "n": 30,
+              "pos": 3,
+              "woe": 0.63,
+              "points": 13
+            },
+            {
+              "range": "(122.5, 195.0]",
+              "n": 31,
+              "pos": 3,
+              "woe": 0.59,
+              "points": 13
+            },
+            {
+              "range": "(195.0, 420.0]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.42,
+              "points": -30
+            }
+          ]
+        },
+        {
+          "feature": "promo_redemptions_30d",
+          "iv": 0.467,
+          "strength": "strong",
+          "coef": 2.11,
+          "bins": [
+            {
+              "range": "(-0.001, 1.0]",
+              "n": 82,
+              "pos": 3,
+              "woe": -0.37,
+              "points": -23
+            },
+            {
+              "range": "(1.0, 2.0]",
+              "n": 18,
+              "pos": 0,
+              "woe": -0.86,
+              "points": -52
+            },
+            {
+              "range": "(2.0, 21.0]",
+              "n": 22,
+              "pos": 3,
+              "woe": 1.03,
+              "points": 63
+            }
+          ]
+        },
+        {
+          "feature": "aggression_factor",
+          "iv": 0.462,
+          "strength": "strong",
+          "coef": 0.04,
+          "bins": [
+            {
+              "range": "(0.719, 1.15]",
+              "n": 32,
+              "pos": 1,
+              "woe": -0.35,
+              "points": 0
+            },
+            {
+              "range": "(1.15, 1.79]",
+              "n": 29,
+              "pos": 3,
+              "woe": 0.67,
+              "points": 1
+            },
+            {
+              "range": "(1.79, 2.15]",
+              "n": 31,
+              "pos": 2,
+              "woe": 0.22,
+              "points": 0
+            },
+            {
+              "range": "(2.15, 4.85]",
+              "n": 30,
+              "pos": 0,
+              "woe": -1.42,
+              "points": -2
+            }
+          ]
+        },
+        {
+          "feature": "avg_pot_size_bb",
+          "iv": 0.193,
+          "strength": "medium",
+          "coef": -0.49,
+          "bins": [
+            {
+              "range": "(5.7989999999999995, 10.8]",
+              "n": 32,
+              "pos": 1,
+              "woe": -0.35,
+              "points": 5
+            },
+            {
+              "range": "(10.8, 16.5]",
+              "n": 30,
+              "pos": 3,
+              "woe": 0.63,
+              "points": -9
+            },
+            {
+              "range": "(16.5, 19.95]",
+              "n": 29,
+              "pos": 1,
+              "woe": -0.25,
+              "points": 4
+            },
+            {
+              "range": "(19.95, 52.0]",
+              "n": 31,
+              "pos": 1,
+              "woe": -0.32,
+              "points": 5
+            }
+          ]
+        },
+        {
+          "feature": "vpip",
+          "iv": 0.035,
+          "strength": "weak",
+          "coef": 1.17,
+          "bins": [
+            {
+              "range": "(0.199, 0.27]",
+              "n": 36,
+              "pos": 2,
+              "woe": 0.07,
+              "points": 2
+            },
+            {
+              "range": "(0.27, 0.31]",
+              "n": 30,
+              "pos": 1,
+              "woe": -0.29,
+              "points": -10
+            },
+            {
+              "range": "(0.31, 0.378]",
+              "n": 25,
+              "pos": 1,
+              "woe": -0.1,
+              "points": -3
+            },
+            {
+              "range": "(0.378, 0.65]",
+              "n": 31,
+              "pos": 2,
+              "woe": 0.22,
+              "points": 8
+            }
+          ]
+        },
+        {
+          "feature": "pfr",
+          "iv": 0.033,
+          "strength": "weak",
+          "coef": -0.0,
+          "bins": [
+            {
+              "range": "(0.059, 0.13]",
+              "n": 37,
+              "pos": 2,
+              "woe": 0.04,
+              "points": 0
+            },
+            {
+              "range": "(0.13, 0.18]",
+              "n": 31,
+              "pos": 2,
+              "woe": 0.22,
+              "points": 0
+            },
+            {
+              "range": "(0.18, 0.21]",
+              "n": 24,
+              "pos": 1,
+              "woe": -0.06,
+              "points": 0
+            },
+            {
+              "range": "(0.21, 0.5]",
+              "n": 30,
+              "pos": 1,
+              "woe": -0.29,
+              "points": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "combination": {
+    "classes": [
+      "aggressive_predatory",
+      "bot_like",
+      "cluster_member",
+      "grinder",
+      "healthy_anchor",
+      "new",
+      "promo_hunter",
+      "recreational",
+      "regular",
+      "shared_device_household"
+    ],
+    "in_sample_accuracy": 0.918,
+    "in_sample_correct": 112,
+    "total": 122,
+    "rule": "predict = argmax over the 10 class scorecards of P(class)",
+    "examples": {
+      "P-104": {
+        "truth": "new",
+        "predicted": "new",
+        "scores": [
+          {
+            "archetype": "new",
+            "prob": 0.945
+          },
+          {
+            "archetype": "recreational",
+            "prob": 0.771
+          },
+          {
+            "archetype": "promo_hunter",
+            "prob": 0.023
+          },
+          {
+            "archetype": "bot_like",
+            "prob": 0.008
+          },
+          {
+            "archetype": "aggressive_predatory",
+            "prob": 0.0
+          },
+          {
+            "archetype": "cluster_member",
+            "prob": 0.0
+          },
+          {
+            "archetype": "grinder",
+            "prob": 0.0
+          },
+          {
+            "archetype": "healthy_anchor",
+            "prob": 0.0
+          },
+          {
+            "archetype": "regular",
+            "prob": 0.0
+          },
+          {
+            "archetype": "shared_device_household",
+            "prob": 0.0
+          }
+        ]
+      },
+      "P-164": {
+        "truth": "grinder",
+        "predicted": "grinder",
+        "scores": [
+          {
+            "archetype": "grinder",
+            "prob": 0.983
+          },
+          {
+            "archetype": "aggressive_predatory",
+            "prob": 0.144
+          },
+          {
+            "archetype": "regular",
+            "prob": 0.026
+          },
+          {
+            "archetype": "cluster_member",
+            "prob": 0.014
+          },
+          {
+            "archetype": "bot_like",
+            "prob": 0.009
+          },
+          {
+            "archetype": "new",
+            "prob": 0.003
+          },
+          {
+            "archetype": "healthy_anchor",
+            "prob": 0.002
+          },
+          {
+            "archetype": "promo_hunter",
+            "prob": 0.001
+          },
+          {
+            "archetype": "recreational",
+            "prob": 0.0
+          },
+          {
+            "archetype": "shared_device_household",
+            "prob": 0.0
+          }
+        ]
+      },
+      "P-198": {
+        "truth": "cluster_member",
+        "predicted": "cluster_member",
+        "scores": [
+          {
+            "archetype": "cluster_member",
+            "prob": 0.969
+          },
+          {
+            "archetype": "regular",
+            "prob": 0.403
+          },
+          {
+            "archetype": "shared_device_household",
+            "prob": 0.108
+          },
+          {
+            "archetype": "bot_like",
+            "prob": 0.065
+          },
+          {
+            "archetype": "aggressive_predatory",
+            "prob": 0.024
+          },
+          {
+            "archetype": "healthy_anchor",
+            "prob": 0.005
+          },
+          {
+            "archetype": "new",
+            "prob": 0.002
+          },
+          {
+            "archetype": "grinder",
+            "prob": 0.001
+          },
+          {
+            "archetype": "promo_hunter",
+            "prob": 0.001
+          },
+          {
+            "archetype": "recreational",
+            "prob": 0.0
+          }
+        ]
+      }
+    }
+  }
+}
