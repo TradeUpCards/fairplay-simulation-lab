@@ -79,3 +79,108 @@ button:hover {
 .rb-error {
   color: #ff9b9b;
 }
+
+/* ── Player lobby (Front of House — warm, neutral, score-free) ──────────────── */
+.player-lobby {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #232a36;
+}
+
+.lobby-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.lobby-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.player-select {
+  font-size: 0.85rem;
+  color: #8b93a7;
+}
+
+.player-select select {
+  background: #1d2531;
+  color: #e6e9ef;
+  border: 1px solid #2c3543;
+  border-radius: 6px;
+  padding: 0.25rem 0.4rem;
+}
+
+.lobby-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.lobby-card {
+  border: 1px solid #232a36;
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  background: #161b24;
+}
+
+.lobby-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.lobby-table-id {
+  font-weight: 600;
+}
+
+.lobby-badge {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.lobby-badge.is-recommended {
+  background: #16341f;
+  border-color: #2f7d4a;
+  color: #8be3a7;
+}
+
+.lobby-badge.is-good-fit {
+  background: #1a2c3a;
+  border-color: #2f6a8a;
+  color: #8fd0ef;
+}
+
+.lobby-badge.is-available {
+  background: #21242c;
+  border-color: #3a4757;
+  color: #b8c0cf;
+}
+
+.lobby-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+}
+
+.lobby-facts > div {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.lobby-facts dt {
+  color: #8b93a7;
+}
+
+.lobby-facts dd {
+  margin: 0;
+}
