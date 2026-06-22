@@ -2,57 +2,125 @@
    House" design direction lands with the real views (U3–U7). */
 :root {
   color-scheme: dark;
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    sans-serif;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, "Cascadia Code", monospace;
+
+  /* surfaces (Back of House — dark instrument room) */
+  --ink: #0d1117;
+  --surface: #161b24;
+  --surface-2: #11161f;
+  --line: #232a36;
+
+  /* brand (sampled to the FairPlay IQ logo kit) */
+  --brass: #c79a4b;
+  --brass-soft: rgba(199, 154, 75, 0.4);
+  --felt: #2f8f5b;
+
+  /* text */
+  --text: #e6e9ef;
+  --muted: #8b93a7;
+  --faint: #6b7283;
+
+  /* layout */
+  --content-max: 1100px;
+
+  font-family: var(--font-sans);
 }
 
 body {
   margin: 0;
-  background: #0e1116;
-  color: #e6e9ef;
+  background: var(--ink);
+  color: var(--text);
 }
 
-.app-shell {
-  max-width: 760px;
+.app {
+  min-height: 100vh;
+}
+
+/* ── Header: the brass rail atop the operator console ──────────────────────── */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: linear-gradient(180deg, #0c1015, var(--ink));
+  border-top: 2px solid var(--brass);
+  border-bottom: 1px solid var(--line);
+}
+
+.app-header-inner {
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-
-.app-header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.subtitle {
-  margin: 0.25rem 0 1.5rem;
-  color: #8b93a7;
-  font-size: 0.85rem;
-}
-
-.sim-controls {
+  padding: 0.7rem 1.5rem;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  padding: 1rem;
-  border: 1px solid #232a36;
-  border-radius: 10px;
-  background: #161b24;
 }
 
-.sim-controls strong {
-  color: #7fd1ff;
-}
-
-.btns {
+.brand {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-left: auto;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.brand-logo {
+  height: 30px;
+  width: auto;
+  display: block;
+}
+
+.brand-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--brass-soft);
+}
+
+.brand-descriptor {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--felt);
+  box-shadow: 0 0 0 3px rgba(47, 143, 91, 0.18);
+}
+
+@media (max-width: 560px) {
+  .header-status {
+    display: none;
+  }
+}
+
+.app-main {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 3rem;
+}
+
+/* The first content section sits right under the header — no extra top rule. */
+.app-main > :first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 button {
@@ -67,13 +135,6 @@ button {
 
 button:hover {
   border-color: #3a4757;
-}
-
-.data-status {
-  margin-top: 1.25rem;
-  display: grid;
-  gap: 0.5rem;
-  font-size: 0.95rem;
 }
 
 .rb-loading,
