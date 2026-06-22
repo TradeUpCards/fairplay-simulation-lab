@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FairPlay IQ — P3 Scoring Engine Overview</title>
+<style>
+:root{
+  --bg:#060e08; --bg2:#0a1409; --bg3:#0e1c0f;
+  --border:#182d1c; --border2:#1f3c25;
+  --text:#d8ecda; --muted:#7a9c80; --dim:#3a553f;
+  --gold:#c9a84c; --gold2:#a8882e; --gold-bg:rgba(201,168,76,.08); --gold-border:rgba(201,168,76,.28);
+  --green-hi:#3fcc6a; --blue:#4f8ef7; --blue-bg:rgba(79,142,247,.09);
+  --purple:#b07eff; --teal:#2ee8cc; --red:#e05c4a; --amber:#f5a623;
+  --r:9px; --mono:'SF Mono','JetBrains Mono','Courier New',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{
+  background:radial-gradient(900px 520px at 80% -8%,rgba(201,168,76,.06),transparent 60%),var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  line-height:1.7; padding:clamp(20px,4vw,64px); max-width:1180px; margin:0 auto;
+}
+h1{font-size:clamp(26px,4vw,40px);font-weight:850;letter-spacing:-.02em;line-height:1.1}
+h2{font-size:clamp(18px,2.4vw,24px);font-weight:800;letter-spacing:-.01em;margin:0 0 4px}
+h3{font-size:14px;font-weight:750}
+.diamond{display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--gold2),var(--gold) 55%,#e8c96a);
+  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);font-weight:900;color:#070f09;font-size:14px}
+.lede{color:var(--muted);font-size:15.5px;max-width:74ch;margin-top:14px}
+.kicker{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold2);font-weight:800}
+a{color:var(--gold)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+section{margin-top:46px}
+.sec-h{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.sec-h .n{font-family:var(--mono);font-size:12px;color:var(--gold2)}
+.muted{color:var(--muted)} .dim{color:var(--dim)}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;
+  font-size:11.5px;border:1px solid var(--border2);background:var(--bg2);color:var(--muted)}
+.chip b{color:var(--text);font-weight:650}
+.chip.g{border-color:rgba(63,204,106,.3);background:rgba(63,204,106,.07);color:var(--green-hi)}
+.chip.r{border-color:rgba(224,92,74,.3);background:rgba(224,92,74,.07);color:#f0907f}
+
+/* pipeline strip */
+.pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:6px;
+  border:1px solid var(--border2);border-radius:var(--r);overflow:hidden}
+.pipe .st{padding:18px 16px;background:var(--bg2);position:relative}
+.pipe .st:not(:last-child){border-right:1px solid var(--border)}
+.pipe .st .t{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);font-weight:800}
+.pipe .st h3{margin:6px 0 4px} .pipe .st p{font-size:12px;color:var(--muted)}
+.pipe .st .who{position:absolute;top:12px;right:12px;font-size:9px;color:var(--dim);font-family:var(--mono)}
+.pipe .st::after{content:'→';position:absolute;right:-10px;top:50%;transform:translateY(-50%);
+  z-index:2;color:var(--gold);font-size:16px;background:var(--bg);width:20px;text-align:center}
+.pipe .st:last-child::after{display:none}
+@media(max-width:760px){.pipe{grid-template-columns:1fr}.pipe .st:not(:last-child){border-right:0;border-bottom:1px solid var(--border)}.pipe .st::after{content:'↓';right:50%;top:auto;bottom:-10px;transform:translateX(50%)}}
+
+/* DAG */
+.dag{display:flex;flex-direction:column;gap:0;align-items:center;margin-top:8px}
+.layer{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%}
+.arrow-d{color:var(--dim);font-size:20px;line-height:1;margin:10px 0;text-align:center}
+.node{flex:1;min-width:210px;max-width:340px;border:1px solid var(--border2);border-radius:var(--r);
+  background:var(--bg2);padding:14px 16px;position:relative}
+.node.root{border-color:var(--gold-border);background:linear-gradient(180deg,var(--gold-bg),var(--bg2))}
+.node.decision{border-color:rgba(79,142,247,.32);background:linear-gradient(180deg,var(--blue-bg),var(--bg2))}
+.node .hd{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.node .badge{font-family:var(--mono);font-size:11px;font-weight:800;color:var(--gold);
+  border:1px solid var(--gold-border);border-radius:5px;padding:1px 6px;background:var(--gold-bg)}
+.node h3{font-size:13.5px} .node p{font-size:12px;color:var(--muted);margin-top:2px}
+.node .file{font-family:var(--mono);font-size:10.5px;color:var(--teal);margin-top:7px}
+.node .needs{font-size:10px;color:var(--dim);margin-top:6px;font-family:var(--mono)}
+.node .needs b{color:var(--muted);font-weight:600}
+
+/* tables */
+table{width:100%;border-collapse:collapse;margin-top:6px;font-size:12.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2);font-weight:800}
+tr:hover td{background:rgba(255,255,255,.015)}
+td .mono{color:var(--teal)} td b{color:var(--text)}
+.band{display:inline-block;padding:1px 7px;border-radius:5px;font-size:10.5px;font-weight:700;font-family:var(--mono)}
+.b-hi{background:rgba(224,92,74,.13);color:#f0907f} .b-mid{background:rgba(245,166,35,.13);color:var(--amber)}
+.b-lo{background:rgba(63,204,106,.12);color:var(--green-hi)} .b-dec{background:rgba(79,142,247,.13);color:#7fb0ff}
+
+/* file map */
+.tree{font-family:var(--mono);font-size:12px;line-height:1.95;background:var(--bg2);
+  border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;overflow-x:auto}
+.tree .d{color:var(--gold)} .tree .f{color:var(--text)} .tree .c{color:var(--dim)}
+.tree .seam{color:var(--teal)}
+
+/* two-col + cards */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.card{border:1px solid var(--border2);border-radius:var(--r);background:var(--bg2);padding:16px 18px}
+.card h3{color:var(--gold);margin-bottom:6px;font-size:13px;letter-spacing:.02em}
+.card ul{list-style:none;font-size:12.5px;color:var(--muted)} .card li{padding:3px 0 3px 16px;position:relative}
+.card li::before{content:'›';position:absolute;left:0;color:var(--gold2)}
+.card.danger{border-color:rgba(224,92,74,.3)} .card.danger h3{color:#f0907f}
+.card.safe{border-color:rgba(63,204,106,.3)} .card.safe h3{color:var(--green-hi)}
+
+/* run */
+.run{background:#04140a;border:1px solid var(--border2);border-radius:var(--r);padding:16px 18px;
+  font-family:var(--mono);font-size:12px;line-height:1.9;color:var(--text);overflow-x:auto}
+.run .c{color:var(--dim)} .run .p{color:var(--green-hi)}
+.footer{margin-top:54px;padding-top:18px;border-top:1px solid var(--border);font-size:11.5px;color:var(--dim)}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:14px">
+    <span class="diamond">◆</span>
+    <div><div class="kicker">FairPlay IQ · Contract 2</div><h1>The P3 Scoring Engine</h1></div>
+  </div>
+  <p class="lede">A deterministic, auditable scoring core. It reads P2's frozen simulation data,
+    computes eight scores with structured <b>reason codes</b>, and freezes the result to JSON the
+    frontend consumes. <b class="muted">The LLM is never the detector</b> — structured scoring finds
+    risk; the AI Investigator (P4) only explains it.</p>
+  <div class="chips">
+    <span class="chip g">✓ Deterministic — same input → byte-identical output</span>
+    <span class="chip">10 archetypes · 4 health terms · 4 integrity bands</span>
+    <span class="chip">Python core · stdlib only · → frozen JSON · → TS frontend</span>
+    <span class="chip g">✓ All 8 scores shipped &amp; independently audited</span>
+  </div>
+</header>
+
+<!-- ══ PIPELINE ══════════════════════════════════════════════ -->
+<section>
+  <div class="sec-h"><span class="n">01</span><h2>The pipeline at a glance</h2></div>
+  <p class="muted" style="margin-bottom:14px;font-size:13px">Four stages, one direction. The engine
+    never calls the simulator live — it reads frozen fixtures and writes frozen scores.</p>
+  <div class="pipe">
+    <div class="st"><span class="who">P2</span><div class="t">1 · Read</div><h3>Contract 1 — simulation data</h3>
+      <p><span class="mono">data/*.json</span> — players, table roster, sessions, relationships, hourly metrics, seeded answer key.</p></div>
+    <div class="st"><span class="who">P3</span><div class="t">2 · Score</div><h3>Scoring core</h3>
+      <p><span class="mono">scoring/*.py</span> — pure functions compute 8 scores + reason codes. No model in the decision loop.</p></div>
+    <div class="st"><span class="who">P3</span><div class="t">3 · Freeze</div><h3>Contract 2 — scores</h3>
+      <p><span class="mono">data/derived/*.json</span> — frozen, reproducible. <span class="mono">build_*.py</span> regenerates.</p></div>
+    <div class="st"><span class="who">P1 / P4</span><div class="t">4 · Consume</div><h3>Frontend &amp; evidence</h3>
+      <p>Lobby + pit-boss UI (typed via <span class="mono">contract2.d.ts</span>); evidence packet → P4's Investigator.</p></div>
+  </div>
+</section>
+
+<!-- ══ THE EIGHT SCORES (DAG) ════════════════════════════════ -->
+<section>
+  <div class="sec-h"><span class="n">02</span><h2>The eight scores &amp; how they depend</h2></div>
+  <p class="muted" style="margin-bottom:14px;font-size:13px">Build top-down — each score's dependencies
+    exist first. Two roots (classification &amp; integrity) feed table health, which feeds seating, which
+    feeds the routing decision. Every box is the deterministic <b>champion</b>; ML "challengers" for
+    ①②③ are an additive upgrade raced later in P4's eval lab.</p>
+
+  <div class="dag">
+    <div class="layer">
+      <div class="node root"><div class="hd"><span class="badge">①</span><h3>Classification</h3></div>
+        <p>Threshold-rule cascade → one of 10 archetypes. ROOT.</p>
+        <div class="file">scoring/classify.py → classifications.json</div>
+        <div class="needs"><b>needs:</b> nothing (player features)</div></div>
+      <div class="node root"><div class="hd"><span class="badge">②</span><h3>Integrity</h3></div>
+        <p>Convergence rule (NOT a model) → band per cluster/household. 2nd ROOT.</p>
+        <div class="file">scoring/integrity.py → integrity_scores.json</div>
+        <div class="needs"><b>needs:</b> nothing (relationships graph)</div></div>
+    </div>
+    <div class="arrow-d">↓ &nbsp; ↓</div>
+    <div class="layer">
+      <div class="node"><div class="hd"><span class="badge">③–⑥</span><h3>Table Health <span class="mono dim">Health(T)</span></h3></div>
+        <p><span class="mono">100 − P_pred − P_frag − P_clus − P_bleed</span>. Measures how long recreationals survive.</p>
+        <div class="file">scoring/health.py → health_scores.json</div>
+        <div class="needs"><b>needs:</b> ① (P_pred) · ② (P_clus) · roster (P_frag) · sessions (P_bleed)</div></div>
+    </div>
+    <div class="arrow-d">↓</div>
+    <div class="layer">
+      <div class="node"><div class="hd"><span class="badge">⑦</span><h3>Seating <span class="mono dim">Fit · ΔHealth · risk</span></h3></div>
+        <p>Per player×table: Fit (archetype×style), ΔHealth (marginal), seating-risk (player protection).</p>
+        <div class="file">scoring/seating.py → seating_scores.json</div>
+        <div class="needs"><b>needs:</b> ⑥ (Health/ΔHealth) · ① (Fit) · ② (integrity gate)</div></div>
+    </div>
+    <div class="arrow-d">↓</div>
+    <div class="layer">
+      <div class="node decision"><div class="hd"><span class="badge" style="color:#7fb0ff;border-color:rgba(79,142,247,.32);background:var(--blue-bg)">⑧</span><h3>Router — the decision</h3></div>
+        <p><span class="mono">Rank = 0.30·Fit + 0.40·Health + 0.30·ΔHealth</span>. Frozen policy, <b>no model</b>. Integrity hard-gate + vulnerable-protection gate → lobby badge.</p>
+        <div class="file">scoring/router.py → router_lobby.json</div>
+        <div class="needs"><b>needs:</b> ⑦ · ⑥ · ②</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ WHAT EACH DOES ════════════════════════════════════════ -->
+<section>
+  <div class="sec-h"><span class="n">03</span><h2>What each score does</h2></div>
+  <table>
+    <thead><tr><th>#</th><th>Score</th><th>Method (champion)</th><th>Output</th><th>Pinned acceptance</th></tr></thead>
+    <tbody>
+      <tr><td>①</td><td><b>Classification</b></td><td>First-match-wins threshold cascade over 9 player features → 10 archetypes</td><td><span class="mono">archetype</span> + reason codes</td><td>11/11 case players; 100% on every signposted class</td></tr>
+      <tr><td>②</td><td><b>Integrity</b></td><td>Graph → count convergent <b>independent signal families</b> net of counter-evidence</td><td>band <span class="band b-lo">low</span><span class="band b-mid">neutral</span><span class="band b-hi">high</span> + action</td><td>CL-001 → high (4 families); household/overlap traps held</td></tr>
+      <tr><td>③</td><td>P_pred <span class="dim">0–45</span></td><td>Skill-weighted aggressor pressure on a saturating curve</td><td>penalty</td><td rowspan="4">Health(T-22) = <b>38</b> → beginner_unfriendly</td></tr>
+      <tr><td>④</td><td>P_frag <span class="dim">0–25</span></td><td>Occupancy + paid-seat-time trend fragility</td><td>penalty</td></tr>
+      <tr><td>⑤</td><td>P_clus <span class="dim">0–30</span></td><td>Integrity band ② × fraction of seats held by cluster</td><td>penalty</td></tr>
+      <tr><td>⑥</td><td><b>Health(T)</b></td><td><span class="mono">100 − Σ penalties</span>, clamped → band</td><td>0–100 + band + integrity_candidate</td></tr>
+      <tr><td>⑦</td><td><b>Seating</b></td><td>Fit (archetype×style matrix) · ΔHealth (re-score composition) · seating-risk (band + vulnerability + gate)</td><td>fit · Δhealth · <span class="band b-hi">risk</span></td><td>Seating-risk(P-104, T-22) = HIGH</td></tr>
+      <tr><td>⑧</td><td><b>Router</b></td><td>Weighted rank + integrity hard-gate + vulnerable-protection gate → badge</td><td><span class="band b-dec">badge</span> + two views</td><td>P-104: T-8 Recommended · T-14 Good fit · T-22 Available · T-11 gated</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══ FILE MAP ══════════════════════════════════════════════ -->
+<section>
+  <div class="sec-h"><span class="n">04</span><h2>Where the parts live</h2></div>
+  <div class="tree">
+<span class="d">scoring/</span>                        <span class="c"># the Python scoring core (stdlib only)</span>
+├─ <span class="f">classify.py</span>              <span class="c">① threshold classifier → 10 archetypes</span>
+├─ <span class="f">integrity.py</span>             <span class="c">② convergence-rule integrity bands</span>
+├─ <span class="f">health.py</span>                <span class="c">③–⑥ Health(T) = 100 − P_pred − P_frag − P_clus − P_bleed</span>
+├─ <span class="f">seating.py</span>               <span class="c">⑦ Fit · ΔHealth · seating-risk</span>
+└─ <span class="f">router.py</span>                <span class="c">⑧ Rank policy + gates → lobby badge</span>
+
+<span class="d">scripts/</span>                       <span class="c"># one validator + one builder per score</span>
+├─ <span class="f">validate_*.py</span>            <span class="c">acceptance harness (asserts the pinned cases)</span>
+└─ <span class="f">build_*.py</span>               <span class="c">freezes each score → data/derived/</span>
+
+<span class="d">data/</span>
+├─ <span class="f">players · table_roster · relationships · sessions · …</span>   <span class="c">Contract 1 (P2, input)</span>
+├─ <span class="f">seeded_case_labels.json</span>  <span class="c">operator answer key — validation only, never player-facing</span>
+└─ <span class="d">derived/</span>                  <span class="seam"># Contract 2 (P3, output — the frozen seam)</span>
+   └─ <span class="seam">classifications · integrity_scores · health_scores · seating_scores · router_lobby .json</span>
+
+<span class="d">frontend/</span>
+└─ <span class="f">contract2.d.ts</span>           <span class="seam">typed interfaces; lobby type narrowed so leakage = compile error</span>
+
+<span class="d">docs/</span>
+├─ <span class="f">scoring-thresholds.md</span>     <span class="c">D8 — every numeric cutoff (source of truth for P4)</span>
+├─ <span class="f">p1-integration-guide.md</span>   <span class="c">how P1 wires the UI to Contracts 1 + 2</span>
+└─ <span class="f">scoring-engine-overview.html</span> <span class="c">← you are here</span>
+  </div>
+</section>
+
+<!-- ══ PROCESS FLOW ══════════════════════════════════════════ -->
+<section>
+  <div class="sec-h"><span class="n">05</span><h2>How the process flows</h2></div>
+  <div class="grid2">
+    <div class="card"><h3>Per score: read → compute → reason → freeze</h3>
+      <ul>
+        <li>A <span class="mono">build_*.py</span> loads the needed <span class="mono">data/*.json</span> fixtures.</li>
+        <li>It runs the pure <span class="mono">scoring/*.py</span> functions (which call upstream scores as needed — e.g. health calls integrity for P_clus).</li>
+        <li>Each score emits <b>reason codes</b> <span class="mono">{code, detail, signals}</span> — the auditable "why", rendered verbatim by the UI.</li>
+        <li>Output is written to <span class="mono">data/derived/</span>, byte-stable across runs.</li>
+      </ul></div>
+    <div class="card"><h3>Validation gate</h3>
+      <ul>
+        <li>Each <span class="mono">validate_*.py</span> asserts the score's <b>pinned acceptance</b> against the seeded answer key.</li>
+        <li>The router validator also asserts the <b>player-facing leakage</b> guardrail (whitelist-subset of safe keys).</li>
+        <li>Every deliverable was <b>independently audited</b>; fixes folded back in.</li>
+      </ul></div>
+  </div>
+
+  <h3 style="margin:22px 0 8px;color:var(--gold)">The demo spine the scores drive</h3>
+  <div class="pipe" style="grid-template-columns:repeat(4,1fr)">
+    <div class="st"><div class="t">Lobby</div><h3>Recommendation</h3><p>Router badges (player_lobby view) — neutral, safe.</p></div>
+    <div class="st"><div class="t">Pit-boss</div><h3>Review / override</h3><p>Health + integrity + reason codes + counter-evidence.</p></div>
+    <div class="st"><div class="t">Simulator</div><h3>Standard vs FairPlay</h3><p>8-hour room-metric divergence.</p></div>
+    <div class="st"><div class="t">Eval</div><h3>Evidence</h3><p>Computed scores vs seeded answer key.</p></div>
+  </div>
+</section>
+
+<!-- ══ GUARDRAILS ════════════════════════════════════════════ -->
+<section>
+  <div class="sec-h"><span class="n">06</span><h2>The guardrails the engine enforces</h2></div>
+  <div class="grid2">
+    <div class="card safe"><h3>🟢 Player-facing (only this is safe)</h3>
+      <ul>
+        <li><span class="mono">router_lobby.json → player_lobby</span> — pre-filtered to neutral table facts + a badge.</li>
+        <li>Type <span class="mono">LobbyTable</span> is structurally narrowed: no health, rank, risk, or archetype field.</li>
+        <li>Badges: "Recommended for you" · "Good fit" · "Available". Gated tables are absent entirely.</li>
+      </ul></div>
+    <div class="card danger"><h3>🔴 Operator-facing only</h3>
+      <ul>
+        <li>Every other derived file + the router <span class="mono">operator_view</span>.</li>
+        <li>Numeric scores, archetypes, seating-risk, integrity language — pit-boss console only.</li>
+        <li><span class="mono">seeded_case_labels.json</span> is the answer key — never a player path.</li>
+      </ul></div>
+  </div>
+  <div class="chips" style="margin-top:16px">
+    <span class="chip r">✗ Never states a player cheated</span>
+    <span class="chip r">✗ Never recommends an auto-ban / enforcement</span>
+    <span class="chip">⚖ Three separate lenses — health ≠ integrity ≠ promo-abuse</span>
+    <span class="chip g">✓ Counter-evidence always surfaced</span>
+    <span class="chip g">✓ Always recommends a human action ("elevated for review")</span>
+  </div>
+</section>
+
+<!-- ══ RUN IT ════════════════════════════════════════════════ -->
+<section>
+  <div class="sec-h"><span class="n">07</span><h2>Run it</h2></div>
+  <div class="grid2">
+    <div>
+      <h3 style="margin-bottom:8px;font-size:12px;color:var(--gold2);letter-spacing:.1em;text-transform:uppercase">Regenerate every frozen score</h3>
+      <div class="run"><span class="c"># reads data/*.json → writes data/derived/*.json</span>
+<span class="p">$</span> python scripts/build_classifications.py
+<span class="p">$</span> python scripts/build_integrity.py
+<span class="p">$</span> python scripts/build_health.py
+<span class="p">$</span> python scripts/build_seating.py
+<span class="p">$</span> python scripts/build_router.py</div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:8px;font-size:12px;color:var(--gold2);letter-spacing:.1em;text-transform:uppercase">Check the pinned acceptance</h3>
+      <div class="run"><span class="c"># each exits 0 on pass</span>
+<span class="p">$</span> python scripts/validate_classify.py
+<span class="p">$</span> python scripts/validate_integrity.py
+<span class="p">$</span> python scripts/validate_health.py
+<span class="p">$</span> python scripts/validate_seating.py
+<span class="p">$</span> python scripts/validate_router.py</div>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  FairPlay Simulation Lab · P3 Scoring + Evidence Engine · Contract 2.
+  Numeric cutoffs: <span class="mono">docs/scoring-thresholds.md</span> · UI wiring:
+  <span class="mono">docs/p1-integration-guide.md</span> · types: <span class="mono">frontend/contract2.d.ts</span>.
+  Generated as a static overview — the engine is the source of truth.
+</div>
+
+</body>
+</html>
