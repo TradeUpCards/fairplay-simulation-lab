@@ -48,7 +48,7 @@ edge and which reviewer-facing reason code.
 
 | P2 fixture field | Lives in | Graph term | Notes |
 |---|---|---|---|
-| health bands `low · neutral · high · manual_review` | scoring output (P3) | integrity band (Contract-2) | Band `monitor` was renamed `neutral` per `reconciliation.md` §2 — **band sense only**. |
+| health bands `low · neutral · high · manual_review` | scoring output (P3) | integrity band (Contract-2) | Band `monitor` was renamed `neutral` — **band sense only** (the `monitor` action/status is unchanged). |
 | `paid_seat_time` / `paid_seat_time_trend` | `table_roster.json`, `room_state_hourly.json` | feeds `Health(T)` `P_frag` / `P_bleed` | Composition + observed terms; not a graph edge. |
 | room KPI fields | `room_metrics_*.json` | `IMPACTS_TABLE` / `table_health_degradation` (demo-approximated) | Counterfactual aggregate, not a per-cluster derived edge yet (needs `hand_events` — see signal-gap doc Level 2). |
 
@@ -85,7 +85,7 @@ These are the exact places the fixture vocabulary and doc-10 vocabulary differ. 
 4. **`bot_similarity_score`** has **no graph edge** — it is an account-level score with its own review queue.
    Keep CASE-G out of the collusion/cluster path.
 5. **Integrity band `neutral`** (was `monitor`) — Contract-2 enum is `low · neutral · high · manual_review`.
-   The *action*/*status* `monitor` is unchanged (see `reconciliation.md`).
+   The *action*/*status* `monitor` is unchanged.
 
 ## Open coordination
 
