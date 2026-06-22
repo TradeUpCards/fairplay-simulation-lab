@@ -247,6 +247,28 @@ None of these affect the click path; they're flagged so a slide built from
 
 ---
 
+## 8. TypeScript types (`frontend/contract2.d.ts`)
+
+Typed interfaces for every `data/derived/*.json` shape — import these instead of
+`any`. They describe the data shape regardless of transport (file import now, or
+an API later that serves identical shapes).
+
+**The lobby type is structurally narrowed to enforce §0 at compile time.** Bind
+player screens to `LobbyTable` — it has no `health`/`rank`/`seating_risk`/
+`archetype` field, and every operator type is branded `OperatorOnly<…>`, so
+passing operator data to a lobby component is a **compile error**:
+
+```ts
+function renderLobbyCard(t: LobbyTable) { /* ... */ }
+renderLobbyCard(routed.player_lobby[0]);   // ✅
+renderLobbyCard(routed.operator_view[0]);  // ❌ does not compile (TS2345)
+```
+
+Operator screens use `HealthScore` / `IntegrityAssessment` / `SeatingCandidate`
+/ `RouterOperatorRow`. The `Contract2` interface bundles all five files.
+
+---
+
 **TL;DR:** bind the lobby to `router_lobby.json → player_lobby` (already safe),
 bind every operator screen to the matching `data/derived/*.json`, render
 `reason_codes[].detail` and `counter_evidence` verbatim, and never let an
