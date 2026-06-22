@@ -1,0 +1,254 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "contract": "Contract 2 \u2014 scores + recommendations (P3)",
+    "score": "2. integrity (champion: convergence rule, NOT a trained model)",
+    "sources": [
+      "data/relationships.json",
+      "data/players.json"
+    ],
+    "bands": [
+      "low",
+      "neutral",
+      "high",
+      "manual_review"
+    ],
+    "note": "Per-group integrity assessment by convergence of independent signal families net of counter-evidence. OPERATOR-FACING ONLY \u2014 integrity/'predator' language must never reach the player lobby. Bands recommend a human review action; they never assert collusion as fact. Counter-evidence is always surfaced.",
+    "total_assessments": 7
+  },
+  "assessments": [
+    {
+      "group_id": "CL-001",
+      "group_kind": "cluster",
+      "member_ids": [
+        "P-198",
+        "P-199",
+        "P-200"
+      ],
+      "band": "high",
+      "convergence_count": 4,
+      "recommended_action": "hold_for_pitboss_review",
+      "signal_families": [
+        {
+          "code": "device_link",
+          "detail": "Shared device link (DG-001) ties cluster accounts to the same device group.",
+          "signals": {
+            "device_group_id": "DG-001"
+          }
+        },
+        {
+          "code": "timing_correlation",
+          "detail": "Pairwise session-timing correlation up to 0.88 (>= 0.8) across members.",
+          "signals": {
+            "max_timing_correlation": 0.88
+          }
+        },
+        {
+          "code": "co_seating",
+          "detail": "Repeated co-seating: 14/18 shared tables (rate 0.78 >= 0.6).",
+          "signals": {
+            "rate": 0.778,
+            "shared_tables": 14,
+            "opportunities": 18
+          }
+        },
+        {
+          "code": "soft_play",
+          "detail": "Within-cluster soft-play: soft_play_delta down to -0.82 (<= -0.6) \u2014 value given away in member-vs-member hands.",
+          "signals": {
+            "min_soft_play_delta": -0.82
+          }
+        }
+      ],
+      "corroborating": [
+        {
+          "code": "outsider_targeting",
+          "detail": "Outsider-pressure signal present (coordinated aggression toward non-members); corroborating context, not a primary family.",
+          "signals": {}
+        },
+        {
+          "code": "casual_exit_impact",
+          "detail": "Elevated casual-player exit impact at affected tables.",
+          "signals": {}
+        }
+      ],
+      "counter_evidence": [],
+      "note": "Primary integrity review case. Three convergent signals: device link (A/B), timing correlation (C to both), repeated co-seating, within-cluster soft_play_delta. Counter-evidence: no individual signal alone proves collusion \u2014 all three must converge."
+    },
+    {
+      "group_id": "CL-002",
+      "group_kind": "cluster",
+      "member_ids": [
+        "P-201",
+        "P-202"
+      ],
+      "band": "neutral",
+      "convergence_count": 1,
+      "recommended_action": "monitor",
+      "signal_families": [
+        {
+          "code": "device_link",
+          "detail": "Shared device link (DG-005) ties cluster accounts to the same device group.",
+          "signals": {
+            "device_group_id": "DG-005"
+          }
+        }
+      ],
+      "corroborating": [],
+      "counter_evidence": [
+        {
+          "code": "low_sample_size_counter_evidence",
+          "detail": "Soft-play signal present but sub-threshold (soft_play_delta -0.35 > -0.6); insufficient to count as a convergent family.",
+          "signals": {
+            "min_soft_play_delta": -0.35,
+            "threshold": -0.6
+          }
+        }
+      ],
+      "note": "Weaker cluster candidate \u2014 device link present, soft_play_signal true but sub-threshold (-0.30 to -0.35 vs. escalation threshold -0.60), co-seating rate moderate (8/15). Population filler demonstrating that not every device link with soft-play is an integrity-review case. Monitor only."
+    },
+    {
+      "group_id": "H-01",
+      "group_kind": "household",
+      "member_ids": [
+        "P-192",
+        "P-193"
+      ],
+      "band": "neutral",
+      "convergence_count": 1,
+      "recommended_action": "monitor",
+      "signal_families": [
+        {
+          "code": "device_link",
+          "detail": "Shared device (DG-002) \u2014 expected for a household; not incriminating on its own.",
+          "signals": {
+            "device_group_id": "DG-002"
+          }
+        }
+      ],
+      "corroborating": [],
+      "counter_evidence": [
+        {
+          "code": "household_counter_evidence",
+          "detail": "Divergent session profiles and low co-seating (rate 0.09); no soft-play, no correlated profitability. Shared-device overlap is explained by household, not collusion.",
+          "signals": {
+            "co_seating_rate": 0.091,
+            "P-192_preferred_time": "evening",
+            "P-193_preferred_time": "morning_afternoon",
+            "vpip_difference": 0.08,
+            "avg_session_diff_minutes": 35.0
+          }
+        }
+      ],
+      "note": "FALSE POSITIVE TRAP. Same mocked device, but radically different session profiles \u2014 H1 plays evenings (~145 min), H2 plays mornings (~110 min), different vpip/pfr. Low co-seating rate (2 of 22). No soft-play, no correlated profit. Must produce monitor-only outcome, NOT escalation or suppression."
+    },
+    {
+      "group_id": "H-02",
+      "group_kind": "household",
+      "member_ids": [
+        "P-194",
+        "P-195"
+      ],
+      "band": "neutral",
+      "convergence_count": 1,
+      "recommended_action": "monitor",
+      "signal_families": [
+        {
+          "code": "device_link",
+          "detail": "Shared device (DG-003) \u2014 expected for a household; not incriminating on its own.",
+          "signals": {
+            "device_group_id": "DG-003"
+          }
+        }
+      ],
+      "corroborating": [],
+      "counter_evidence": [
+        {
+          "code": "household_counter_evidence",
+          "detail": "Divergent session profiles and low co-seating (rate 0.17); no soft-play, no correlated profitability. Shared-device overlap is explained by household, not collusion.",
+          "signals": {
+            "co_seating_rate": 0.167
+          }
+        }
+      ],
+      "note": "Additional household pair \u2014 population realism. Low risk, monitor only."
+    },
+    {
+      "group_id": "H-03",
+      "group_kind": "household",
+      "member_ids": [
+        "P-196",
+        "P-197"
+      ],
+      "band": "neutral",
+      "convergence_count": 1,
+      "recommended_action": "monitor",
+      "signal_families": [
+        {
+          "code": "device_link",
+          "detail": "Shared device (DG-004) \u2014 expected for a household; not incriminating on its own.",
+          "signals": {
+            "device_group_id": "DG-004"
+          }
+        }
+      ],
+      "corroborating": [],
+      "counter_evidence": [
+        {
+          "code": "household_counter_evidence",
+          "detail": "Divergent session profiles and low co-seating (rate 0.04); no soft-play, no correlated profitability. Shared-device overlap is explained by household, not collusion.",
+          "signals": {
+            "co_seating_rate": 0.04
+          }
+        }
+      ],
+      "note": "Additional household pair \u2014 lowest co-seating rate. Low risk, monitor only."
+    },
+    {
+      "group_id": "OVL-001",
+      "group_kind": "regular_overlap",
+      "member_ids": [
+        "P-142",
+        "P-143"
+      ],
+      "band": "low",
+      "convergence_count": 0,
+      "recommended_action": "monitor",
+      "signal_families": [],
+      "corroborating": [],
+      "counter_evidence": [
+        {
+          "code": "legitimate_regular_counter_evidence",
+          "detail": "High co-seating (rate 0.50) but no device link, no soft-play, no correlated win/loss \u2014 explained by shared stake/time preference, not coordination.",
+          "signals": {
+            "co_seating_rate": 0.5
+          }
+        }
+      ],
+      "note": "TRAP for over-eager classifiers. High overlap without collusion signals is expected for players who share a preferred session window."
+    },
+    {
+      "group_id": "P-221",
+      "group_kind": "bot_account",
+      "member_ids": [
+        "P-221"
+      ],
+      "band": "manual_review",
+      "convergence_count": 0,
+      "recommended_action": "route_to_bot_review_queue",
+      "signal_families": [
+        {
+          "code": "bot_fingerprint",
+          "detail": "Account-level bot-similarity 0.87 (>= 0.8) with timing regularity 0.88. Routed to a dedicated bot-review queue, separate from collusion review.",
+          "signals": {
+            "bot_similarity_score": 0.87,
+            "timing_regularity": 0.88
+          }
+        }
+      ],
+      "corroborating": [],
+      "counter_evidence": [],
+      "note": "Account-level bot signal \u2014 own review queue, not collusion."
+    }
+  ]
+}

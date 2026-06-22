@@ -1,0 +1,463 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "contract": "Contract 2 \u2014 scores + recommendations (P3)",
+    "score": "7. seating (Fit champion + \u0394Health + seating-risk)",
+    "sources": [
+      "data/table_roster.json",
+      "data/players.json",
+      "data/relationships.json",
+      "data/sessions.json"
+    ],
+    "note": "Per player\u00d7table seating scores. \u0394Health is the marginal composition-health change (P_bleed held fixed); it can be positive even where seating-risk is HIGH \u2014 the new-player danger lives in seating_risk + table band, not the \u0394Health sign. integrity_gated tables are removed from router candidates entirely. OPERATOR-FACING: seating-risk / numeric scores must never reach the player lobby."
+  },
+  "seeking_players": [
+    {
+      "player_id": "P-104",
+      "candidate_tables": [
+        {
+          "player_id": "P-104",
+          "table_id": "T-1",
+          "fit": 90.0,
+          "delta_health": 3.6,
+          "seating_risk": "low",
+          "integrity_gated": false,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 90/100 \u2014 new at a 'beginner_friendly' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "beginner_friendly",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +3.6 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 3.6
+              }
+            },
+            {
+              "code": "vulnerable_on_band",
+              "detail": "new player at a 'healthy' table (Health 94). New/recreational players are the cohort this protects \u2014 risk low.",
+              "signals": {
+                "archetype": "new",
+                "band": "healthy",
+                "health": 94.0
+              }
+            }
+          ],
+          "table_health": 94.0,
+          "table_band": "healthy"
+        },
+        {
+          "player_id": "P-104",
+          "table_id": "T-3",
+          "fit": 80.0,
+          "delta_health": 3.3,
+          "seating_risk": "low",
+          "integrity_gated": false,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 80/100 \u2014 new at a 'recreational_heavy' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "recreational_heavy",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +3.3 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 3.3
+              }
+            },
+            {
+              "code": "vulnerable_on_band",
+              "detail": "new player at a 'healthy' table (Health 88). New/recreational players are the cohort this protects \u2014 risk low.",
+              "signals": {
+                "archetype": "new",
+                "band": "healthy",
+                "health": 88.0
+              }
+            }
+          ],
+          "table_health": 88.0,
+          "table_band": "healthy"
+        },
+        {
+          "player_id": "P-104",
+          "table_id": "T-5",
+          "fit": 30.0,
+          "delta_health": 5.0,
+          "seating_risk": "low",
+          "integrity_gated": false,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 30/100 \u2014 new at a 'grinder_heavy' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "grinder_heavy",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +5.0 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 5.0
+              }
+            },
+            {
+              "code": "vulnerable_on_band",
+              "detail": "new player at a 'healthy' table (Health 90). New/recreational players are the cohort this protects \u2014 risk low.",
+              "signals": {
+                "archetype": "new",
+                "band": "healthy",
+                "health": 90.0
+              }
+            }
+          ],
+          "table_health": 90.0,
+          "table_band": "healthy"
+        },
+        {
+          "player_id": "P-104",
+          "table_id": "T-7",
+          "fit": 80.0,
+          "delta_health": 3.3,
+          "seating_risk": "low",
+          "integrity_gated": false,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 80/100 \u2014 new at a 'recreational_heavy' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "recreational_heavy",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +3.3 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 3.3
+              }
+            },
+            {
+              "code": "vulnerable_on_band",
+              "detail": "new player at a 'healthy' table (Health 97). New/recreational players are the cohort this protects \u2014 risk low.",
+              "signals": {
+                "archetype": "new",
+                "band": "healthy",
+                "health": 96.7
+              }
+            }
+          ],
+          "table_health": 96.7,
+          "table_band": "healthy"
+        },
+        {
+          "player_id": "P-104",
+          "table_id": "T-8",
+          "fit": 74.0,
+          "delta_health": 3.3,
+          "seating_risk": "low",
+          "integrity_gated": false,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 74/100 \u2014 new at a 'balanced' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "balanced",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +3.3 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 3.3
+              }
+            },
+            {
+              "code": "vulnerable_on_band",
+              "detail": "new player at a 'healthy' table (Health 93). New/recreational players are the cohort this protects \u2014 risk low.",
+              "signals": {
+                "archetype": "new",
+                "band": "healthy",
+                "health": 93.3
+              }
+            }
+          ],
+          "table_health": 93.3,
+          "table_band": "healthy"
+        },
+        {
+          "player_id": "P-104",
+          "table_id": "T-9",
+          "fit": 40.0,
+          "delta_health": 14.8,
+          "seating_risk": "medium",
+          "integrity_gated": false,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 40/100 \u2014 new at a 'promo_short' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "promo_short",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +14.8 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 14.8
+              }
+            },
+            {
+              "code": "vulnerable_on_band",
+              "detail": "new player at a 'fragile' table (Health 64). New/recreational players are the cohort this protects \u2014 risk medium.",
+              "signals": {
+                "archetype": "new",
+                "band": "fragile",
+                "health": 63.9
+              }
+            }
+          ],
+          "table_health": 63.9,
+          "table_band": "fragile"
+        },
+        {
+          "player_id": "P-104",
+          "table_id": "T-11",
+          "fit": 45.0,
+          "delta_health": 17.8,
+          "seating_risk": "high",
+          "integrity_gated": true,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 45/100 \u2014 new at a 'long_session' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "long_session",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +17.8 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 17.8
+              }
+            },
+            {
+              "code": "integrity_hard_gate",
+              "detail": "Table has a high-band coordinated cluster under review \u2014 gated out of seating recommendations entirely (player may still self-select).",
+              "signals": {
+                "band": "beginner_unfriendly"
+              }
+            }
+          ],
+          "table_health": 43.9,
+          "table_band": "beginner_unfriendly"
+        },
+        {
+          "player_id": "P-104",
+          "table_id": "T-14",
+          "fit": 58.0,
+          "delta_health": 5.0,
+          "seating_risk": "low",
+          "integrity_gated": false,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 58/100 \u2014 new at a 'regular_heavy' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "regular_heavy",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +5.0 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 5.0
+              }
+            },
+            {
+              "code": "vulnerable_on_band",
+              "detail": "new player at a 'healthy' table (Health 93). New/recreational players are the cohort this protects \u2014 risk low.",
+              "signals": {
+                "archetype": "new",
+                "band": "healthy",
+                "health": 93.0
+              }
+            }
+          ],
+          "table_health": 93.0,
+          "table_band": "healthy"
+        },
+        {
+          "player_id": "P-104",
+          "table_id": "T-15",
+          "fit": 85.0,
+          "delta_health": 3.3,
+          "seating_risk": "low",
+          "integrity_gated": false,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 85/100 \u2014 new at a 'healthy_anchor' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "healthy_anchor",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +3.3 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 3.3
+              }
+            },
+            {
+              "code": "vulnerable_on_band",
+              "detail": "new player at a 'healthy' table (Health 93). New/recreational players are the cohort this protects \u2014 risk low.",
+              "signals": {
+                "archetype": "new",
+                "band": "healthy",
+                "health": 93.3
+              }
+            }
+          ],
+          "table_health": 93.3,
+          "table_band": "healthy"
+        },
+        {
+          "player_id": "P-104",
+          "table_id": "T-18",
+          "fit": 80.0,
+          "delta_health": 3.8,
+          "seating_risk": "low",
+          "integrity_gated": false,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 80/100 \u2014 new at a 'recreational_heavy' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "recreational_heavy",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +3.8 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 3.8
+              }
+            },
+            {
+              "code": "vulnerable_on_band",
+              "detail": "new player at a 'healthy' table (Health 90). New/recreational players are the cohort this protects \u2014 risk low.",
+              "signals": {
+                "archetype": "new",
+                "band": "healthy",
+                "health": 90.5
+              }
+            }
+          ],
+          "table_health": 90.5,
+          "table_band": "healthy"
+        },
+        {
+          "player_id": "P-104",
+          "table_id": "T-22",
+          "fit": 22.0,
+          "delta_health": 15.0,
+          "seating_risk": "high",
+          "integrity_gated": false,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 22/100 \u2014 new at a 'predatory' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "predatory",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +15.0 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 15.0
+              }
+            },
+            {
+              "code": "vulnerable_on_band",
+              "detail": "new player at a 'beginner_unfriendly' table (Health 38). New/recreational players are the cohort this protects \u2014 risk high.",
+              "signals": {
+                "archetype": "new",
+                "band": "beginner_unfriendly",
+                "health": 38.0
+              }
+            }
+          ],
+          "table_health": 38.0,
+          "table_band": "beginner_unfriendly"
+        },
+        {
+          "player_id": "P-104",
+          "table_id": "T-25",
+          "fit": 65.0,
+          "delta_health": 3.3,
+          "seating_risk": "low",
+          "integrity_gated": false,
+          "reason_codes": [
+            {
+              "code": "fit",
+              "detail": "Fit 65/100 \u2014 new at a 'mixed' table.",
+              "signals": {
+                "archetype": "new",
+                "style": "mixed",
+                "matrix_row": "new"
+              }
+            },
+            {
+              "code": "delta_health",
+              "detail": "\u0394Health +3.3 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+              "signals": {
+                "delta_health": 3.3
+              }
+            },
+            {
+              "code": "vulnerable_on_band",
+              "detail": "new player at a 'healthy' table (Health 85). New/recreational players are the cohort this protects \u2014 risk low.",
+              "signals": {
+                "archetype": "new",
+                "band": "healthy",
+                "health": 84.7
+              }
+            }
+          ],
+          "table_health": 84.7,
+          "table_band": "healthy"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1809 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "contract": "Contract 2 \u2014 scores + recommendations (P3)",
+    "score": "1. classification (champion: deterministic threshold rules)",
+    "source": "data/players.json",
+    "source_schema_version": "1.0.0",
+    "source_seed": 42,
+    "archetypes": [
+      "new",
+      "recreational",
+      "regular",
+      "grinder",
+      "aggressive_predatory",
+      "promo_hunter",
+      "shared_device_household",
+      "cluster_member",
+      "healthy_anchor",
+      "bot_like"
+    ],
+    "note": "Deterministic champion classifier. Reason codes are the audit trail behind each label \u2014 UI/evidence packet must render these, never hand-write the 'why'. OPERATOR-FACING: archetypes and reason codes must NOT appear in any player-facing lobby path.",
+    "total_players": 122
+  },
+  "classifications": [
+    {
+      "player_id": "P-100",
+      "archetype": "new",
+      "reason_codes": [
+        {
+          "code": "recent_registration",
+          "detail": "Account registered 2 day(s) ago (<= 14); treat as a new, vulnerable player.",
+          "signals": {
+            "registered_days_ago": 2.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-101",
+      "archetype": "new",
+      "reason_codes": [
+        {
+          "code": "recent_registration",
+          "detail": "Account registered 7 day(s) ago (<= 14); treat as a new, vulnerable player.",
+          "signals": {
+            "registered_days_ago": 7.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-102",
+      "archetype": "new",
+      "reason_codes": [
+        {
+          "code": "recent_registration",
+          "detail": "Account registered 11 day(s) ago (<= 14); treat as a new, vulnerable player.",
+          "signals": {
+            "registered_days_ago": 11.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-103",
+      "archetype": "new",
+      "reason_codes": [
+        {
+          "code": "recent_registration",
+          "detail": "Account registered 3 day(s) ago (<= 14); treat as a new, vulnerable player.",
+          "signals": {
+            "registered_days_ago": 3.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-104",
+      "archetype": "new",
+      "reason_codes": [
+        {
+          "code": "recent_registration",
+          "detail": "Account registered 4 day(s) ago (<= 14); treat as a new, vulnerable player.",
+          "signals": {
+            "registered_days_ago": 4.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-105",
+      "archetype": "new",
+      "reason_codes": [
+        {
+          "code": "recent_registration",
+          "detail": "Account registered 8 day(s) ago (<= 14); treat as a new, vulnerable player.",
+          "signals": {
+            "registered_days_ago": 8.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-106",
+      "archetype": "new",
+      "reason_codes": [
+        {
+          "code": "recent_registration",
+          "detail": "Account registered 13 day(s) ago (<= 14); treat as a new, vulnerable player.",
+          "signals": {
+            "registered_days_ago": 13.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-107",
+      "archetype": "new",
+      "reason_codes": [
+        {
+          "code": "recent_registration",
+          "detail": "Account registered 1 day(s) ago (<= 14); treat as a new, vulnerable player.",
+          "signals": {
+            "registered_days_ago": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-108",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (338 hands, ~56-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 338.0,
+            "avg_session_minutes": 56.0,
+            "sessions_last_30d": 7.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-109",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (264 hands, ~51-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 264.0,
+            "avg_session_minutes": 51.0,
+            "sessions_last_30d": 6.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-110",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (312 hands, ~68-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 312.0,
+            "avg_session_minutes": 68.0,
+            "sessions_last_30d": 8.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-111",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (780 hands, ~75-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 780.0,
+            "avg_session_minutes": 75.0,
+            "sessions_last_30d": 10.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-112",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (420 hands, ~55-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 420.0,
+            "avg_session_minutes": 55.0,
+            "sessions_last_30d": 7.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-113",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (1,250 hands, ~82-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 1250.0,
+            "avg_session_minutes": 82.0,
+            "sessions_last_30d": 9.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-114",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (580 hands, ~60-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 580.0,
+            "avg_session_minutes": 60.0,
+            "sessions_last_30d": 8.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-115",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (245 hands, ~52-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 245.0,
+            "avg_session_minutes": 52.0,
+            "sessions_last_30d": 6.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-116",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (1,100 hands, ~90-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 1100.0,
+            "avg_session_minutes": 90.0,
+            "sessions_last_30d": 11.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-117",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (380 hands, ~65-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 380.0,
+            "avg_session_minutes": 65.0,
+            "sessions_last_30d": 9.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-118",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (1,850 hands, 12 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 1850.0,
+            "avg_session_minutes": 95.0,
+            "sessions_last_30d": 12.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-119",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (490 hands, ~70-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 490.0,
+            "avg_session_minutes": 70.0,
+            "sessions_last_30d": 9.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-120",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (920 hands, ~80-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 920.0,
+            "avg_session_minutes": 80.0,
+            "sessions_last_30d": 10.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-121",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (2,400 hands, 11 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 2400.0,
+            "avg_session_minutes": 88.0,
+            "sessions_last_30d": 11.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-122",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (310 hands, ~58-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 310.0,
+            "avg_session_minutes": 58.0,
+            "sessions_last_30d": 7.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-123",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (1,550 hands, 12 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 1550.0,
+            "avg_session_minutes": 92.0,
+            "sessions_last_30d": 12.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-124",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (530 hands, ~72-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 530.0,
+            "avg_session_minutes": 72.0,
+            "sessions_last_30d": 8.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-125",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (280 hands, ~62-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 280.0,
+            "avg_session_minutes": 62.0,
+            "sessions_last_30d": 8.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-126",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (3,100 hands, 13 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 3100.0,
+            "avg_session_minutes": 105.0,
+            "sessions_last_30d": 13.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-127",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (680 hands, ~78-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 680.0,
+            "avg_session_minutes": 78.0,
+            "sessions_last_30d": 10.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-128",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (405 hands, ~68-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 405.0,
+            "avg_session_minutes": 68.0,
+            "sessions_last_30d": 9.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-129",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (4,500 hands, 14 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 4500.0,
+            "avg_session_minutes": 110.0,
+            "sessions_last_30d": 14.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-130",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (215 hands, ~48-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 215.0,
+            "avg_session_minutes": 48.0,
+            "sessions_last_30d": 6.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-131",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (980 hands, ~85-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 980.0,
+            "avg_session_minutes": 85.0,
+            "sessions_last_30d": 11.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-132",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (620 hands, ~74-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 620.0,
+            "avg_session_minutes": 74.0,
+            "sessions_last_30d": 9.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-133",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (1,300 hands, ~88-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 1300.0,
+            "avg_session_minutes": 88.0,
+            "sessions_last_30d": 11.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-134",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (440 hands, ~65-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 440.0,
+            "avg_session_minutes": 65.0,
+            "sessions_last_30d": 8.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-135",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (1,720 hands, 12 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 1720.0,
+            "avg_session_minutes": 95.0,
+            "sessions_last_30d": 12.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-136",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (295 hands, ~56-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 295.0,
+            "avg_session_minutes": 56.0,
+            "sessions_last_30d": 7.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-137",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (840 hands, ~80-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 840.0,
+            "avg_session_minutes": 80.0,
+            "sessions_last_30d": 10.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-138",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (2,300 hands, 13 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 2300.0,
+            "avg_session_minutes": 98.0,
+            "sessions_last_30d": 13.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-139",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (345 hands, ~62-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 345.0,
+            "avg_session_minutes": 62.0,
+            "sessions_last_30d": 8.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-140",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (1,180 hands, 12 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 1180.0,
+            "avg_session_minutes": 90.0,
+            "sessions_last_30d": 12.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-141",
+      "archetype": "recreational",
+      "reason_codes": [
+        {
+          "code": "low_volume_casual",
+          "detail": "Low-volume casual play (510 hands, ~72-min sessions) \u2014 the recreational majority this room is built to protect.",
+          "signals": {
+            "lifetime_hands": 510.0,
+            "avg_session_minutes": 72.0,
+            "sessions_last_30d": 9.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-142",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (8,500 hands, 16 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 8500.0,
+            "avg_session_minutes": 140.0,
+            "sessions_last_30d": 16.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-143",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (7,200 hands, 15 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 7200.0,
+            "avg_session_minutes": 125.0,
+            "sessions_last_30d": 15.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-144",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (10,200 hands, 18 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 10200.0,
+            "avg_session_minutes": 155.0,
+            "sessions_last_30d": 18.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-145",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (5,800 hands, 14 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 5800.0,
+            "avg_session_minutes": 120.0,
+            "sessions_last_30d": 14.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-146",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (13,000 hands, ~168-min sessions) with moderate aggression (AF 2.30) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 13000.0,
+            "avg_session_minutes": 168.0,
+            "aggression_factor": 2.3
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-147",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (3,600 hands, 13 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 3600.0,
+            "avg_session_minutes": 105.0,
+            "sessions_last_30d": 13.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-148",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (14,500 hands, ~172-min sessions) with moderate aggression (AF 2.35) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 14500.0,
+            "avg_session_minutes": 172.0,
+            "aggression_factor": 2.35
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-149",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (6,900 hands, 16 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 6900.0,
+            "avg_session_minutes": 130.0,
+            "sessions_last_30d": 16.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-150",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (1,900 hands, 12 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 1900.0,
+            "avg_session_minutes": 95.0,
+            "sessions_last_30d": 12.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-151",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (9,600 hands, 17 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 9600.0,
+            "avg_session_minutes": 148.0,
+            "sessions_last_30d": 17.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-152",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (4,800 hands, 14 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 4800.0,
+            "avg_session_minutes": 115.0,
+            "sessions_last_30d": 14.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-153",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (11,800 hands, ~160-min sessions) with moderate aggression (AF 2.25) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 11800.0,
+            "avg_session_minutes": 160.0,
+            "aggression_factor": 2.25
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-154",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (2,600 hands, 13 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 2600.0,
+            "avg_session_minutes": 100.0,
+            "sessions_last_30d": 13.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-155",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (16,400 hands, ~180-min sessions) with moderate aggression (AF 2.42) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 16400.0,
+            "avg_session_minutes": 180.0,
+            "aggression_factor": 2.42
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-156",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (6,200 hands, 15 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 6200.0,
+            "avg_session_minutes": 125.0,
+            "sessions_last_30d": 15.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-157",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (8,800 hands, 17 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 8800.0,
+            "avg_session_minutes": 142.0,
+            "sessions_last_30d": 17.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-158",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (3,200 hands, 13 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 3200.0,
+            "avg_session_minutes": 108.0,
+            "sessions_last_30d": 13.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-159",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (13,600 hands, ~170-min sessions) with moderate aggression (AF 2.32) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 13600.0,
+            "avg_session_minutes": 170.0,
+            "aggression_factor": 2.32
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-160",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (10,400 hands, 18 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 10400.0,
+            "avg_session_minutes": 152.0,
+            "sessions_last_30d": 18.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-161",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (5,400 hands, 14 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 5400.0,
+            "avg_session_minutes": 118.0,
+            "sessions_last_30d": 14.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-162",
+      "archetype": "regular",
+      "reason_codes": [
+        {
+          "code": "steady_midvolume",
+          "detail": "Steady mid-volume play (3,800 hands, 13 sessions/30d) \u2014 ordinary engaged regular.",
+          "signals": {
+            "lifetime_hands": 3800.0,
+            "avg_session_minutes": 110.0,
+            "sessions_last_30d": 13.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-163",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (15,200 hands, ~175-min sessions) with moderate aggression (AF 2.38) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 15200.0,
+            "avg_session_minutes": 175.0,
+            "aggression_factor": 2.38
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-164",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (285,000 lifetime hands) with strong postflop aggression (AF 2.80); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 285000.0,
+            "aggression_factor": 2.8,
+            "sessions_last_30d": 26.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-165",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (150,000 lifetime hands) with strong postflop aggression (AF 2.65); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 150000.0,
+            "aggression_factor": 2.65,
+            "sessions_last_30d": 24.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-166",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (420,000 lifetime hands) with strong postflop aggression (AF 3.00); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 420000.0,
+            "aggression_factor": 3.0,
+            "sessions_last_30d": 28.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-167",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (85,000 lifetime hands) with strong postflop aggression (AF 2.55); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 85000.0,
+            "aggression_factor": 2.55,
+            "sessions_last_30d": 22.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-168",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (220,000 lifetime hands) with strong postflop aggression (AF 2.72); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 220000.0,
+            "aggression_factor": 2.72,
+            "sessions_last_30d": 26.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-169",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (110,000 lifetime hands) with strong postflop aggression (AF 2.62); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 110000.0,
+            "aggression_factor": 2.62,
+            "sessions_last_30d": 23.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-170",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (580,000 lifetime hands) with strong postflop aggression (AF 2.90); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 580000.0,
+            "aggression_factor": 2.9,
+            "sessions_last_30d": 28.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-171",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (180,000 lifetime hands) with strong postflop aggression (AF 2.68); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 180000.0,
+            "aggression_factor": 2.68,
+            "sessions_last_30d": 25.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-172",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (75,000 lifetime hands) with strong postflop aggression (AF 2.50); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 75000.0,
+            "aggression_factor": 2.5,
+            "sessions_last_30d": 21.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-173",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (260,000 lifetime hands) with strong postflop aggression (AF 2.75); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 260000.0,
+            "aggression_factor": 2.75,
+            "sessions_last_30d": 26.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-174",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (105,000 lifetime hands) with strong postflop aggression (AF 2.60); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 105000.0,
+            "aggression_factor": 2.6,
+            "sessions_last_30d": 23.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-175",
+      "archetype": "grinder",
+      "reason_codes": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (200,000 lifetime hands) with strong postflop aggression (AF 2.70); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 200000.0,
+            "aggression_factor": 2.7,
+            "sessions_last_30d": 25.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-176",
+      "archetype": "aggressive_predatory",
+      "reason_codes": [
+        {
+          "code": "loose_aggressive_profile",
+          "detail": "Loose-aggressive profile (vpip 0.58 >= 0.54, pfr 0.44 >= 0.4); raises predation pressure on softer tables.",
+          "signals": {
+            "vpip": 0.58,
+            "pfr": 0.44,
+            "aggression_factor": 4.2
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-177",
+      "archetype": "aggressive_predatory",
+      "reason_codes": [
+        {
+          "code": "loose_aggressive_profile",
+          "detail": "Loose-aggressive profile (vpip 0.62 >= 0.54, pfr 0.48 >= 0.4); raises predation pressure on softer tables.",
+          "signals": {
+            "vpip": 0.62,
+            "pfr": 0.48,
+            "aggression_factor": 4.65
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-178",
+      "archetype": "aggressive_predatory",
+      "reason_codes": [
+        {
+          "code": "loose_aggressive_profile",
+          "detail": "Loose-aggressive profile (vpip 0.54 >= 0.54, pfr 0.40 >= 0.4); raises predation pressure on softer tables.",
+          "signals": {
+            "vpip": 0.54,
+            "pfr": 0.4,
+            "aggression_factor": 3.85
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-179",
+      "archetype": "aggressive_predatory",
+      "reason_codes": [
+        {
+          "code": "loose_aggressive_profile",
+          "detail": "Loose-aggressive profile (vpip 0.65 >= 0.54, pfr 0.50 >= 0.4); raises predation pressure on softer tables.",
+          "signals": {
+            "vpip": 0.65,
+            "pfr": 0.5,
+            "aggression_factor": 4.85
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-180",
+      "archetype": "aggressive_predatory",
+      "reason_codes": [
+        {
+          "code": "loose_aggressive_profile",
+          "detail": "Loose-aggressive profile (vpip 0.55 >= 0.54, pfr 0.42 >= 0.4); raises predation pressure on softer tables.",
+          "signals": {
+            "vpip": 0.55,
+            "pfr": 0.42,
+            "aggression_factor": 4.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-181",
+      "archetype": "aggressive_predatory",
+      "reason_codes": [
+        {
+          "code": "loose_aggressive_profile",
+          "detail": "Loose-aggressive profile (vpip 0.60 >= 0.54, pfr 0.46 >= 0.4); raises predation pressure on softer tables.",
+          "signals": {
+            "vpip": 0.6,
+            "pfr": 0.46,
+            "aggression_factor": 4.4
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-182",
+      "archetype": "aggressive_predatory",
+      "reason_codes": [
+        {
+          "code": "loose_aggressive_profile",
+          "detail": "Loose-aggressive profile (vpip 0.57 >= 0.54, pfr 0.43 >= 0.4); raises predation pressure on softer tables.",
+          "signals": {
+            "vpip": 0.57,
+            "pfr": 0.43,
+            "aggression_factor": 4.15
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-183",
+      "archetype": "aggressive_predatory",
+      "reason_codes": [
+        {
+          "code": "loose_aggressive_profile",
+          "detail": "Loose-aggressive profile (vpip 0.63 >= 0.54, pfr 0.49 >= 0.4); raises predation pressure on softer tables.",
+          "signals": {
+            "vpip": 0.63,
+            "pfr": 0.49,
+            "aggression_factor": 4.7
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-184",
+      "archetype": "promo_hunter",
+      "reason_codes": [
+        {
+          "code": "promo_redemption_rate",
+          "detail": "21 promo redemptions in 30d with short ~32-min sessions \u2014 promo abuse, a health/economics concern, not collusion.",
+          "signals": {
+            "promo_redemptions_30d": 21.0,
+            "avg_session_minutes": 32.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-185",
+      "archetype": "promo_hunter",
+      "reason_codes": [
+        {
+          "code": "promo_redemption_rate",
+          "detail": "16 promo redemptions in 30d with short ~38-min sessions \u2014 promo abuse, a health/economics concern, not collusion.",
+          "signals": {
+            "promo_redemptions_30d": 16.0,
+            "avg_session_minutes": 38.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-186",
+      "archetype": "promo_hunter",
+      "reason_codes": [
+        {
+          "code": "promo_redemption_rate",
+          "detail": "12 promo redemptions in 30d with short ~42-min sessions \u2014 promo abuse, a health/economics concern, not collusion.",
+          "signals": {
+            "promo_redemptions_30d": 12.0,
+            "avg_session_minutes": 42.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-187",
+      "archetype": "promo_hunter",
+      "reason_codes": [
+        {
+          "code": "promo_redemption_rate",
+          "detail": "14 promo redemptions in 30d with short ~35-min sessions \u2014 promo abuse, a health/economics concern, not collusion.",
+          "signals": {
+            "promo_redemptions_30d": 14.0,
+            "avg_session_minutes": 35.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-188",
+      "archetype": "promo_hunter",
+      "reason_codes": [
+        {
+          "code": "promo_redemption_rate",
+          "detail": "10 promo redemptions in 30d with short ~48-min sessions \u2014 promo abuse, a health/economics concern, not collusion.",
+          "signals": {
+            "promo_redemptions_30d": 10.0,
+            "avg_session_minutes": 48.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-189",
+      "archetype": "promo_hunter",
+      "reason_codes": [
+        {
+          "code": "promo_redemption_rate",
+          "detail": "18 promo redemptions in 30d with short ~30-min sessions \u2014 promo abuse, a health/economics concern, not collusion.",
+          "signals": {
+            "promo_redemptions_30d": 18.0,
+            "avg_session_minutes": 30.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-190",
+      "archetype": "promo_hunter",
+      "reason_codes": [
+        {
+          "code": "promo_redemption_rate",
+          "detail": "8 promo redemptions in 30d with short ~55-min sessions \u2014 promo abuse, a health/economics concern, not collusion.",
+          "signals": {
+            "promo_redemptions_30d": 8.0,
+            "avg_session_minutes": 55.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-191",
+      "archetype": "promo_hunter",
+      "reason_codes": [
+        {
+          "code": "promo_redemption_rate",
+          "detail": "13 promo redemptions in 30d with short ~40-min sessions \u2014 promo abuse, a health/economics concern, not collusion.",
+          "signals": {
+            "promo_redemptions_30d": 13.0,
+            "avg_session_minutes": 40.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-192",
+      "archetype": "shared_device_household",
+      "reason_codes": [
+        {
+          "code": "household_membership",
+          "detail": "Belongs to known household H-01 (shared-device link). Benign overlap by default \u2014 monitor, do not escalate.",
+          "signals": {
+            "household_id": "H-01"
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-193",
+      "archetype": "shared_device_household",
+      "reason_codes": [
+        {
+          "code": "household_membership",
+          "detail": "Belongs to known household H-01 (shared-device link). Benign overlap by default \u2014 monitor, do not escalate.",
+          "signals": {
+            "household_id": "H-01"
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-194",
+      "archetype": "shared_device_household",
+      "reason_codes": [
+        {
+          "code": "household_membership",
+          "detail": "Belongs to known household H-02 (shared-device link). Benign overlap by default \u2014 monitor, do not escalate.",
+          "signals": {
+            "household_id": "H-02"
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-195",
+      "archetype": "shared_device_household",
+      "reason_codes": [
+        {
+          "code": "household_membership",
+          "detail": "Belongs to known household H-02 (shared-device link). Benign overlap by default \u2014 monitor, do not escalate.",
+          "signals": {
+            "household_id": "H-02"
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-196",
+      "archetype": "shared_device_household",
+      "reason_codes": [
+        {
+          "code": "household_membership",
+          "detail": "Belongs to known household H-03 (shared-device link). Benign overlap by default \u2014 monitor, do not escalate.",
+          "signals": {
+            "household_id": "H-03"
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-197",
+      "archetype": "shared_device_household",
+      "reason_codes": [
+        {
+          "code": "household_membership",
+          "detail": "Belongs to known household H-03 (shared-device link). Benign overlap by default \u2014 monitor, do not escalate.",
+          "signals": {
+            "household_id": "H-03"
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-198",
+      "archetype": "cluster_member",
+      "reason_codes": [
+        {
+          "code": "cluster_membership",
+          "detail": "Member of flagged coordination cluster CL-001; integrity is scored at the cluster level, not asserted against this account.",
+          "signals": {
+            "cluster_id": "CL-001"
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-199",
+      "archetype": "cluster_member",
+      "reason_codes": [
+        {
+          "code": "cluster_membership",
+          "detail": "Member of flagged coordination cluster CL-001; integrity is scored at the cluster level, not asserted against this account.",
+          "signals": {
+            "cluster_id": "CL-001"
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-200",
+      "archetype": "cluster_member",
+      "reason_codes": [
+        {
+          "code": "cluster_membership",
+          "detail": "Member of flagged coordination cluster CL-001; integrity is scored at the cluster level, not asserted against this account.",
+          "signals": {
+            "cluster_id": "CL-001"
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-201",
+      "archetype": "cluster_member",
+      "reason_codes": [
+        {
+          "code": "cluster_membership",
+          "detail": "Member of flagged coordination cluster CL-002; integrity is scored at the cluster level, not asserted against this account.",
+          "signals": {
+            "cluster_id": "CL-002"
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-202",
+      "archetype": "cluster_member",
+      "reason_codes": [
+        {
+          "code": "cluster_membership",
+          "detail": "Member of flagged coordination cluster CL-002; integrity is scored at the cluster level, not asserted against this account.",
+          "signals": {
+            "cluster_id": "CL-002"
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-203",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (35,000 hands, ~210-min sessions) with moderate aggression (AF 2.00) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 35000.0,
+            "avg_session_minutes": 210.0,
+            "aggression_factor": 2.0
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-204",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (52,000 hands, ~240-min sessions) with moderate aggression (AF 1.95) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 52000.0,
+            "avg_session_minutes": 240.0,
+            "aggression_factor": 1.95
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-205",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (22,000 hands, ~185-min sessions) with moderate aggression (AF 1.82) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 22000.0,
+            "avg_session_minutes": 185.0,
+            "aggression_factor": 1.82
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-206",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (72,000 hands, ~270-min sessions) with moderate aggression (AF 1.90) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 72000.0,
+            "avg_session_minutes": 270.0,
+            "aggression_factor": 1.9
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-207",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (18,000 hands, ~172-min sessions) with moderate aggression (AF 1.75) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 18000.0,
+            "avg_session_minutes": 172.0,
+            "aggression_factor": 1.75
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-208",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (30,000 hands, ~205-min sessions) with moderate aggression (AF 1.98) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 30000.0,
+            "avg_session_minutes": 205.0,
+            "aggression_factor": 1.98
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-209",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (45,000 hands, ~232-min sessions) with moderate aggression (AF 1.92) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 45000.0,
+            "avg_session_minutes": 232.0,
+            "aggression_factor": 1.92
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-210",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (26,000 hands, ~195-min sessions) with moderate aggression (AF 1.85) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 26000.0,
+            "avg_session_minutes": 195.0,
+            "aggression_factor": 1.85
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-211",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (12,000 hands, ~162-min sessions) with moderate aggression (AF 1.72) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 12000.0,
+            "avg_session_minutes": 162.0,
+            "aggression_factor": 1.72
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-212",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (90,000 hands, ~295-min sessions) with moderate aggression (AF 1.88) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 90000.0,
+            "avg_session_minutes": 295.0,
+            "aggression_factor": 1.88
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-213",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (20,000 hands, ~180-min sessions) with moderate aggression (AF 1.80) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 20000.0,
+            "avg_session_minutes": 180.0,
+            "aggression_factor": 1.8
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-214",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (108,000 hands, ~315-min sessions) with moderate aggression (AF 1.85) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 108000.0,
+            "avg_session_minutes": 315.0,
+            "aggression_factor": 1.85
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-215",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (16,000 hands, ~168-min sessions) with moderate aggression (AF 1.78) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 16000.0,
+            "avg_session_minutes": 168.0,
+            "aggression_factor": 1.78
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-216",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (40,000 hands, ~218-min sessions) with moderate aggression (AF 1.95) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 40000.0,
+            "avg_session_minutes": 218.0,
+            "aggression_factor": 1.95
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-217",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (24,000 hands, ~188-min sessions) with moderate aggression (AF 1.82) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 24000.0,
+            "avg_session_minutes": 188.0,
+            "aggression_factor": 1.82
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-218",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (62,000 hands, ~255-min sessions) with moderate aggression (AF 1.90) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 62000.0,
+            "avg_session_minutes": 255.0,
+            "aggression_factor": 1.9
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-219",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (32,000 hands, ~208-min sessions) with moderate aggression (AF 1.92) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 32000.0,
+            "avg_session_minutes": 208.0,
+            "aggression_factor": 1.92
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-220",
+      "archetype": "healthy_anchor",
+      "reason_codes": [
+        {
+          "code": "established_stabilizer",
+          "detail": "Established, high-engagement regular (46,000 hands, ~228-min sessions) with moderate aggression (AF 1.88) \u2014 a stabilizing presence at the table.",
+          "signals": {
+            "lifetime_hands": 46000.0,
+            "avg_session_minutes": 228.0,
+            "aggression_factor": 1.88
+          }
+        }
+      ]
+    },
+    {
+      "player_id": "P-221",
+      "archetype": "bot_like",
+      "reason_codes": [
+        {
+          "code": "bot_fingerprint",
+          "detail": "Extreme bot-similarity (0.87) with near-perfect timing regularity (0.88) \u2014 routed to its own review queue, not a verdict.",
+          "signals": {
+            "bot_similarity_score": 0.87,
+            "timing_regularity": 0.88
+          }
+        }
+      ]
+    }
+  ]
+}
