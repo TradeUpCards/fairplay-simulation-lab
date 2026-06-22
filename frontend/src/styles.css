@@ -123,6 +123,111 @@ body {
   border-top: none;
 }
 
+/* ── Operator | Player toggle (primary nav) ────────────────────────────────── */
+.mode-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.mode-tab {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+  padding: 0.32rem 0.95rem;
+  border-radius: 999px;
+}
+
+.mode-tab:hover {
+  color: var(--text);
+  border-color: transparent;
+}
+
+.mode-tab.is-active {
+  background: var(--brass);
+  color: #1a1407;
+  font-weight: 600;
+}
+
+/* ── Front of House: the warm, light player surface ────────────────────────── */
+.app.is-player {
+  background: #ece4d3;
+}
+
+.is-player .app-main {
+  padding-top: 2rem;
+}
+
+.is-player .player-lobby {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.is-player .lobby-header h2 {
+  color: #2b2620;
+}
+
+.is-player .player-select {
+  color: #6f6656;
+}
+
+.is-player .player-select select {
+  background: #fffdf8;
+  color: #2b2620;
+  border-color: #d8cdb8;
+}
+
+.is-player .lobby-card {
+  background: #fdfbf6;
+  border-color: #ddd2bd;
+  box-shadow: 0 1px 2px rgba(43, 38, 32, 0.06);
+}
+
+.is-player .lobby-table-id {
+  color: #2b2620;
+}
+
+.is-player .lobby-facts {
+  color: #4a4438;
+}
+
+.is-player .lobby-facts dt {
+  color: #9b9281;
+}
+
+.is-player .lobby-facts dd {
+  color: #4a4438;
+}
+
+.is-player .lobby-badge.is-recommended {
+  background: #e2f0e4;
+  border-color: #2f8f5b;
+  color: #1f6f43;
+}
+
+.is-player .lobby-badge.is-good-fit {
+  background: #e3edf4;
+  border-color: #4a86a8;
+  color: #2c6080;
+}
+
+.is-player .lobby-badge.is-available {
+  background: #efe7d6;
+  border-color: #cdbfa3;
+  color: #6f6656;
+}
+
+.is-player .rb-empty {
+  color: #6f6656;
+}
+
 button {
   cursor: pointer;
   border: 1px solid #2c3543;

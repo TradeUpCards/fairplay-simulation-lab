@@ -1,13 +1,21 @@
 import logo from '../assets/fairplay-iq-logo-brass.svg'
 
+export type ViewMode = 'operator' | 'player'
+
 /**
- * App header — the brass rail at the top of the operator console. The FairPlay
- * IQ wordmark anchors it on the left; a monospace status on the right states the
- * one thing a reviewer should know up front: this runs on synthetic data
- * (responsible-use framing, never real detection). Deliberately quiet — the
- * app's signature element is the seat-ring, not the chrome.
+ * App header — the brass rail atop the console. The FairPlay IQ wordmark anchors
+ * it; the Operator|Player toggle is the app's primary navigation and makes the
+ * player/operator wall a visible boundary (player screens never expose scores).
+ * A monospace "synthetic data" status states the responsible-use framing up
+ * front. Deliberately quiet — the app's signature is the seat-ring, not the chrome.
  */
-export function Header() {
+export function Header({
+  mode,
+  onModeChange,
+}: {
+  mode: ViewMode
+  onModeChange: (mode: ViewMode) => void
+}) {
   return (
     <header className="app-header" role="banner">
       <div className="app-header-inner">
@@ -16,6 +24,28 @@ export function Header() {
           <span className="brand-divider" aria-hidden="true" />
           <span className="brand-descriptor">Simulation Lab</span>
         </div>
+
+        <div className="mode-toggle" role="tablist" aria-label="Audience view">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'operator'}
+            className={`mode-tab${mode === 'operator' ? ' is-active' : ''}`}
+            onClick={() => onModeChange('operator')}
+          >
+            Operator
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'player'}
+            className={`mode-tab${mode === 'player' ? ' is-active' : ''}`}
+            onClick={() => onModeChange('player')}
+          >
+            Player
+          </button>
+        </div>
+
         <p className="header-status">
           <span className="status-dot" aria-hidden="true" />
           Synthetic data
