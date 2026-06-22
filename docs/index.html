@@ -871,15 +871,17 @@ ol.ol li{color:var(--muted);font-size:13.5px;margin-bottom:6px}
       <div class="card-tag" style="color:var(--red)">Negative ΔHealth</div>
       <h4>Seating degrades the table</h4>
       <p>Adding this player increases predation pressure or cluster severity. The router penalizes this table. If ΔHealth is negative enough, the table may drop a badge even if absolute Health is acceptable.</p>
-      <p style="margin-top:8px"><b>Example:</b> P-104 (new, 14 lifetime hands) → T-22 (two aggressive_predatory players, 3/6 seated). ΔHealth ≈ −8. Adds a vulnerable target without strengthening composition.</p>
+      <p style="margin-top:8px"><b>Example:</b> P-176 (aggressive_predatory) → T-8 (soft, 7/9 recreational-weighted). ΔHealth ≈ −4. Adds predation pressure to a healthy table.</p>
     </div>
     <div class="card">
       <div class="card-tag" style="color:var(--gold)">Positive ΔHealth</div>
       <h4>Seating improves the table</h4>
       <p>Adding a recreational player to a table that lacks recreational depth slightly improves composition. The router rewards this — encouraging placement of players where they also help the table.</p>
-      <p style="margin-top:8px"><b>Example:</b> P-104 → T-8 (balanced, 5/6 recreational-weighted). ΔHealth ≈ +2. New player adds recreational depth without stressing predation terms.</p>
+      <p style="margin-top:8px"><b>Example:</b> P-104 → T-8 (balanced, 7/9 recreational-weighted). ΔHealth ≈ +3. New player adds recreational depth without stressing predation terms.</p>
     </div>
   </div>
+  <div class="callout" style="margin-top:12px">
+    <b>ΔHealth is about the table's composition — not the joining player's danger.</b> Adding the new player P-104 to the predator table T-22 actually gives a <b>positive</b> ΔHealth (≈ +15): the new seat dilutes the aggressor ratio and fills an empty chair. The danger <i>to P-104</i> is not in ΔHealth — it is in <b>seating-risk = HIGH</b> (a beginner-unfriendly table + a vulnerable player). That separation is deliberate: ΔHealth protects the <i>table</i>, seating-risk protects the <i>player</i>.</div>
 
   <div class="callout info">
     <b>No per-decision simulation:</b> ΔHealth is computed analytically by re-running the composition-term formulas with the new player included. This is O(1) per table, not a Monte Carlo. The simulation lab exists for offline calibration and eval — not the live routing loop.
@@ -927,7 +929,7 @@ ol.ol li{color:var(--muted);font-size:13.5px;margin-bottom:6px}
   <p style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2);margin-bottom:12px">Worked Example — P-104 Seeking a Table</p>
 
   <div class="ex-box">
-    <div class="ex-hd">Player P-104 · new · 2 days registered · 14 lifetime hands · vpip 0.62 (loose/passive)</div>
+    <div class="ex-hd">Player P-104 · new · 4 days registered · 31 lifetime hands · vpip 0.35 / pfr 0.08 (loose-passive)</div>
     <div class="ex-body">
       <div class="ex-row ex-hdr-row">
         <span class="ex-hdr">Table</span>
@@ -939,32 +941,34 @@ ol.ol li{color:var(--muted);font-size:13.5px;margin-bottom:6px}
       <div class="ex-row">
         <span class="tn">T-8 · $1/$2 NLH</span>
         <span>74</span>
-        <span style="color:var(--blue)">81</span>
-        <span style="color:var(--gold)">+2</span>
-        <span><span class="rhi">55.2</span> &nbsp;<span class="ex-badge ba">Recommended for you</span></span>
+        <span style="color:var(--blue)">93.3</span>
+        <span style="color:var(--gold)">+3.3</span>
+        <span><span class="rhi">60.5</span> &nbsp;<span class="ex-badge ba">Recommended for you</span></span>
       </div>
       <div class="ex-row">
-        <span class="tn">T-14 · $1/$2 NLH</span>
+        <span class="tn">T-14 · $2/$5 NLH</span>
         <span>58</span>
-        <span style="color:var(--gold)">67</span>
-        <span>0</span>
-        <span><span class="rhi">44.2</span> &nbsp;<span class="ex-badge bb">Good fit</span></span>
+        <span style="color:var(--gold)">93.0</span>
+        <span style="color:var(--gold)">+5.0</span>
+        <span><span class="rhi">56.1</span> &nbsp;<span class="ex-badge bb">Good fit</span></span>
       </div>
       <div class="ex-row">
-        <span class="tn">T-22 · $1/$2 NLH</span>
+        <span class="tn">T-22 · $3/$6 NLH</span>
         <span>22</span>
-        <span style="color:var(--amber)">38</span>
-        <span style="color:var(--red)">−8</span>
-        <span><span class="rlo">13.0</span> &nbsp;<span class="ex-badge bc">Available</span> <small style="color:var(--dim);font-size:10px">(not promoted)</small></span>
+        <span style="color:var(--amber)">38.0</span>
+        <span style="color:var(--gold)">+15.0</span>
+        <span><span class="rlo">26.3</span> &nbsp;<span class="ex-badge bc">Available</span> <small style="color:var(--dim);font-size:10px">(not promoted)</small></span>
       </div>
     </div>
   </div>
 
   <p style="font-size:11.5px;color:var(--dim);margin-top:-4px;padding:0 2px">
-    T-8: 0.30×74 + 0.40×81 + 0.30×2 = 22.2 + 32.4 + 0.6 = <b style="color:var(--gold)">55.2</b> &nbsp;·&nbsp;
-    T-14: 17.4 + 26.8 + 0 = <b style="color:var(--gold2)">44.2</b> &nbsp;·&nbsp;
-    T-22: 6.6 + 15.2 − 2.4 = <b style="color:var(--dim)">13.0</b>
+    T-8: 0.30×74 + 0.40×93.3 + 0.30×3.3 = 22.2 + 37.3 + 1.0 = <b style="color:var(--gold)">60.5</b> &nbsp;·&nbsp;
+    T-14: 17.4 + 37.2 + 1.5 = <b style="color:var(--gold2)">56.1</b> &nbsp;·&nbsp;
+    T-22: 6.6 + 15.2 + 4.5 = <b style="color:var(--dim)">26.3</b>
   </p>
+  <p style="font-size:11px;color:var(--dim);padding:0 2px">
+    <b>Note:</b> Health values are the computed engine output (the Health champion is anchored to the one pinned value, T-22 = 38; healthy tables compute to ~90+). T-22's ΔHealth is <i>positive</i> (the new player dilutes predation) — it stays last because of low Fit + low Health, and is kept off the new-player lobby by <b>seating-risk = HIGH</b>, not by ΔHealth. The badge <i>ordering</i> is what matters and it holds.</p>
 
   <div class="callout" style="margin-top:18px">
     <b>Why the policy is not ML:</b> A routing model trained end-to-end would be a black box — impossible to audit, impossible to explain to a regulator, and impossible to override safely. The weights are <em>calibrated</em> using eval-lab outcomes but the formula is human-designed and frozen. Any operator can inspect it and trace any recommendation to specific factor values.
@@ -1137,7 +1141,7 @@ ol.ol li{color:var(--muted);font-size:13.5px;margin-bottom:6px}
       <span class="chev">▶</span>
     </div>
     <div class="case-body">
-      <p class="p">P-104 (new, 2 days registered, 14 lifetime hands, vpip 0.62) is routed to T-22 in the Standard path. T-22 is short-handed (3/6) with P-176 and P-177 — both aggressive_predatory. FairPlay routes P-104 to T-8 instead. This is a <b>table health</b> case, not integrity — the aggressive players are not cheating, they are simply dangerous for a new player.</p>
+      <p class="p">P-104 (new, 4 days registered, 31 lifetime hands, vpip 0.35) is routed to T-22 in the Standard path. T-22 is short-handed (3/6) with P-176 and P-177 — both aggressive_predatory. FairPlay routes P-104 to T-8 instead. This is a <b>table health</b> case, not integrity — the aggressive players are not cheating, they are simply dangerous for a new player.</p>
       <div class="sig-grid">
         <div class="sig-it"><div class="si-lbl">Health(T-22)</div><div class="si-val" style="color:var(--red)">38</div><div class="si-note">Beginner-unfriendly band</div></div>
         <div class="sig-it"><div class="si-lbl">New-player risk</div><div class="si-val" style="color:var(--red)">HIGH</div><div class="si-note">2 aggressive_predatory seated</div></div>
@@ -1497,8 +1501,8 @@ function toggleCase(hd){
      desc:'Shared device group. Mocked hardware/browser fingerprint shared between Account A and Account B only.',
      props:['device_group_id: DG-001','member_count: 2','members: [P-198, P-199]']},
     {id:'gn_tbl',type:'Table',color:'#2ee8cc',label:'T-11 ($1/$2 NLH)',x:420,y:175,
-     desc:'Active table. Health(T-11)=44 (Fragile). CL-001 cluster is seated here. 5/6 seats occupied. P_clus elevated.',
-     props:['table_id: T-11','health: 44 (Fragile)','seated: 5/6','P_clus: HIGH','stakes: $1/$2']},
+     desc:'Active table. Health(T-11)=43.9 (Beginner-Unfriendly). CL-001 members P-198/P-199 seated here. 4/6 seats occupied. P_clus elevated; integrity_candidate flag set.',
+     props:['table_id: T-11','health: 43.9 (Beginner-Unfriendly)','seated: 4/6','P_clus: 15/30','stakes: $2/$5']},
     {id:'gn_seat',type:'Seating',color:'#c9a84c',label:'SE-001 (C → T-11)',x:370,y:350,
      desc:'Event node. P-200 (Account C) requests the open seat at T-11 at hour 2. FairPlay holds this seat pending pit-boss review.',
      props:['player: P-200','table: T-11','hour: 2','fairplay_action: hold_for_review']},

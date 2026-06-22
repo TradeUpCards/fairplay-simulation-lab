@@ -47,9 +47,10 @@ shared_device_household, bot_like, healthy_anchor). All residual error is the
 recreational↔regular boundary. This is the baseline the ML challenger must beat
 to be promoted.
 
-**Open decision — D7.** The proposed canonical list is *9* archetypes and omits
-`bot_like`, but kickoff §8 pins `P-221 = bot_like` as acceptance and Eval G
-needs the label. The champion emits **10** labels. → P3 to ratify with P2.
+**D7 (LOCKED 2026-06-22).** The canonical set is **10** archetypes — the nine
+behavioral/structural types plus `bot_like` (kickoff §8 pins `P-221 = bot_like`
+and Eval G needs it). `bot_like` routes to its own account-level bot review
+queue, kept out of the coordinated-cluster path. See `docs/DECISIONS.md` D7.
 
 ---
 
