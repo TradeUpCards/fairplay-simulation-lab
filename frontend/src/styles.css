@@ -196,8 +196,8 @@ body {
 /* responsive grid — at most 3 columns */
 .is-player .lobby-list {
   grid-template-columns: repeat(3, 1fr);
-  gap: 2rem 1.5rem;
-  margin-top: 1.5rem;
+  gap: 2.75rem 1.5rem;
+  margin-top: 1.75rem;
 }
 
 @media (max-width: 880px) {
@@ -260,7 +260,7 @@ body {
   position: relative;
   z-index: 1;
   aspect-ratio: 3 / 2;
-  border-radius: 14px 14px 0 0;
+  border-radius: 14px;
   overflow: hidden;
   background: #0c0a07;
 }
@@ -304,46 +304,70 @@ body {
   opacity: 1;
 }
 
-.is-player .table-stage-id {
-  position: absolute;
-  left: 0.7rem;
-  bottom: 0.55rem;
-  z-index: 2;
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #f6efe2;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
-}
-
-.is-player .table-stage .lobby-badge {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  z-index: 2;
-}
-
-/* info plinth under the table */
-.is-player .lobby-card-body {
-  position: relative;
-  z-index: 1;
-  background: rgba(18, 14, 9, 0.72);
-  border: 1px solid #2a2218;
-  border-top: none;
-  border-radius: 0 0 14px 14px;
-  padding: 0.7rem 0.85rem 0.8rem;
-}
-
+/* table details, laid over the felt */
 .is-player .lobby-facts {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 78%;
   margin: 0;
-  color: #b8ab95;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem 1.25rem;
+  text-align: center;
+}
+
+.is-player .lobby-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
 }
 
 .is-player .lobby-facts dt {
-  color: #7d735f;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(228, 240, 224, 0.55);
 }
 
 .is-player .lobby-facts dd {
-  color: #d8cdb8;
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #f3efe4;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* badge straddles the top rail — half on the table, half above */
+.is-player .lobby-badge {
+  position: absolute;
+  z-index: 3;
+  top: 6%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+/* engraved table-number plaque on the bottom rail */
+.is-player .table-plaque {
+  position: absolute;
+  z-index: 3;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.18rem 0.7rem;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #e0bd76, #b78a3c);
+  color: #2c1f08;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .is-player .rb-empty {

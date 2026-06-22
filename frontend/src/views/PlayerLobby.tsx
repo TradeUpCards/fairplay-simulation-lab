@@ -89,10 +89,6 @@ function LobbyCard({ table }: { table: LobbyTable }) {
     <li className="lobby-card">
       <div className="table-stage">
         <img className="table-art" src={pokerTable} alt="" aria-hidden="true" />
-        <span className={`lobby-badge ${BADGE_TONE[table.badge]}`}>{table.badge_label}</span>
-        <span className="table-stage-id">{table.table_id}</span>
-      </div>
-      <div className="lobby-card-body">
         <dl className="lobby-facts">
           <div>
             <dt>Stakes</dt>
@@ -114,6 +110,8 @@ function LobbyCard({ table }: { table: LobbyTable }) {
           </div>
         </dl>
       </div>
+      <span className={`lobby-badge ${BADGE_TONE[table.badge]}`}>{table.badge_label}</span>
+      <span className="table-plaque">{table.table_id}</span>
     </li>
   )
 }
