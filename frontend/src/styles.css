@@ -802,6 +802,20 @@ button:hover {
   opacity: 0.92;
 }
 
+/* Centered brand watermark — sits above the felt but below the label + seats.
+   Tune --watermark-opacity for the final art (black mark on a dark felt is
+   intentionally faint). */
+.seat-ring-watermark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 38%;
+  opacity: var(--watermark-opacity, 0.1);
+  pointer-events: none;
+  user-select: none;
+}
+
 .seat-ring-center {
   position: absolute;
   left: 50%;

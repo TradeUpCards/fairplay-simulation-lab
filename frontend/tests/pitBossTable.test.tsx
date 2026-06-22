@@ -80,6 +80,12 @@ describe('PitBossTableView — seat ring', () => {
     expect(container.querySelectorAll('[data-ptl-tone="pending"]').length).toBe(4)
     expect(screen.getByTestId('ptl-legend').textContent).toMatch(/pending/i)
   })
+
+  it('renders a centered brand watermark on the felt', async () => {
+    const b = await bundle()
+    render(<PitBossTableView tableId="T-11" {...b} />)
+    expect(screen.getByTestId('table-watermark')).toBeTruthy()
+  })
 })
 
 describe('PitBossTableView — integrity case', () => {
