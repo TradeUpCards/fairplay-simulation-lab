@@ -45,7 +45,7 @@ export function TableDrawer({
     >
       <button
         type="button"
-        className="absolute right-[1.1rem] top-4 z-2 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-[rgba(0,0,0,0.45)] p-0 text-[0.85rem] leading-none text-text hover:border-brass hover:text-brass"
+        className="absolute right-5 top-5 z-2 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-[rgba(0,0,0,0.45)] p-0 text-[0.85rem] leading-none text-text hover:border-brass hover:text-brass"
         onClick={onClose}
         aria-label="close detail"
       >

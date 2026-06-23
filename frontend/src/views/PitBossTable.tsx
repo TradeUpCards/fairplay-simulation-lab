@@ -99,7 +99,7 @@ export function PitBossTableView({
         <span className="font-mono text-2xl font-bold tracking-[0.04em] text-brass">{table.table_id}</span>
         <span className="text-base text-text">{table.game_type}</span>
         <span className="text-sm text-muted">{table.stakes}</span>
-        <span className="ml-auto flex items-center gap-2">
+        <span className="ml-auto mr-15 flex items-center gap-2">
           {healthRow?.integrity_candidate && (
             <span className="text-xl text-[#ff8a8a]" title="surface to review" aria-label="surface to review">
               ⚑
@@ -116,7 +116,7 @@ export function PitBossTableView({
       </p>
 
       {healthRow && (
-        <div className="mb-4 max-w-[420px]">
+        <div className="mb-4 w-1/2">
           <TermBars terms={healthRow.terms} />
         </div>
       )}
