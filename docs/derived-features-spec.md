@@ -30,8 +30,21 @@ No new fields required — just the same emission over all 122 players.
 
 ## Requirements
 
-- **Volume:** **N ≥ 200 hands per player.** (Downstream features include trailing
-  windows up to 200 hands; fewer than that leaves them undefined.)
+- **Volume — scale to the player, no flat floor.** Generate
+  **`min(lifetime_hands, CAP)`** hands per player, with `CAP ≈ 300–500` (enough
+  headroom for the longest downstream trailing window). Rationale:
+  - **No floor.** `lifetime_hands` varies enormously by archetype — `new` players
+    have a *median of ~29* lifetime hands (max ~58), grinders have *~190k*. A flat
+    "≥200" would falsify the low-volume archetypes (a `new` player with 200 hands
+    isn't "new"). Low-volume players keep their true short history.
+  - **Cap the high end.** Don't generate full careers — 12 grinders × ~190k hands
+    is millions of hands for no benefit. A bounded *recent* window per player is
+    enough and realistic (you observe recent play, not a months-long career).
+  - **Short histories are fine, not a gap.** A trailing window longer than a
+    player's available hands is simply **undefined → emit `null`/NaN**; downstream
+    handles it as missing. **Do not fabricate extra sessions to hit a number.**
+    (Multiple sessions/days of history *do* accumulate naturally for high-volume
+    archetypes — that's expected; just don't force it on casuals.)
 - **Seeding:** seed each player's run by their **archetype**, and make the whole
   run **deterministic / reproducible** (per-player seed) — CLAUDE.md hard rule.
 - **Join key:** emit strictly by `P-*` id; no `SIM-*` ids in the output.
