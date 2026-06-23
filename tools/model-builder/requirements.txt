@@ -1,0 +1,10 @@
+# FairPlay Model Builder (Dash + AG Grid) — internal P3/dev tool.
+#   pip install -r tools/model-builder/requirements.txt
+# (On Windows without admin: add --user.)
+dash>=2.16
+dash-ag-grid>=31
+plotly>=5.18
+# modeling engine (shared with ml/):
+scikit-learn>=1.4
+pandas>=2.0
+numpy>=1.26
