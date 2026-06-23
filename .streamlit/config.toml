@@ -1,0 +1,12 @@
+# Theme for the FairPlay Model Builder (ml/scorecard_app.py).
+# Dark, dense, data-grid feel to echo a modeling IDE.
+[theme]
+base = "dark"
+primaryColor = "#c9a84c"
+backgroundColor = "#081109"
+secondaryBackgroundColor = "#0e1c12"
+textColor = "#d8ecda"
+font = "sans serif"
+
+[server]
+runOnSave = true

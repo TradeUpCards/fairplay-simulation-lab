@@ -1,24 +1,29 @@
-"""Interactive OvR scorecard MODEL BUILDER (Streamlit).
+"""FairPlay Model Builder — a FICO-Model-Builder-style scorecard workbench (Streamlit).
 
-A guided, stage-by-stage workbench for building the one-vs-rest classification
-challenger — modeled on the FICO Model Builder scorecard workflow:
+Builds the one-vs-rest classification challenger the way FICO Model Builder
+builds a credit scorecard, recreated within Streamlit's constraints:
 
-    1 Target → 2 Binning → 3 WoE → 4 IV & selection → 5 Fit → 6 Points
-    → 7 Validation → 8 Combine (one-vs-rest)
+  • Project-tree sidebar (datasets / models / binning libraries / reports)
+  • Data Set Editor — binary good/bad target mapping + build the model
+  • Scorecard Editor — selected-variable list + relative-importance chart
+  • Interactive Binner — per-variable WoE plot + editable (coarse-class) bins
+  • Reports — Performance (KS/ROC vs Champion), Training, Fit-Odds
+  • Combine (OvR) — assemble the 10 scorecards into the classifier
+  • Console / Jobs — a running log of modeling actions
 
-Each stage explains what it does, shows the artifact for that step on the real
-122-player data, and carries your choices forward. Stage 8 assembles the 10
-per-class scorecards into the full classifier and scores it.
+Streamlit is a web-app framework, not a dockable desktop IDE, so the panes are
+approximated with a tree sidebar + tabbed main area + a console expander; the
+*workflow* matches FICO even if the window chrome can't.
 
-Run it:
+Run:
     pip install -r ml/requirements.txt
     python -m streamlit run ml/scorecard_app.py
     # use `python -m streamlit` (not bare `streamlit`) — the console script is
     # often not on PATH on Windows. No virtualenv required. Opens localhost:8501.
 
-This is a *workbench* for building/exploring the challenger — not part of the
-deterministic demo path. The frozen panels (docs/scorecard.html,
-docs/champion-vs-challenger.html) are the read-only snapshots.
+A workbench for building/exploring the challenger — not part of the deterministic
+demo path. Frozen read-only snapshots live in docs/scorecard.html and
+docs/champion-vs-challenger.html.
 """
 
 from __future__ import annotations
@@ -27,7 +32,6 @@ import json
 import sys
 from pathlib import Path
 
-# Ensure the repo root is importable so `ml.*` resolves however the app is launched.
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -48,10 +52,7 @@ from ml.scorecard import woe_iv, iv_strength, _ks
 ARCHETYPES = ["new", "recreational", "regular", "grinder", "aggressive_predatory",
               "promo_hunter", "shared_device_household", "cluster_member",
               "healthy_anchor", "bot_like"]
-
-STEPS = ["Target", "Binning", "Weight of Evidence", "Info Value & selection",
-         "Fit logistic", "Scale to points", "Validation", "Combine (OvR)"]
-STEP_LABELS = [f"{i+1}. {s}" for i, s in enumerate(STEPS)]
+DEFAULT_BINS = 4
 
 
 def truth_of(pid: str) -> str:
@@ -74,263 +75,287 @@ def load() -> pd.DataFrame:
     return df
 
 
-@st.cache_data
-def feature_tables(target: str, bins: int):
-    """Per-feature WoE/IV table + row-WoE for the binary 'is target' problem."""
-    df = load()
+def divergence(prob: np.ndarray, y: np.ndarray) -> float:
+    """Separation between Good/Bad score distributions (FICO 'divergence')."""
+    g, b = prob[y == 1], prob[y == 0]
+    if len(g) < 2 or len(b) < 2:
+        return float("nan")
+    return float((g.mean() - b.mean()) ** 2 / (0.5 * (g.var() + b.var()) + 1e-9))
+
+
+def build_model(df: pd.DataFrame, target: str, var_bins: dict[str, int],
+                selected: list[str], C: float, balanced: bool) -> dict:
+    """Fit a WoE-scorecard for the binary 'is target' problem on the selected
+    variables with their per-variable bin counts."""
     y = (df["archetype"] == target).astype(int)
-    out = {}
-    for f in FEATURES:
-        g, iv, row = woe_iv(df[f], y, bins=bins)
-        out[f] = {"table": g, "iv": iv, "row_woe": row}
-    return out, y
-
-
-def fit_card(target, bins, feats, C, balanced):
-    tables, y = feature_tables(target, bins)
-    woe_X = pd.DataFrame({f: tables[f]["row_woe"] for f in feats})
+    cols, ivs, tables = {}, {}, {}
+    for f in selected:
+        g, iv, row = woe_iv(df[f], y, bins=var_bins.get(f, DEFAULT_BINS))
+        cols[f], ivs[f], tables[f] = row, iv, g
+    X = pd.DataFrame(cols)
     model = LogisticRegression(max_iter=2000, C=C,
                                class_weight="balanced" if balanced else None)
-    model.fit(woe_X.to_numpy(), y.to_numpy())
-    prob = model.predict_proba(woe_X.to_numpy())[:, 1]
-    return tables, y, model, prob, dict(zip(feats, model.coef_[0]))
+    model.fit(X.to_numpy(), y.to_numpy())
+    prob = model.predict_proba(X.to_numpy())[:, 1]
+    yv = y.to_numpy()
+    return dict(model=model, prob=prob, y=yv, ivs=ivs, tables=tables,
+                coef=dict(zip(selected, model.coef_[0])),
+                intercept=float(model.intercept_[0]),
+                ks=_ks(yv, prob) if y.sum() >= 2 else float("nan"),
+                auc=roc_auc_score(yv, prob) if y.sum() >= 2 else float("nan"),
+                divergence=divergence(prob, yv), n_pos=int(y.sum()))
 
 
-# ── session state ────────────────────────────────────────────────────────────
-st.set_page_config(page_title="OvR Scorecard Model Builder", page_icon="◆", layout="wide")
+@st.cache_data
+def champion(target: str) -> dict:
+    """Champion baseline = the auto-built default model (all variables, 4 bins).
+    The user's edits become the Challenger, compared against this."""
+    return build_model(load(), target, {}, list(FEATURES), 1.0, True)
+
+
+def log(msg: str) -> None:
+    st.session_state.jobs.insert(0, msg)
+
+
+# ── state ────────────────────────────────────────────────────────────────────
+st.set_page_config(page_title="FairPlay Model Builder", page_icon="◆", layout="wide")
 ss = st.session_state
-ss.setdefault("step", 0)
 ss.setdefault("target", "grinder")
-ss.setdefault("bins", 4)
-ss.setdefault("kept", list(FEATURES))
+ss.setdefault("model_name", "grinder_GB_scorecard")
+ss.setdefault("selected", list(FEATURES))
+ss.setdefault("var_bins", {})         # per-variable bin-count overrides
 ss.setdefault("C", 1.0)
 ss.setdefault("balanced", True)
 ss.setdefault("pdo", 20)
-ss.setdefault("nav_radio", STEP_LABELS[0])
-
-
-def goto(i: int) -> None:
-    """Single source of truth for the active stage — keeps the jump radio in sync
-    so it never fights the Back/Next buttons."""
-    i = max(0, min(len(STEPS) - 1, i))
-    ss.step = i
-    ss.nav_radio = STEP_LABELS[i]
-
-
-def on_jump() -> None:
-    ss.step = STEP_LABELS.index(ss.nav_radio)
+ss.setdefault("jobs", ["[session started] workspace: fairplay-archetypes"])
 
 df = load()
-N = len(STEPS)
+
+# ── sidebar: project tree + model config ─────────────────────────────────────
+with st.sidebar:
+    st.markdown("### ◆ FairPlay Model Builder")
+    sel_n, tot_n = len(ss.selected), len(FEATURES)
+    st.markdown(
+        f"""<div style='font-family:monospace;font-size:12px;line-height:1.9;color:#7a9c80'>
+        📁 <b style='color:#c9a84c'>fairplay-archetypes</b><br>
+        &nbsp;├─ 📁 datasets<br>
+        &nbsp;│&nbsp;&nbsp;└─ 📄 players <span style='color:#3a553f'>(122)</span><br>
+        &nbsp;├─ 📁 models<br>
+        &nbsp;│&nbsp;&nbsp;└─ 📄 <b style='color:#d8ecda'>{ss.model_name}</b><br>
+        &nbsp;├─ 📁 binning-libraries<br>
+        &nbsp;│&nbsp;&nbsp;└─ 📄 {ss.target} <span style='color:#3a553f'>({sel_n}/{tot_n} vars)</span><br>
+        &nbsp;└─ 📁 reports
+        </div>""", unsafe_allow_html=True)
+    st.divider()
+    st.caption("MODEL CONFIG")
+    new_target = st.selectbox("Target class (one-vs-rest)", ARCHETYPES,
+                              index=ARCHETYPES.index(ss.target))
+    if new_target != ss.target:
+        ss.target = new_target
+        ss.model_name = f"{new_target}_GB_scorecard"
+        ss.selected = list(FEATURES)
+        ss.var_bins = {}
+        log(f"[target] switched to '{new_target}' — model reset")
+        st.rerun()
+    ss.model_name = st.text_input("Model name", ss.model_name)
+    ss.C = st.select_slider("Regularization C", [0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0], value=ss.C)
+    ss.balanced = st.checkbox("class_weight = balanced", value=ss.balanced)
+    ss.pdo = st.slider("PDO (points to double odds)", 10, 40, ss.pdo, step=5)
+    st.divider()
+    st.caption("⚠ Synthetic data: classes are near-separable, so IV/KS are inflated "
+               "(real-world IV .1–.5, KS .3–.6).")
+
+target = ss.target
+y_full = (df["archetype"] == target).astype(int)
+n_pos = int(y_full.sum())
+
+# Build the current (Challenger) model + the Champion baseline.
+chal = build_model(df, target, ss.var_bins, ss.selected, ss.C, ss.balanced) if ss.selected else None
+champ = champion(target)
 factor = ss.pdo / np.log(2)
 
+st.markdown(f"#### Scorecard Model Editor — *{ss.model_name}*  "
+            f"<span style='color:#7a9c80;font-size:13px'>· target `{target}` (Good/Bad) · "
+            f"binary one-vs-rest</span>", unsafe_allow_html=True)
 
-def stepper_html(active: int) -> str:
-    cells = ""
-    for i, name in enumerate(STEPS):
-        done = i < active
-        cur = i == active
-        bg = "#1f3c25" if cur else ("#0e1c12" if done else "transparent")
-        col = "#c9a84c" if cur else ("#3fcc6a" if done else "#3a553f")
-        bd = "#c9a84c" if cur else "#182d1c"
-        mark = "✓" if done else str(i + 1)
-        cells += (f'<div style="flex:1;text-align:center;padding:6px 4px;border-bottom:2px solid {bd};'
-                  f'background:{bg}">'
-                  f'<div style="font-family:monospace;font-size:10px;color:{col};font-weight:700">{mark}</div>'
-                  f'<div style="font-size:10px;color:{col};line-height:1.25">{name}</div></div>')
-    return f'<div style="display:flex;gap:3px;margin:4px 0 18px">{cells}</div>'
+tabs = st.tabs(["📊 Data Set Editor", "🗂 Scorecard Editor", "🔬 Interactive Binner",
+                "📈 Reports", "🧩 Combine (OvR)"])
 
-
-# ── header + stepper ─────────────────────────────────────────────────────────
-st.markdown("### ◆ OvR Scorecard Model Builder")
-st.caption("Build the classification challenger the FICO Model-Builder way — one stage at a time, "
-           "on the real 122-player data. Target: **one-vs-rest** logistic scorecards.")
-st.markdown(stepper_html(ss.step), unsafe_allow_html=True)
-
-with st.sidebar:
-    st.subheader("Current model")
-    st.write(f"**Target:** `{ss.target}`")
-    st.write(f"**Bins:** {ss.bins}  ·  **C:** {ss.C}  ·  **PDO:** {ss.pdo}")
-    st.write(f"**Characteristics:** {len(ss.kept)}/{len(FEATURES)}")
-    st.divider()
-    st.radio("Jump to stage", STEP_LABELS, key="nav_radio", on_change=on_jump)
-    st.divider()
-    st.caption("⚠ Synthetic data: classes are near-perfectly separable, so IVs blow past the "
-               "textbook scale (weak .02–.1 · strong .3–.5) and KS hits ~1.0. On real data expect "
-               "IV .1–.5, KS .3–.6.")
-
-step = ss.step
-y = (df["archetype"] == ss.target).astype(int)
-n_pos = int(y.sum())
-
-# ── STEP 1 · TARGET ──────────────────────────────────────────────────────────
-if step == 0:
-    st.subheader("1 · Define the target (score formula)")
-    st.write("One-vs-rest builds **one yes/no model per archetype**. Pick the class to model — "
-             "every player is either that class (**good = 1**) or not (**bad = 0**). Repeat for all "
-             "10 in the final stage.")
-    ss.target = st.selectbox("Target archetype", ARCHETYPES, index=ARCHETYPES.index(ss.target))
-    y = (df["archetype"] == ss.target).astype(int)
-    n_pos = int(y.sum())
+# ── TAB 1 · DATA SET EDITOR ──────────────────────────────────────────────────
+with tabs[0]:
+    st.markdown("**Binary target mapping** — one-vs-rest maps the 10-way archetype label to a "
+                f"`Good/Bad` target: **Good = is `{target}`**, **Bad = every other archetype**.")
     c1, c2, c3 = st.columns(3)
-    c1.metric("in-class (good = 1)", n_pos)
-    c2.metric("rest (bad = 0)", len(df) - n_pos)
+    c1.metric("Good (in-class)", n_pos)
+    c2.metric("Bad (rest)", len(df) - n_pos)
     c3.metric("base rate", f"{n_pos/len(df):.1%}")
     if n_pos < 4:
-        st.warning(f"Only {n_pos} example(s) of `{ss.target}` — a scorecard on this class is "
-                   "unreliable (you can't bin 1 positive). Real-world classes need more cases.")
-    st.altair_chart(alt.Chart(pd.DataFrame(
-        {"label": ["in-class", "rest"], "n": [n_pos, len(df) - n_pos]})).mark_bar().encode(
-        x="n:Q", y=alt.Y("label:N", sort="-x"),
-        color=alt.Color("label:N", legend=None)).properties(height=90), width="stretch")
+        st.warning(f"Only {n_pos} Good case(s) for '{target}' — binning/scorecard is unreliable "
+                   "(can't bin one positive). Real classes need more cases.")
+    st.altair_chart(alt.Chart(pd.DataFrame({"class": ["Good (in-class)", "Bad (rest)"],
+                    "n": [n_pos, len(df) - n_pos]})).mark_bar().encode(
+        x="n:Q", y=alt.Y("class:N", sort="-x"),
+        color=alt.Color("class:N", legend=None)).properties(height=110), width="stretch")
+    st.caption("Candidate predictors (binning library) — the 9 behavioural features. The auto-built "
+               "Champion uses every variable at 4 bins; edit in the Scorecard Editor and Interactive "
+               "Binner to build your Challenger.")
+    st.dataframe(pd.DataFrame({"predictor": FEATURES,
+                 "in model": [f in ss.selected for f in FEATURES],
+                 "bins": [ss.var_bins.get(f, DEFAULT_BINS) for f in FEATURES]}),
+                 hide_index=True, width="stretch")
 
-# ── STEP 2 · BINNING ─────────────────────────────────────────────────────────
-elif step == 1:
-    st.subheader("2 · Bin the characteristics (fine classing)")
-    st.write("Each numeric characteristic is cut into ranges (**bins**). Binning tames outliers and "
-             "lets each range carry its own risk. More bins = finer detail but less stability.")
-    ss.bins = st.slider("Number of bins per characteristic", 2, 6, ss.bins)
-    tables, _ = feature_tables(ss.target, ss.bins)
-    pick = st.selectbox("Inspect a characteristic", FEATURES,
-                        index=FEATURES.index("aggression_factor"))
-    g = tables[pick]["table"].reset_index()
-    g = g.rename(columns={g.columns[0]: "bin"})
-    show = g[["bin", "n", "pos", "neg"]].copy()
-    show["bin"] = show["bin"].astype(str)
-    show = show.rename(columns={"pos": "in-class", "neg": "rest"})
-    st.dataframe(show, hide_index=True, width="stretch")
-    st.altair_chart(alt.Chart(show).transform_fold(["in-class", "rest"]).mark_bar().encode(
-        x=alt.X("bin:N", sort=None), y="value:Q", color="key:N").properties(height=200),
-        width="stretch")
+# ── TAB 2 · SCORECARD EDITOR ─────────────────────────────────────────────────
+with tabs[1]:
+    st.markdown("**Selected variables & relative importance** — each predictor's marginal "
+                "contribution (Information Value) to the model's total separation. Toggle variables "
+                "to do stepwise selection.")
+    all_iv = {f: woe_iv(df[f], y_full, bins=ss.var_bins.get(f, DEFAULT_BINS))[1] for f in FEATURES}
+    total_iv = sum(all_iv[f] for f in ss.selected) if ss.selected else 0.0
+    new_sel = st.multiselect("Variables in the model (stepwise selection)", FEATURES, default=ss.selected)
+    if new_sel != ss.selected:
+        ss.selected = new_sel
+        log(f"[stepwise] model now uses {len(new_sel)} variable(s)")
+        st.rerun()
 
-# ── STEP 3 · WOE ─────────────────────────────────────────────────────────────
-elif step == 2:
-    st.subheader("3 · Weight of Evidence (WoE)")
-    st.write("Replace each bin with a single number: **WoE = ln( %in-class / %rest )**. Positive = "
-             "the range leans toward the class; negative = away. This is the binary-native transform "
-             "one-vs-rest is built for.")
-    tables, _ = feature_tables(ss.target, ss.bins)
-    pick = st.selectbox("Characteristic", FEATURES, index=FEATURES.index("aggression_factor"))
-    g = tables[pick]["table"].reset_index()
-    g = g.rename(columns={g.columns[0]: "bin"})
-    g["bin"] = g["bin"].astype(str)
-    g["WoE"] = g["woe"].round(2)
-    st.altair_chart(alt.Chart(g).mark_bar().encode(
-        x=alt.X("bin:N", sort=None), y="WoE:Q",
-        color=alt.condition(alt.datum.WoE > 0, alt.value("#3fcc6a"), alt.value("#e05c4a")),
-        tooltip=["bin", "n", "WoE"]).properties(height=220,
-        title=f"WoE by bin · {pick}"), width="stretch")
-    st.dataframe(g[["bin", "n", "WoE"]], hide_index=True, width="stretch")
-
-# ── STEP 4 · IV & SELECTION ──────────────────────────────────────────────────
-elif step == 3:
-    st.subheader("4 · Information Value & characteristic selection")
-    st.write("**IV = Σ (%in-class − %rest)·WoE** scores how well a whole characteristic separates the "
-             "class. Rank by IV, keep the strong ones, drop dead weight. Selected characteristics go "
-             "into the model.")
-    tables, _ = feature_tables(ss.target, ss.bins)
-    iv_df = pd.DataFrame({"characteristic": FEATURES,
-                          "IV": [round(tables[f]["iv"], 3) for f in FEATURES]}
-                         ).sort_values("IV", ascending=False)
-    iv_df["strength"] = iv_df["IV"].map(iv_strength)
-    st.altair_chart(alt.Chart(iv_df).mark_bar().encode(
-        x="IV:Q", y=alt.Y("characteristic:N", sort="-x"),
-        color=alt.Color("strength:N", legend=None),
-        tooltip=["characteristic", "IV", "strength"]).properties(height=30 * len(iv_df)),
-        width="stretch")
-    ss.kept = st.multiselect("Characteristics to keep in the model", FEATURES,
-                             default=[f for f in iv_df["characteristic"] if f in ss.kept])
-    st.dataframe(iv_df, hide_index=True, width="stretch")
-
-# ── STEP 5 · FIT ─────────────────────────────────────────────────────────────
-elif step == 4:
-    st.subheader("5 · Fit the logistic regression")
-    st.write("Fit a logistic model on the **WoE-transformed** selected characteristics. The "
-             "coefficients say how much each characteristic moves the score. `C` is regularization "
-             "(smaller = simpler); balanced class-weights help the rarer in-class group.")
-    if not ss.kept:
-        st.warning("No characteristics selected — go back to stage 4.")
-        st.stop()
-    c1, c2 = st.columns(2)
-    ss.C = c1.select_slider("Regularization C", [0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0], value=ss.C)
-    ss.balanced = c2.checkbox("class_weight = balanced", value=ss.balanced)
-    _, _, model, prob, coef = fit_card(ss.target, ss.bins, ss.kept, ss.C, ss.balanced)
-    cf = (pd.DataFrame({"characteristic": list(coef), "WoE coef": [round(v, 3) for v in coef.values()]})
-          .sort_values("WoE coef", key=lambda s: s.abs(), ascending=False))
-    st.altair_chart(alt.Chart(cf).mark_bar().encode(
-        x="WoE coef:Q", y=alt.Y("characteristic:N", sort="-x"),
-        color=alt.condition(alt.datum["WoE coef"] > 0, alt.value("#3fcc6a"), alt.value("#e05c4a")),
-        tooltip=["characteristic", "WoE coef"]).properties(height=30 * len(cf)), width="stretch")
-    st.dataframe(cf, hide_index=True, width="stretch")
-
-# ── STEP 6 · POINTS ──────────────────────────────────────────────────────────
-elif step == 5:
-    st.subheader("6 · Scale to points (the scorecard)")
-    st.write("Turn the fit into an auditable **points table**: `points = coef × WoE × factor`, where "
-             "`factor = PDO / ln 2`. Every bin gets integer points; **+ pushes toward the class**. "
-             "A player's score is the sum of their bins' points.")
-    if not ss.kept:
-        st.warning("No characteristics selected — go back to stage 4.")
-        st.stop()
-    ss.pdo = st.slider("PDO (points to double the odds)", 10, 40, ss.pdo, step=5)
-    factor = ss.pdo / np.log(2)
-    tables, _, model, prob, coef = fit_card(ss.target, ss.bins, ss.kept, ss.C, ss.balanced)
-    rows = []
-    for f in ss.kept:
-        g = tables[f]["table"]
-        for interval, r in g.iterrows():
-            rows.append({"characteristic": f, "bin": str(interval), "n": int(r["n"]),
-                         "WoE": round(float(r["woe"]), 2),
-                         "points": int(round(factor * coef[f] * float(r["woe"])))})
-    sc = pd.DataFrame(rows)
-    st.dataframe(sc, hide_index=True, width="stretch",
-                 column_config={"points": st.column_config.NumberColumn("points", format="%+d")})
-    st.download_button("⬇ Export scorecard (JSON)",
-                       json.dumps({"target": ss.target, "pdo": ss.pdo,
-                                   "config": {"bins": ss.bins, "C": ss.C,
-                                              "balanced": ss.balanced, "characteristics": ss.kept},
-                                   "scorecard": rows}, indent=2),
-                       file_name=f"scorecard_{ss.target}.json", mime="application/json")
-
-# ── STEP 7 · VALIDATION ──────────────────────────────────────────────────────
-elif step == 6:
-    st.subheader("7 · Validate (separation: KS · AUC · ROC)")
-    st.write("How cleanly does the scorecard separate in-class from rest? **KS** = biggest gap between "
-             "the two score distributions; **AUC** = ranking quality. (Development sample — in-sample.)")
-    if not ss.kept:
-        st.warning("No characteristics selected — go back to stage 4.")
-        st.stop()
-    _, yv, model, prob, _ = fit_card(ss.target, ss.bins, ss.kept, ss.C, ss.balanced)
-    yv = yv.to_numpy()
-    if n_pos >= 2:
-        c1, c2, c3 = st.columns(3)
-        c1.metric("KS", f"{_ks(yv, prob):.2f}")
-        c2.metric("AUC", f"{roc_auc_score(yv, prob):.2f}")
-        c3.metric("in-class / total", f"{n_pos}/{len(df)}")
-        fpr, tpr, _ = roc_curve(yv, prob)
-        st.altair_chart(alt.Chart(pd.DataFrame({"FPR": fpr, "TPR": tpr})).mark_line(
-            color="#4f8ef7").encode(x="FPR:Q", y="TPR:Q").properties(
-            height=240, title="ROC curve"), width="stretch")
-        dist = pd.DataFrame({"score": prob, "group": np.where(yv == 1, "in-class", "rest")})
-        st.altair_chart(alt.Chart(dist).mark_bar(opacity=0.6).encode(
-            x=alt.X("score:Q", bin=alt.Bin(maxbins=20)), y="count()",
-            color="group:N").properties(height=180, title="Score distribution"), width="stretch")
+    if ss.selected and chal:
+        imp = (pd.DataFrame({"predictor": ss.selected,
+                             "contribution": [round(all_iv[f], 3) for f in ss.selected],
+                             "weight": [round(chal["coef"][f], 3) for f in ss.selected]})
+               .sort_values("contribution", ascending=False))
+        imp["strength"] = imp["contribution"].map(iv_strength)
+        cL, cR = st.columns([1.1, 1])
+        with cL:
+            st.caption(f"Total contribution (Σ IV) = **{total_iv:.2f}** across {len(ss.selected)} variables")
+            st.dataframe(imp, hide_index=True, width="stretch")
+        with cR:
+            st.altair_chart(alt.Chart(imp).mark_bar().encode(
+                x=alt.X("contribution:Q", title="marginal contribution (IV)"),
+                y=alt.Y("predictor:N", sort="-x"),
+                color=alt.Color("strength:N", legend=None),
+                tooltip=["predictor", "contribution", "weight", "strength"]
+            ).properties(height=34 * len(imp), title="Relative importance"), width="stretch")
+        m1, m2, m3 = st.columns(3)
+        m1.metric("KS", f"{chal['ks']:.2f}" if not np.isnan(chal['ks']) else "—")
+        m2.metric("AUC", f"{chal['auc']:.2f}" if not np.isnan(chal['auc']) else "—")
+        m3.metric("divergence", f"{chal['divergence']:.2f}" if not np.isnan(chal['divergence']) else "—")
     else:
-        st.warning(f"Only {n_pos} in-class example — not enough to validate.")
+        st.warning("No variables selected — add at least one above.")
 
-# ── STEP 8 · COMBINE ─────────────────────────────────────────────────────────
-elif step == 7:
-    st.subheader("8 · Combine the 10 scorecards (one-vs-rest)")
-    st.write("Build the scorecard for **all 10** classes with the current settings, then predict each "
-             "player by **argmax** — the class whose scorecard scores them highest. That ensemble is "
-             "the OvR challenger.")
-    feats = ss.kept if ss.kept else list(FEATURES)
-    probs = np.column_stack([
-        fit_card(c, ss.bins, feats, ss.C, ss.balanced)[3] for c in ARCHETYPES])
+# ── TAB 3 · INTERACTIVE BINNER ───────────────────────────────────────────────
+with tabs[2]:
+    st.markdown("**Interactive Binner** — inspect a variable's bins and Weight-of-Evidence, and "
+                "**coarse-class** it by changing the bin count. Fewer bins = coarser/smoother; watch "
+                "the WoE trend and IV update.")
+    var = st.selectbox("Variable", FEATURES,
+                       index=FEATURES.index(ss.selected[0]) if ss.selected else 0)
+    cur_bins = ss.var_bins.get(var, DEFAULT_BINS)
+    nb = st.slider(f"Bins for `{var}` (coarse classing)", 2, 8, cur_bins, key=f"bin_{var}")
+    if nb != cur_bins:
+        ss.var_bins[var] = nb
+        log(f"[binner] '{var}' re-binned to {nb} bins")
+        st.rerun()
+
+    g, iv, _ = woe_iv(df[var], y_full, bins=nb)
+    gt = g.reset_index().rename(columns={g.reset_index().columns[0]: "bin"})
+    gt["bin"] = gt["bin"].astype(str)
+    gt["WoE"] = gt["woe"].round(2)
+    coef_v = chal["coef"].get(var, 0.0) if chal else 0.0
+    gt["points"] = [int(round(factor * coef_v * w)) for w in gt["woe"]]
+    gt = gt.rename(columns={"pos": "Good", "neg": "Bad"})
+    woes = list(gt["WoE"])
+    mono = (all(woes[i] <= woes[i+1] for i in range(len(woes)-1)) or
+            all(woes[i] >= woes[i+1] for i in range(len(woes)-1)))
+    c1, c2, c3 = st.columns(3)
+    c1.metric(f"IV ({var})", f"{iv:.3f}", iv_strength(iv), delta_color="off")
+    c2.metric("WoE monotonic?", "yes ✓" if mono else "no ✗",
+              help="Monotonic WoE across bins is usually preferred; try fewer bins if not.")
+    c3.metric("in model", "yes" if var in ss.selected else "no")
+    cL, cR = st.columns([1, 1])
+    with cL:
+        st.altair_chart(alt.Chart(gt).mark_bar().encode(
+            x=alt.X("bin:N", sort=None), y="WoE:Q",
+            color=alt.condition(alt.datum.WoE > 0, alt.value("#46c98b"), alt.value("#e05c4a")),
+            tooltip=["bin", "n", "Good", "Bad", "WoE"]).properties(height=240,
+            title=f"Weight of Evidence · {var}"), width="stretch")
+    with cR:
+        st.dataframe(gt[["bin", "n", "Good", "Bad", "WoE", "points"]], hide_index=True,
+                     width="stretch")
+    if not mono:
+        st.info("WoE is non-monotonic across these bins — coarser bins often restore a clean trend.")
+
+# ── TAB 4 · REPORTS ──────────────────────────────────────────────────────────
+with tabs[3]:
+    st.markdown("**Reports** — Challenger (your edited model) vs **Champion** (auto-built: all "
+                "variables, 4 bins). " + ("" if n_pos >= 2 else "⚠ Too few Good cases to report."))
+    if n_pos >= 2 and ss.selected and chal:
+        rtabs = st.tabs(["Performance (KS / ROC)", "Model Training", "Fit Odds"])
+        with rtabs[0]:
+            cc = pd.DataFrame({
+                "model": ["Challenger", "Champion"],
+                "KS": [round(chal["ks"], 3), round(champ["ks"], 3)],
+                "AUC": [round(chal["auc"], 3), round(champ["auc"], 3)],
+                "divergence": [round(chal["divergence"], 3), round(champ["divergence"], 3)],
+                "variables": [len(ss.selected), len(FEATURES)]})
+            st.dataframe(cc, hide_index=True, width="stretch")
+            roc_rows = []
+            for name, m in [("Challenger", chal), ("Champion", champ)]:
+                fpr, tpr, _ = roc_curve(m["y"], m["prob"])
+                roc_rows.append(pd.DataFrame({"FPR": fpr, "TPR": tpr, "model": name}))
+            st.altair_chart(alt.Chart(pd.concat(roc_rows)).mark_line().encode(
+                x="FPR:Q", y="TPR:Q", color="model:N").properties(
+                height=260, title="ROC — Challenger vs Champion"), width="stretch")
+            d = pd.DataFrame({"p": chal["prob"], "y": chal["y"]}).sort_values("p")
+            d["cum_good"] = (d.y == 1).cumsum() / max((d.y == 1).sum(), 1)
+            d["cum_bad"] = (d.y == 0).cumsum() / max((d.y == 0).sum(), 1)
+            d["pct"] = np.linspace(0, 1, len(d))
+            ksdf = pd.concat([d.assign(curve="good", v=d.cum_good),
+                              d.assign(curve="bad", v=d.cum_bad)])
+            st.altair_chart(alt.Chart(ksdf).mark_line().encode(
+                x=alt.X("pct:Q", title="population sorted by score"),
+                y=alt.Y("v:Q", title="cumulative"), color="curve:N").properties(
+                height=220, title=f"KS curve · Challenger KS = {chal['ks']:.2f}"),
+                width="stretch")
+        with rtabs[1]:
+            st.caption("Selected vs candidate variables, contribution (IV), and model weights.")
+            st.dataframe(pd.DataFrame({"variable": FEATURES,
+                "selected": [f in ss.selected for f in FEATURES],
+                "contribution (IV)": [round(all_iv[f], 3) for f in FEATURES],
+                "bins": [ss.var_bins.get(f, DEFAULT_BINS) for f in FEATURES],
+                "weight": [round(chal["coef"].get(f, float("nan")), 3) for f in FEATURES]}),
+                hide_index=True, width="stretch")
+            st.caption(f"Score statistics — KS {chal['ks']:.3f} · AUC {chal['auc']:.3f} · "
+                       f"divergence {chal['divergence']:.3f} · intercept {chal['intercept']:.3f} · "
+                       f"base points {int(round(100 + factor*chal['intercept']))}")
+        with rtabs[2]:
+            st.caption("Fit Odds — does the score line up linearly with the actual log-odds? "
+                       "(Used for scaling / scorecard alignment.)")
+            d = pd.DataFrame({"p": chal["prob"], "y": chal["y"]})
+            q = min(10, max(2, n_pos))
+            d["band"] = pd.qcut(d["p"].rank(method="first"), q=q, labels=False)
+            fo = d.groupby("band").agg(score=("p", "mean"), good=("y", "sum"),
+                                       n=("y", "size")).reset_index()
+            fo["bad"] = fo["n"] - fo["good"]
+            fo["log_odds"] = np.log((fo["good"] + 0.5) / (fo["bad"] + 0.5))
+            st.altair_chart(alt.Chart(fo).mark_circle(size=70, color="#c9a84c").encode(
+                x=alt.X("score:Q", title="mean model score (by band)"),
+                y=alt.Y("log_odds:Q", title="actual log-odds"),
+                tooltip=["band", "score", "good", "bad", "log_odds"]).properties(
+                height=260, title="Fit Odds (closer to a straight line = better calibrated)"),
+                width="stretch")
+    elif not ss.selected:
+        st.warning("No variables selected.")
+
+# ── TAB 5 · COMBINE (OvR) ────────────────────────────────────────────────────
+with tabs[4]:
+    st.markdown("**Combine all 10 scorecards (one-vs-rest)** — build every class's scorecard with "
+                "the current settings, predict each player by argmax, and compare to the rule "
+                "**Champion** (88.5%).")
+    feats = ss.selected if ss.selected else list(FEATURES)
+    probs = np.column_stack([build_model(df, c, ss.var_bins, feats, ss.C, ss.balanced)["prob"]
+                             for c in ARCHETYPES])
     pred = np.array(ARCHETYPES)[probs.argmax(axis=1)]
     truth = df["archetype"].to_numpy()
     acc = float((pred == truth).mean())
-
     c1, c2 = st.columns(2)
     c1.metric("in-sample accuracy (this config)", f"{acc:.1%}")
     with c2:
@@ -338,30 +363,23 @@ elif step == 7:
             pipe = make_pipeline(StandardScaler(), OneVsRestClassifier(LogisticRegression(
                 max_iter=2000, C=ss.C, class_weight="balanced" if ss.balanced else None)))
             loo = cross_val_predict(pipe, df[feats].to_numpy(), truth, cv=LeaveOneOut())
+            log(f"[combine] LOO accuracy {(loo==truth).mean():.1%}")
             st.metric("leave-one-out accuracy", f"{(loo == truth).mean():.1%}",
                       help="Each player predicted by a model that never saw it. Rule champion = 88.5%.")
-    st.caption("In-sample is optimistic. The honest out-of-sample number is leave-one-out; "
-               "the rule champion scores **88.5%**. See docs/champion-vs-challenger.html.")
-
-    st.divider()
-    pid = st.selectbox("Score one player under all 10 scorecards",
-                       df["player_id"].tolist(), index=df["player_id"].tolist().index("P-104"))
+    st.caption("In-sample is optimistic; the honest out-of-sample number is leave-one-out. "
+               "Rule champion = **88.5%**. See docs/champion-vs-challenger.html.")
+    pid = st.selectbox("Score one player under all 10 scorecards", df["player_id"].tolist(),
+                       index=df["player_id"].tolist().index("P-104"))
     pos = df.index.get_loc(df.index[df["player_id"] == pid][0])
-    pr = pd.DataFrame({"class": ARCHETYPES, "P(class)": probs[pos]}).sort_values(
-        "P(class)", ascending=False)
-    winner = pr.iloc[0]["class"]
-    pr["is_winner"] = pr["class"] == winner
-    st.write(f"**{pid}** · truth **{df.iloc[pos]['archetype']}** → argmax picks **{winner}** "
-             + ("✅" if winner == df.iloc[pos]["archetype"] else "❌"))
+    pr = pd.DataFrame({"class": ARCHETYPES, "P(class)": probs[pos]}).sort_values("P(class)", ascending=False)
+    win = pr.iloc[0]["class"]; pr["win"] = pr["class"] == win
+    st.write(f"**{pid}** · truth **{df.iloc[pos]['archetype']}** → argmax **{win}** "
+             + ("✅" if win == df.iloc[pos]["archetype"] else "❌"))
     st.altair_chart(alt.Chart(pr).mark_bar().encode(
         x="P(class):Q", y=alt.Y("class:N", sort="-x"),
-        color=alt.condition(alt.datum.is_winner, alt.value("#4f8ef7"), alt.value("#2b4231")),
+        color=alt.condition(alt.datum.win, alt.value("#5b9bf5"), alt.value("#2b4231")),
         tooltip=["class", "P(class)"]).properties(height=28 * len(ARCHETYPES)), width="stretch")
 
-# ── nav ──────────────────────────────────────────────────────────────────────
-st.divider()
-b1, b2, b3 = st.columns([1, 6, 1])
-b1.button("← Back", disabled=step == 0, width="stretch", on_click=goto, args=(step - 1,))
-b2.markdown(f"<div style='text-align:center;color:#3a553f;font-size:12px;padding-top:6px'>"
-            f"Stage {step+1} of {N} · {STEPS[step]}</div>", unsafe_allow_html=True)
-b3.button("Next →", disabled=step == N - 1, width="stretch", on_click=goto, args=(step + 1,))
+# ── console / jobs ───────────────────────────────────────────────────────────
+with st.expander("🖥 Console / Jobs", expanded=False):
+    st.code("\n".join(ss.jobs[:14]) or "(no activity)", language="text")
