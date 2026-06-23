@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +49,15 @@ class Room:
         praw = _load("players.json")
         players = praw["players"] if isinstance(praw, dict) else praw
         self.players_by_id: dict[str, Any] = {p["player_id"]: p for p in players}
+
+        # Archetype per player (the frozen classification output). Operator-only
+        # language — surfaced solely through the impersonator picker, never on a
+        # real player-facing card.
+        craw = _load("derived/classifications.json")
+        classifications = craw["classifications"] if isinstance(craw, dict) else craw
+        self.archetype_by_id: dict[str, str] = {
+            c["player_id"]: c["archetype"] for c in classifications
+        }
 
         # The roster is the mutable surface — seated_player_ids change on stand/sit.
         self.tables: list[dict[str, Any]] = _load("table_roster.json")["tables"]
@@ -115,11 +125,21 @@ class Room:
         t["open_seats"] = t["max_seats"] - t["seated_count"]
 
     # ── player views (the front-of-house seam — neutral, player-safe) ─────────
-    def players(self) -> list[dict[str, str]]:
-        """Selectable player universe for the lobby impersonator (id + name only)."""
+    def players(self) -> list[dict[str, Any]]:
+        """Selectable player universe for the lobby impersonator: id + name, plus
+        the player's archetype and how many tables they're currently seated at
+        (count only — the seat count is live, recomputed from the roster each call)."""
+        seated_counts: Counter[str] = Counter(
+            pid for t in self.tables for pid in t.get("seated_player_ids", [])
+        )
         return sorted(
             (
-                {"player_id": p["player_id"], "display_name": p.get("display_name", p["player_id"])}
+                {
+                    "player_id": p["player_id"],
+                    "display_name": p.get("display_name", p["player_id"]),
+                    "archetype": self.archetype_by_id.get(p["player_id"]),
+                    "seated_count": seated_counts.get(p["player_id"], 0),
+                }
                 for p in self.players_by_id.values()
             ),
             key=lambda p: p["player_id"],
@@ -133,12 +153,18 @@ class Room:
         if player_id not in self.players_by_id:
             raise RoomError(f"unknown player {player_id}")
         routed = route(player_id, self.tables, self.players_by_id, self.cbi, self.health)
+        seated_tables = self.tables_of(player_id)
+        seated_ids = {t["table_id"] for t in seated_tables}
+        # The lobby is "find a NEW table" — never surface one the player is already
+        # seated at; that table lives in My Tables (`tables` below). Without this a
+        # joined table keeps appearing in the lobby while it still has open seats.
+        player_lobby = [t for t in routed["player_lobby"] if t["table_id"] not in seated_ids]
         seated = [
-            {k: t[k] for k in LOBBY_SAFE_FIELDS if k in t} for t in self.tables_of(player_id)
+            {k: t[k] for k in LOBBY_SAFE_FIELDS if k in t} for t in seated_tables
         ]
         return {
             "player_id": player_id,
-            "player_lobby": routed["player_lobby"],
+            "player_lobby": player_lobby,
             "tables": seated,
         }
 
