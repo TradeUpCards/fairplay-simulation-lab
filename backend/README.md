@@ -25,8 +25,8 @@ byte-for-byte (verified), so the live API and the static demo agree on hour 0.
 
 ```bash
 uv venv --python 3.12 .venv          # Python 3.14 lacks wheels for the stack; 3.12 is safe
-VIRTUAL_ENV=.venv uv pip install -r api/requirements.txt
-PORT=8000 .venv/bin/python -m api.app          # or: .venv/bin/uvicorn api.app:app --reload
+VIRTUAL_ENV=.venv uv pip install -r backend/requirements.txt
+PORT=8000 .venv/bin/python -m backend.app.main   # or: .venv/bin/uvicorn backend.app.main:app --reload
 ```
 
 The frontend points at `http://localhost:8000` by default; override with
@@ -46,9 +46,9 @@ to the frozen JSON, so the demo still runs.
 - **One worker only.** State (the room) and the SSE hub are in-process; multiple
   workers would each hold a divergent room and split the SSE subscribers. Run a
   single uvicorn worker, or move the room + hub to Redis before scaling out.
-- Working dir must be the **repo root** so `scoring/` imports and `data/*.json`
-  resolve (`api/room.py` derives paths from `parents[1]`).
-- Suggested start command: `uvicorn api.app:app --host 0.0.0.0 --port $PORT`.
+- Working dir must be the **repo root** so the `scoring` package imports and
+  `data/*.json` resolve (`backend/app/room.py` derives paths from the repo root).
+- Suggested start command: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`.
 - Set `CORS_ORIGINS` to the deployed frontend URL.
 - SSE needs the proxy to **not buffer** `text/event-stream` and to allow long-lived
   connections (Railway is fine by default; mentioned for any nginx in front).

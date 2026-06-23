@@ -11,7 +11,7 @@ Endpoints
   GET  /api/stream                   SSE: a `score_update` per mutation
   GET  /api/healthz                  liveness probe (for Railway/Docker)
 
-Run locally:  uvicorn api.app:app --reload --port 8000   (from the repo root)
+Run locally:  uvicorn backend.app.main:app --reload --port 8000   (from the repo root)
 """
 from __future__ import annotations
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "api.app:app",
+        "backend.app.main:app",
         host="0.0.0.0",
         port=int(os.environ.get("PORT", "8000")),
         reload=bool(os.environ.get("RELOAD")),

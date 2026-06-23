@@ -22,15 +22,15 @@ import type {
   SimPath,
 } from './types'
 
-import classificationsRaw from '../../../data/derived/classifications.json'
-import integrityRaw from '../../../data/derived/integrity_scores.json'
-import healthRaw from '../../../data/derived/health_scores.json'
-import seatingRaw from '../../../data/derived/seating_scores.json'
-import routerRaw from '../../../data/derived/router_lobby.json'
-import roomStandardRaw from '../../../data/room_metrics_standard.json'
-import roomFairplayRaw from '../../../data/room_metrics_fairplay.json'
-import seededCasesRaw from '../../../data/seeded_case_labels.json'
-import tableRosterRaw from '../../../data/table_roster.json'
+import classificationsRaw from '@data/derived/classifications.json'
+import integrityRaw from '@data/derived/integrity_scores.json'
+import healthRaw from '@data/derived/health_scores.json'
+import seatingRaw from '@data/derived/seating_scores.json'
+import routerRaw from '@data/derived/router_lobby.json'
+import roomStandardRaw from '@data/room_metrics_standard.json'
+import roomFairplayRaw from '@data/room_metrics_fairplay.json'
+import seededCasesRaw from '@data/seeded_case_labels.json'
+import tableRosterRaw from '@data/table_roster.json'
 
 /** Assert a frozen JSON artifact into its Contract-2 type at the trust boundary. */
 const asType = <T>(raw: unknown): T => raw as T

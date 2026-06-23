@@ -17,8 +17,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))  # make the top-level `scoring` package importable
+ROOT = Path(__file__).resolve().parents[2]  # repo root (backend/app/ -> backend/ -> root)
+sys.path.insert(0, str(ROOT / "backend"))  # make the `scoring` package importable
 
 from scoring.health import (  # noqa: E402
     HealthScore,

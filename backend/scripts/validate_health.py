@@ -15,8 +15,8 @@ import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "backend"))
 from scoring.integrity import score_integrity  # noqa: E402
 from scoring.health import (  # noqa: E402
     build_cluster_band_index, score_all_tables,
