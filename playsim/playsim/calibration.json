@@ -1,0 +1,45 @@
+{
+  "_note": "Tuned postflop_aggression per archetype (playsim.calibrate). Overlaid on knobs.py defaults at import.",
+  "rounds": 6,
+  "hands": 400,
+  "seed": 1234,
+  "postflop_aggression": {
+    "new": 0.3449,
+    "recreational": 0.398,
+    "regular": 0.5813,
+    "grinder": 0.995,
+    "aggressive_predatory": 0.995,
+    "promo_hunter": 0.3431,
+    "healthy_anchor": 0.701,
+    "shared_device_household": 0.5168,
+    "cluster_member": 0.6266,
+    "bot_like": 0.6254,
+    "solver_like": 0.9884
+  },
+  "realized_af": {
+    "new": 0.925,
+    "recreational": 1.203,
+    "regular": 1.507,
+    "grinder": 2.444,
+    "aggressive_predatory": 3.864,
+    "promo_hunter": 0.914,
+    "healthy_anchor": 1.732,
+    "shared_device_household": 1.551,
+    "cluster_member": 2.176,
+    "bot_like": 2.188,
+    "solver_like": 2.182
+  },
+  "target_af": {
+    "new": 0.89,
+    "recreational": 1.18,
+    "regular": 2.06,
+    "grinder": 2.69,
+    "aggressive_predatory": 4.3,
+    "promo_hunter": 1.1,
+    "healthy_anchor": 1.88,
+    "shared_device_household": 1.55,
+    "cluster_member": 2.15,
+    "bot_like": 2.05,
+    "solver_like": 2.8
+  }
+}
