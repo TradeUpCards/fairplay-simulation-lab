@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>playsim vs. Superpowers Simulator - FairPlay Design Comparison</title>
+<style>
+:root {
+  --ink: #ecf6ee;
+  --muted: #9db8a5;
+  --dim: #66816c;
+  --paper: #08100a;
+  --paper-2: #0d1710;
+  --paper-3: #122218;
+  --line: #21382a;
+  --line-2: #31513c;
+  --gold: #e6c86d;
+  --gold-2: #b99032;
+  --mint: #58d99d;
+  --cyan: #4bcbd8;
+  --blue: #76a9ff;
+  --violet: #bd96ff;
+  --rose: #ff7f8f;
+  --amber: #f2a94b;
+  --ok: #48ca88;
+  --shadow: 0 24px 70px rgba(0, 0, 0, .35);
+  --radius: 18px;
+  --rail: 292px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 80% -10%, rgba(230, 200, 109, .14), transparent 34rem),
+    radial-gradient(circle at 12% 18%, rgba(75, 203, 216, .09), transparent 28rem),
+    linear-gradient(135deg, #050905 0%, #07120a 45%, #040704 100%);
+  font-family: "Avenir Next", "Trebuchet MS", Verdana, sans-serif;
+  line-height: 1.68;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .28;
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
+}
+
+a { color: inherit; }
+code {
+  color: var(--gold);
+  background: rgba(230, 200, 109, .09);
+  border: 1px solid rgba(230, 200, 109, .16);
+  border-radius: 6px;
+  padding: .05rem .35rem;
+  font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-size: .92em;
+}
+
+pre {
+  overflow-x: auto;
+  margin: 1rem 0;
+  padding: 1.1rem 1.2rem;
+  background: #050b07;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: #c7dccb;
+  font-size: .88rem;
+  line-height: 1.58;
+}
+
+pre code {
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 1.4rem 1.2rem;
+  background: rgba(9, 18, 11, .86);
+  border-right: 1px solid var(--line);
+  backdrop-filter: blur(18px);
+}
+
+.mark {
+  display: flex;
+  gap: .75rem;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1rem;
+}
+
+.diamond {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, var(--gold), #f6e3a0);
+  color: #0d1409;
+  box-shadow: 0 0 0 6px rgba(230, 200, 109, .08);
+}
+
+.diamond span { transform: rotate(-45deg); font-weight: 900; font-size: .72rem; }
+.brand { font-size: .82rem; letter-spacing: .09em; text-transform: uppercase; color: var(--gold); font-weight: 800; }
+.subbrand { font-size: .68rem; color: var(--dim); text-transform: uppercase; letter-spacing: .12em; }
+
+.nav {
+  display: grid;
+  gap: .22rem;
+}
+
+.nav a {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: .55rem;
+  text-decoration: none;
+  color: var(--muted);
+  padding: .48rem .55rem;
+  border-radius: 10px;
+  font-size: .82rem;
+  border: 1px solid transparent;
+}
+
+.nav a:hover {
+  color: var(--ink);
+  background: rgba(255,255,255,.035);
+  border-color: var(--line);
+}
+
+.nav b {
+  color: var(--dim);
+  font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-size: .72rem;
+  text-align: right;
+}
+
+.rail-note {
+  margin-top: 1.4rem;
+  padding: .9rem;
+  border: 1px solid rgba(230, 200, 109, .18);
+  background: rgba(230, 200, 109, .055);
+  border-radius: 14px;
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+main {
+  width: min(1180px, 100%);
+  padding: clamp(2rem, 5vw, 5rem);
+}
+
+.hero {
+  position: relative;
+  padding: 2.6rem;
+  border: 1px solid var(--line-2);
+  border-radius: calc(var(--radius) + 10px);
+  background:
+    linear-gradient(135deg, rgba(18, 34, 24, .88), rgba(8, 16, 10, .84)),
+    radial-gradient(circle at 90% 18%, rgba(230, 200, 109, .22), transparent 18rem);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  right: -5rem;
+  top: -5rem;
+  width: 16rem;
+  height: 16rem;
+  border: 1px solid rgba(230, 200, 109, .25);
+  transform: rotate(45deg);
+}
+
+.kicker {
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  font-size: .72rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  max-width: 920px;
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: -.045em;
+  line-height: 1.02;
+  font-size: clamp(2.35rem, 6vw, 5.4rem);
+}
+
+h1 em {
+  color: var(--gold);
+  font-style: italic;
+}
+
+.hero p {
+  max-width: 830px;
+  margin: 1.25rem 0 0;
+  color: var(--muted);
+  font-size: 1.08rem;
+}
+
+.stamp-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .7rem;
+  margin-top: 1.6rem;
+}
+
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .46rem .7rem;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: rgba(0,0,0,.15);
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.stamp i {
+  width: .48rem;
+  height: .48rem;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 18px rgba(230, 200, 109, .8);
+}
+
+section {
+  scroll-margin-top: 2rem;
+  margin-top: 4rem;
+}
+
+.section-head {
+  display: grid;
+  gap: .5rem;
+  margin-bottom: 1.2rem;
+}
+
+.section-head .num {
+  color: var(--gold-2);
+  font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-size: .82rem;
+}
+
+h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.75rem, 3.2vw, 3rem);
+  line-height: 1.08;
+  font-weight: 520;
+  letter-spacing: -.028em;
+}
+
+h3 {
+  margin: 1.6rem 0 .6rem;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.lede {
+  max-width: 840px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.summary-grid,
+.cards,
+.two-col,
+.three-col {
+  display: grid;
+  gap: 1rem;
+}
+
+.summary-grid { grid-template-columns: 1.1fr .9fr; align-items: stretch; }
+.two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.three-col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.panel {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(18, 34, 24, .82), rgba(9, 18, 11, .82));
+  box-shadow: 0 10px 36px rgba(0,0,0,.22);
+  padding: 1.2rem;
+}
+
+.panel.gold { border-color: rgba(230, 200, 109, .32); background: linear-gradient(180deg, rgba(230, 200, 109, .105), rgba(9, 18, 11, .82)); }
+.panel.blue { border-color: rgba(118, 169, 255, .28); }
+.panel.mint { border-color: rgba(88, 217, 157, .28); }
+.panel.rose { border-color: rgba(255, 127, 143, .28); }
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: .13em;
+  font-weight: 900;
+  font-size: .68rem;
+  margin-bottom: .7rem;
+}
+
+.label::before {
+  content: "";
+  width: 1.1rem;
+  height: 1px;
+  background: currentColor;
+}
+
+.panel h3,
+.panel h4 {
+  margin: 0 0 .45rem;
+}
+
+.panel p,
+.panel li {
+  color: var(--muted);
+  font-size: .92rem;
+}
+
+.panel p { margin: 0 0 .7rem; }
+.panel p:last-child { margin-bottom: 0; }
+ul { margin: .6rem 0 0; padding: 0; list-style: none; }
+li { position: relative; padding-left: 1.05rem; margin: .3rem 0; }
+li::before { content: ""; position: absolute; left: 0; top: .72em; width: .42rem; height: 1px; background: var(--gold-2); }
+
+.matrix {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: rgba(8, 16, 10, .72);
+}
+
+.matrix th,
+.matrix td {
+  padding: .9rem .95rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+
+.matrix th:last-child,
+.matrix td:last-child { border-right: 0; }
+.matrix tr:last-child td { border-bottom: 0; }
+.matrix th {
+  color: var(--gold);
+  background: rgba(230, 200, 109, .08);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+}
+.matrix td { color: var(--muted); font-size: .88rem; }
+.matrix strong { color: var(--ink); }
+
+.flow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .75rem;
+  margin: 1rem 0;
+}
+
+.step {
+  min-height: 8.2rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: .95rem;
+  background: rgba(18, 34, 24, .76);
+}
+
+.step .top {
+  color: var(--dim);
+  font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-size: .72rem;
+  margin-bottom: .55rem;
+}
+
+.step b { color: var(--ink); display: block; margin-bottom: .35rem; }
+.step span { color: var(--muted); font-size: .82rem; display: block; }
+
+.score-card {
+  display: grid;
+  gap: .65rem;
+}
+
+.formula {
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(230, 200, 109, .25);
+  background: rgba(230, 200, 109, .07);
+  color: #f2e4b5;
+  font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
+  font-size: .92rem;
+}
+
+.split-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+  margin-bottom: .6rem;
+}
+
+.split-title small {
+  color: var(--dim);
+  font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
+}
+
+.verdict {
+  border: 1px solid rgba(88, 217, 157, .28);
+  background:
+    linear-gradient(135deg, rgba(88, 217, 157, .09), rgba(230, 200, 109, .055)),
+    rgba(9, 18, 11, .86);
+  border-radius: calc(var(--radius) + 4px);
+  padding: 1.35rem;
+}
+
+.verdict strong { color: var(--mint); }
+
+.loss { color: var(--rose); }
+.gain { color: var(--mint); }
+.warn { color: var(--amber); }
+.quiet { color: var(--dim); }
+
+footer {
+  margin: 4rem 0 0;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  color: var(--dim);
+  font-size: .82rem;
+}
+
+@media (max-width: 1060px) {
+  .layout { grid-template-columns: 1fr; }
+  .rail { position: relative; height: auto; }
+  main { padding: 1.2rem; }
+  .summary-grid,
+  .two-col,
+  .three-col,
+  .flow { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="rail">
+    <div class="mark">
+      <div class="diamond"><span>FP</span></div>
+      <div>
+        <div class="brand">FairPlay Learn</div>
+        <div class="subbrand">simulator comparison</div>
+      </div>
+    </div>
+    <nav class="nav" aria-label="Page navigation">
+      <a href="#summary"><b>00</b><span>Summary</span></a>
+      <a href="#one-sentence"><b>01</b><span>One sentence</span></a>
+      <a href="#shared"><b>02</b><span>Shared substrate</span></a>
+      <a href="#backend"><b>03</b><span>Superpowers/backend sim</span></a>
+      <a href="#playsim"><b>04</b><span>playsim V1</span></a>
+      <a href="#v2v3"><b>05</b><span>V2 and V3</span></a>
+      <a href="#scoring"><b>06</b><span>Scoring nuances</span></a>
+      <a href="#backtest"><b>07</b><span>Backtesting</span></a>
+      <a href="#tradeoffs"><b>08</b><span>Gain / lose</span></a>
+      <a href="#decision"><b>09</b><span>Decision guide</span></a>
+    </nav>
+    <div class="rail-note">
+      This page compares <code>docs/superpowers</code> + <code>backend/sim</code> against the newer
+      <code>playsim</code> engine and its V1/V2/V3 roadmap.
+    </div>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <div class="kicker">FairPlay Simulation Lab</div>
+      <h1>Two poker simulators, <em>different jobs</em>.</h1>
+      <p>
+        The Superpowers/backend simulator proves that archetype behavior can emerge from legal poker hands.
+        playsim takes that substrate and turns it into a routing validation lab: retained paid seat-time,
+        independent realized health, and eventually a router-in-the-loop backtest.
+      </p>
+      <div class="stamp-row">
+        <span class="stamp"><i></i> backend/sim: feature generator</span>
+        <span class="stamp"><i></i> playsim V1: fixed counterfactual backtest</span>
+        <span class="stamp"><i></i> playsim V3: router-in-the-loop target</span>
+      </div>
+    </header>
+
+    <section id="summary">
+      <div class="section-head">
+        <div class="num">00</div>
+        <h2>Summary</h2>
+        <p class="lede">
+          Both systems use agentic poker play, but they answer different questions. The backend simulator asks
+          "can we generate credible player behavior stats from played hands?" playsim asks "if FairPlay changes
+          seating, do realized table outcomes improve?"
+        </p>
+      </div>
+
+      <div class="summary-grid">
+        <div class="panel gold">
+          <div class="label">The short version</div>
+          <p>
+            <strong>backend/sim</strong> is a standalone outcome generator. It deals legal No-Limit Hold'em
+            hands, lets archetype agents act, and rolls the action log into <code>vpip</code>, <code>pfr</code>,
+            <code>aggression_factor</code>, <code>avg_pot_size_bb</code>, <code>net_chips</code>, and hand histories.
+          </p>
+          <p>
+            <strong>playsim</strong> is a validation harness. It still plays hands, but it adds FairPlay-specific
+            integrity behaviors, retention, paid seat-time, realized health, Standard-vs-FairPlay comparison,
+            multi-seed averaging, and a service boundary for UI/API use.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="label">The caution</div>
+          <p>
+            The current playsim V1 backtest uses fixed <code>routing_standard</code> and
+            <code>routing_fairplay</code> rosters. That is useful, but it tests the routing hypothesis, not the
+            actual router implementation.
+          </p>
+          <p>
+            The stronger backtest is V3: the simulator starts from a room snapshot, calls the canonical router,
+            seats the cohort where the router recommends, then measures realized outcomes independently.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="one-sentence">
+      <div class="section-head">
+        <div class="num">01</div>
+        <h2>The one-sentence distinction</h2>
+      </div>
+
+      <div class="verdict">
+        <p>
+          <strong>Superpowers/backend sim generates emergent features from gameplay;</strong>
+          <strong>playsim uses gameplay to test whether seating decisions retain play-time.</strong>
+        </p>
+      </div>
+
+      <div class="flow">
+        <div class="step">
+          <div class="top">backend/sim</div>
+          <b>Config tables</b>
+          <span>Static table config under <code>backend/sim/config</code>.</span>
+        </div>
+        <div class="step">
+          <div class="top">backend/sim</div>
+          <b>Play hands</b>
+          <span>Agents act through a PokerKit engine seam.</span>
+        </div>
+        <div class="step">
+          <div class="top">backend/sim</div>
+          <b>Roll up stats</b>
+          <span>Behavior features emerge from the event log.</span>
+        </div>
+        <div class="step">
+          <div class="top">playsim</div>
+          <b>Compare routes</b>
+          <span>Same cohort, different table composition.</span>
+        </div>
+        <div class="step">
+          <div class="top">playsim</div>
+          <b>Measure retention</b>
+          <span>Paid seat-time and realized health become the outcome.</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="shared">
+      <div class="section-head">
+        <div class="num">02</div>
+        <h2>What they share</h2>
+        <p class="lede">
+          The systems are not opposing designs. playsim is best understood as a FairPlay-specific fork/evolution
+          of the same core insight: use a real poker engine and seeded archetype agents so behavior is measured,
+          not typed in by hand.
+        </p>
+      </div>
+
+      <div class="three-col">
+        <div class="panel">
+          <div class="label">Engine seam</div>
+          <p>
+            Both rely on PokerKit for poker mechanics and keep the rest of the stack engine-agnostic. The agents
+            decide; the engine enforces legality, betting, pots, board state, and payoffs.
+          </p>
+        </div>
+        <div class="panel">
+          <div class="label">Seeded agents</div>
+          <p>
+            Both reject live LLM hand execution. Agent decisions are seeded and replayable, with archetype knobs
+            controlling style and strength.
+          </p>
+        </div>
+        <div class="panel">
+          <div class="label">Derived features</div>
+          <p>
+            Both treat played hands as the source for behavior stats such as VPIP, PFR, aggression, pot size, and
+            profitability. That avoids "the fixture says the stat because we typed it."
+          </p>
+        </div>
+      </div>
+
+      <table class="matrix" aria-label="Shared foundations">
+        <thead>
+          <tr>
+            <th>Foundation</th>
+            <th>Superpowers/backend sim</th>
+            <th>playsim</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Poker mechanics</strong></td>
+            <td>PokerKit adapter behind <code>Engine</code>.</td>
+            <td>PokerKit referee in <code>table.py</code>, with a higher-level <code>play_hand</code> record.</td>
+          </tr>
+          <tr>
+            <td><strong>Agent abstraction</strong></td>
+            <td><code>Agent.decide(ctx, rng)</code> over <code>DecisionContext</code>.</td>
+            <td><code>ArchetypeAgent.act(obs, rng)</code> over <code>Observation</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Determinism</strong></td>
+            <td>Master seed plus derived dealing/decision RNG streams.</td>
+            <td>Seeded deck and agent decisions; replay command asserts byte-identical output.</td>
+          </tr>
+          <tr>
+            <td><strong>Primary output</strong></td>
+            <td><code>data/sim/hand_histories.json</code> and <code>data/sim/player_stats.json</code>.</td>
+            <td><code>out/sim.db</code>, PHH-shaped hands, <code>features.json</code>, service JSON, and routing comparison metrics.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="backend">
+      <div class="section-head">
+        <div class="num">03</div>
+        <h2>Superpowers/backend sim: the feature generator</h2>
+        <p class="lede">
+          The design in <code>docs/superpowers</code> produced <code>backend/sim</code>. Its purpose is narrow and
+          valuable: generate legal poker outcomes and roll them into player behavior features.
+        </p>
+      </div>
+
+      <div class="two-col">
+        <div class="panel blue">
+          <div class="label">Design center</div>
+          <p>
+            A static config describes tables, seats, archetypes, stack size, blinds, and hands per table. For
+            each hand, the driver resets stacks, rotates the button, deals a seeded deck, asks each agent for an
+            action, and logs action/result rows.
+          </p>
+          <pre><code>config -> run_table -> EventLog -> stats.rollup
+       -> data/sim/hand_histories.json
+       -> data/sim/player_stats.json</code></pre>
+        </div>
+
+        <div class="panel">
+          <div class="label">Agent model</div>
+          <p>
+            The backend simulator has seven behavioral archetypes. Each archetype is a skill percentage plus
+            style knobs: aggression, tightness, and bluff frequency.
+          </p>
+          <ul>
+            <li><strong>Skill blend:</strong> with probability <code>skill</code>, use the strong policy; otherwise use beginner policy.</li>
+            <li><strong>Preflop range gate:</strong> Chen-style hand strength plus position and tightness.</li>
+            <li><strong>Style overlay:</strong> aggression upgrades calls, bluff frequency turns some folds into tagged bluffs.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>What its scoring means</h3>
+      <div class="score-card">
+        <div class="formula">vpip = preflop voluntary-money-in-pot hands / hands dealt</div>
+        <div class="formula">pfr = preflop-raise hands / hands dealt</div>
+        <div class="formula">aggression_factor = postflop bets-and-raises / postflop calls</div>
+        <div class="formula">avg_pot_size_bb = mean pot size on contested hands</div>
+        <div class="formula">net_chips = sum of per-hand payoffs</div>
+      </div>
+
+      <div class="panel rose" style="margin-top:1rem">
+        <div class="label">Important limitation</div>
+        <p>
+          The backend simulator explicitly defers seat-time. It reloads stacks between hands, keeps seating
+          static, and does not model join/leave/quit. That is correct for a feature generator, but it means it
+          cannot by itself answer the product's north-star question: did routing retain paid play-time?
+        </p>
+      </div>
+    </section>
+
+    <section id="playsim">
+      <div class="section-head">
+        <div class="num">04</div>
+        <h2>playsim V1: the health/routing validation sandbox</h2>
+        <p class="lede">
+          playsim keeps the core gameplay idea, then adds FairPlay-specific behaviors and outcome metrics:
+          cluster soft-play, target-weak predation, bot-like timing, retention, paid seat-time, and independent
+          realized health.
+        </p>
+      </div>
+
+      <div class="two-col">
+        <div class="panel mint">
+          <div class="label">Design center</div>
+          <p>
+            Instead of only asking whether features emerge, playsim asks whether a seating choice changes the
+            lived experience of vulnerable players. It can run one table for integrity signals or compare
+            Standard vs FairPlay routing across many seeds.
+          </p>
+          <pre><code>roster -> run_session(retention=True)
+       -> played hands
+       -> features
+       -> realized health
+       -> paid seat-time retained</code></pre>
+        </div>
+
+        <div class="panel">
+          <div class="label">Agent model</div>
+          <p>
+            playsim expands the archetype vocabulary to match FairPlay: <code>cluster_member</code>,
+            <code>shared_device_household</code>, <code>bot_like</code>, and <code>solver_like</code> join the
+            regular poker personas.
+          </p>
+          <ul>
+            <li><strong>Looseness and PFR:</strong> tuned to hit fixture medians.</li>
+            <li><strong>Postflop aggression:</strong> calibrated by <code>calibrate.py</code>.</li>
+            <li><strong>Soft play:</strong> cluster members reduce aggression against teammates.</li>
+            <li><strong>Target weak:</strong> predators and clusters increase pressure against weak opponents.</li>
+            <li><strong>Timing regularity:</strong> bot-like agents produce low-jitter latency.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>What playsim measures that backend/sim does not</h3>
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Meaning</th>
+            <th>Why it matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>paid_seat_hours_cohort</strong></td>
+            <td>How long the routed vulnerable cohort actually stayed seated.</td>
+            <td>The north star: healthier routing should slow play decay.</td>
+          </tr>
+          <tr>
+            <td><strong>avg_casual_session_min</strong></td>
+            <td>Mean session minutes for the protected cohort.</td>
+            <td>Demo-friendly evidence: "12 min vs 42 min" is legible.</td>
+          </tr>
+          <tr>
+            <td><strong>retention_rate / early_exits</strong></td>
+            <td>Whether cohort members remain active or leave early.</td>
+            <td>Separates healthy volume from churn-throughput.</td>
+          </tr>
+          <tr>
+            <td><strong>recreational_loss_velocity</strong></td>
+            <td>BB lost per 100 cohort hands.</td>
+            <td>Connects chip flow to session decay.</td>
+          </tr>
+          <tr>
+            <td><strong>winnings_concentration</strong></td>
+            <td>Share of all winnings held by the top winner.</td>
+            <td>Captures predatory concentration that averages can hide.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="panel gold" style="margin-top:1rem">
+        <div class="label">The V1 tradeoff</div>
+        <p>
+          playsim V1 currently compares fixed <code>routing_standard</code> and
+          <code>routing_fairplay</code> rosters. This is a controlled counterfactual: same cohort, matched seeds,
+          different table composition. It proves the hypothesis that good routing can improve outcomes. It does
+          not yet prove the canonical router would choose the good table.
+        </p>
+      </div>
+    </section>
+
+    <section id="v2v3">
+      <div class="section-head">
+        <div class="num">05</div>
+        <h2>V1, V2, V3: what changes</h2>
+        <p class="lede">
+          The V1/V2/V3 framing is a roadmap for increasing proof strength. Each step makes the simulator more
+          realistic or more integrated, but also increases complexity and coupling.
+        </p>
+      </div>
+
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>Version</th>
+            <th>Question answered</th>
+            <th>How it works</th>
+            <th>What it proves</th>
+            <th>What it cannot prove</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>backend/sim</strong></td>
+            <td>Can gameplay generate behavioral stats?</td>
+            <td>Static tables, reset stacks, hand histories, per-player rollups.</td>
+            <td>Archetype behavior can emerge from played hands.</td>
+            <td>Routing impact, seat-time retention, live router correctness.</td>
+          </tr>
+          <tr>
+            <td><strong>playsim V1</strong></td>
+            <td>Does better table composition retain more play-time?</td>
+            <td>Fixed Standard vs FairPlay rosters, same cohort, matched seeds, retention mode.</td>
+            <td>The routing hypothesis is directionally sound.</td>
+            <td>The actual router would pick the right table.</td>
+          </tr>
+          <tr>
+            <td><strong>playsim V2</strong></td>
+            <td>Do stronger poker brains change the results?</td>
+            <td>RLCard/OpenSpiel/PokerRL or exported solver-like policies behind the same <code>act()</code> seam.</td>
+            <td>The result is less dependent on heuristic-agent quirks.</td>
+            <td>Full room dynamics unless routing and join/leave are also integrated.</td>
+          </tr>
+          <tr>
+            <td><strong>playsim V3</strong></td>
+            <td>Does the actual FairPlay router improve outcomes?</td>
+            <td>Initial room snapshot, Standard baseline chooser, FairPlay router call, playsim outcome evaluation.</td>
+            <td>Router implementation quality, not just routing theory.</td>
+            <td>Production accuracy without real deployment data and longitudinal calibration.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>The V3 loop</h3>
+      <div class="flow">
+        <div class="step">
+          <div class="top">1</div>
+          <b>Initial room</b>
+          <span>Same players, tables, open seats, and seeds.</span>
+        </div>
+        <div class="step">
+          <div class="top">2A</div>
+          <b>Standard choice</b>
+          <span>Naive lobby, historical route, or random open table.</span>
+        </div>
+        <div class="step">
+          <div class="top">2B</div>
+          <b>FairPlay choice</b>
+          <span>Call canonical classify, health, seating, and router logic.</span>
+        </div>
+        <div class="step">
+          <div class="top">3</div>
+          <b>Play out</b>
+          <span>Same seed family; only the seating decision differs.</span>
+        </div>
+        <div class="step">
+          <div class="top">4</div>
+          <b>Evaluate</b>
+          <span>Measure paid seat-time and realized health independently.</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="scoring">
+      <div class="section-head">
+        <div class="num">06</div>
+        <h2>Technical nuances in scoring</h2>
+        <p class="lede">
+          The word "health" appears in multiple places. That is fine only if the page is explicit about which
+          score is predicted, which score is realized, and which metrics are just behavior rollups.
+        </p>
+      </div>
+
+      <div class="three-col">
+        <div class="panel">
+          <div class="label">Canonical scoring</div>
+          <h3>Product score</h3>
+          <p>
+            The scoring engine in <code>backend/scoring</code> computes the product's predicted table health:
+          </p>
+          <div class="formula">Health(T) = 100 - P_pred - P_frag - P_clus - P_bleed</div>
+          <p>
+            This is composition-led. It uses archetype classifications, occupancy/trend, seated cluster severity,
+            and observed recreational truncation.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="label">Router score</div>
+          <h3>Decision score</h3>
+          <p>
+            The router ranks candidate tables with a frozen auditable formula:
+          </p>
+          <div class="formula">Rank = 0.30*Fit + 0.40*Health + 0.30*DeltaHealth</div>
+          <p>
+            This is what V3 should call before gameplay. It predicts the best table; it should not be used as
+            the answer key after gameplay.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="label">Realized health</div>
+          <h3>Backtest score</h3>
+          <p>
+            playsim computes a separate realized health measurement from chip flow:
+          </p>
+          <div class="formula">100 - bleed penalty - concentration penalty - bust penalty</div>
+          <p>
+            This is intentionally not the canonical <code>Health(T)</code> formula. It is an independent outcome
+            measure used to test the prediction.
+          </p>
+        </div>
+      </div>
+
+      <div class="panel gold" style="margin-top:1rem">
+        <div class="label">Why this matters</div>
+        <p>
+          If the router chooses a table using <code>Health(T)</code>, and the backtest declares victory by
+          re-running the same <code>Health(T)</code>, the result is circular. The correct setup is:
+          predicted health before routing, independent realized health after gameplay.
+        </p>
+      </div>
+    </section>
+
+    <section id="backtest">
+      <div class="section-head">
+        <div class="num">07</div>
+        <h2>Is backtesting done the same way?</h2>
+        <p class="lede">
+          No. The backend simulator has tests and calibration runs. playsim has a backtest. The live backend
+          room API has mutable rescoring, which is useful for interaction but is not itself an outcome backtest.
+        </p>
+      </div>
+
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>System</th>
+            <th>What "test" means</th>
+            <th>Backtest status</th>
+            <th>Correct interpretation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>backend/sim</strong></td>
+            <td>Run deterministic tables and verify rollups/calibration.</td>
+            <td><span class="warn">Not a routing backtest.</span></td>
+            <td>Useful for generating emergent behavior features and validating simulator determinism.</td>
+          </tr>
+          <tr>
+            <td><strong>backend/app live scoring</strong></td>
+            <td>Stand/sit players, recompute affected table health, stream updates.</td>
+            <td><span class="warn">What-if rescoring, not outcome simulation.</span></td>
+            <td>Useful for the pit-boss UI and live demonstration of recomputation.</td>
+          </tr>
+          <tr>
+            <td><strong>playsim V1</strong></td>
+            <td>Fixed Standard roster vs fixed FairPlay roster, averaged across seeds.</td>
+            <td><span class="gain">A real counterfactual, but fixed-path.</span></td>
+            <td>Tests whether healthier composition produces better realized outcomes.</td>
+          </tr>
+          <tr>
+            <td><strong>playsim V3</strong></td>
+            <td>Call router, play out its chosen table, compare against baseline choice.</td>
+            <td><span class="quiet">Target design.</span></td>
+            <td>Tests whether the actual router improves retained paid seat-time.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>The backtest recipe</h3>
+      <pre><code>for each seed:
+  room0 = same initial room snapshot
+
+  standard_table = baseline_policy(room0, arriving_player)
+  fairplay_table = router.route(arriving_player, room0).top_recommendation
+
+  standard_outcome = playsim.play(room0 + standard_table, seed)
+  fairplay_outcome = playsim.play(room0 + fairplay_table, seed)
+
+  compare:
+    paid_seat_hours_cohort
+    avg_casual_session_min
+    retention_rate
+    early_exits
+    realized_health
+    rec_loss_velocity</code></pre>
+    </section>
+
+    <section id="tradeoffs">
+      <div class="section-head">
+        <div class="num">08</div>
+        <h2>What we gain and lose</h2>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <div class="split-title">
+            <h3>backend/sim</h3>
+            <small>feature generator</small>
+          </div>
+          <p class="gain"><strong>Gain:</strong></p>
+          <ul>
+            <li>Small surface area and easy determinism.</li>
+            <li>Clean hand-history and player-stat outputs.</li>
+            <li>Good unit-test boundaries: deck, tools, policy, engine, stats.</li>
+            <li>Useful provenance for behavior features.</li>
+          </ul>
+          <p class="loss" style="margin-top:1rem"><strong>Lose:</strong></p>
+          <ul>
+            <li>No retained seat-time, leave model, table breaks, or paid-hour north star.</li>
+            <li>No FairPlay-specific cluster/household/bot behavior in v1.</li>
+            <li>No router integration and no Standard-vs-FairPlay outcome comparison.</li>
+            <li>Reload-to-stack means no true session decay.</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <div class="split-title">
+            <h3>playsim</h3>
+            <small>validation lab</small>
+          </div>
+          <p class="gain"><strong>Gain:</strong></p>
+          <ul>
+            <li>FairPlay archetypes map directly to the PRD.</li>
+            <li>Integrity signals can emerge from play: soft-play, target-weak, robotic timing.</li>
+            <li>Retention mode connects chip flow to paid seat-time.</li>
+            <li>Multi-seed routing comparison reduces poker variance.</li>
+            <li>Service API is closer to UI/API consumption.</li>
+          </ul>
+          <p class="loss" style="margin-top:1rem"><strong>Lose:</strong></p>
+          <ul>
+            <li>More moving parts and more assumptions.</li>
+            <li>Skill-edge transfer is a modeling input until stronger brains make it emerge.</li>
+            <li>V1 fixed rosters can be oversold if not labeled carefully.</li>
+            <li>V3 router-in-the-loop will add coupling to canonical scoring contracts.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="decision">
+      <div class="section-head">
+        <div class="num">09</div>
+        <h2>Decision guide</h2>
+        <p class="lede">
+          Use both, but do not ask them to prove the same thing. The cleanest story is a ladder: backend/sim
+          proves emergent behavior; playsim V1 proves the table-health hypothesis; playsim V3 proves router
+          implementation quality.
+        </p>
+      </div>
+
+      <div class="three-col">
+        <div class="panel">
+          <div class="label">Use backend/sim when</div>
+          <ul>
+            <li>You need raw hand histories.</li>
+            <li>You need player behavior rollups.</li>
+            <li>You are testing policy realism or determinism.</li>
+            <li>You want low-coupling data generation.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <div class="label">Use playsim V1 when</div>
+          <ul>
+            <li>You need a demo-safe Standard-vs-FairPlay comparison.</li>
+            <li>You need paid seat-time as the north-star result.</li>
+            <li>You want to show why healthier composition matters.</li>
+            <li>You can honestly say "fixed counterfactual, not router proof."</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <div class="label">Build playsim V3 when</div>
+          <ul>
+            <li>You need to prove the actual router selects better tables.</li>
+            <li>P3's router contract is stable enough to call.</li>
+            <li>You can define a fair Standard baseline chooser.</li>
+            <li>You can freeze outputs for the demo after generating them.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="verdict" style="margin-top:1rem">
+        <p>
+          <strong>Recommended narrative:</strong> "We started with the Superpowers/backend simulator to make
+          behavioral stats emerge from real hands. playsim turns that into an outcome lab: it measures whether
+          healthier seating retains paid play-time. Today V1 is a fixed counterfactual; the next stronger proof
+          is V3, where the actual FairPlay router chooses the table and playsim independently evaluates the
+          result."
+        </p>
+      </div>
+    </section>
+
+    <footer>
+      Sources inspected: <code>docs/superpowers/specs/2026-06-22-poker-outcome-sim-design.md</code>,
+      <code>docs/superpowers/plans/2026-06-22-poker-outcome-sim.md</code>, <code>backend/sim</code>,
+      <code>backend/scoring</code>, <code>backend/app</code>, and <code>playsim</code>.
+    </footer>
+  </main>
+</div>
+</body>
+</html>
