@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How the Play Simulation Works — Archetype Agents, Step by Step</title>
+<style>
+:root{
+  --bg:#070f09; --bg2:#0c1810; --bg3:#102013; --border:#1b3221; --border2:#244a2e;
+  --text:#e4f2e6; --muted:#8fb89a; --dim:#3a5a42;
+  --gold:#e3c46a; --gold2:#c9a84c; --gold-bg:rgba(227,196,106,.1);
+  --blue:#5b9bf5; --teal:#33e0c4; --purple:#b98cff; --pink:#ff8fb0; --red:#ef6f6f; --amber:#f5b743; --green:#46c98b;
+  --sb:264px; --pad:clamp(28px,4.5vw,80px); --r:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;line-height:1.7;display:flex;min-height:100dvh}
+#sidebar{position:fixed;top:0;left:0;width:var(--sb);height:100dvh;overflow-y:auto;background:var(--bg2);border-right:1px solid var(--border);z-index:400;display:flex;flex-direction:column;transition:transform .24s ease;scrollbar-width:thin}
+.sb-top{padding:22px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.sb-diamond{width:28px;height:28px;flex-shrink:0;background:linear-gradient(135deg,var(--gold2),var(--gold) 60%,#f0d98a);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:flex;align-items:center;justify-content:center;font-size:11px;color:#0a140c;font-weight:900}
+.sb-name{font-size:13.5px;font-weight:800;color:var(--gold)}
+.sb-tag{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);line-height:1.5}
+nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--muted);font-size:12.5px;text-decoration:none;border-left:2px solid transparent;transition:all .14s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.03)}
+nav a.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-bg)}
+.nav-n{font-family:'Courier New',monospace;font-size:10px;color:var(--dim);min-width:18px;text-align:right}
+nav a.active .nav-n{color:var(--gold2)}
+.sb-foot{margin-top:auto;padding:14px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--dim);line-height:1.8}
+.sb-foot a{color:var(--muted);text-decoration:none;display:block;padding:2px 0}
+.sb-foot a:hover{color:var(--gold)}
+#hbg{display:none;position:fixed;top:14px;left:14px;z-index:500;width:42px;height:42px;border-radius:9px;background:var(--bg2);border:1px solid var(--border2);color:var(--gold);font-size:18px;cursor:pointer;align-items:center;justify-content:center}
+#overlay{display:none;position:fixed;inset:0;z-index:390;background:rgba(0,0,0,.6)}
+#overlay.open{display:block}
+#main{margin-left:var(--sb);flex:1;min-width:0;padding:0 var(--pad) 120px;max-width:1180px}
+.hero{padding:clamp(40px,7vh,80px) 0 clamp(26px,4vh,44px);border-bottom:1px solid var(--border);margin-bottom:40px}
+.hero .kicker{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.hero .kicker::before{content:'';width:26px;height:1px;background:var(--gold2)}
+.hero h1{font-size:clamp(26px,4.4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.12;margin-bottom:14px}
+.hero h1 em{color:var(--gold);font-style:normal}
+.hero p{font-size:clamp(15px,1.8vw,18px);color:var(--muted);max-width:680px;line-height:1.65}
+.crosslink{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.crosslink a{font-size:12px;padding:6px 13px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);background:var(--bg3);text-decoration:none;transition:all .15s}
+.crosslink a:hover{border-color:var(--gold2);color:var(--gold)}
+.crosslink a.here{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+.tldr{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:22px 26px;margin-bottom:48px}
+.tldr h3{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:10px}
+.tldr p{color:var(--muted);font-size:15px}.tldr b{color:var(--text)}
+.step{margin-bottom:clamp(48px,7vh,80px);scroll-margin-top:20px}
+.step-head{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.step-badge{width:46px;height:46px;flex-shrink:0;border-radius:12px;background:linear-gradient(140deg,var(--teal),#1aa890);color:#04130f;font-size:20px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(51,224,196,.16)}
+.step-head h2{font-size:clamp(19px,2.6vw,27px);font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.step-head .of{font-family:'Courier New',monospace;font-size:11px;color:var(--dim);margin-top:3px}
+.panel{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}
+.illus{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;display:flex;align-items:center;justify-content:center;min-height:210px}
+.illus svg{width:100%;height:auto;max-height:300px;display:block}
+.explain .what,.explain .why{margin-bottom:18px}
+.lbl{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:5px;margin-bottom:8px}
+.lbl-what{background:rgba(91,155,245,.12);color:var(--blue)}
+.lbl-why{background:rgba(70,201,139,.12);color:var(--green)}
+.explain p{font-size:15px;color:var(--muted);line-height:1.72}
+.explain p b{color:var(--text)}.explain p em{color:var(--gold);font-style:normal}
+.termbox{background:var(--bg3);border-left:3px solid var(--gold2);border-radius:0 8px 8px 0;padding:11px 16px;margin-top:14px;font-size:13.5px;color:var(--muted)}
+.termbox b{color:var(--gold)}
+.analogy{background:rgba(185,140,255,.07);border:1px solid rgba(185,140,255,.2);border-radius:8px;padding:12px 16px;margin-top:14px;font-size:14px;color:var(--muted)}
+.analogy b{color:var(--purple)}
+.pro{background:rgba(245,183,67,.07);border:1px solid rgba(245,183,67,.28);border-radius:8px;padding:13px 16px;margin-top:14px;font-size:13.5px;color:var(--muted)}
+.pro .ptag{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);background:rgba(245,183,67,.12);padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.pro b{color:var(--amber)}
+.callout{border-left:3px solid var(--gold);background:var(--gold-bg);border-radius:0 8px 8px 0;padding:14px 18px;margin:8px 0 0;font-size:14.5px;color:var(--muted)}
+.callout b{color:var(--text)}
+.danger{border-left:3px solid var(--red);background:rgba(239,111,111,.07);border-radius:0 8px 8px 0;padding:13px 16px;margin-top:14px;font-size:13.5px;color:var(--muted)}
+.danger b{color:var(--red)}
+table.mini{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+table.mini th,table.mini td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--border)}
+table.mini th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold2)}
+table.mini code{color:var(--teal)}
+@media(max-width:880px){.panel{grid-template-columns:1fr}.illus{order:-1}}
+@media(max-width:1000px){#hbg{display:flex}#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#overlay.open{display:block}#main{margin-left:0;padding-top:64px}}
+</style>
+</head>
+<body>
+<button id="hbg" aria-label="Menu">☰</button>
+<div id="overlay"></div>
+<aside id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo"><div class="sb-diamond">◆</div><div class="sb-name">FairPlay IQ · Learn</div></div>
+    <div class="sb-tag">Play simulation<br>Agents that play hands</div>
+  </div>
+  <nav>
+    <a href="#s1" class="nav-link"><span class="nav-n">1</span>Why simulate play</a>
+    <a href="#s2" class="nav-link"><span class="nav-n">2</span>One policy, ten personalities</a>
+    <a href="#s3" class="nav-link"><span class="nav-n">3</span>A stat is a knob</a>
+    <a href="#s4" class="nav-link"><span class="nav-n">4</span>What the engine looks at</a>
+    <a href="#s5" class="nav-link"><span class="nav-n">5</span>Playing one hand</a>
+    <a href="#s6" class="nav-link"><span class="nav-n">6</span>Reading &amp; exploiting opponents</a>
+    <a href="#s7" class="nav-link"><span class="nav-n">7</span>Being human (tilt, timing)</a>
+    <a href="#s8" class="nav-link"><span class="nav-n">8</span>Coordinated &amp; bot play</a>
+    <a href="#s9" class="nav-link"><span class="nav-n">9</span>Closing the loop</a>
+  </nav>
+  <div class="sb-foot">
+    <span style="color:var(--muted)">Related:</span>
+    <a href="../archetype-play-profiles.md">→ Archetype play profiles (the spec)</a>
+    <a href="../scoring-engine-overview.html">→ Scoring engine overview</a>
+    <a href="binary-logistic-walkthrough.html">→ Binary logistic (the detector)</a>
+  </div>
+</aside>
+<main id="main">
+<div class="hero">
+  <div class="kicker">FairPlay IQ · Learning Guide · No poker or stats background needed</div>
+  <h1>How the <em>play simulation</em> works — agents that actually play hands</h1>
+  <p>Instead of hand-setting each player's stats, we let an <em>agent</em> play real hands in the archetype's style. Realistic table dynamics fall out — and the signals our detector watches (looseness, aggression, soft-play, robotic timing) <em>emerge from the play</em> rather than being typed in.</p>
+  <div class="crosslink">
+    <a class="here" href="poker-sim-walkthrough.html">You are here: Play simulation</a>
+    <a href="../archetype-play-profiles.md">Archetype profiles (spec)</a>
+    <a href="binary-logistic-walkthrough.html">The detector (binary logistic)</a>
+  </div>
+</div>
+<div class="tldr">
+  <h3>The 30-second version</h3>
+  <p>Build <b>one decision engine</b> and give it <b>ten knob-sets</b> — one per archetype. The engine reads the game state (cards, position, stacks, pot, opponents), estimates equity, and the knobs bias every choice: how loose, how aggressive, how big, how human. Run thousands of seeded hands and each agent's <em>realized</em> stats (vpip, pfr, aggression factor) settle onto the archetype's real targets. The integrity behaviours — collusion soft-play, robotic timing, promo-grinding — are extra policy layers. The point: the detector's features become <b>emergent properties of play</b>, so the simulation is a genuine test of the detector, not a field it reads back.</p>
+</div>
+
+<!-- 1 -->
+<section class="step" id="s1">
+  <div class="step-head"><div class="step-badge">1</div><div><h2>Why simulate actual play?</h2><div class="of">step 1 of 9</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 210" role="img" aria-label="Agents play hands; signals emerge; the detector reads them">
+        <circle cx="48" cy="60" r="13" fill="#5b9bf5"/><circle cx="48" cy="110" r="13" fill="#46c98b"/><circle cx="48" cy="160" r="13" fill="#ef6f6f"/>
+        <text x="48" y="185" font-size="8" fill="#8fb89a" text-anchor="middle">agents play</text>
+        <path d="M68 110 L112 110" stroke="#3a5a42" stroke-width="2" marker-end="url(#ar)"/>
+        <rect x="112" y="40" width="92" height="140" rx="10" fill="#102013" stroke="#244a2e" stroke-width="2"/>
+        <text x="158" y="60" text-anchor="middle" font-size="8.5" fill="#e3c46a">hands played</text>
+        <text x="158" y="92" text-anchor="middle" font-size="8" fill="#8fb89a">vpip emerges</text>
+        <text x="158" y="110" text-anchor="middle" font-size="8" fill="#8fb89a">aggression emerges</text>
+        <text x="158" y="128" text-anchor="middle" font-size="8" fill="#8fb89a">timing emerges</text>
+        <text x="158" y="146" text-anchor="middle" font-size="8" fill="#8fb89a">soft-play emerges</text>
+        <path d="M204 110 L248 110" stroke="#3a5a42" stroke-width="2" marker-end="url(#ar)"/>
+        <rect x="248" y="86" width="58" height="48" rx="9" fill="#0c1810" stroke="#e3c46a" stroke-width="1.5"/>
+        <text x="277" y="108" text-anchor="middle" font-size="8.5" fill="#e3c46a">detector</text><text x="277" y="122" text-anchor="middle" font-size="8" fill="#8fb89a">scores it</text>
+        <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="#3a5a42"/></marker></defs>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Today P2's generator <b>writes</b> each player's stats directly. Here we instead let an agent <b>play hands</b> in character; the stats are then measured from how it played.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>It produces <b>real table dynamics</b> — a predator actually attacks the new player, a colluder actually soft-plays a teammate — and the detector's signals <em>emerge</em> from that. That makes the simulation a true test: the detector can't just read a field it was handed.</p></div>
+      <div class="callout"><b>The guiding principle.</b> Design the engine so vpip, aggression, <code>soft_play_delta</code>, <code>timing_regularity</code> and co-seating are <b>emergent properties of play</b> — not inputs. If they're typed in, the detector is grading its own homework.</div>
+      <div class="pro"><span class="ptag">Responsible use</span><b>Sandbox only.</b> These agents play synthetic chips in the integrity lab so the detector can be tested. This is not a tool for real-money play, real-time assistance, or actual collusion (see <code>CLAUDE.md</code> non-goals).</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="step" id="s2">
+  <div class="step-head"><div class="step-badge">2</div><div><h2>One engine, ten personalities</h2><div class="of">step 2 of 9</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 210" role="img" aria-label="One policy box with knobs, fed by ten archetype knob-sets">
+        <rect x="108" y="70" width="104" height="70" rx="10" fill="#102013" stroke="#33e0c4" stroke-width="2"/>
+        <text x="160" y="98" text-anchor="middle" font-size="9" fill="#33e0c4">decision</text><text x="160" y="112" text-anchor="middle" font-size="9" fill="#33e0c4">engine</text>
+        <text x="160" y="128" text-anchor="middle" font-size="7.5" fill="#8fb89a">(one policy)</text>
+        <g font-size="7.5" fill="#8fb89a">
+        <text x="60" y="40">grinder</text><text x="60" y="56">predator</text><text x="60" y="72">recreational</text><text x="60" y="88">new</text><text x="60" y="104">promo</text>
+        <text x="250" y="40">regular</text><text x="250" y="56">anchor</text><text x="250" y="72">household</text><text x="250" y="88">cluster</text><text x="250" y="104">bot</text>
+        </g>
+        <path d="M100 60 L108 90" stroke="#3a5a42" stroke-width="1.4"/><path d="M100 90 L108 100" stroke="#3a5a42" stroke-width="1.4"/>
+        <path d="M220 60 L212 90" stroke="#3a5a42" stroke-width="1.4"/><path d="M220 90 L212 100" stroke="#3a5a42" stroke-width="1.4"/>
+        <text x="160" y="175" text-anchor="middle" font-size="8.5" fill="#e3c46a">same engine + different knob vector = a different player type</text>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>We don't write ten programs. We write <b>one</b> decision engine and hand it a <b>vector of knobs</b> for each archetype: <em>looseness, preflop aggression, postflop aggression, sizing, skill, stamina, risk-aversion</em>, plus integrity flags.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>It keeps the agents comparable and the differences <b>auditable</b> — a grinder and a recreational differ only by their knobs, and you can read exactly which knob makes them play differently.</p></div>
+      <div class="termbox"><b>Knob vector</b> = the small set of numbers that turns the generic engine into one archetype. The whole spec lives in <code>docs/archetype-play-profiles.md</code>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="step" id="s3">
+  <div class="step-head"><div class="step-badge">3</div><div><h2>A stat is just a knob</h2><div class="of">step 3 of 9</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 210" role="img" aria-label="vpip, pfr and aggression factor as dials">
+        <g font-size="8" fill="#8fb89a" text-anchor="middle">
+        <circle cx="65" cy="80" r="30" fill="none" stroke="#244a2e" stroke-width="6"/>
+        <path d="M65 80 L65 54" stroke="#5b9bf5" stroke-width="3"/><text x="65" y="125">vpip → looseness</text><text x="65" y="84" font-size="9" fill="#e4f2e6">0.23</text>
+        <circle cx="160" cy="80" r="30" fill="none" stroke="#244a2e" stroke-width="6"/>
+        <path d="M160 80 L182 66" stroke="#46c98b" stroke-width="3"/><text x="160" y="125">pfr → preflop agg</text><text x="160" y="84" font-size="9" fill="#e4f2e6">0.21</text>
+        <circle cx="255" cy="80" r="30" fill="none" stroke="#244a2e" stroke-width="6"/>
+        <path d="M255 80 L274 92" stroke="#ef6f6f" stroke-width="3"/><text x="255" y="125">AF → postflop agg</text><text x="255" y="84" font-size="9" fill="#e4f2e6">2.69</text>
+        <text x="160" y="165" fill="#e3c46a">grinder's dials: tight, raises what it plays, aggressive postflop</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Each aggregate stat maps to a decision dial. <b>vpip</b> sets how wide a range the agent enters; <b>pfr</b> sets how often it raises instead of limping; the <b>aggression factor</b> sets how often it bets/raises vs calls after the flop.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>These are the targets the agent must hit. A grinder's dials (<code>vpip 0.23</code>, <code>pfr 0.21</code>, <code>AF 2.69</code>) say "tight, almost never limps, aggressive postflop." A recreational's (<code>0.38 / 0.12 / 1.18</code>) say "loose and passive."</p></div>
+      <table class="mini"><tr><th>stat</th><th>dial</th></tr>
+      <tr><td><code>vpip</code></td><td>preflop looseness (entering-range width)</td></tr>
+      <tr><td><code>pfr</code></td><td>preflop aggression; <code>vpip − pfr</code> = the limp/call gap</td></tr>
+      <tr><td><code>aggression_factor</code></td><td>postflop aggression (bet/raise vs call)</td></tr>
+      <tr><td><code>avg_pot_size</code></td><td>bet sizing / stakes</td></tr></table>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="step" id="s4">
+  <div class="step-head"><div class="step-badge">4</div><div><h2>What the engine looks at</h2><div class="of">step 4 of 9</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 210" role="img" aria-label="A poker table state with the inputs the engine reads">
+        <ellipse cx="160" cy="105" rx="92" ry="58" fill="#0c1810" stroke="#244a2e" stroke-width="2"/>
+        <rect x="132" y="92" width="20" height="26" rx="2" fill="#102013" stroke="#5b9bf5"/><rect x="156" y="92" width="20" height="26" rx="2" fill="#102013" stroke="#5b9bf5"/>
+        <text x="160" y="84" text-anchor="middle" font-size="7.5" fill="#8fb89a">board + pot</text>
+        <g font-size="7.5" fill="#8fb89a">
+        <text x="160" y="48" text-anchor="middle">opponents &amp; reads</text>
+        <text x="46" y="108" text-anchor="middle">position</text>
+        <text x="274" y="108" text-anchor="middle">stack / SPR</text>
+        <text x="160" y="172" text-anchor="middle">pot odds · action history · # players</text>
+        </g>
+        <circle cx="160" cy="52" r="6" fill="#ef6f6f"/><circle cx="80" cy="105" r="6" fill="#46c98b"/><circle cx="240" cy="105" r="6" fill="#5b9bf5"/>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Before choosing an action the engine reads the <b>full situation</b>, not just its two cards: position, effective stack and stack-to-pot ratio, the board texture, the pot and the price to call, how many players are in, and the betting action so far.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>Position and stack depth swing the right play more than the cards do. A real-feeling agent has to weigh them — and weighing them <em>badly</em> is exactly how a low-skill archetype (new, recreational) leaks chips.</p></div>
+      <div class="termbox"><b>SPR</b> = stack ÷ pot. Low SPR → commit with top pair; high SPR → play more carefully and chase implied odds. <b>Position</b> = how late you act; acting last is a big edge.</div>
+      <div class="analogy"><b>Like chess:</b> the same piece is strong or weak depending on the whole board. The engine scores the <em>situation</em>, then the knobs decide how boldly to act on it.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="step" id="s5">
+  <div class="step-head"><div class="step-badge">5</div><div><h2>Playing one hand, street by street</h2><div class="of">step 5 of 9</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 210" role="img" aria-label="The per-decision loop: estimate equity, bias by knobs, pick a sized action">
+        <g font-size="8" fill="#8fb89a" text-anchor="middle">
+        <rect x="20" y="86" width="64" height="40" rx="8" fill="#102013" stroke="#244a2e"/><text x="52" y="103">estimate</text><text x="52" y="115">equity</text>
+        <path d="M84 106 L104 106" stroke="#3a5a42" stroke-width="2" marker-end="url(#a5)"/>
+        <rect x="104" y="86" width="64" height="40" rx="8" fill="#102013" stroke="#33e0c4"/><text x="136" y="103" fill="#33e0c4">apply</text><text x="136" y="115" fill="#33e0c4">knobs</text>
+        <path d="M168 106 L188 106" stroke="#3a5a42" stroke-width="2" marker-end="url(#a5)"/>
+        <rect x="188" y="86" width="64" height="40" rx="8" fill="#102013" stroke="#244a2e"/><text x="220" y="100">pick action</text><text x="220" y="112">+ size</text>
+        <path d="M252 106 L272 106" stroke="#3a5a42" stroke-width="2" marker-end="url(#a5)"/>
+        <text x="290" y="103" fill="#46c98b">bet</text><text x="290" y="115" fill="#ef6f6f">fold</text>
+        <text x="160" y="45" fill="#e3c46a">preflop → flop → turn → river</text>
+        <path d="M30 60 L290 60" stroke="#244a2e" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <text x="160" y="160">repeat the loop on every street</text>
+        </g>
+        <defs><marker id="a5" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="#3a5a42"/></marker></defs>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>On each street the engine: (1) estimates <b>equity</b> — its chance to win against the opponents' likely <em>range</em>; (2) lets the <b>knobs bias</b> the threshold — looseness lowers the equity needed to continue, aggression turns a marginal call into a bet; (3) picks an action and a <b>size</b>.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>This loop is the heart of "playing." Same engine, different knobs → a grinder value-bets a thin edge while a recreational just calls and a predator turns it into a bluff-raise.</p></div>
+      <div class="pro"><span class="ptag">Scorecard parallel</span>Use <b>mixed strategies</b> — sometimes call, sometimes raise the same hand, chosen by a seeded coin-flip — so play isn't robotic. The one exception is the <b>bot</b>, whose lack of mixing is its tell (step 8).</div>
+      <div class="termbox"><b>Equity</b> = win probability vs a range. <b>Range</b> = the set of hands an opponent could hold, narrowed as they act. <b>EV</b> = expected chips; the engine prefers higher-EV actions, knob-biased.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="step" id="s6">
+  <div class="step-head"><div class="step-badge">6</div><div><h2>Reading — and exploiting — opponents</h2><div class="of">step 6 of 9</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 210" role="img" aria-label="A predator targeting the weakest player at the table">
+        <ellipse cx="160" cy="100" rx="96" ry="60" fill="#0c1810" stroke="#244a2e" stroke-width="2"/>
+        <circle cx="160" cy="48" r="11" fill="#ef6f6f"/><text x="160" y="36" text-anchor="middle" font-size="8" fill="#ef6f6f">predator</text>
+        <circle cx="80" cy="120" r="11" fill="#5b9bf5"/><text x="80" y="146" text-anchor="middle" font-size="7.5" fill="#8fb89a">new (weak)</text>
+        <circle cx="240" cy="120" r="11" fill="#46c98b"/><text x="240" y="146" text-anchor="middle" font-size="7.5" fill="#8fb89a">regular</text>
+        <path d="M150 56 Q110 80 88 110" stroke="#ef6f6f" stroke-width="2.5" fill="none" marker-end="url(#a6)"/>
+        <text x="120" y="92" font-size="7.5" fill="#ef6f6f">targets the fish</text>
+        <defs><marker id="a6" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="#ef6f6f"/></marker></defs>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Each agent keeps <b>reads</b> on the others (their observed looseness/aggression) and <b>adjusts</b>: value-bet thinner against a calling-station, bluff more against a nit, tighten up against a maniac. A predator carries a <em>"target the weakest player"</em> flag and hunts the new/recreational seat.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>This is where the <b>table dynamics emerge</b>. Predation pressure isn't a number we set — it's what happens when a predator agent actually attacks the fish. The <code>healthy_anchor</code> deliberately does <em>not</em> hunt; that's why it stabilises a table.</p></div>
+      <div class="callout"><b>Emergence again.</b> "This table is dangerous for a beginner" becomes <em>true in the simulation</em> — the new player really does bust faster — which is exactly the table-health signal the detector later has to catch.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="step" id="s7">
+  <div class="step-head"><div class="step-badge">7</div><div><h2>Being human: tilt, fatigue, timing</h2><div class="of">step 7 of 9</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 210" role="img" aria-label="Human timing varies; a bot's timing is flat">
+        <g font-size="8" fill="#8fb89a">
+        <text x="80" y="30" text-anchor="middle" fill="#46c98b">human latency</text>
+        <path d="M24 96 L40 70 L56 100 L72 60 L88 104 L104 78 L120 92 L136 64" fill="none" stroke="#46c98b" stroke-width="2"/>
+        <text x="80" y="124" text-anchor="middle" font-size="7">tanks, snaps — varies</text>
+        <text x="240" y="30" text-anchor="middle" fill="#ef6f6f">bot latency</text>
+        <path d="M184 84 L296 84" fill="none" stroke="#ef6f6f" stroke-width="2"/>
+        <text x="240" y="124" text-anchor="middle" font-size="7">flat = timing_regularity ≈ 1</text>
+        <text x="160" y="166" text-anchor="middle" fill="#e3c46a">after a bad beat: a recreational tilts looser; new player quits</text>
+        </g>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Layer on human realism: <b>tilt</b> (play looser/wilder after a bad beat, or quit), <b>fatigue</b> (decisions decay over a long session), a <b>stop-loss / win-goal</b> (when to leave), and a <b>decision-latency model</b> (how long it "thinks" before acting).</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>These produce the <em>session</em> and <em>timing</em> signals. A new player's low stop-loss is the 12-minute churn in CASE-A. And the latency model is where <code>timing_regularity</code> comes from — humans vary, so a near-flat latency curve is the bot's fingerprint.</p></div>
+      <div class="termbox"><b>Action timing</b> = the seconds before each decision. Modelling it explicitly (with per-archetype jitter) means the bot's robotic consistency <em>emerges</em> as a detectable signal.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="step" id="s8">
+  <div class="step-head"><div class="step-badge">8</div><div><h2>Coordinated &amp; special behaviour</h2><div class="of">step 8 of 9</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 210" role="img" aria-label="Cluster members soft-play each other and squeeze the outsider">
+        <ellipse cx="160" cy="100" rx="96" ry="60" fill="#0c1810" stroke="#244a2e" stroke-width="2"/>
+        <circle cx="100" cy="56" r="11" fill="#b98cff"/><circle cx="220" cy="56" r="11" fill="#b98cff"/>
+        <text x="160" y="40" text-anchor="middle" font-size="7.5" fill="#b98cff">members</text>
+        <path d="M112 58 Q160 44 208 58" stroke="#b98cff" stroke-width="2" stroke-dasharray="3 2" fill="none"/>
+        <text x="160" y="76" text-anchor="middle" font-size="7" fill="#b98cff">soft-play each other</text>
+        <circle cx="160" cy="146" r="11" fill="#5b9bf5"/><text x="160" y="168" text-anchor="middle" font-size="7.5" fill="#8fb89a">outsider</text>
+        <path d="M106 68 Q140 110 150 136" stroke="#ef6f6f" stroke-width="2" fill="none" marker-end="url(#a8)"/>
+        <path d="M214 68 Q180 110 170 136" stroke="#ef6f6f" stroke-width="2" fill="none" marker-end="url(#a8)"/>
+        <text x="160" y="120" text-anchor="middle" font-size="7" fill="#ef6f6f">squeeze together</text>
+        <defs><marker id="a8" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="#ef6f6f"/></marker></defs>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Integrity archetypes get extra policy layers. A <b>cluster</b> agent is member-aware: it <em>soft-plays</em> teammates (won't bet into them, folds marginal spots, can chip-dump) and <em>gangs up</em> on outsiders, while members converge on the same tables.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>The collusion signals — negative <code>soft_play_delta</code>, high co-seating, outsider pressure — are produced by this behaviour, not set by hand. That's what makes CASE-C a real positive the detector must find.</p></div>
+      <div class="danger"><b>Don't over-fit the trap.</b> The <code>shared_device_household</code> agents share a device but are <b>two independent players</b> — divergent schedules, no soft-play, rarely the same table. They must look superficially linked yet behave independently, so the detector learns <em>not</em> to escalate them (CASE-E). The <b>bot</b> is its own layer: deterministic policy, flat timing, no tilt, near-24/7.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="step" id="s9">
+  <div class="step-head"><div class="step-badge">9</div><div><h2>Closing the loop: calibrate &amp; feed the detector</h2><div class="of">step 9 of 9</div></div></div>
+  <div class="panel">
+    <div class="illus">
+      <svg viewBox="0 0 320 210" role="img" aria-label="Calibration loop: play, measure, tune knobs until stats match targets">
+        <g font-size="8" fill="#8fb89a" text-anchor="middle">
+        <rect x="40" y="40" width="70" height="34" rx="8" fill="#102013" stroke="#244a2e"/><text x="75" y="61">play hands</text>
+        <rect x="210" y="40" width="70" height="34" rx="8" fill="#102013" stroke="#244a2e"/><text x="245" y="56">measure</text><text x="245" y="68">vpip/pfr/AF</text>
+        <rect x="210" y="120" width="70" height="34" rx="8" fill="#102013" stroke="#33e0c4"/><text x="245" y="136" fill="#33e0c4">tune knobs</text><text x="245" y="148" fill="#33e0c4">to targets</text>
+        <rect x="40" y="120" width="70" height="34" rx="8" fill="#102013" stroke="#e3c46a"/><text x="75" y="136" fill="#e3c46a">match?</text><text x="75" y="148" fill="#e3c46a">→ detector</text>
+        <path d="M110 57 L210 57" stroke="#3a5a42" stroke-width="2" marker-end="url(#a9)"/>
+        <path d="M245 74 L245 120" stroke="#3a5a42" stroke-width="2" marker-end="url(#a9)"/>
+        <path d="M210 137 L110 137" stroke="#3a5a42" stroke-width="2" marker-end="url(#a9)"/>
+        <path d="M75 120 L75 74" stroke="#3a5a42" stroke-width="2" marker-end="url(#a9)"/>
+        </g>
+        <defs><marker id="a9" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="#3a5a42"/></marker></defs>
+      </svg>
+    </div>
+    <div class="explain">
+      <div class="what"><span class="lbl lbl-what">What this does</span><p>Run each agent over thousands of <b>seeded</b> hands, <b>measure</b> its realized vpip/pfr/AF, and <b>tune the knobs</b> until they hit the archetype's targets from the profile spec. Then the hand histories aggregate into the same player features our pipeline already uses.</p></div>
+      <div class="why"><span class="lbl lbl-why">Why it matters</span><p>This is the bridge between <em>agents playing hands</em> and <em>the fields the scoring engine consumes</em> — and seeding keeps every run reproducible, matching the lab's deterministic ethos. The simulation slots in under the current generator with <b>Contract-1 compatibility</b>.</p></div>
+      <div class="callout"><b>You've closed the loop.</b> Agents play → signals emerge → calibration locks them to the real archetype targets → the hand histories feed Contract 1 → the detector scores them. Because the signals are emergent, beating the detector now means actually <em>changing how the agents play</em> — a genuine test. &nbsp;See <a href="../archetype-play-profiles.md" style="color:var(--gold)">the archetype spec →</a></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<script>
+(function(){var h=document.getElementById('hbg'),s=document.getElementById('sidebar'),o=document.getElementById('overlay');if(!h)return;h.onclick=function(){s.classList.add('open');o.classList.add('open')};o.onclick=function(){s.classList.remove('open');o.classList.remove('open')}})();
+(function(){var l=[].slice.call(document.querySelectorAll('.nav-link')),s=[].slice.call(document.querySelectorAll('.step'));if(!l.length)return;var o=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){l.forEach(function(x){x.classList.remove('active')});var a=document.querySelector('.nav-link[href="#'+e.target.id+'"]');if(a)a.classList.add('active')}})},{rootMargin:'-12% 0px -75% 0px'});s.forEach(function(x){o.observe(x)})})();
+</script>
+</body>
+</html>
