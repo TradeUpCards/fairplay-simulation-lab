@@ -11,6 +11,26 @@ Capstone submission. Build: 7–10 days · 4 people.
 
 ---
 
+## Quick start
+
+```bash
+# one-time setup
+uv venv --python 3.12 .venv                          # backend interpreter (3.14 lacks wheels)
+VIRTUAL_ENV=.venv uv pip install -r backend/requirements.txt
+npm install                                          # root — installs `concurrently`
+npm install --prefix frontend                        # frontend deps
+
+# run the whole stack (backend :8000 + frontend :5173) with one command:
+npm run dev
+```
+
+`npm run dev` starts the FastAPI backend (`backend.app.main`, auto-reload) and the
+Vite frontend together with labeled output; one Ctrl-C stops both. Run them alone
+with `npm run dev:api` / `npm run dev:web`. The frontend works without the backend
+too — it falls back to the frozen JSON in `data/`.
+
+---
+
 ## The one thing that can't break — the demo spine
 
 ```
