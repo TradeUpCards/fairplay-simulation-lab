@@ -2,9 +2,10 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import type { LobbyTable, PlayerFloorData, PlayerOption, RouterLobbyFile } from '../data/types'
 import { loadRouterLobby } from '../data/shim'
 import { useResource } from '../state/useResource'
-import { useLiveRoom, playerApi } from '../state/liveRoom'
+import { useLiveRoom, playerApi, liveRoom } from '../state/liveRoom'
 import { ResourceBoundary } from '../components/ResourceBoundary'
 import { TableTile } from '../components/TableTile'
+import { PlayerPickerModal } from '../components/PlayerPickerModal'
 
 const DEFAULT_PLAYER = 'P-104'
 
@@ -50,14 +51,20 @@ function LivePlayerFloor({ lastUpdatedAt }: { lastUpdatedAt: number }) {
   const [players, setPlayers] = useState<PlayerOption[]>([])
   const [floor, setFloor] = useState<PlayerFloorData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  // Tables with a seat change in flight — disables their Join/Leave control until
+  // the resulting score_update re-fetches the floor and the table moves lists.
+  const [busy, setBusy] = useState<Set<string>>(() => new Set())
 
+  // Re-fetch on each live seat change too, so the picker's per-player seat counts
+  // stay current as tables fill and empty.
   useEffect(() => {
     let alive = true
     playerApi.players().then((ps) => alive && setPlayers(ps)).catch(() => {})
     return () => {
       alive = false
     }
-  }, [])
+  }, [lastUpdatedAt])
 
   // Re-fetch on player change AND on any live seat change, so "My Tables" tracks
   // what the operator does on the floor in real time.
@@ -72,6 +79,26 @@ function LivePlayerFloor({ lastUpdatedAt }: { lastUpdatedAt: number }) {
       alive = false
     }
   }, [playerId, lastUpdatedAt])
+
+  // Join (sit) / Leave (stand) go through the live API; the resulting SSE
+  // score_update bumps `lastUpdatedAt`, which re-runs the fetch above so the
+  // table hops from Lobby → My Tables (or back). Locked decision: seating is
+  // live-only, so these controls render only here, never in the static fallback.
+  const seatMove = (tableId: string, fn: () => Promise<void>) => {
+    setBusy((b) => new Set(b).add(tableId))
+    setError(null)
+    fn()
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .finally(() =>
+        setBusy((b) => {
+          const next = new Set(b)
+          next.delete(tableId)
+          return next
+        }),
+      )
+  }
+  const join = (tableId: string) => seatMove(tableId, () => liveRoom.sit(playerId, tableId))
+  const leave = (tableId: string) => seatMove(tableId, () => liveRoom.stand(playerId, tableId))
 
   const options = players.length ? players : [{ player_id: playerId, display_name: playerId }]
   const lobby = floor?.player_lobby ?? []
@@ -93,21 +120,17 @@ function LivePlayerFloor({ lastUpdatedAt }: { lastUpdatedAt: number }) {
           </FloorTab>
         </div>
 
-        <label className="text-[0.85rem] text-[#b8ab95]">
-          Viewing as{' '}
-          <select
-            className={SELECT_CLS}
-            aria-label="select player"
-            value={playerId}
-            onChange={(e) => setPlayerId(e.target.value)}
-          >
-            {options.map((p) => (
-              <option key={p.player_id} value={p.player_id}>
-                {p.player_id}
-              </option>
-            ))}
-          </select>
-        </label>
+        <button
+          type="button"
+          onClick={() => setPickerOpen(true)}
+          aria-haspopup="dialog"
+          aria-label="select player"
+          className={`${SELECT_CLS} inline-flex items-center gap-1.5 text-[0.85rem] hover:border-brass`}
+        >
+          <span className="text-[#b8ab95]">Viewing as</span>
+          <span className="font-mono font-semibold text-[#f3ece0]">{playerId}</span>
+          <span className="text-[0.7rem] text-[#b8ab95]">▾</span>
+        </button>
       </div>
 
       {tab === 'lobby' ? (
@@ -115,11 +138,13 @@ function LivePlayerFloor({ lastUpdatedAt }: { lastUpdatedAt: number }) {
           <p className="mt-7 text-[#b8ab95]">No tables available for {playerId} right now.</p>
         ) : (
           <ul className={FLOOR_GRID} aria-label="lobby">
-            {lobby.map((t) => (
+            {lobby.map((t, i) => (
               <TableTile
                 key={t.table_id}
                 table={t}
+                featured={i === 0}
                 badge={{ toneClass: BADGE_TONE[t.badge], label: t.badge_label }}
+                action={{ kind: 'join', onClick: () => join(t.table_id), busy: busy.has(t.table_id) }}
               />
             ))}
           </ul>
@@ -131,7 +156,14 @@ function LivePlayerFloor({ lastUpdatedAt }: { lastUpdatedAt: number }) {
       ) : (
         <ul className={FLOOR_GRID} aria-label="my tables">
           {tables.map((t) => (
-            <TableTile key={t.table_id} table={t} badge={SEATED_BADGE} testId="my-table-card" />
+            <TableTile
+              key={t.table_id}
+              table={t}
+              variant="seated"
+              badge={SEATED_BADGE}
+              testId="my-table-card"
+              action={{ kind: 'leave', onClick: () => leave(t.table_id), busy: busy.has(t.table_id) }}
+            />
           ))}
         </ul>
       )}
@@ -141,6 +173,17 @@ function LivePlayerFloor({ lastUpdatedAt }: { lastUpdatedAt: number }) {
           {error}
         </p>
       )}
+
+      <PlayerPickerModal
+        open={pickerOpen}
+        current={playerId}
+        players={options}
+        onSelect={(id) => {
+          setPlayerId(id)
+          setPickerOpen(false)
+        }}
+        onClose={() => setPickerOpen(false)}
+      />
     </section>
   )
 }
@@ -217,10 +260,11 @@ export function PlayerLobbyView({
         <p className="text-[#b8ab95]">No tables available right now.</p>
       ) : (
         <ul className={FLOOR_GRID} aria-label="lobby">
-          {tables.map((t) => (
+          {tables.map((t, i) => (
             <TableTile
               key={t.table_id}
               table={t}
+              featured={i === 0}
               badge={{ toneClass: BADGE_TONE[t.badge], label: t.badge_label }}
             />
           ))}

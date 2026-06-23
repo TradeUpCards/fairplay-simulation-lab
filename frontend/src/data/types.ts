@@ -7,15 +7,22 @@
  * reads, and the `SimPath` discriminant the sim-state store uses.
  */
 export * from '../../contract2'
-import type { LobbyTable } from '../../contract2'
+import type { Archetype, LobbyTable } from '../../contract2'
 
 /** A seated table on the player's "My Tables" view — neutral facts, no badge. */
 export type NeutralTable = Omit<LobbyTable, 'badge' | 'badge_label'>
 
-/** One selectable player for the lobby impersonator (`GET /api/players`). */
+/**
+ * One selectable player for the lobby impersonator (`GET /api/players`).
+ * `archetype` + `seated_count` are operator-only context for the picker — they
+ * never reach a player-facing card (the player/operator wall). Optional so the
+ * pre-fetch fallback option can omit them.
+ */
 export interface PlayerOption {
   player_id: string
   display_name: string
+  archetype?: Archetype
+  seated_count?: number
 }
 
 /** A player's front-of-house view (`GET /api/lobby/{id}`): recommendations + seats. */
