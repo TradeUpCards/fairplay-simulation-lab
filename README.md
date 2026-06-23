@@ -29,6 +29,36 @@ Vite frontend together with labeled output; one Ctrl-C stops both. Run them alon
 with `npm run dev:api` / `npm run dev:web`. The frontend works without the backend
 too — it falls back to the frozen JSON in `data/`.
 
+### Run the full app with Docker
+
+Compose starts the FastAPI backend on `:8000` and the nginx-served frontend on
+`:5173`:
+
+```bash
+docker compose up --build
+```
+
+Then open <http://localhost:5173>. The frontend bundle is built with
+`VITE_API_BASE=http://localhost:8000`, so live room state, SSE updates, and seating
+mutations use the containerized API.
+
+### Run the static frontend only
+
+For an offline/static demo, build only the frontend image from the repo root so
+Vite can import the frozen JSON in `data/`:
+
+```bash
+docker build -f frontend/Dockerfile -t fairplay-frontend .
+docker run --rm -p 5173:80 fairplay-frontend
+```
+
+Or use Compose from the frontend directory:
+
+```bash
+cd frontend
+docker compose up --build
+```
+
 ---
 
 ## The one thing that can't break — the demo spine
