@@ -27,6 +27,7 @@ from scoring.health import (  # noqa: E402
     score_table,
 )
 from scoring.integrity import score_integrity  # noqa: E402
+from scoring.router import LOBBY_SAFE_FIELDS, route  # noqa: E402
 
 DATA = ROOT / "data"
 
@@ -67,11 +68,9 @@ class Room:
         }
 
     # ── queries ──────────────────────────────────────────────────────────────
-    def table_of(self, player_id: str) -> dict[str, Any] | None:
-        for t in self.tables:
-            if player_id in t.get("seated_player_ids", []):
-                return t
-        return None
+    def tables_of(self, player_id: str) -> list[dict[str, Any]]:
+        """Every table this player is currently seated at (a player may sit at several)."""
+        return [t for t in self.tables if player_id in t.get("seated_player_ids", [])]
 
     def _rescore(self, table_id: str) -> HealthScore:
         h = score_table(self.tables_by_id[table_id], self.players_by_id, self.cbi, sessions=self.sessions)
@@ -79,17 +78,24 @@ class Room:
         return h
 
     # ── mutations ────────────────────────────────────────────────────────────
-    def stand(self, player_id: str) -> HealthScore:
-        """Remove a player from whatever table they're seated at; rescore it."""
-        t = self.table_of(player_id)
+    def stand(self, player_id: str, table_id: str) -> HealthScore:
+        """Remove a player from a *specific* table; rescore that table.
+
+        A player may be seated at multiple tables, so standing up is per-table —
+        the caller names which seat to vacate.
+        """
+        t = self.tables_by_id.get(table_id)
         if t is None:
-            raise RoomError(f"{player_id} is not seated at any table")
+            raise RoomError(f"unknown table {table_id}")
+        if player_id not in t.get("seated_player_ids", []):
+            raise RoomError(f"{player_id} is not seated at {table_id}")
         t["seated_player_ids"].remove(player_id)
         self._sync_counts(t)
-        return self._rescore(t["table_id"])
+        return self._rescore(table_id)
 
     def sit(self, player_id: str, table_id: str) -> HealthScore:
-        """Seat a player at a table; rescore it. Rejects full tables / double-seating."""
+        """Seat a player at a table; rescore it. Rejects full tables / double-seating
+        the same table. A player may be seated at several *different* tables at once."""
         if player_id not in self.players_by_id:
             raise RoomError(f"unknown player {player_id}")
         t = self.tables_by_id.get(table_id)
@@ -97,9 +103,6 @@ class Room:
             raise RoomError(f"unknown table {table_id}")
         if player_id in t["seated_player_ids"]:
             raise RoomError(f"{player_id} is already seated at {table_id}")
-        current = self.table_of(player_id)
-        if current is not None:
-            raise RoomError(f"{player_id} is already seated at {current['table_id']} — stand them up first")
         if t["max_seats"] - len(t["seated_player_ids"]) <= 0:
             raise RoomError(f"{table_id} is full")
         t["seated_player_ids"].append(player_id)
@@ -110,6 +113,34 @@ class Room:
     def _sync_counts(t: dict[str, Any]) -> None:
         t["seated_count"] = len(t["seated_player_ids"])
         t["open_seats"] = t["max_seats"] - t["seated_count"]
+
+    # ── player views (the front-of-house seam — neutral, player-safe) ─────────
+    def players(self) -> list[dict[str, str]]:
+        """Selectable player universe for the lobby impersonator (id + name only)."""
+        return sorted(
+            (
+                {"player_id": p["player_id"], "display_name": p.get("display_name", p["player_id"])}
+                for p in self.players_by_id.values()
+            ),
+            key=lambda p: p["player_id"],
+        )
+
+    def lobby(self, player_id: str) -> dict[str, Any]:
+        """What a player would see: their routed lobby (recommendations) + the
+        tables they're currently seated at. Both carry only player-safe fields —
+        no scores, classifications, or integrity language (the player/operator wall).
+        """
+        if player_id not in self.players_by_id:
+            raise RoomError(f"unknown player {player_id}")
+        routed = route(player_id, self.tables, self.players_by_id, self.cbi, self.health)
+        seated = [
+            {k: t[k] for k in LOBBY_SAFE_FIELDS if k in t} for t in self.tables_of(player_id)
+        ]
+        return {
+            "player_id": player_id,
+            "player_lobby": routed["player_lobby"],
+            "tables": seated,
+        }
 
     # ── snapshots (the wire shapes the frontend binds to) ─────────────────────
     def table_update(self, table_id: str) -> dict[str, Any]:

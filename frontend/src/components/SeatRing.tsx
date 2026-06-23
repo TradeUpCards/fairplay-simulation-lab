@@ -22,17 +22,25 @@ const PTL_DOT: Record<PtlTone, string> = {
  * table card on the floor grid: no archetype, top/bottom seats pulled onto the
  * brass rim to save height. `centerContent` overrides the centre label (the card
  * puts the health score + seat count there).
+ *
+ * When `onStand` / `onSeatOpen` are supplied (the live detail panel), occupied
+ * seats grow a stand-up control and open seats become clickable to seat a player.
+ * Omit them (the floor cards, tests) and the ring is purely read-only.
  */
 export function SeatRing({
   table,
   seats,
   compact = false,
   centerContent,
+  onStand,
+  onSeatOpen,
 }: {
   table: TableRosterEntry
   seats: SeatInfo[]
   compact?: boolean
   centerContent?: ReactNode
+  onStand?: (playerId: string) => void
+  onSeatOpen?: (seatIndex: number) => void
 }) {
   return (
     <div
@@ -58,7 +66,7 @@ export function SeatRing({
         )
       )}
       {seats.map((seat) => (
-        <Seat key={seat.index} seat={seat} compact={compact} />
+        <Seat key={seat.index} seat={seat} compact={compact} onStand={onStand} onSeatOpen={onSeatOpen} />
       ))}
     </div>
   )
@@ -70,7 +78,17 @@ function centerClass(compact: boolean) {
   }`
 }
 
-function Seat({ seat, compact }: { seat: SeatInfo; compact: boolean }) {
+function Seat({
+  seat,
+  compact,
+  onStand,
+  onSeatOpen,
+}: {
+  seat: SeatInfo
+  compact: boolean
+  onStand?: (playerId: string) => void
+  onSeatOpen?: (seatIndex: number) => void
+}) {
   // In compact mode re-seat the players onto the card mini-table's brass rim — a
   // tighter ellipse whose extremes land on the measured rim positions: left
   // 10.6269% / 89.3731% (±39.3731), top 17.8% / 82.2% (±32.2). Base radii in
@@ -86,6 +104,22 @@ function Seat({ seat, compact }: { seat: SeatInfo; compact: boolean }) {
     const openCls = compact
       ? 'h-[0.9rem] w-[0.9rem] gap-0 rounded-full p-0'
       : 'w-[4.6rem] gap-[0.1rem] rounded-[9px] px-[0.2rem] py-[0.3rem]'
+    // Interactive open seat (live panel): click to seat a player.
+    if (onSeatOpen) {
+      return (
+        <button
+          type="button"
+          className={`${base} ${openCls} cursor-pointer border border-dashed border-[#2c3543] bg-[rgba(14,17,22,0.86)] text-faint opacity-70 transition hover:border-brass hover:text-brass hover:opacity-100`}
+          style={style}
+          data-testid="seat"
+          data-open="true"
+          onClick={() => onSeatOpen(seat.index)}
+          aria-label="Seat a player here"
+        >
+          {compact ? '+' : <span className="text-[0.72rem]">＋ Seat</span>}
+        </button>
+      )
+    }
     return (
       <div
         className={`${base} ${openCls} border border-dashed border-[#2c3543] bg-[rgba(14,17,22,0.86)] opacity-[0.55]`}
@@ -118,6 +152,17 @@ function Seat({ seat, compact }: { seat: SeatInfo; compact: boolean }) {
       data-ptl-tone={tone}
       title={title || undefined}
     >
+      {onStand && (
+        <button
+          type="button"
+          className="absolute -left-[0.5rem] -top-[0.5rem] flex h-[1.15rem] w-[1.15rem] items-center justify-center rounded-full border border-line bg-[rgba(0,0,0,0.72)] p-0 text-[0.7rem] leading-none text-muted hover:border-brass hover:text-brass"
+          onClick={() => onStand(seat.playerId!)}
+          aria-label={`Stand ${seat.playerId} up`}
+          title={`Stand ${seat.playerId} up`}
+        >
+          ⏏
+        </button>
+      )}
       <span
         className={`rounded-full ${compact ? 'h-[0.4rem] w-[0.4rem]' : 'h-[0.55rem] w-[0.55rem]'} ${PTL_DOT[tone]}`}
         aria-hidden="true"

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type {
   ClassificationsFile,
   HealthScoresFile,
@@ -6,13 +7,14 @@ import type {
 } from '../data/types'
 import { loadHealth, loadIntegrity, loadTableRoster, loadClassifications } from '../data/shim'
 import { useResource } from '../state/useResource'
-import { useLiveRoom, mergeHealthFile, mergeRosterFile } from '../state/liveRoom'
+import { liveRoom, useLiveRoom, mergeHealthFile, mergeRosterFile } from '../state/liveRoom'
 import { ResourceBoundary } from '../components/ResourceBoundary'
 import { SeatRing } from '../components/SeatRing'
 import { IntegrityCase } from '../components/IntegrityCase'
 import { TermBars } from '../components/TermBars'
 import { AnimatedNumber } from '../components/AnimatedNumber'
 import { LiveFloorControls } from '../components/LiveFloorControls'
+import { PlayerSelectModal } from '../components/PlayerSelectModal'
 import { assessmentsForTable, buildSeats, classificationIndex } from '../lib/table'
 import { ptlForTable } from '../lib/ptl'
 import { BAND_META } from '../lib/health'
@@ -68,6 +70,17 @@ export function PitBossTableView({
 }: {
   tableId: string
 } & TableBundle) {
+  const live = useLiveRoom()
+  const [seatModalOpen, setSeatModalOpen] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
+
+  // Seating mutations go through the live API; the SSE stream brings the rescored
+  // table back. Surface a rejection (full table, etc.) inline.
+  const run = (p: Promise<void>) => {
+    setActionError(null)
+    p.catch((e) => setActionError(e instanceof Error ? e.message : String(e)))
+  }
+
   const table = roster.tables.find((t) => t.table_id === tableId)
   if (!table) return <p className="text-muted">Select a table from the list.</p>
 
@@ -122,7 +135,13 @@ export function PitBossTableView({
       )}
 
       <div className="mb-4 mt-2">
-        <SeatRing table={table} seats={seats} centerContent={center} />
+        <SeatRing
+          table={table}
+          seats={seats}
+          centerContent={center}
+          onStand={live.connected ? (pid) => run(liveRoom.stand(pid, tableId)) : undefined}
+          onSeatOpen={live.connected ? () => setSeatModalOpen(true) : undefined}
+        />
         <p
           className="mt-2 flex flex-wrap items-center justify-center gap-x-[0.85rem] gap-y-[0.3rem] text-[0.74rem] text-faint"
           data-testid="ptl-legend"
@@ -132,9 +151,26 @@ export function PitBossTableView({
           <span className={`${PTL_KEY} before:bg-[#e3b25f]`}>warm</span>
           <span className={`${PTL_KEY} before:bg-[#ff7b7b]`}>hot — about to bolt</span>
         </p>
+        {actionError && (
+          <p className="mt-2 text-center text-[0.74rem] text-[#ff7b7b]" role="alert">
+            {actionError}
+          </p>
+        )}
       </div>
 
       <LiveFloorControls table={table} />
+
+      <PlayerSelectModal
+        open={seatModalOpen}
+        tableId={tableId}
+        tables={roster.tables}
+        classifications={classifications.classifications}
+        onSelect={(pid) => {
+          run(liveRoom.sit(pid, tableId))
+          setSeatModalOpen(false)
+        }}
+        onClose={() => setSeatModalOpen(false)}
+      />
 
       {assessments.length > 0 ? (
         <div className="grid gap-3">

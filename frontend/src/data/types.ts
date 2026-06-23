@@ -7,6 +7,23 @@
  * reads, and the `SimPath` discriminant the sim-state store uses.
  */
 export * from '../../contract2'
+import type { LobbyTable } from '../../contract2'
+
+/** A seated table on the player's "My Tables" view — neutral facts, no badge. */
+export type NeutralTable = Omit<LobbyTable, 'badge' | 'badge_label'>
+
+/** One selectable player for the lobby impersonator (`GET /api/players`). */
+export interface PlayerOption {
+  player_id: string
+  display_name: string
+}
+
+/** A player's front-of-house view (`GET /api/lobby/{id}`): recommendations + seats. */
+export interface PlayerFloorData {
+  player_id: string
+  player_lobby: LobbyTable[]
+  tables: NeutralTable[]
+}
 
 /** One hour of room KPIs in `data/room_metrics_{standard,fairplay}.json` → `hours[]`. */
 export interface RoomMetricsHour {

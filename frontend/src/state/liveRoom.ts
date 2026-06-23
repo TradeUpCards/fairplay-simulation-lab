@@ -12,7 +12,14 @@
  * `useSyncExternalStore`.
  */
 import { useSyncExternalStore } from 'react'
-import type { HealthScore, HealthScoresFile, TableRosterEntry, TableRosterFile } from '../data/types'
+import type {
+  HealthScore,
+  HealthScoresFile,
+  PlayerFloorData,
+  PlayerOption,
+  TableRosterEntry,
+  TableRosterFile,
+} from '../data/types'
 
 const API_BASE: string =
   (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, '') ?? 'http://localhost:8000'
@@ -98,6 +105,23 @@ async function move(path: string, body?: unknown): Promise<void> {
   // The resulting score_update arrives over SSE; no need to apply the response here.
 }
 
+async function getJSON<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`)
+  if (!res.ok) throw new Error(`request failed (${res.status})`)
+  return (await res.json()) as T
+}
+
+/**
+ * Player-facing reads (request/response, not the SSE stream). Used by the lobby
+ * impersonator to fetch any player's routed lobby + seated tables on demand.
+ */
+export const playerApi = {
+  players: (): Promise<PlayerOption[]> =>
+    getJSON<{ players: PlayerOption[] }>('/api/players').then((r) => r.players),
+  lobby: (playerId: string): Promise<PlayerFloorData> =>
+    getJSON<PlayerFloorData>(`/api/lobby/${encodeURIComponent(playerId)}`),
+}
+
 export const liveRoom = {
   getSnapshot: (): LiveRoomState => state,
   subscribe(listener: Listener): () => void {
@@ -107,7 +131,8 @@ export const liveRoom = {
       listeners.delete(listener)
     }
   },
-  stand: (playerId: string): Promise<void> => move(`/api/players/${playerId}/stand`),
+  stand: (playerId: string, tableId: string): Promise<void> =>
+    move(`/api/players/${playerId}/stand`, { table_id: tableId }),
   sit: (playerId: string, tableId: string): Promise<void> =>
     move(`/api/players/${playerId}/sit`, { table_id: tableId }),
 }
