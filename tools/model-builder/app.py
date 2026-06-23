@@ -188,6 +188,16 @@ toolbar = html.Div(style={"background": "#eceef0", "borderBottom": f"1px solid {
                  style={"width": "78px", "fontSize": "12px"}),
     dcc.Checklist(id="balanced", options=[{"label": " class_weight=balanced", "value": "bal"}],
                   value=["bal"], style={"color": MUTED, "fontSize": "12px"}),
+    # ── recalc UX: stage changes (auto-refit off) then Build, FICO-style ──
+    html.Div(style={"display": "flex", "alignItems": "center", "gap": "9px",
+                    "marginLeft": "auto"}, children=[
+        dcc.Checklist(id="autofit", options=[{"label": " auto-refit", "value": "auto"}],
+                      value=["auto"], style={"color": MUTED, "fontSize": "12px"}),
+        html.Button("▶ Build", id="build", n_clicks=0,
+                    style={"fontSize": "12px", "fontWeight": 600, "padding": "4px 14px",
+                           "cursor": "pointer", "border": f"1px solid {BORDER}"}),
+        html.Span(id="build-status", style={"fontSize": "11px", "color": FAINT}),
+    ]),
 ])
 
 tab_style = {"background": "#dfe2e5", "color": MUTED, "border": f"1px solid {BORDER}",
@@ -198,7 +208,8 @@ tab_sel = {"background": PANEL, "color": TEXT, "fontWeight": 600, "border": f"1p
 app.layout = html.Div(style={"background": WIN, "color": TEXT, "minHeight": "100vh",
                              "fontFamily": "Segoe UI,-apple-system,system-ui,sans-serif", "fontSize": "12px"},
                       children=[
-    dcc.Store(id="cfg", data=default_cfg()),
+    dcc.Store(id="cfg", data=default_cfg()),        # working/staged config (live)
+    dcc.Store(id="applied", data=default_cfg()),    # committed config the fit reads from
     dcc.Store(id="focus", data="aggression_factor"),
     dcc.Store(id="expanded", data=[]),
     menu, toolbar,
@@ -300,6 +311,32 @@ def update_cfg(target, C, balanced, pdo, cell, n_comb, n_sep, n_reset, sel_bins,
     return cfg
 
 
+# Recalc gate: `applied` is what the model fit reads. With auto-refit ON it tracks
+# `cfg` live (original behavior); OFF, it only updates when Build is clicked (or the
+# moment auto-refit is switched back ON, which flushes any staged changes).
+@callback(Output("applied", "data"),
+          Input("cfg", "data"), Input("build", "n_clicks"), Input("autofit", "value"))
+def commit_applied(cfg, _build, autofit):
+    auto = "auto" in (autofit or [])
+    if ctx.triggered_id == "cfg" and not auto:
+        return no_update                  # staged — wait for Build
+    if ctx.triggered_id == "autofit" and not auto:
+        return no_update                  # just turned auto OFF — nothing to flush yet
+    return cfg                            # build, auto-on track, or auto re-enabled
+
+
+@callback(Output("build-status", "children"), Output("build-status", "style"),
+          Output("build", "disabled"),
+          Input("cfg", "data"), Input("applied", "data"), Input("autofit", "value"))
+def build_status(cfg, applied, autofit):
+    base = {"fontSize": "11px"}
+    if "auto" in (autofit or []):
+        return "auto-refit on", {**base, "color": FAINT}, True
+    if cfg != applied:
+        return "● staged changes — click Build", {**base, "color": BAD, "fontWeight": 600}, False
+    return "✓ up to date", {**base, "color": GOOD}, False
+
+
 @callback(Output("focus", "data"), Input("grid", "selectedRows"),
           State("focus", "data"), prevent_initial_call=True)
 def set_focus(rows, focus):
@@ -310,7 +347,7 @@ def set_focus(rows, focus):
 
 @callback(Output("grid", "rowData"),
           Output("metrics", "children"), Output("tree", "children"),
-          Output("ds-summary", "children"), Output("console", "children"), Input("cfg", "data"))
+          Output("ds-summary", "children"), Output("console", "children"), Input("applied", "data"))
 def render_editor(cfg):
     rows = svc.attribute_rows(cfg["target"], cfg["selected"], cfg["var_cuts"], cfg["C"], cfg["balanced"])
     met = svc.model_metrics(cfg["target"], cfg["selected"], cfg["var_cuts"], cfg["C"], cfg["balanced"], cfg["pdo"])
@@ -385,7 +422,7 @@ def render_binner(cfg, focus, expanded):
     return title, rows, stats
 
 
-@callback(Output("reports", "children"), Input("cfg", "data"), Input("view", "value"))
+@callback(Output("reports", "children"), Input("applied", "data"), Input("view", "value"))
 def render_reports(cfg, view):
     if view != "reports":
         return no_update
@@ -428,7 +465,7 @@ def render_reports(cfg, view):
 
 
 @callback(Output("combine-summary", "children"), Output("player-graph", "figure"),
-          Input("cfg", "data"), Input("view", "value"), Input("player", "value"))
+          Input("applied", "data"), Input("view", "value"), Input("player", "value"))
 def render_combine(cfg, view, player):
     if view != "combine":
         return no_update, no_update
@@ -450,7 +487,7 @@ def render_combine(cfg, view, player):
 
 
 @callback(Output("loo-out", "children"), Input("loo-btn", "n_clicks"),
-          State("cfg", "data"), prevent_initial_call=True)
+          State("applied", "data"), prevent_initial_call=True)
 def run_loo(n, cfg):
     r = svc.combine_loo(cfg["selected"], cfg["C"], cfg["balanced"])
     return f"Leave-one-out accuracy: {r['loo_accuracy']:.1%}  (rule champion {r['rule_champion']:.1%})"
