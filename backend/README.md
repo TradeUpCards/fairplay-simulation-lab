@@ -14,8 +14,8 @@ byte-for-byte (verified), so the live API and the static demo agree on hour 0.
 | Method | Path | Purpose |
 |---|---|---|
 | `GET`  | `/api/pit` | Full operator snapshot — every table's roster + health, ranked healthiest-first |
-| `POST` | `/api/players/{id}/stand` | Stand a player up from their table → rescore → broadcast |
-| `POST` | `/api/players/{id}/sit` | Seat a player (`{"table_id": "T-8"}`) → rescore → broadcast |
+| `POST` | `/api/players/{id}/stand` | Stand a player up from a table (`{"table_id": "T-8"}`) → rescore → broadcast |
+| `POST` | `/api/players/{id}/sit` | Seat a player (`{"table_id": "T-8"}`) → rescore → broadcast. A player may sit at several tables at once. |
 | `GET`  | `/api/stream` | SSE; emits a `score_update` event per mutation |
 | `GET`  | `/api/healthz` | Liveness probe |
 

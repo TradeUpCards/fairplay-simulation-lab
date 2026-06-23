@@ -61,10 +61,25 @@ def get_pit() -> dict:
     return room.pit_snapshot()
 
 
-@app.post("/api/players/{player_id}/stand")
-def stand(player_id: str) -> dict:
+@app.get("/api/players")
+def get_players() -> dict:
+    """Selectable player universe for the lobby impersonator (id + name only)."""
+    return {"players": room.players()}
+
+
+@app.get("/api/lobby/{player_id}")
+def get_lobby(player_id: str) -> dict:
+    """A player's front-of-house view: routed lobby + the tables they're seated at."""
     try:
-        h = room.stand(player_id)
+        return room.lobby(player_id)
+    except RoomError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/api/players/{player_id}/stand")
+def stand(player_id: str, body: SitBody) -> dict:
+    try:
+        h = room.stand(player_id, body.table_id)
     except RoomError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return _broadcast_table(h.table_id)
