@@ -1,0 +1,5 @@
+# Poker Outcome Simulator (backend/sim/). Run from repo root:
+#   python backend/sim/run.py --config backend/sim/config/default.json
+pokerkit>=0.5
+treys>=0.1.8
+pytest>=8.0

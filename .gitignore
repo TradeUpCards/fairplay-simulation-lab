@@ -41,6 +41,7 @@ Thumbs.db
 # Local-only coordination (not committed)
 .project/
 .claude/
+.superpowers/
 CLAUDE_SESSION_HANDOFF.md
 
 # Misc
