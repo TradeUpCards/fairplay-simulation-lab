@@ -185,17 +185,18 @@ run(config, master_seed)
 ## 10. Dependencies & how to run
 
 ```bash
-pip install -r sim/requirements.txt     # pokerkit, treys
-python -m sim.run --config sim/config/default.json
+pip install -r backend/sim/requirements.txt     # pokerkit, treys
+python backend/sim/run.py --config backend/sim/config/default.json
 # → writes data/sim/hand_histories.json + data/sim/player_stats.json
 ```
 
 ## 11. File list (all new)
 
-`sim/engine/base.py`, `sim/engine/pokerkit_engine.py`, `sim/agents/archetype.py`, `sim/agents/policy.py`,
-`sim/agents/tools.py`, `sim/deck.py`, `sim/driver.py`, `sim/log.py`, `sim/stats.py`, `sim/run.py`,
-`sim/config/` (master seed + a sample run config), `sim/requirements.txt`, the test suite under `sim/tests/`,
-and outputs `data/sim/`. No existing files edited (sole prior change this branch: `.gitignore` += `.superpowers/`).
+All under `backend/sim/` (to match the repo's `backend/` layout): `engine/base.py`, `engine/pokerkit_engine.py`,
+`agents/archetype.py`, `agents/policy.py`, `agents/tools.py`, `deck.py`, `driver.py`, `log.py`, `stats.py`,
+`run.py`, `config/default.json`, `requirements.txt`, `README.md`, and the test suite under `tests/`. Outputs go
+to the repo-root `data/sim/`. No existing files edited (only `.gitignore` += `.superpowers/`); the package was
+relocated into `backend/sim/` when integrating the team's `backend/` restructure.
 
 ## 12. As-built realism pass + known limitations
 

@@ -1,4 +1,4 @@
-# FairPlay Poker Outcome Simulator (`sim/`)
+# FairPlay Poker Outcome Simulator (`backend/sim/`)
 
 A standalone, **deterministic No-Limit Texas Hold'em simulator** that generates poker data by mapping each
 player **archetype to an agent** whose decision quality is tuned by a **skill percentage** (learner ≈ 10%,
@@ -6,23 +6,24 @@ professional ≈ 100%) plus archetype **style**. Running many hands across table
 per-player behavioral stats — the behavioral features (`vpip`, `pfr`, `aggression`, …) **emerge from real
 play** instead of being hand-authored.
 
-> Full design: [`docs/superpowers/specs/2026-06-22-poker-outcome-sim-design.md`](../docs/superpowers/specs/2026-06-22-poker-outcome-sim-design.md)
-> · implementation plan: [`docs/superpowers/plans/2026-06-22-poker-outcome-sim.md`](../docs/superpowers/plans/2026-06-22-poker-outcome-sim.md)
+> Full design: [`docs/superpowers/specs/2026-06-22-poker-outcome-sim-design.md`](../../docs/superpowers/specs/2026-06-22-poker-outcome-sim-design.md)
+> · implementation plan: [`docs/superpowers/plans/2026-06-22-poker-outcome-sim.md`](../../docs/superpowers/plans/2026-06-22-poker-outcome-sim.md)
 
 ## Quick start
 
 ```bash
+# run from the repo root.
 # 1. set up the environment (first time only)
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1     # Windows PowerShell  (macOS/Linux: source .venv/bin/activate)
-pip install -r sim/requirements.txt
+pip install -r backend/sim/requirements.txt
 
 # 2. generate the data
-python -m sim.run --config sim/config/default.json
+python backend/sim/run.py --config backend/sim/config/default.json
 #    -> writes data/sim/hand_histories.json + data/sim/player_stats.json
 
 # 3. run the tests
-python -m pytest sim/tests -q
+python -m pytest backend/sim/tests -q
 ```
 
 ## Outputs (`data/sim/`)
@@ -91,5 +92,5 @@ deferred next phase.
 
 ---
 
-**Note:** `sim/cases/` and `sim/counterfactual/` are **pre-existing P2 fixtures** (demo-case JSON +
-counterfactual decision list) that predate this simulator — they are not part of this package.
+**Note:** the sibling `backend/sim/cases/` and `backend/sim/counterfactual/` are **pre-existing P2 fixtures**
+(demo-case JSON + counterfactual decision list) that predate this simulator — they are not part of this package.

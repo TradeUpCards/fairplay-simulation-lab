@@ -1,17 +1,23 @@
-"""Entrypoint: config -> run all tables -> write hand histories + player stats."""
+"""Entrypoint: config -> run all tables -> write hand histories + player stats.
+
+Run from the repo root:  python backend/sim/run.py --config backend/sim/config/default.json
+"""
 from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
-from sim import deck, stats
-from sim.agents.archetype import Agent, ARCHETYPES
-from sim.driver import run_table
-from sim.engine.pokerkit_engine import PokerKitEngine
-from sim.log import EventLog
+ROOT = Path(__file__).resolve().parents[2]          # repo root (backend/sim/ -> backend/ -> root)
+sys.path.insert(0, str(ROOT / "backend"))           # make the `sim` package importable
 
-ROOT = Path(__file__).resolve().parents[1]
+from sim import deck, stats  # noqa: E402
+from sim.agents.archetype import Agent, ARCHETYPES  # noqa: E402
+from sim.driver import run_table  # noqa: E402
+from sim.engine.pokerkit_engine import PokerKitEngine  # noqa: E402
+from sim.log import EventLog  # noqa: E402
+
 OUT_DIR = ROOT / "data" / "sim"
 
 
@@ -41,7 +47,7 @@ def simulate(config: dict):
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--config", default=str(ROOT / "sim" / "config" / "default.json"))
+    ap.add_argument("--config", default=str(ROOT / "backend" / "sim" / "config" / "default.json"))
     args = ap.parse_args()
     config = json.loads(Path(args.config).read_text(encoding="utf-8"))
     events, results, player_stats = simulate(config)
