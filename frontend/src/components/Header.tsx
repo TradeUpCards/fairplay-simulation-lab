@@ -33,7 +33,7 @@ export function Header({
             className={`mode-tab${mode === 'operator' ? ' is-active' : ''}`}
             onClick={() => onModeChange('operator')}
           >
-            Operator
+            Pit Boss
           </button>
           <button
             type="button"

@@ -17,14 +17,14 @@ import { assessmentsForTable, buildSeats, classificationIndex } from '../lib/tab
 import { ptlForTable } from '../lib/ptl'
 import { BAND_META } from '../lib/health'
 
-interface TableBundle {
+export interface TableBundle {
   health: HealthScoresFile
   integrity: IntegrityScoresFile
   roster: TableRosterFile
   classifications: ClassificationsFile
 }
 
-const loadTableBundle = async (): Promise<TableBundle> => ({
+export const loadTableBundle = async (): Promise<TableBundle> => ({
   health: await loadHealth(),
   integrity: await loadIntegrity(),
   roster: await loadTableRoster(),

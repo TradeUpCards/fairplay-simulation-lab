@@ -142,12 +142,17 @@ describe('PitBossTableView — integrity case', () => {
   })
 })
 
-describe('PitBossConsole — index drives detail', () => {
-  it('clicking a table row swaps the detail panel', async () => {
+describe('PitBossConsole — floor cards open the detail drawer', () => {
+  it('a card opens its detail drawer; opening another swaps it', async () => {
     render(<PitBossConsole />)
-    // Defaults to T-11 (flagged cluster).
+    // The grid renders cards; no detail until a card is opened.
+    expect(await screen.findByLabelText('inspect table T-11')).toBeTruthy()
+    expect(screen.queryByLabelText('integrity case CL-001')).toBeNull()
+
+    fireEvent.click(screen.getByLabelText('inspect table T-11'))
     expect(await screen.findByLabelText('integrity case CL-001')).toBeTruthy()
-    fireEvent.click(await screen.findByLabelText('open table T-22'))
+
+    fireEvent.click(screen.getByLabelText('inspect table T-22'))
     expect(await screen.findByTestId('no-flags')).toBeTruthy()
   })
 })
