@@ -1,6 +1,7 @@
 import type { HealthScore, HealthScoresFile } from '../data/types'
 import { loadHealth } from '../data/shim'
 import { useResource } from '../state/useResource'
+import { useLiveRoom, mergeHealthScores } from '../state/liveRoom'
 import { ResourceBoundary } from '../components/ResourceBoundary'
 import { BAND_META, rankTables, TERM_CAP, type TermKey } from '../lib/health'
 
@@ -31,11 +32,12 @@ export function PitBossIndex({
   selectedTableId?: string
 }) {
   const health = useResource(loadHealth, (d) => d.health_scores.length === 0)
+  const live = useLiveRoom()
   return (
     <ResourceBoundary state={health} label="table health">
       {(data: HealthScoresFile) => (
         <PitBossIndexView
-          scores={data.health_scores}
+          scores={mergeHealthScores(data.health_scores, live)}
           onSelectTable={onSelectTable}
           selectedTableId={selectedTableId}
         />

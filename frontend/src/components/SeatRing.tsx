@@ -6,8 +6,9 @@ import { ARCHETYPE_LABEL, ptlTone, type SeatInfo } from '../lib/table'
  * The signature pit-boss element: a round seat-ring over the poker-table felt.
  * Seats are positioned around the ring from the roster; each shows the player,
  * archetype, an integrity flag if their group is under review, and a PTL heat
- * dot. PTL is stubbed neutral (`pending`) until U2 ships per-seat scores — when
- * it lands, `seat.ptl` flows straight into `ptlTone` and the dots colour in.
+ * dot. PTL (propensity to leave) flows from `lib/ptl` through `seat.ptl` into
+ * `ptlTone` — vulnerable seats run hot at unhealthy tables, anchored ones cool.
+ * Seats with no computed PTL fall back to a neutral `pending` dot.
  */
 export function SeatRing({ table, seats }: { table: TableRosterEntry; seats: SeatInfo[] }) {
   return (
@@ -39,6 +40,7 @@ function Seat({ seat }: { seat: SeatInfo }) {
 
   const tone = ptlTone(seat.ptl)
   const flagged = Boolean(seat.flaggedGroupId)
+  const title = [seat.archetypeWhy, seat.ptlWhy].filter(Boolean).join(' — ')
   return (
     <div
       className={`seat seat-occupied ptl-${tone}${flagged ? ' seat-flagged' : ''}`}
@@ -46,7 +48,7 @@ function Seat({ seat }: { seat: SeatInfo }) {
       data-testid="seat"
       data-flagged={flagged ? 'true' : 'false'}
       data-ptl-tone={tone}
-      title={seat.archetypeWhy}
+      title={title || undefined}
     >
       <span className="seat-ptl-dot" aria-hidden="true" />
       <span className="seat-player">{seat.playerId}</span>

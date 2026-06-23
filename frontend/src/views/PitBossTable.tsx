@@ -6,11 +6,15 @@ import type {
 } from '../data/types'
 import { loadHealth, loadIntegrity, loadTableRoster, loadClassifications } from '../data/shim'
 import { useResource } from '../state/useResource'
+import { useLiveRoom, mergeHealthFile, mergeRosterFile } from '../state/liveRoom'
 import { ResourceBoundary } from '../components/ResourceBoundary'
 import { SeatRing } from '../components/SeatRing'
 import { IntegrityCase } from '../components/IntegrityCase'
 import { TermBars } from '../components/TermBars'
+import { AnimatedNumber } from '../components/AnimatedNumber'
+import { LiveFloorControls } from '../components/LiveFloorControls'
 import { assessmentsForTable, buildSeats, classificationIndex } from '../lib/table'
+import { ptlForTable } from '../lib/ptl'
 import { BAND_META } from '../lib/health'
 
 interface TableBundle {
@@ -36,14 +40,15 @@ const loadTableBundle = async (): Promise<TableBundle> => ({
  */
 export function PitBossTable({ tableId }: { tableId: string }) {
   const bundle = useResource(loadTableBundle, (d) => d.roster.tables.length === 0)
+  const live = useLiveRoom()
   return (
     <ResourceBoundary state={bundle} label="table">
       {(d) => (
         <PitBossTableView
           tableId={tableId}
-          health={d.health}
+          health={mergeHealthFile(d.health, live)}
           integrity={d.integrity}
-          roster={d.roster}
+          roster={mergeRosterFile(d.roster, live)}
           classifications={d.classifications}
         />
       )}
@@ -66,7 +71,9 @@ export function PitBossTableView({
   const healthRow = health.health_scores.find((h) => h.table_id === tableId)
   const band = healthRow ? BAND_META[healthRow.band] : null
   const assessments = assessmentsForTable(table, integrity.assessments)
-  const seats = buildSeats(table, classificationIndex(classifications.classifications), assessments)
+  const clsIndex = classificationIndex(classifications.classifications)
+  const ptl = ptlForTable(table, healthRow, clsIndex)
+  const seats = buildSeats(table, clsIndex, assessments, ptl)
 
   return (
     <section className="pit-table" aria-label={`table ${tableId}`}>
@@ -82,7 +89,9 @@ export function PitBossTableView({
       {healthRow && band && (
         <div className="pt-vitals">
           <div className="pt-health-headline">
-            <span className="pt-health-num">{healthRow.health.toFixed(0)}</span>
+            <span className="pt-health-num">
+              <AnimatedNumber value={healthRow.health} />
+            </span>
             <span className={`band-chip ${band.tone}`}>{band.label}</span>
             {healthRow.integrity_candidate && <span className="review-flag">⚑ Surface to review</span>}
           </div>
@@ -93,9 +102,14 @@ export function PitBossTableView({
       <div className="pt-ring-wrap">
         <SeatRing table={table} seats={seats} />
         <p className="ptl-legend" data-testid="ptl-legend">
-          Seat heat = propensity to leave — <em>pending U2 (PTL not yet computed)</em>
+          Seat heat = <strong>propensity to leave</strong>:
+          <span className="ptl-key ptl-cool">cool — staying</span>
+          <span className="ptl-key ptl-warm">warm</span>
+          <span className="ptl-key ptl-hot">hot — about to bolt</span>
         </p>
       </div>
+
+      <LiveFloorControls table={table} />
 
       {assessments.length > 0 ? (
         <div className="pt-cases">

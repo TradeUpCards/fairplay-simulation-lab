@@ -49,7 +49,7 @@ describe('seat-ring + table helpers', () => {
     expect(assessmentsForTable(await tableEntry('T-22'), integrity.assessments)).toHaveLength(0)
   })
 
-  it('buildSeats flags cluster members and leaves PTL null (pending U2)', async () => {
+  it('buildSeats flags cluster members; PTL stays null when no PTL map is supplied', async () => {
     const { integrity, classifications } = await bundle()
     const t11 = await tableEntry('T-11')
     const seats = buildSeats(
@@ -73,12 +73,15 @@ describe('PitBossTableView — seat ring', () => {
     expect(container.querySelectorAll('[data-open="true"]').length).toBe(2)
   })
 
-  it('flags exactly the seated cluster members, PTL still pending', async () => {
+  it('flags exactly the seated cluster members; PTL now computed cool for all four', async () => {
     const b = await bundle()
     const { container } = render(<PitBossTableView tableId="T-11" {...b} />)
     expect(container.querySelectorAll('[data-flagged="true"]')).toHaveLength(2)
-    expect(container.querySelectorAll('[data-ptl-tone="pending"]').length).toBe(4)
-    expect(screen.getByTestId('ptl-legend').textContent).toMatch(/pending/i)
+    // T-11 is cluster + grinders — all seated by design, so every seat reads cool.
+    expect(container.querySelectorAll('[data-ptl-tone="cool"]').length).toBe(4)
+    expect(container.querySelectorAll('[data-ptl-tone="pending"]').length).toBe(0)
+    expect(screen.getByTestId('ptl-legend').textContent).toMatch(/propensity to leave/i)
+    expect(screen.getByTestId('ptl-legend').textContent).not.toMatch(/pending/i)
   })
 
 })

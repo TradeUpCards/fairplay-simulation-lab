@@ -160,12 +160,76 @@ body {
   font-weight: 600;
 }
 
+/* ── Operator sub-nav (Console · Simulator · Eval) ─────────────────────────── */
+/* A quiet underline tab bar under the brass header — subordinate to the pill
+   toggle. Walks the demo spine one view at a time instead of stacking three. */
+.operator-nav {
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.operator-tabs {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.operator-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  padding: 0.55rem 1.05rem 0.6rem;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px; /* overlap the nav's hairline so the underline sits on it */
+}
+
+.operator-tab-label {
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+}
+
+.operator-tab-hint {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.operator-tab:hover .operator-tab-label {
+  color: var(--text);
+}
+
+.operator-tab.is-active {
+  border-bottom-color: var(--brass);
+}
+
+.operator-tab.is-active .operator-tab-label {
+  color: var(--brass);
+  font-weight: 600;
+}
+
+/* Only one operator view shows at a time — drop the inter-section divider each
+   carried when the three were stacked; the sub-nav is the separator now. */
+.operator-view > section {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
 /* ── Front of House: the card-room floor — dark, lit tables ────────────────── */
 .app.is-player {
   /* lighter scrim than operator so the carpet reads as a floor, plus a warm
      top vignette for depth — kept dim so the table spotlights still pop */
   background:
-    radial-gradient(140% 100% at 50% -20%, rgba(82, 63, 40, 0.34), transparent 55%),
+    radial-gradient(
+      140% 100% at 50% -20%,
+      rgba(82, 63, 40, 0.34),
+      transparent 55%
+    ),
     rgba(9, 7, 4, 0.5);
 }
 
@@ -342,7 +406,7 @@ body {
 .is-player .lobby-badge {
   position: absolute;
   z-index: 3;
-  top: calc(19% - 20px);
+  top: calc(19% - 15px);
   left: 50%;
   transform: translate(-50%, -50%);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
@@ -352,7 +416,7 @@ body {
 .is-player .table-plaque {
   position: absolute;
   z-index: 3;
-  top: calc(82% + 20px);
+  top: calc(82% + 15px);
   left: 50%;
   transform: translate(-50%, -50%);
   padding: 0.18rem 0.7rem;
@@ -1221,10 +1285,174 @@ button:hover {
 }
 
 .ptl-legend {
-  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem 0.85rem;
   font-size: 0.74rem;
   color: #6b7283;
-  margin: 0.4rem 0 0;
+  margin: 0.5rem 0 0;
+}
+
+.ptl-legend strong {
+  color: #8b93a7;
+  font-weight: 600;
+}
+
+/* Heat keys mirror the seat dots: a coloured pip before each label. */
+.ptl-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+}
+
+.ptl-key::before {
+  content: '';
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #4a5466;
+}
+
+.ptl-key.ptl-cool::before {
+  background: #5fcf8a;
+}
+
+.ptl-key.ptl-warm::before {
+  background: #e3b25f;
+}
+
+.ptl-key.ptl-hot::before {
+  background: #ff7b7b;
+}
+
+/* ── Live floor controls + animated score ──────────────────────────────────── */
+.animated-number {
+  font-variant-numeric: tabular-nums; /* no width jitter while counting */
+}
+
+.floor-controls {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2, #141a22);
+  font-size: 0.82rem;
+}
+
+.floor-controls.is-offline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--faint, #6b7283);
+  font-size: 0.76rem;
+}
+
+.floor-controls-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--muted, #8b93a7);
+  margin-bottom: 0.7rem;
+}
+
+.live-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex: none;
+}
+
+.live-dot.is-online {
+  background: var(--felt, #2f8f5b);
+  box-shadow: 0 0 0 3px rgba(47, 143, 91, 0.2);
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+
+.live-dot.is-offline {
+  background: #4a5466;
+}
+
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(47, 143, 91, 0.2); }
+  50% { box-shadow: 0 0 0 5px rgba(47, 143, 91, 0.05); }
+}
+
+.seat-actions {
+  list-style: none;
+  margin: 0 0 0.7rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.seat-actions li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.2rem 0.2rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.seat-action-id {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text, #c9d1d9);
+}
+
+.floor-controls button {
+  border: 1px solid var(--brass-soft, #6b5a33);
+  background: transparent;
+  color: var(--brass, #c79a4b);
+  font-size: 0.72rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.floor-controls button:hover:not(:disabled) {
+  background: rgba(199, 154, 75, 0.12);
+}
+
+.floor-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sit-form {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.sit-form input {
+  flex: 1;
+  min-width: 0;
+  background: var(--ink, #0d1117);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text, #c9d1d9);
+  padding: 0.32rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+}
+
+.sit-form button {
+  white-space: nowrap;
+}
+
+.floor-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  color: var(--faint, #6b7283);
+}
+
+.floor-error {
+  margin: 0.5rem 0 0;
+  font-size: 0.74rem;
+  color: #ff7b7b;
 }
 
 /* ── Integrity case (folded into the table) ────────────────────────────────── */

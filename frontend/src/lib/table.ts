@@ -9,6 +9,7 @@ import type {
   IntegrityAssessment,
   TableRosterEntry,
 } from '../data/types'
+import type { PtlResult } from './ptl'
 
 export const ARCHETYPE_LABEL: Record<Archetype, string> = {
   new: 'New',
@@ -41,8 +42,10 @@ export interface SeatInfo {
   archetypeWhy?: string
   /** Integrity group this seat's player belongs to, if any (drives the flag ring). */
   flaggedGroupId: string | null
-  /** Per-seat PTL 0–1, or null until U2 ships the score (rendered neutral/pending). */
+  /** Per-seat PTL 0–1, or null when no PTL was supplied (rendered neutral/pending). */
   ptl: number | null
+  /** PTL reason headline (`reason_codes[0].detail`) — the "why this heat", surfaced on hover. */
+  ptlWhy?: string
   leftPct: number
   topPct: number
 }
@@ -65,7 +68,7 @@ export function buildSeats(
   table: TableRosterEntry,
   classifications: Map<string, Classification>,
   assessments: IntegrityAssessment[],
-  ptlByPlayer?: Map<string, number>,
+  ptlByPlayer?: Map<string, PtlResult>,
 ): SeatInfo[] {
   const memberToGroup = new Map<string, string>()
   for (const a of assessments) {
@@ -75,13 +78,15 @@ export function buildSeats(
   return seatPositions(table.max_seats).map((pos, i) => {
     const playerId = table.seated_player_ids[i] ?? null
     const cls = playerId ? classifications.get(playerId) : undefined
+    const ptlResult = playerId ? ptlByPlayer?.get(playerId) : undefined
     return {
       index: i,
       playerId,
       archetype: cls?.archetype ?? null,
       archetypeWhy: cls?.reason_codes[0]?.detail,
       flaggedGroupId: playerId ? memberToGroup.get(playerId) ?? null : null,
-      ptl: playerId && ptlByPlayer ? ptlByPlayer.get(playerId) ?? null : null,
+      ptl: ptlResult?.ptl ?? null,
+      ptlWhy: ptlResult?.reason_codes[0]?.detail,
       leftPct: pos.leftPct,
       topPct: pos.topPct,
     }

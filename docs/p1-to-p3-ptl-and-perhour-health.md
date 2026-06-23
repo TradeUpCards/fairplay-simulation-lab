@@ -1,7 +1,32 @@
 # P1 → P3 — coordination ask: PTL ownership + per-hour health
 
 **From:** P1 (demo UI) · **To:** P3 (scoring + evidence engine) · **Date:** 2026-06-22
-**Status:** blocking two UI units (U2, U5) and one feature of a third (U4 re-rank)
+**Status:** ✅ **RESOLVED 2026-06-22** (team decision) — see Resolution below.
+
+## Resolution (2026-06-22)
+
+Answered with the team; all three asks closed.
+
+1. **PTL ownership → P1 derives it UI-side (for now).** P3 will not champion
+   `scoring/ptl.py`. P1 implemented the fallback in `frontend/src/lib/ptl.ts`
+   (`PTL = volatility(archetype) × pressure(table)`, archetype-gated, deterministic,
+   `{code, detail, signals}` reason codes), wired into the seat-ring (U5). If P3
+   later ships `ptl_scores.json`, the binding swaps in `PitBossTable` with no other
+   change. **U2 + U5 seat-heat are now built.**
+2. **Hot-PTL exemplar → undecided, defaulted to P-104.** No team answer yet, so
+   the U2 validator pins to the clean contrast already in the data: **P-104 (new)
+   hot at T-22, cool at T-8** (`frontend/tests/ptl.test.ts`). Note: T-11 still has
+   **no seated fish** — its ring reads all-cool (cluster + grinders), which is
+   truthful. If a hot seat at the flagged table is wanted for the demo, P3 seats a
+   recreational player at T-11. (T-22's promo-hunter does render *warm*.)
+3. **Per-hour table health → deferred.** Re-rank as the clock advances is out of
+   scope until there's live/per-hour data. The index stays snapshot-ranked;
+   `rankTables()` already re-sorts whatever it's handed, so a future series is a
+   drop-in. **U4 live re-rank is settled-deferred, not blocked.**
+
+---
+
+_Original ask (for the record):_
 
 ## Context
 
