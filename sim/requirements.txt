@@ -1,0 +1,4 @@
+# Poker Outcome Simulator (sim/). Run: python -m sim.run --config sim/config/default.json
+pokerkit>=0.5
+treys>=0.1.8
+pytest>=8.0

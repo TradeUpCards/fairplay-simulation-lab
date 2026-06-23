@@ -1,0 +1,25 @@
+{
+  "master_seed": 42,
+  "equity_samples": 60,
+  "blinds": [1, 2],
+  "starting_stack": 200,
+  "hands_per_table": 300,
+  "tables": [
+    {"table_id": "T1", "seats": [
+      {"player_id": "SIM-001", "archetype": "grinder"},
+      {"player_id": "SIM-002", "archetype": "recreational"},
+      {"player_id": "SIM-003", "archetype": "aggressive_predatory"},
+      {"player_id": "SIM-004", "archetype": "new"},
+      {"player_id": "SIM-005", "archetype": "regular"},
+      {"player_id": "SIM-006", "archetype": "healthy_anchor"}
+    ]},
+    {"table_id": "T2", "seats": [
+      {"player_id": "SIM-007", "archetype": "regular"},
+      {"player_id": "SIM-008", "archetype": "promo_hunter"},
+      {"player_id": "SIM-009", "archetype": "recreational"},
+      {"player_id": "SIM-010", "archetype": "grinder"},
+      {"player_id": "SIM-011", "archetype": "healthy_anchor"},
+      {"player_id": "SIM-012", "archetype": "aggressive_predatory"}
+    ]}
+  ]
+}

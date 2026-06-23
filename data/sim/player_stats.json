@@ -1,0 +1,124 @@
+{
+  "players": {
+    "SIM-001": {
+      "lifetime_hands": 300,
+      "vpip": 0.09,
+      "pfr": 0.063,
+      "aggression_factor": 1.484,
+      "avg_pot_size_bb": 230.78,
+      "hands_contested": 27,
+      "net_chips": 1276,
+      "archetype": "grinder"
+    },
+    "SIM-002": {
+      "lifetime_hands": 300,
+      "vpip": 0.357,
+      "pfr": 0.14,
+      "aggression_factor": 0.528,
+      "avg_pot_size_bb": 131.64,
+      "hands_contested": 151,
+      "net_chips": -2034,
+      "archetype": "recreational"
+    },
+    "SIM-003": {
+      "lifetime_hands": 300,
+      "vpip": 0.347,
+      "pfr": 0.327,
+      "aggression_factor": 1.522,
+      "avg_pot_size_bb": 140.46,
+      "hands_contested": 104,
+      "net_chips": -290,
+      "archetype": "aggressive_predatory"
+    },
+    "SIM-004": {
+      "lifetime_hands": 300,
+      "vpip": 0.357,
+      "pfr": 0.097,
+      "aggression_factor": 0.416,
+      "avg_pot_size_bb": 85.8,
+      "hands_contested": 107,
+      "net_chips": 1470,
+      "archetype": "new"
+    },
+    "SIM-005": {
+      "lifetime_hands": 300,
+      "vpip": 0.187,
+      "pfr": 0.12,
+      "aggression_factor": 1.062,
+      "avg_pot_size_bb": 164.81,
+      "hands_contested": 56,
+      "net_chips": -1338,
+      "archetype": "regular"
+    },
+    "SIM-006": {
+      "lifetime_hands": 300,
+      "vpip": 0.117,
+      "pfr": 0.08,
+      "aggression_factor": 0.976,
+      "avg_pot_size_bb": 115.79,
+      "hands_contested": 35,
+      "net_chips": 916,
+      "archetype": "healthy_anchor"
+    },
+    "SIM-007": {
+      "lifetime_hands": 300,
+      "vpip": 0.29,
+      "pfr": 0.123,
+      "aggression_factor": 0.874,
+      "avg_pot_size_bb": 113.91,
+      "hands_contested": 87,
+      "net_chips": -704,
+      "archetype": "regular"
+    },
+    "SIM-008": {
+      "lifetime_hands": 300,
+      "vpip": 0.017,
+      "pfr": 0.013,
+      "aggression_factor": 0.455,
+      "avg_pot_size_bb": 67.74,
+      "hands_contested": 47,
+      "net_chips": -863,
+      "archetype": "promo_hunter"
+    },
+    "SIM-009": {
+      "lifetime_hands": 300,
+      "vpip": 0.59,
+      "pfr": 0.317,
+      "aggression_factor": 0.466,
+      "avg_pot_size_bb": 94.26,
+      "hands_contested": 177,
+      "net_chips": -1920,
+      "archetype": "recreational"
+    },
+    "SIM-010": {
+      "lifetime_hands": 300,
+      "vpip": 0.077,
+      "pfr": 0.07,
+      "aggression_factor": 5.5,
+      "avg_pot_size_bb": 110.78,
+      "hands_contested": 23,
+      "net_chips": 826,
+      "archetype": "grinder"
+    },
+    "SIM-011": {
+      "lifetime_hands": 300,
+      "vpip": 0.133,
+      "pfr": 0.12,
+      "aggression_factor": 1.912,
+      "avg_pot_size_bb": 176.82,
+      "hands_contested": 40,
+      "net_chips": 1587,
+      "archetype": "healthy_anchor"
+    },
+    "SIM-012": {
+      "lifetime_hands": 300,
+      "vpip": 0.247,
+      "pfr": 0.22,
+      "aggression_factor": 1.566,
+      "avg_pot_size_bb": 121.19,
+      "hands_contested": 74,
+      "net_chips": 1074,
+      "archetype": "aggressive_predatory"
+    }
+  }
+}
