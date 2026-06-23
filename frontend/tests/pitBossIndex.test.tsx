@@ -34,7 +34,7 @@ describe('rankTables — healthiest-first, data-driven', () => {
 describe('PitBossIndexView', () => {
   it('renders every table, ranked healthiest-first in the DOM', async () => {
     const { container } = render(<PitBossIndexView scores={await scores()} />)
-    const ids = Array.from(container.querySelectorAll('.pit-table-id')).map((el) => el.textContent)
+    const ids = Array.from(container.querySelectorAll('[data-testid="pit-table-id"]')).map((el) => el.textContent)
     expect(ids).toHaveLength(12)
     expect(ids[0]).toBe('T-7')
     expect(ids[ids.length - 1]).toBe('T-22')
@@ -42,7 +42,7 @@ describe('PitBossIndexView', () => {
 
   it('shows T-22 as 38 / beginner-unfriendly', async () => {
     render(<PitBossIndexView scores={await scores()} />)
-    const row = screen.getByText('T-22').closest('.pit-row') as HTMLElement
+    const row = screen.getByText('T-22').closest('[data-testid="pit-row"]') as HTMLElement
     expect(within(row).getByText('38')).toBeTruthy()
     expect(within(row).getByText('Beginner-unfriendly')).toBeTruthy()
   })
@@ -51,7 +51,7 @@ describe('PitBossIndexView', () => {
     render(<PitBossIndexView scores={await scores()} />)
     const flags = screen.getAllByTestId('review-flag')
     expect(flags).toHaveLength(1)
-    const flaggedRow = flags[0].closest('.pit-row')
+    const flaggedRow = flags[0].closest('[data-testid="pit-row"]')
     expect(flaggedRow?.contains(screen.getByText('T-11'))).toBe(true)
   })
 

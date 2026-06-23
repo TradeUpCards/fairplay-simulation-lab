@@ -34,13 +34,13 @@ export function Simulator() {
   const h = displayHour(sim.hour)
 
   return (
-    <section className="simulator" aria-label="standard vs fairplay simulator">
-      <header className="sim-frame-header">
-        <h2>Standard vs FairPlay — 8-hour room</h2>
+    <section aria-label="standard vs fairplay simulator">
+      <header>
+        <h2 className="m-0 mb-3 text-[1.15rem]">Standard vs FairPlay — 8-hour room</h2>
       </header>
 
-      <div className="sim-frame-controls">
-        <label>
+      <div className="mb-4 flex flex-wrap gap-6 text-[0.85rem] text-muted">
+        <label className="flex flex-col gap-[0.3rem]">
           Hour {h}
           <input
             type="range"
@@ -51,7 +51,7 @@ export function Simulator() {
             onChange={(e) => simStore.setHour(Number(e.target.value))}
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-[0.3rem]">
           FairPlay adherence {sim.adherence}%
           <input
             type="range"
@@ -93,7 +93,7 @@ export function SimulatorView({
   const isBlended = adherence !== 0 && adherence !== 100
 
   return (
-    <div className="sim-body">
+    <div className="grid gap-5">
       <DivergenceChart
         standard={standard}
         fairplay={fairplay}
@@ -104,21 +104,23 @@ export function SimulatorView({
 
       <KpiComparison standardRow={stdRow} fairplayRow={fpRow} adherence={adherence} />
 
-      <aside className={`integrity-outcome outcome-${outcome}`} aria-label="integrity outcome">
-        <h3>Integrity outcome{isBlended ? ' (illustrative)' : ''}</h3>
-        <p className="outcome-label">{OUTCOME_LABEL[outcome]}</p>
-        <p className="outcome-note">
+      <aside className="rounded-lg border border-line bg-surface px-[0.9rem] py-3" aria-label="integrity outcome">
+        <h3 className="m-0 mb-[0.3rem] text-[0.95rem]">Integrity outcome{isBlended ? ' (illustrative)' : ''}</h3>
+        <p className={`m-0 font-semibold ${outcome === 'cluster_forms' ? 'text-[#ff9b9b]' : 'text-[#8be3a7]'}`}>
+          {OUTCOME_LABEL[outcome]}
+        </p>
+        <p className="m-0 mt-[0.4rem] text-[0.8rem] text-muted">
           High-risk formations (h{h}): Standard {stdRow.high_risk_seating_formations} · FairPlay{' '}
           {fpRow.high_risk_seating_formations}
         </p>
       </aside>
 
-      <div className="hour-notes">
+      <div className="grid gap-[0.3rem] text-[0.8rem] text-[#9aa2b3]">
         <p>
-          <strong>Standard · h{h}:</strong> {stdRow.hour_note}
+          <strong className="text-[#c3c9d6]">Standard · h{h}:</strong> {stdRow.hour_note}
         </p>
         <p>
-          <strong>FairPlay · h{h}:</strong> {fpRow.hour_note}
+          <strong className="text-[#c3c9d6]">FairPlay · h{h}:</strong> {fpRow.hour_note}
         </p>
       </div>
     </div>

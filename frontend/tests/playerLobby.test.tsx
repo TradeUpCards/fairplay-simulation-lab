@@ -8,7 +8,7 @@ import type { LobbyTable, RouterLobbyFile, RouterPolicy } from '../src/data/type
 afterEach(cleanup)
 
 function badgeWithin(tableId: string): HTMLElement {
-  const card = screen.getByText(tableId).closest('.lobby-card')
+  const card = screen.getByText(tableId).closest('[data-testid="lobby-card"]')
   expect(card).not.toBeNull()
   return card as HTMLElement
 }

@@ -18,20 +18,27 @@ export function App() {
   const [mode, setMode] = useState<ViewMode>('operator')
   const [operatorView, setOperatorView] = useState<OperatorView>('console')
 
+  // mode scrim — a warm vignette over the carpet for the player floor, a cooler
+  // one for the operator console; both layered on a darkening wash.
+  const scrim =
+    mode === 'player'
+      ? 'bg-[radial-gradient(140%_100%_at_50%_-20%,rgba(82,63,40,0.34),transparent_55%),rgba(9,7,4,0.5)]'
+      : 'bg-[radial-gradient(150%_100%_at_50%_-15%,rgba(62,76,68,0.22),transparent_55%),rgba(10,9,7,0.5)]'
+
   return (
-    <div className={`app ${mode === 'player' ? 'is-player' : 'is-operator'}`}>
+    <div className={`min-h-screen ${scrim}`}>
       <Header mode={mode} onModeChange={setMode} />
       {mode === 'operator' ? (
-        <main className="app-main">
+        <main className="mx-auto max-w-[1360px] px-6 pb-12 pt-7">
           <OperatorNav view={operatorView} onViewChange={setOperatorView} />
-          <div className="operator-view">
+          <div>
             {operatorView === 'console' && <PitBossConsole />}
             {operatorView === 'simulator' && <Simulator />}
             {operatorView === 'eval' && <EvalPanel />}
           </div>
         </main>
       ) : (
-        <main className="app-main">
+        <main className="mx-auto max-w-[1360px] px-6 pb-12 pt-8">
           <PlayerLobby />
         </main>
       )}

@@ -32,14 +32,16 @@ export function KpiComparison({
   adherence: number
 }) {
   return (
-    <table className="kpi-table">
-      <caption>Room KPIs · Standard vs FairPlay (Projected = lever-blended, illustrative)</caption>
+    <table className="w-full border-collapse text-[0.85rem]">
+      <caption className="mb-[0.4rem] text-left text-[0.78rem] text-muted">
+        Room KPIs · Standard vs FairPlay (Projected = lever-blended, illustrative)
+      </caption>
       <thead>
         <tr>
-          <th scope="col">KPI</th>
-          <th scope="col">Standard</th>
-          <th scope="col">Projected</th>
-          <th scope="col">FairPlay</th>
+          <th scope="col" className={`${CELL} font-semibold text-muted`}>KPI</th>
+          <th scope="col" className={`${CELL} font-semibold text-muted`}>Standard</th>
+          <th scope="col" className={`${CELL} font-semibold text-muted`}>Projected</th>
+          <th scope="col" className={`${CELL} font-semibold text-muted`}>FairPlay</th>
         </tr>
       </thead>
       <tbody>
@@ -50,10 +52,10 @@ export function KpiComparison({
           const fmt = kpi.fmt ?? ((n: number) => String(n))
           return (
             <tr key={kpi.key}>
-              <th scope="row">{kpi.label}</th>
-              <td data-testid={`std-${kpi.key}`}>{fmt(std)}</td>
-              <td data-testid={`proj-${kpi.key}`} className="kpi-projected">{fmt(projected)}</td>
-              <td data-testid={`fp-${kpi.key}`}>{fmt(fp)}</td>
+              <th scope="row" className={`${CELL} text-left font-medium text-[#c3c9d6]`}>{kpi.label}</th>
+              <td data-testid={`std-${kpi.key}`} className={CELL}>{fmt(std)}</td>
+              <td data-testid={`proj-${kpi.key}`} className={`${CELL} text-[#7fd1ff]`}>{fmt(projected)}</td>
+              <td data-testid={`fp-${kpi.key}`} className={CELL}>{fmt(fp)}</td>
             </tr>
           )
         })}
@@ -61,3 +63,6 @@ export function KpiComparison({
     </table>
   )
 }
+
+// shared cell box: hairline bottom rule, right-aligned numerics
+const CELL = 'border-b border-line px-2 py-[0.35rem] text-right'

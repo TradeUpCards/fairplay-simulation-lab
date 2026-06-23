@@ -17,6 +17,9 @@ import { assessmentsForTable, buildSeats, classificationIndex } from '../lib/tab
 import { ptlForTable } from '../lib/ptl'
 import { BAND_META } from '../lib/health'
 
+// PTL legend keys: a coloured pip (::before) then the label
+const PTL_KEY = 'inline-flex items-center gap-[0.34rem] before:h-[0.55rem] before:w-[0.55rem] before:rounded-full before:content-[\'\']'
+
 export interface TableBundle {
   health: HealthScoresFile
   integrity: IntegrityScoresFile
@@ -66,7 +69,7 @@ export function PitBossTableView({
   tableId: string
 } & TableBundle) {
   const table = roster.tables.find((t) => t.table_id === tableId)
-  if (!table) return <p className="rb-empty">Select a table from the list.</p>
+  if (!table) return <p className="text-muted">Select a table from the list.</p>
 
   const healthRow = health.health_scores.find((h) => h.table_id === tableId)
   const band = healthRow ? BAND_META[healthRow.band] : null
@@ -75,50 +78,75 @@ export function PitBossTableView({
   const ptl = ptlForTable(table, healthRow, clsIndex)
   const seats = buildSeats(table, clsIndex, assessments, ptl)
 
+  // health score + seat count centred on the felt, like the card view (bigger here)
+  const center =
+    healthRow && band ? (
+      <div className="grid justify-items-center gap-1">
+        <span className="text-[3.25rem] font-bold leading-none tabular-nums text-[#f4efe6] [text-shadow:0_1px_7px_rgba(0,0,0,0.7)]">
+          <AnimatedNumber value={healthRow.health} />
+        </span>
+        <span className="font-mono text-[0.8rem] tracking-[0.02em] text-[#d7dfd1] [text-shadow:0_1px_5px_rgba(0,0,0,0.75)]">
+          {table.seated_count}/{table.max_seats} · {table.open_seats} open
+        </span>
+      </div>
+    ) : undefined
+
   return (
-    <section className="pit-table" aria-label={`table ${tableId}`}>
-      <header className="pt-head">
-        <h2>
-          {table.table_id} <span className="pt-stakes">{table.stakes} · {table.game_type}</span>
-        </h2>
-        <span className="pt-pace">
-          {table.pace_label} · {table.style_volatility_label}
+    <section aria-label={`table ${tableId}`}>
+      {/* top row mirrors the floor card: brass id · game · stakes, with the flag +
+          band badge riding top-right — just larger to suit the detail panel */}
+      <header className="mb-2 flex items-center gap-2">
+        <span className="font-mono text-2xl font-bold tracking-[0.04em] text-brass">{table.table_id}</span>
+        <span className="text-base text-text">{table.game_type}</span>
+        <span className="text-sm text-muted">{table.stakes}</span>
+        <span className="ml-auto flex items-center gap-2">
+          {healthRow?.integrity_candidate && (
+            <span className="text-xl text-[#ff8a8a]" title="surface to review" aria-label="surface to review">
+              ⚑
+            </span>
+          )}
+          {band && (
+            <span className={`rounded-full border px-3 py-1 text-[0.85rem] ${band.tone}`}>{band.label}</span>
+          )}
         </span>
       </header>
 
-      {healthRow && band && (
-        <div className="pt-vitals">
-          <div className="pt-health-headline">
-            <span className="pt-health-num">
-              <AnimatedNumber value={healthRow.health} />
-            </span>
-            <span className={`band-chip ${band.tone}`}>{band.label}</span>
-            {healthRow.integrity_candidate && <span className="review-flag">⚑ Surface to review</span>}
-          </div>
+      <p className="mb-3 text-[0.85rem] text-faint">
+        {table.pace_label} · {table.style_volatility_label}
+      </p>
+
+      {healthRow && (
+        <div className="mb-4 max-w-[420px]">
           <TermBars terms={healthRow.terms} />
         </div>
       )}
 
-      <div className="pt-ring-wrap">
-        <SeatRing table={table} seats={seats} />
-        <p className="ptl-legend" data-testid="ptl-legend">
-          Seat heat = <strong>propensity to leave</strong>:
-          <span className="ptl-key ptl-cool">cool — staying</span>
-          <span className="ptl-key ptl-warm">warm</span>
-          <span className="ptl-key ptl-hot">hot — about to bolt</span>
+      <div className="mb-4 mt-2">
+        <SeatRing table={table} seats={seats} centerContent={center} />
+        <p
+          className="mt-2 flex flex-wrap items-center justify-center gap-x-[0.85rem] gap-y-[0.3rem] text-[0.74rem] text-faint"
+          data-testid="ptl-legend"
+        >
+          Seat heat = <strong className="font-semibold text-muted">propensity to leave</strong>:
+          <span className={`${PTL_KEY} before:bg-[#5fcf8a]`}>cool — staying</span>
+          <span className={`${PTL_KEY} before:bg-[#e3b25f]`}>warm</span>
+          <span className={`${PTL_KEY} before:bg-[#ff7b7b]`}>hot — about to bolt</span>
         </p>
       </div>
 
       <LiveFloorControls table={table} />
 
       {assessments.length > 0 ? (
-        <div className="pt-cases">
+        <div className="grid gap-3">
           {assessments.map((a) => (
             <IntegrityCase key={a.group_id} assessment={a} />
           ))}
         </div>
       ) : (
-        <p className="pt-no-flags" data-testid="no-flags">
+        <p
+          className="my-2 rounded-lg border border-line bg-surface px-[0.85rem] py-[0.7rem] text-[0.85rem] text-[#8be3a7]"
+          data-testid="no-flags"
+        >
           No integrity flags — this table reads clean.
         </p>
       )}

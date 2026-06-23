@@ -4,11 +4,18 @@
  */
 import type { HealthBand } from '../data/types'
 
+/** Shared chip box (size/shape); `tone` supplies the band's colour trio. */
+export const BAND_CHIP = 'rounded-full border px-2 py-[0.15rem] text-[0.72rem]'
+
 export const BAND_META: Record<HealthBand, { label: string; tone: string; range: string }> = {
-  healthy: { label: 'Healthy', tone: 'band-healthy', range: '70–100' },
-  fragile: { label: 'Fragile', tone: 'band-fragile', range: '50–69' },
-  beginner_unfriendly: { label: 'Beginner-unfriendly', tone: 'band-beginner', range: '30–49' },
-  collapsed: { label: 'Collapsed', tone: 'band-collapsed', range: '0–29' },
+  healthy: { label: 'Healthy', tone: 'border-[#2f7d4a] bg-[#16341f] text-[#8be3a7]', range: '70–100' },
+  fragile: { label: 'Fragile', tone: 'border-[#8a7a2f] bg-[#33301a] text-[#e3d28b]', range: '50–69' },
+  beginner_unfriendly: {
+    label: 'Beginner-unfriendly',
+    tone: 'border-[#8a5f2f] bg-[#3a2a1a] text-[#efc28f]',
+    range: '30–49',
+  },
+  collapsed: { label: 'Collapsed', tone: 'border-[#8a2f3f] bg-[#3a1a1f] text-[#ef8f9b]', range: '0–29' },
 }
 
 /**

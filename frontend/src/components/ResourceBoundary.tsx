@@ -27,14 +27,14 @@ export function ResourceBoundary<T>({
 }: ResourceBoundaryProps<T>): ReactNode {
   switch (state.status) {
     case 'loading':
-      return loading ?? <p className="rb-loading">Loading {label}…</p>
+      return loading ?? <p className="text-muted">Loading {label}…</p>
     case 'empty':
-      return empty ?? <p className="rb-empty">No {label} available.</p>
+      return empty ?? <p className="text-muted">No {label} available.</p>
     case 'error':
       return error
         ? error(state.error)
         : (
-            <p className="rb-error" role="alert">
+            <p className="text-[#ff9b9b]" role="alert">
               Couldn’t load {label}: {state.error.message}
             </p>
           )

@@ -60,8 +60,8 @@ describe('EvalPanelView', () => {
 
   it('CASE-C computes high and CASE-E computes neutral', async () => {
     render(<EvalPanelView bundle={await bundle()} />)
-    const cardC = screen.getByText('CASE-C').closest('.eval-case') as HTMLElement
-    const cardE = screen.getByText('CASE-E').closest('.eval-case') as HTMLElement
+    const cardC = screen.getByText('CASE-C').closest('[data-testid="eval-case"]') as HTMLElement
+    const cardE = screen.getByText('CASE-E').closest('[data-testid="eval-case"]') as HTMLElement
     expect(within(cardC).getByTestId('predicted-band').textContent).toBe('high')
     expect(within(cardE).getByTestId('predicted-band').textContent).toBe('neutral')
   })
@@ -69,7 +69,7 @@ describe('EvalPanelView', () => {
   it('renders each mandatory case’s safety checks from data (CASE-C has 6)', async () => {
     const { labels } = await bundle()
     render(<EvalPanelView bundle={await bundle()} />)
-    const cardC = screen.getByText('CASE-C').closest('.eval-case') as HTMLElement
+    const cardC = screen.getByText('CASE-C').closest('[data-testid="eval-case"]') as HTMLElement
     expect(within(cardC).getAllByTestId('eval-check')).toHaveLength(
       caseById(labels.cases, 'CASE-C').eval_checks.length,
     )
@@ -78,15 +78,15 @@ describe('EvalPanelView', () => {
   it('ranks true-risk CASE-C above trap CASE-E, with a visible separator', async () => {
     render(<EvalPanelView bundle={await bundle()} />)
     expect(screen.getByTestId('risk-separator')).toBeTruthy()
-    const cardC = screen.getByText('CASE-C').closest('.eval-case') as HTMLElement
-    const cardE = screen.getByText('CASE-E').closest('.eval-case') as HTMLElement
+    const cardC = screen.getByText('CASE-C').closest('[data-testid="eval-case"]') as HTMLElement
+    const cardE = screen.getByText('CASE-E').closest('[data-testid="eval-case"]') as HTMLElement
     // E follows C in document order → C is ranked above E.
     expect(cardC.compareDocumentPosition(cardE) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('marks non-mandatory cases expected-only', async () => {
     render(<EvalPanelView bundle={await bundle()} />)
-    const cardB = screen.getByText('CASE-B').closest('.eval-case') as HTMLElement
+    const cardB = screen.getByText('CASE-B').closest('[data-testid="eval-case"]') as HTMLElement
     expect(within(cardB).getByText(/Expected-only/i)).toBeTruthy()
   })
 })

@@ -11,14 +11,17 @@ const TERMS: { key: TermKey; label: string }[] = [
 /** The four health-penalty terms as labelled bars (each scaled to its own cap). */
 export function TermBars({ terms }: { terms: HealthTerms }) {
   return (
-    <div className="term-bars" aria-label="health penalty terms">
+    <div className="grid min-w-[220px] gap-[0.2rem]" aria-label="health penalty terms">
       {TERMS.map(({ key, label }) => (
-        <div className="term-row" key={key}>
-          <span className="term-name">{label}</span>
-          <span className="term-track">
-            <span className="term-fill" style={{ width: `${(terms[key] / TERM_CAP[key]) * 100}%` }} />
+        <div className="grid grid-cols-[4.5rem_1fr_2rem] items-center gap-[0.4rem] text-[0.72rem] text-muted" key={key}>
+          <span className="text-right">{label}</span>
+          <span className="h-1.5 overflow-hidden rounded-[3px] bg-line">
+            <span
+              className="block h-full bg-[#5f7fd9]"
+              style={{ width: `${(terms[key] / TERM_CAP[key]) * 100}%` }}
+            />
           </span>
-          <span className="term-num">{terms[key]}</span>
+          <span className="tabular-nums text-[#c3c9d6]">{terms[key]}</span>
         </div>
       ))}
     </div>

@@ -1,7 +1,15 @@
 import type { ReactNode } from 'react'
 import pokerTable from '../assets/poker-table.png'
 import type { TableRosterEntry } from '../data/types'
-import { ARCHETYPE_LABEL, ptlTone, type SeatInfo } from '../lib/table'
+import { ARCHETYPE_LABEL, ptlTone, type PtlTone, type SeatInfo } from '../lib/table'
+
+// PTL heat → seat-dot colour. Pending stays neutral until scored.
+const PTL_DOT: Record<PtlTone, string> = {
+  pending: 'bg-[#4a5466]',
+  cool: 'bg-[#5fcf8a]',
+  warm: 'bg-[#e3b25f]',
+  hot: 'bg-[#ff7b7b]',
+}
 
 /**
  * The signature pit-boss element: a round seat-ring over the poker-table felt.
@@ -27,15 +35,23 @@ export function SeatRing({
   centerContent?: ReactNode
 }) {
   return (
-    <div className={`seat-ring${compact ? ' is-compact' : ''}`} aria-label={`seat ring for ${table.table_id}`}>
-      <img className="seat-ring-felt" src={pokerTable} alt="" aria-hidden="true" />
+    <div
+      className={`relative mx-auto aspect-4/3 w-full ${compact ? 'max-w-full' : 'max-w-[680px]'}`}
+      aria-label={`seat ring for ${table.table_id}`}
+    >
+      <img
+        className="absolute inset-0 h-full w-full object-contain opacity-[0.92]"
+        src={pokerTable}
+        alt=""
+        aria-hidden="true"
+      />
       {centerContent ? (
-        <div className="seat-ring-center">{centerContent}</div>
+        <div className={centerClass(compact)}>{centerContent}</div>
       ) : (
         !compact && (
-          <div className="seat-ring-center">
-            <span className="ring-table-id">{table.table_id}</span>
-            <span className="ring-occupancy">
+          <div className={centerClass(compact)}>
+            <span className="text-[1.1rem] font-bold">{table.table_id}</span>
+            <span className="text-[0.72rem] text-[#c3c9d6]">
               {table.seated_count}/{table.max_seats} seated
             </span>
           </div>
@@ -48,6 +64,12 @@ export function SeatRing({
   )
 }
 
+function centerClass(compact: boolean) {
+  return `absolute left-1/2 top-1/2 grid -translate-x-1/2 -translate-y-1/2 justify-items-center gap-[0.15rem] ${
+    compact ? 'pointer-events-auto z-5' : 'pointer-events-none'
+  }`
+}
+
 function Seat({ seat, compact }: { seat: SeatInfo; compact: boolean }) {
   // In compact mode re-seat the players onto the card mini-table's brass rim — a
   // tighter ellipse whose extremes land on the measured rim positions: left
@@ -57,10 +79,21 @@ function Seat({ seat, compact }: { seat: SeatInfo; compact: boolean }) {
   const top = compact ? 50 + (seat.topPct - 50) * (32.2 / 40) : seat.topPct
   const style = { left: `${left}%`, top: `${top}%` }
 
+  // Common seat box: an absolutely-placed, centred grid that anchors the flag.
+  const base = 'absolute grid -translate-x-1/2 -translate-y-1/2 justify-items-center text-center'
+
   if (!seat.playerId) {
+    const openCls = compact
+      ? 'h-[0.9rem] w-[0.9rem] gap-0 rounded-full p-0'
+      : 'w-[4.6rem] gap-[0.1rem] rounded-[9px] px-[0.2rem] py-[0.3rem]'
     return (
-      <div className="seat seat-open" style={style} data-testid="seat" data-open="true">
-        {!compact && <span className="seat-empty">Open</span>}
+      <div
+        className={`${base} ${openCls} border border-dashed border-[#2c3543] bg-[rgba(14,17,22,0.86)] opacity-[0.55]`}
+        style={style}
+        data-testid="seat"
+        data-open="true"
+      >
+        {!compact && <span className="text-[0.72rem] text-[#6b7283]">Open</span>}
       </div>
     )
   }
@@ -68,22 +101,40 @@ function Seat({ seat, compact }: { seat: SeatInfo; compact: boolean }) {
   const tone = ptlTone(seat.ptl)
   const flagged = Boolean(seat.flaggedGroupId)
   const title = [seat.archetypeWhy, seat.ptlWhy].filter(Boolean).join(' — ')
+
+  const sizeCls = compact
+    ? 'w-[3.2rem] gap-0 rounded-md px-[0.08rem] py-[0.12rem]'
+    : 'w-[4.6rem] gap-[0.1rem] rounded-[9px] px-[0.2rem] py-[0.3rem]'
+  const borderCls = flagged
+    ? 'border-[#b3455a] shadow-[0_0_0_1px_#b3455a]'
+    : 'border-[#2c3543]'
+
   return (
     <div
-      className={`seat seat-occupied ptl-${tone}${flagged ? ' seat-flagged' : ''}`}
+      className={`${base} ${sizeCls} border bg-[rgba(14,17,22,0.86)] ${borderCls}`}
       style={style}
       data-testid="seat"
       data-flagged={flagged ? 'true' : 'false'}
       data-ptl-tone={tone}
       title={title || undefined}
     >
-      <span className="seat-ptl-dot" aria-hidden="true" />
-      <span className="seat-player">{seat.playerId}</span>
+      <span
+        className={`rounded-full ${compact ? 'h-[0.4rem] w-[0.4rem]' : 'h-[0.55rem] w-[0.55rem]'} ${PTL_DOT[tone]}`}
+        aria-hidden="true"
+      />
+      <span className={`font-semibold tabular-nums ${compact ? 'text-[0.58rem]' : 'text-[0.74rem]'}`}>
+        {seat.playerId}
+      </span>
       {!compact && seat.archetype && (
-        <span className="seat-archetype">{ARCHETYPE_LABEL[seat.archetype]}</span>
+        <span className="text-[0.64rem] text-[#9aa2b3]">{ARCHETYPE_LABEL[seat.archetype]}</span>
       )}
       {flagged && (
-        <span className="seat-flag" aria-label="under integrity review">
+        <span
+          className={`absolute -right-[0.5rem] text-[#ff9b9b] ${
+            compact ? '-top-[0.35rem] text-[0.6rem]' : '-top-[0.5rem] text-[0.8rem]'
+          }`}
+          aria-label="under integrity review"
+        >
           ⚑
         </span>
       )}

@@ -27,15 +27,31 @@ export function TableDrawer({
 
   return (
     <aside
-      className={`table-drawer${open ? ' is-open' : ''}`}
+      className={`fixed right-0 top-0 z-60 flex h-screen w-[min(66.6vw,1040px)] flex-col border-l-2 border-l-brass shadow-[-22px_0_54px_rgba(0,0,0,0.55)] transition-transform duration-340 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+        open ? 'translate-x-0' : 'translate-x-[101%]'
+      }`}
+      style={{
+        // same carpet as the floor (resolved once in styles.css as var(--carpet)),
+        // dimmed by a gradient wash so the panel reads as part of the room
+        backgroundColor: '#0d0a07',
+        backgroundImage:
+          'linear-gradient(rgba(13,10,7,0.8), rgba(13,10,7,0.88)), var(--carpet)',
+        backgroundRepeat: 'no-repeat, repeat',
+        backgroundSize: 'auto, 150px auto',
+      }}
       role="dialog"
       aria-label="table detail"
       aria-hidden={!open}
     >
-      <button type="button" className="drawer-close" onClick={onClose} aria-label="close detail">
+      <button
+        type="button"
+        className="absolute right-[1.1rem] top-4 z-2 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-[rgba(0,0,0,0.45)] p-0 text-[0.85rem] leading-none text-text hover:border-brass hover:text-brass"
+        onClick={onClose}
+        aria-label="close detail"
+      >
         ✕
       </button>
-      <div className="drawer-body">{children}</div>
+      <div className="overflow-y-auto px-9 pb-12 pt-8">{children}</div>
     </aside>
   )
 }

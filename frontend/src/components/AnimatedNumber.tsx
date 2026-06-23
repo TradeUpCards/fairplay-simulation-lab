@@ -50,5 +50,6 @@ export function AnimatedNumber({
     }
   }, [value, durationMs])
 
-  return <span className="animated-number">{format(display)}</span>
+  // tabular-nums keeps the width steady so the digits don't jitter while counting
+  return <span className="tabular-nums">{format(display)}</span>
 }

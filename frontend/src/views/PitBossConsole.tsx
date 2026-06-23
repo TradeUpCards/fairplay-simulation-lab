@@ -37,15 +37,20 @@ export function PitBossConsole() {
         })
 
         return (
-          <section className={`pit-floor${selected ? ' has-selection' : ''}`} aria-label="pit boss floor">
-            <header className="floor-head">
-              <h2>The floor</h2>
-              <p className="floor-sub">
+          <section className="relative" aria-label="pit boss floor">
+            <header className="mb-5">
+              <h2 className="m-0 text-[1.35rem] tracking-[0.01em]">The floor</h2>
+              <p className="mt-1 text-[0.78rem] text-muted">
                 {roster.tables.length} tables · needs-attention first · click a table to inspect &amp; control
               </p>
             </header>
 
-            <ul className="table-grid">
+            {/* grid collapses to a left rail when the drawer takes the right 2/3 */}
+            <ul
+              className={`grid gap-[1.1rem] transition-[max-width] duration-360 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                selected ? 'max-w-[30%] grid-cols-1' : 'grid-cols-3 max-[900px]:grid-cols-2'
+              }`}
+            >
               {tables.map((t) => (
                 <TableCard
                   key={t.table_id}

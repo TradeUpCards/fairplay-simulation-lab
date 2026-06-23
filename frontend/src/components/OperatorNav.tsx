@@ -21,21 +21,34 @@ export function OperatorNav({
   onViewChange: (view: OperatorView) => void
 }) {
   return (
-    <nav className="operator-nav" aria-label="Operator views">
-      <div className="operator-tabs" role="tablist">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={view === tab.id}
-            className={`operator-tab${view === tab.id ? ' is-active' : ''}`}
-            onClick={() => onViewChange(tab.id)}
-          >
-            <span className="operator-tab-label">{tab.label}</span>
-            <span className="operator-tab-hint">{tab.hint}</span>
-          </button>
-        ))}
+    <nav className="mb-7 border-b border-line" aria-label="Operator views">
+      <div className="inline-flex gap-[0.4rem]" role="tablist">
+        {TABS.map((tab) => {
+          const active = view === tab.id
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              className={`group -mb-px flex flex-col gap-[0.15rem] border-0 border-b-2 bg-transparent px-[1.05rem] pb-[0.6rem] pt-[0.55rem] text-left ${
+                active ? 'border-b-brass' : 'border-b-transparent'
+              }`}
+              onClick={() => onViewChange(tab.id)}
+            >
+              <span
+                className={`text-[0.92rem] tracking-[0.02em] ${
+                  active ? 'font-semibold text-brass' : 'text-muted group-hover:text-text'
+                }`}
+              >
+                {tab.label}
+              </span>
+              <span className="font-mono text-[0.62rem] uppercase tracking-[0.13em] text-faint">
+                {tab.hint}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </nav>
   )

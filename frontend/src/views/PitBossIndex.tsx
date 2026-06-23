@@ -3,7 +3,11 @@ import { loadHealth } from '../data/shim'
 import { useResource } from '../state/useResource'
 import { useLiveRoom, mergeHealthScores } from '../state/liveRoom'
 import { ResourceBoundary } from '../components/ResourceBoundary'
-import { BAND_META, rankTables, TERM_CAP, type TermKey } from '../lib/health'
+import { BAND_CHIP, BAND_META, rankTables, TERM_CAP, type TermKey } from '../lib/health'
+
+// "surface to review" pill — shared with the table-detail header
+export const REVIEW_FLAG =
+  'ml-auto rounded-full border border-[#b3455a] bg-[#3a1a1f] px-[0.55rem] py-[0.15rem] text-[0.72rem] font-semibold text-[#ff9b9b]'
 
 const TERMS: { key: TermKey; label: string }[] = [
   { key: 'P_pred', label: 'pred' },
@@ -58,12 +62,14 @@ export function PitBossIndexView({
 }) {
   const ranked = rankTables(scores)
   return (
-    <section className="pit-index" aria-label="pit boss table index">
-      <header className="pit-index-header">
-        <h2>Tables — healthiest first</h2>
-        <p className="pit-index-note">Ranked on the current health snapshot · per-hour re-rank pending P3 series</p>
+    <section className="mt-8 border-t border-line pt-6" aria-label="pit boss table index">
+      <header>
+        <h2 className="m-0 text-[1.15rem]">Tables — healthiest first</h2>
+        <p className="mb-4 mt-[0.2rem] text-[0.78rem] text-faint">
+          Ranked on the current health snapshot · per-hour re-rank pending P3 series
+        </p>
       </header>
-      <ol className="pit-list">
+      <ol className="grid list-none gap-2 p-0">
         {ranked.map((table, i) => (
           <PitRow
             key={table.table_id}
@@ -92,38 +98,43 @@ function PitRow({
   const band = BAND_META[table.band]
   const why = table.reason_codes[0]?.detail
   return (
-    <li className={`pit-row${selected ? ' pit-row-selected' : ''}`}>
+    <li
+      data-testid="pit-row"
+      className={`overflow-hidden rounded-[9px] border border-line bg-surface${
+        selected ? ' [outline:2px_solid_#5f7fd9]' : ''
+      }`}
+    >
       <button
         type="button"
-        className="pit-row-main"
+        className="flex w-full items-center gap-3 rounded-none border-none bg-transparent px-[0.8rem] py-[0.6rem] text-left hover:bg-[#1b2230]"
         aria-label={`open table ${table.table_id}`}
         aria-current={selected ? 'true' : undefined}
         onClick={() => onSelect?.(table.table_id)}
       >
-        <span className="pit-rank">#{rank}</span>
-        <span className="pit-table-id">{table.table_id}</span>
-        <span className="pit-health">{table.health.toFixed(0)}</span>
-        <span className={`band-chip ${band.tone}`}>{band.label}</span>
+        <span className="min-w-[1.8rem] text-[0.8rem] tabular-nums text-faint">#{rank}</span>
+        <span data-testid="pit-table-id" className="min-w-10 font-semibold">{table.table_id}</span>
+        <span className="min-w-8 text-[1.05rem] font-semibold tabular-nums">{table.health.toFixed(0)}</span>
+        <span className={`${BAND_CHIP} ${band.tone}`}>{band.label}</span>
         {table.integrity_candidate && (
-          <span className="review-flag" data-testid="review-flag">
+          <span className={REVIEW_FLAG} data-testid="review-flag">
             ⚑ Surface to review
           </span>
         )}
       </button>
 
-      <div className="pit-terms" aria-label="penalty terms">
+      <div className="flex flex-wrap gap-3 px-[0.8rem] pb-2 text-[0.72rem] text-muted" aria-label="penalty terms">
         {TERMS.map(({ key, label }) => (
-          <span className="term" key={key}>
-            <span className="term-label">{label}</span>
-            <span className="term-bar">
-              <span className="term-fill" style={{ width: `${(table.terms[key] / TERM_CAP[key]) * 100}%` }} />
+          <span className="flex items-center gap-[0.3rem]" key={key}>
+            <span>{label}</span>
+            <span className="inline-block h-1.25 w-11 overflow-hidden rounded-[3px] bg-line">
+              <span className="block h-full bg-[#5f7fd9]" style={{ width: `${(table.terms[key] / TERM_CAP[key]) * 100}%` }} />
             </span>
-            <span className="term-val">{table.terms[key]}</span>
+            <span className="tabular-nums text-[#c3c9d6]">{table.terms[key]}</span>
           </span>
         ))}
       </div>
 
-      {why && <p className="pit-why">{why}</p>}
+      {why && <p className="m-0 px-[0.8rem] pb-[0.7rem] text-[0.8rem] text-[#9aa2b3]">{why}</p>}
     </li>
   )
 }
