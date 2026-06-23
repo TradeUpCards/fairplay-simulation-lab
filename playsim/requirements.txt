@@ -1,0 +1,5 @@
+pokerkit==0.7.4
+# dev/test
+pytest>=8
+# V2 baselines (optional — solver-like grinder via CFR/RL):
+#   pip install "rlcard[torch]>=1.2.0"

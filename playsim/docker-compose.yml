@@ -1,0 +1,12 @@
+# Stand up the engine and persist runs to ./out (a SQLite DB you can query).
+#   docker compose run --rm playsim run --table case_c --hands 500 --seed 42 --db /data/sim.db
+#   docker compose run --rm playsim replay --table case_c --hands 500 --seed 42
+#   docker compose run --rm playsim population --data-root /fixture --out /data/playsim_hand_histories.json
+services:
+  playsim:
+    build: .
+    environment:
+      PLAYSIM_DATA_ROOT: /fixture
+    volumes:
+      - ./out:/data
+      - ..:/fixture:ro
