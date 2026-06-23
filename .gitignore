@@ -46,3 +46,5 @@ CLAUDE_SESSION_HANDOFF.md
 # Misc
 *.local
 .cache/
+.design-shots/
+.playwright-mcp/

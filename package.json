@@ -1,0 +1,13 @@
+{
+  "name": "fairplay-simulation-lab",
+  "private": true,
+  "description": "Dev orchestration — run the FastAPI backend and the Vite frontend together.",
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c yellow,cyan \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": ".venv/bin/uvicorn backend.app.main:app --reload --port 8000",
+    "dev:web": "npm --prefix frontend run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}

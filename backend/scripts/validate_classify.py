@@ -18,10 +18,10 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # backend/ — for `scoring`
 from scoring.classify import classify  # noqa: E402
 
-DATA = Path(__file__).resolve().parents[1] / "data" / "players.json"
+DATA = Path(__file__).resolve().parents[2] / "data" / "players.json"  # repo root
 
 # Kickoff §8 acceptance — the case players that MUST classify correctly.
 ACCEPTANCE = {

@@ -1,0 +1,80 @@
+/* Tailwind v4 — CSS-first config.
+   The "Back of House / Front of House" design tokens live in @theme (so they
+   generate `bg-brass`, `text-muted`, `font-mono`, … utilities). Everything else
+   is expressed as utilities in the components — this file holds only the token
+   theme, element-level base styles (carpet, button reset), the carpet asset
+   reference, and the one keyframe Tailwind can't express as a utility. */
+@import "tailwindcss";
+
+@theme {
+  /* fonts */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, "Cascadia Code", monospace;
+
+  /* surfaces (Back of House — dark instrument room) */
+  --color-ink: #0d1117;
+  --color-surface: #161b24;
+  --color-surface-2: #11161f;
+  --color-line: #232a36;
+
+  /* brand (sampled to the FairPlay IQ logo kit) */
+  --color-brass: #c79a4b;
+  --color-brass-soft: rgba(199, 154, 75, 0.4);
+  --color-felt: #2f8f5b;
+
+  /* text */
+  --color-text: #e6e9ef;
+  --color-muted: #8b93a7;
+  --color-faint: #6b7283;
+
+  /* the live-floor heartbeat — used as `animate-live-pulse` */
+  --animate-live-pulse: live-pulse 1.8s ease-in-out infinite;
+}
+
+/* The carpet asset, resolved by Vite once here and reused via var(--carpet)
+   (body background below, and the slide-out drawer's layered background). */
+:root {
+  --carpet: url("./assets/carpet-tile.png");
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    background-color: #0d0a07;
+    background-image: var(--carpet);
+    background-repeat: repeat;
+    background-size: 150px auto;
+  }
+
+  /* default (secondary) button look — styled buttons override via utilities,
+     which sit in a later layer and win regardless of specificity */
+  button {
+    cursor: pointer;
+    border: 1px solid #2c3543;
+    background: #1d2531;
+    color: var(--color-text);
+    padding: 0.4rem 0.7rem;
+    border-radius: 7px;
+    font-size: 0.85rem;
+  }
+
+  button:hover {
+    border-color: #3a4757;
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(47, 143, 91, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(47, 143, 91, 0.05);
+  }
+}
