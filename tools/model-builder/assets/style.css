@@ -1,0 +1,23 @@
+/* FairPlay Model Builder — neutral enterprise theme polish. */
+
+/* sliders: replace Dash's purple with the neutral blue accent */
+.rc-slider-track { background-color: #3f7cc0 !important; }
+.rc-slider-handle { border-color: #2f6fb3 !important; background-color: #ffffff !important; opacity: 1; }
+.rc-slider-handle:hover, .rc-slider-handle:focus { border-color: #2f6fb3 !important; box-shadow: 0 0 0 4px rgba(47,111,179,.18) !important; }
+.rc-slider-dot-active { border-color: #3f7cc0 !important; }
+.rc-slider-rail { background-color: #c8ccd0 !important; }
+.rc-slider-mark-text { color: #8a929a !important; font-size: 9px !important; }
+
+/* dropdowns: tighter, neutral */
+.Select-control, .is-focused:not(.is-open) > .Select-control { border-color: #9aa3ab !important; border-radius: 2px !important; }
+.Select-menu-outer { border-color: #9aa3ab !important; }
+
+/* tabs flush, no rounded web look */
+.tab { border-radius: 0 !important; }
+
+/* AG Grid Balham: slightly tighter + selection tint */
+.ag-theme-balham { --ag-font-size: 12px; --ag-row-height: 26px; --ag-header-height: 28px;
+  --ag-selected-row-background-color: #cfe3f7; --ag-row-hover-color: #eef4fa;
+  --ag-borders: solid 1px; --ag-border-color: #c3c9ce; }
+
+body { margin: 0; }

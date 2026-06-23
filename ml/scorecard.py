@@ -68,6 +68,62 @@ def woe_iv(x: pd.Series, y: pd.Series, bins: int = N_BINS):
     return g, iv, row_woe
 
 
+def auto_fine_cuts(x: pd.Series, y: pd.Series, max_bins: int = 8,
+                   min_frac: float = 0.05) -> list[float]:
+    """Data-driven FINE binning: supervised cut points from a shallow decision
+    tree on the target. Target-aware (so the cuts isolate where the class lives),
+    handles non-monotonic relationships (e.g. a class that occupies a middle
+    band), and gives a variable bin count per variable — unlike a flat quantile
+    split. These are the starting bins the analyst then coarse-classes (merges)."""
+    from sklearn.tree import DecisionTreeClassifier
+    xv = np.asarray(x, dtype=float)
+    yv = np.asarray(y, dtype=int)
+    if len(np.unique(xv)) < 2 or yv.sum() == 0 or yv.sum() == len(yv):
+        return []
+    min_leaf = max(5, int(min_frac * len(xv)))
+    t = DecisionTreeClassifier(max_leaf_nodes=max_bins, min_samples_leaf=min_leaf,
+                               random_state=0)
+    t.fit(xv.reshape(-1, 1), yv)
+    thr = sorted(float(c) for c in t.tree_.threshold if c != -2.0)  # -2 = leaf
+    cuts: list[float] = []
+    for c in thr:                       # dedupe near-equal thresholds
+        if not cuts or c - cuts[-1] > 1e-9:
+            cuts.append(round(c, 4))
+    return cuts
+
+
+def woe_from_cuts(x: pd.Series, y: pd.Series, cuts: list[float]):
+    """WoE/IV from EXPLICIT cut points (the bin boundaries). This is what makes
+    coarse classing possible: merging two bins = dropping the cut between them.
+    Returns ``(bin_table, iv, row_woe)`` like :func:`woe_iv`."""
+    xv = np.asarray(x, dtype=float)
+    cuts = sorted(float(c) for c in cuts)
+    idx = np.digitize(xv, cuts, right=True)  # bin index 0..len(cuts)
+    edges = [-np.inf] + cuts + [np.inf]
+    labels = [f"({_fmt(edges[i])}, {_fmt(edges[i + 1])}]" for i in range(len(edges) - 1)]
+    d = pd.DataFrame({"bin": [labels[i] for i in idx], "y": np.asarray(y, dtype=int)})
+    d["bin"] = pd.Categorical(d["bin"], categories=labels, ordered=True)
+    g = d.groupby("bin", observed=True)["y"].agg(n="count", pos="sum")
+    g["neg"] = g["n"] - g["pos"]
+    k = max(len(g), 1)
+    tot_pos, tot_neg = max(int(g["pos"].sum()), 1), max(int(g["neg"].sum()), 1)
+    g["dist_pos"] = (g["pos"] + 0.5) / (tot_pos + 0.5 * k)
+    g["dist_neg"] = (g["neg"] + 0.5) / (tot_neg + 0.5 * k)
+    g["woe"] = np.log(g["dist_pos"] / g["dist_neg"])
+    g["iv_part"] = (g["dist_pos"] - g["dist_neg"]) * g["woe"]
+    iv = float(g["iv_part"].sum())
+    row_woe = pd.Series(d["bin"].map(g["woe"]).astype(float).values, index=x.index)
+    return g, iv, row_woe
+
+
+def _fmt(v: float) -> str:
+    if v == float("-inf"):
+        return "-inf"
+    if v == float("inf"):
+        return "inf"
+    return f"{v:,.0f}" if abs(v) >= 100 else f"{v:.2f}"
+
+
 def iv_strength(iv: float) -> str:
     if iv < 0.02: return "unpredictive"
     if iv < 0.1: return "weak"
