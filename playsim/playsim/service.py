@@ -147,3 +147,85 @@ def simulate_routing(
 
 def list_tables() -> list[str]:
     return sorted(TABLES)
+
+
+def simulate_room(
+    *,
+    root=None,
+    seed: int = 42,
+    seeds: list[int] | None = None,
+    horizon_min: float = 480.0,
+    equity_samples: int = 20,
+    tables: list[str] | None = None,
+    protect: bool = False,
+    protect_threshold: float = 50.0,
+    data_root_str: str = "",
+) -> dict:
+    """Run the closed-loop room A/B and return JSON-serializable results.
+
+    Standard (most-full) vs FairPlay-route (backend router) over an identical,
+    seeded, policy-independent arrival stream. The headline directional metric
+    (vulnerable paid seat-time) is **averaged over a seed set** — single-seed
+    variance is expected. Canonical ``room_sim_*`` outputs use the first seed.
+
+    Returns ``{standard, fairplay, room_metrics_standard, room_metrics_fairplay,
+    comparison[, fairplay_protect]}``. Realized health stays evaluation-only;
+    routing uses backend predicted health via the adapter.
+    """
+    from .arrivals import build_arrival_intents
+    from .policies import FairPlayProtectPolicy, FairPlayRoutePolicy, StandardPolicy
+    from .room import run_room
+    from .room_export import build_canonical, derive_room_metrics
+    from .router_adapter import RouterAdapter
+
+    adapter = RouterAdapter(root)
+    seed_list = list(seeds) if seeds else [seed]
+
+    std_hours: list[float] = []
+    fp_hours: list[float] = []
+    canon_std = canon_fp = canon_protect = None
+
+    for i, s in enumerate(seed_list):
+        intents = build_arrival_intents(horizon_min, seed=s, root=root)
+        common = dict(root=root, master_seed=s, horizon_min=horizon_min,
+                      equity_samples=equity_samples, tables=tables,
+                      arrival_intents=intents)
+        std = run_room(StandardPolicy(), **common)
+        fp = run_room(FairPlayRoutePolicy(adapter), **common)
+        cstd = build_canonical(std, data_root=data_root_str)
+        cfp = build_canonical(fp, data_root=data_root_str)
+        std_hours.append(cstd["summary"]["vulnerable_paid_seat_hours"])
+        fp_hours.append(cfp["summary"]["vulnerable_paid_seat_hours"])
+        if i == 0:
+            canon_std, canon_fp = cstd, cfp
+            if protect:
+                pr = run_room(
+                    FairPlayProtectPolicy(adapter, enabled=True,
+                                          safety_threshold=protect_threshold),
+                    **common)
+                canon_protect = build_canonical(pr, data_root=data_root_str)
+
+    n = len(seed_list)
+    std_mean = sum(std_hours) / n
+    fp_mean = sum(fp_hours) / n
+    comparison = {
+        "metric": "vulnerable_paid_seat_hours",
+        "seeds": seed_list,
+        "standard_mean": round(std_mean, 3),
+        "fairplay_route_mean": round(fp_mean, 3),
+        "delta_hours": round(fp_mean - std_mean, 3),
+        "delta_pct": round((fp_mean - std_mean) / std_mean * 100, 1) if std_mean > 0 else None,
+        "routing_helped": fp_mean >= std_mean,
+        "per_seed": {"standard": std_hours, "fairplay_route": fp_hours},
+    }
+
+    out = {
+        "standard": canon_std,
+        "fairplay": canon_fp,
+        "room_metrics_standard": derive_room_metrics(canon_std),
+        "room_metrics_fairplay": derive_room_metrics(canon_fp),
+        "comparison": comparison,
+    }
+    if protect:
+        out["fairplay_protect"] = canon_protect
+    return out

@@ -172,6 +172,43 @@ def _population(args) -> int:
     return 0
 
 
+def _room_sim(args) -> int:
+    from .service import simulate_room
+
+    seeds = [int(s) for s in args.seeds.split(",")] if args.seeds else None
+    res = simulate_room(
+        root=args.data_root, seed=args.seed, seeds=seeds,
+        horizon_min=args.horizon, equity_samples=args.samples,
+        tables=args.tables.split(",") if args.tables else None,
+        protect=args.protect, protect_threshold=args.protect_threshold,
+        data_root_str=str(args.data_root or ""),
+    )
+    c = res["comparison"]
+    print(
+        f"\n  room-sim   seeds={c['seeds']}   horizon={args.horizon}min\n"
+        f"  vulnerable paid seat-hours (mean):  "
+        f"standard={c['standard_mean']}   fairplay_route={c['fairplay_route_mean']}\n"
+        f"  Δ {c['delta_hours']} hrs ({c['delta_pct']}%)   "
+        f"routing_helped={c['routing_helped']}\n"
+    )
+    out_dir = Path(args.out_dir)
+    suffix = ".json.gz" if args.gzip else ".json"
+
+    def w(name: str, payload) -> None:
+        path = str(out_dir / (name + suffix))
+        _write_json(path, payload, compact=args.compact)
+        print(f"  wrote {path}")
+
+    w("room_sim_standard", res["standard"])
+    w("room_sim_fairplay", res["fairplay"])
+    w("room_metrics_standard", res["room_metrics_standard"])
+    w("room_metrics_fairplay", res["room_metrics_fairplay"])
+    if args.protect and res.get("fairplay_protect"):
+        w("room_sim_fairplay_protect", res["fairplay_protect"])
+    print()
+    return 0
+
+
 def _tables(args) -> int:
     print("\n  available tables:")
     for name, builder in TABLES.items():
@@ -242,6 +279,23 @@ def main(argv=None) -> int:
     pop.add_argument("--features", help="optional sim_player_features sidecar JSON")
     pop.add_argument("--compact", action="store_true", help="write compact JSON; .gz paths are compressed")
     pop.set_defaults(fn=_population)
+
+    rs = sub.add_parser(
+        "room-sim",
+        help="closed-loop Standard-vs-FairPlay room routing comparison → room_sim_*.json",
+    )
+    rs.add_argument("--data-root", help="repo root containing data/ (default: auto-detect or PLAYSIM_DATA_ROOT)")
+    rs.add_argument("--seed", type=int, default=42, help="primary seed (canonical outputs use this)")
+    rs.add_argument("--seeds", help="comma-separated seed set to average the directional headline (default: just --seed)")
+    rs.add_argument("--horizon", type=float, default=480.0, help="horizon in minutes (default 480 = 8h)")
+    rs.add_argument("--samples", type=int, default=20, help="Monte-Carlo equity samples")
+    rs.add_argument("--tables", help="comma-separated table ids (default: all in table_roster.json)")
+    rs.add_argument("--protect", action="store_true", help="also run the experimental FairPlay-protect arm")
+    rs.add_argument("--protect-threshold", type=float, default=50.0, help="protect safety threshold (untuned)")
+    rs.add_argument("--out-dir", default=".", help="directory for room_sim_*/room_metrics_* outputs")
+    rs.add_argument("--gzip", action="store_true", help="write .json.gz outputs")
+    rs.add_argument("--compact", action="store_true", help="compact JSON")
+    rs.set_defaults(fn=_room_sim)
 
     t = sub.add_parser("tables", help="list available demo tables and archetypes")
     t.set_defaults(fn=_tables)
