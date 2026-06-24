@@ -36,7 +36,7 @@ from .population import (
 )
 from .router_adapter import make_table_dict
 from .runner import _effective_session_min, apply_hand_accounting
-from .table import HandRecord, play_hand
+from .table import play_hand
 
 # Mirrors runner._COHORT / _WEAK — the vulnerable north-star cohort and the set
 # the predator/cluster agents treat as prey.
@@ -255,7 +255,6 @@ class RoomSim:
     # --- routing ----------------------------------------------------------
 
     def _live_tables(self) -> list[dict]:
-        from .policies import Seeker  # noqa: F401 (kept local; no backend import here)
         return [
             make_table_dict(
                 tid, list(t.seated), t.max_seats,

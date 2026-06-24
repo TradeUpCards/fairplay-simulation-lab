@@ -204,7 +204,6 @@ def run_session(
     members = _members_by_player(roster)
     weak_ids = frozenset(p.player_id for p in roster if p.archetype in _WEAK)
     start = starting_stack_bb * bb
-    n = len(roster)
     pids = [p.player_id for p in roster]
 
     min_per_hand = 60.0 / hands_per_hour
