@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playsim Room Simulator — Team Guide</title>
+<style>
+  :root{
+    --bg:#07100a; --panel:#0d1710; --panel2:#122119; --ink:#edf7ef; --muted:#a2bba9;
+    --dim:#6f8c78; --line:#244130; --line2:#365b44; --gold:#e5c56c; --gold2:#b79237;
+    --mint:#63d99a; --cyan:#58c7d6; --violet:#b997ff; --rose:#ff7f8f; --amber:#f1ac4e;
+    --shadow:0 28px 80px rgba(0,0,0,.35); --radius:18px; --rail:300px;
+  }
+  *{box-sizing:border-box} html{scroll-behavior:smooth}
+  body{margin:0;min-height:100vh;color:var(--ink);line-height:1.65;
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:radial-gradient(circle at 82% -12%,rgba(229,197,108,.16),transparent 34rem),
+      radial-gradient(circle at 8% 22%,rgba(88,199,214,.1),transparent 28rem),
+      linear-gradient(135deg,#050906 0%,var(--bg) 48%,#040704 100%);}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;
+    background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);
+    background-size:36px 36px;mask-image:linear-gradient(to bottom,black,transparent 76%);}
+  a{color:var(--cyan);text-decoration:none} a:hover{text-decoration:underline}
+  code{color:var(--gold);background:rgba(229,197,108,.09);border:1px solid rgba(229,197,108,.16);
+    border-radius:7px;padding:.06rem .38rem;font-family:"SF Mono","Cascadia Code",Consolas,monospace;font-size:.9em}
+  pre{overflow-x:auto;margin:1rem 0 0;padding:1rem 1.15rem;color:#cfe2d2;background:#050b07;
+    border:1px solid var(--line);border-radius:14px;font-size:.85rem;line-height:1.55}
+  pre code{color:inherit;background:transparent;border:0;padding:0}
+  .layout{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);min-height:100vh}
+  .rail{position:sticky;top:0;height:100vh;overflow-y:auto;padding:1.35rem 1.1rem;
+    background:rgba(9,18,11,.9);border-right:1px solid var(--line);backdrop-filter:blur(18px)}
+  .brand{display:flex;gap:.8rem;align-items:center;padding-bottom:1rem;border-bottom:1px solid var(--line);margin-bottom:1rem}
+  .mark{width:2.1rem;height:2.1rem;display:grid;place-items:center;transform:rotate(45deg);
+    background:linear-gradient(135deg,var(--gold2),var(--gold) 62%,#f8e4a4);color:#0c1309;flex:0 0 auto}
+  .mark span{transform:rotate(-45deg);font-size:.7rem;font-weight:900}
+  .brand-title{color:var(--gold);font-weight:850;font-size:.82rem;letter-spacing:.09em;text-transform:uppercase}
+  .brand-sub{color:var(--dim);font-size:.66rem;letter-spacing:.13em;text-transform:uppercase}
+  .nav{display:grid;gap:.15rem;margin-top:.4rem}
+  .nav .grp{color:var(--dim);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;margin:.8rem 0 .25rem .55rem}
+  .nav a{display:grid;grid-template-columns:1.7rem 1fr;gap:.5rem;padding:.4rem .55rem;color:var(--muted);
+    border:1px solid transparent;border-radius:10px;font-size:.82rem}
+  .nav a:hover{color:var(--ink);background:rgba(255,255,255,.035);border-color:var(--line);text-decoration:none}
+  .nav b{color:var(--dim);font-family:"SF Mono",Consolas,monospace;font-size:.7rem;text-align:right}
+  main{width:min(1120px,100%);padding:clamp(1.6rem,4vw,4rem)}
+  .hero{position:relative;overflow:hidden;padding:clamp(1.8rem,4vw,3.6rem);border:1px solid var(--line2);
+    border-radius:calc(var(--radius) + 8px);box-shadow:var(--shadow);
+    background:linear-gradient(135deg,rgba(18,33,25,.9),rgba(7,16,10,.82)),
+      linear-gradient(115deg,rgba(229,197,108,.08),transparent 42%),
+      linear-gradient(300deg,rgba(88,199,214,.08),transparent 44%)}
+  .eyebrow{display:inline-flex;gap:.55rem;align-items:center;margin-bottom:1rem;color:var(--gold);
+    font-size:.74rem;font-weight:850;letter-spacing:.13em;text-transform:uppercase}
+  .eyebrow::before{content:"";width:2rem;height:1px;background:var(--gold)}
+  h1{margin:0;max-width:900px;font-size:clamp(2rem,5vw,4.2rem);line-height:1.0}
+  .hero p{max-width:760px;margin:1.1rem 0 0;color:var(--muted);font-size:clamp(1rem,1.6vw,1.15rem)}
+  .badges{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:1.4rem}
+  .badge{display:inline-flex;align-items:center;min-height:2rem;padding:.3rem .75rem;color:var(--muted);
+    background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:999px;font-size:.8rem}
+  section{margin-top:clamp(2.2rem,4.5vw,4rem);scroll-margin-top:1.5rem}
+  .shead{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1rem;align-items:start;margin-bottom:1.1rem}
+  .num{width:2.3rem;height:2.3rem;display:grid;place-items:center;color:#10170c;background:var(--gold);
+    border-radius:11px;font-family:"SF Mono",Consolas,monospace;font-weight:900;font-size:.9rem}
+  h2{margin:0;font-size:clamp(1.4rem,2.8vw,2.2rem);line-height:1.15}
+  .lede{margin:.5rem 0 0;max-width:850px;color:var(--muted)}
+  h3{margin:1.4rem 0 .4rem;color:var(--ink);font-size:1.08rem}
+  p{color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:1rem;margin-top:1rem}
+  .card{grid-column:span 4;padding:1.1rem 1.2rem;border:1px solid var(--line);border-radius:var(--radius);
+    background:linear-gradient(180deg,rgba(18,33,25,.88),rgba(11,21,14,.9));box-shadow:0 16px 45px rgba(0,0,0,.18)}
+  .card.half{grid-column:span 6} .card.wide{grid-column:span 8} .card.full{grid-column:1/-1}
+  .label{display:inline-flex;align-items:center;gap:.4rem;margin-bottom:.55rem;color:var(--gold);
+    font-size:.7rem;font-weight:850;letter-spacing:.11em;text-transform:uppercase}
+  .dot{width:.45rem;height:.45rem;background:currentColor;border-radius:50%}
+  .card h4{margin:0 0 .35rem;color:var(--ink);font-size:1.02rem} .card p{margin:0;font-size:.92rem}
+  table{width:100%;border-collapse:collapse;overflow:hidden;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);font-size:.88rem;margin-top:1rem}
+  th{padding:.7rem .85rem;color:var(--gold);background:rgba(229,197,108,.055);border-bottom:1px solid var(--line);
+    text-align:left;font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
+  td{padding:.7rem .85rem;color:var(--muted);border-bottom:1px solid rgba(36,65,48,.6);vertical-align:top}
+  tr:last-child td{border-bottom:0} td strong{color:var(--ink)}
+  td.win{color:var(--mint);font-weight:700} td.bad{color:var(--rose)}
+  .callout{margin-top:1.1rem;padding:1rem 1.15rem;border:1px solid rgba(88,199,214,.24);border-left:4px solid var(--cyan);
+    border-radius:14px;background:rgba(88,199,214,.055);color:var(--muted)}
+  .callout strong{color:var(--ink)}
+  .callout.warn{background:rgba(241,172,78,.055);border-color:rgba(241,172,78,.24);border-left-color:var(--amber)}
+  .callout.q{background:rgba(185,151,255,.06);border-color:rgba(185,151,255,.28);border-left-color:var(--violet)}
+  .callout.q .label{color:var(--violet)}
+  .callout ul{margin:.5rem 0 0;padding-left:1.1rem} .callout li{margin:.25rem 0}
+  .flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:hidden;background:var(--panel);
+    border:1px solid var(--line);border-radius:var(--radius);margin-top:1rem}
+  .step{min-height:7.5rem;padding:.9rem;border-right:1px solid var(--line)}
+  .step:last-child{border-right:0}
+  .step small{display:block;margin-bottom:.4rem;color:var(--dim);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
+  .step strong{display:block;color:var(--cyan);font-size:.95rem;line-height:1.25}
+  .step p{margin:.45rem 0 0;font-size:.8rem;line-height:1.45}
+  .pill{display:inline-block;padding:.1rem .5rem;border-radius:999px;font-size:.68rem;font-weight:800;
+    letter-spacing:.03em;text-transform:uppercase;border:1px solid currentColor}
+  .pill.now{color:var(--mint)} .pill.exp{color:var(--amber)} .pill.no{color:var(--rose)}
+  .foot{margin-top:4rem;padding-top:1.3rem;border-top:1px solid var(--line);color:var(--dim);font-size:.85rem}
+  @media(max-width:1040px){.layout{grid-template-columns:1fr}.rail{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+    .nav{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:1fr}.step{border-right:0;border-bottom:1px solid var(--line)}}
+  @media(max-width:760px){.card,.card.half,.card.wide{grid-column:1/-1}.shead{grid-template-columns:1fr}table{display:block;overflow-x:auto}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="rail">
+    <div class="brand"><div class="mark"><span>PS</span></div>
+      <div><div class="brand-title">Playsim</div><div class="brand-sub">Room sim · team guide</div></div></div>
+    <nav class="nav">
+      <div class="grp">Orientation</div>
+      <a href="#what"><b>01</b><span>What this is</span></a>
+      <a href="#loop"><b>02</b><span>The closed loop</span></a>
+      <div class="grp">Deep dives — how it works</div>
+      <a href="#archetypes"><b>03</b><span>Players &amp; archetypes</span></a>
+      <a href="#arrivals"><b>04</b><span>Arrival → table</span></a>
+      <a href="#hand"><b>05</b><span>Playing a hand</span></a>
+      <a href="#leave"><b>06</b><span>When players leave</span></a>
+      <a href="#breaks"><b>07</b><span>Table breaks</span></a>
+      <a href="#health"><b>08</b><span>Predicted vs realized</span></a>
+      <a href="#policies"><b>09</b><span>The policies</span></a>
+      <div class="grp">The experiment</div>
+      <a href="#design"><b>10</b><span>How we compare</span></a>
+      <a href="#findings"><b>11</b><span>Findings</span></a>
+      <a href="#questions"><b>12</b><span>Open questions</span></a>
+      <div class="grp">Practical</div>
+      <a href="#run"><b>13</b><span>Run it yourself</span></a>
+      <a href="#map"><b>14</b><span>Code &amp; doc map</span></a>
+    </nav>
+    <div class="callout" style="margin-top:1.2rem;font-size:.78rem">
+      Look for the <span style="color:var(--violet);font-weight:800">◆ Questions to investigate</span>
+      boxes — they're starting points for your own deep dives.
+    </div>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">FairPlay Simulation Lab</div>
+      <h1>How playsim's room simulator works — and what it found</h1>
+      <p>A learning tool for the team: how synthetic poker players arrive, get seated, play, bleed, and
+        leave a simulated room — and why, when we compared FairPlay health-routing against a plain
+        "most-full" baseline, <strong>the baseline won</strong>. Each section is a place to stop and
+        ask your own questions.</p>
+      <div class="badges">
+        <span class="badge">Seeded &amp; byte-replayable</span>
+        <span class="badge">PokerKit referee</span>
+        <span class="badge">Signals emerge from play</span>
+        <span class="badge">Standard vs FairPlay A/B</span>
+        <span class="badge">Honest negative result</span>
+      </div>
+    </header>
+
+    <!-- 01 -->
+    <section id="what">
+      <div class="shead"><div class="num">01</div><div>
+        <h2>What this is</h2>
+        <p class="lede">Playsim deals synthetic No-Limit Hold'em so that the signals our detector watches
+          — VPIP, aggression, soft-play, robotic timing, chip bleed — <em>emerge from play</em> instead
+          of being typed into a fixture. The <strong>room simulator</strong> is the newest layer: a
+          closed loop that lets a routing <em>policy</em> decide where each arriving player sits, then
+          measures the consequences.</p></div></div>
+      <div class="grid">
+        <article class="card"><div class="label"><span class="dot"></span>The question</div>
+          <h4>Does routing help?</h4>
+          <p>FairPlay's pitch: steer vulnerable players to <em>healthy</em> tables so they survive longer
+            and keep playing. We built this to <em>test</em> that — not assume it.</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>The trick</div>
+          <h4>Decisions, not fixtures</h4>
+          <p>Old comparison used two hand-written rosters (tested compositions). Now a policy makes the
+            seating <em>decision</em> live, so the outcome is caused by the policy.</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>The honesty rule</div>
+          <h4>Never grade your own homework</h4>
+          <p>Routing uses <em>predicted</em> health from the scorer; the <em>realized</em> outcome is
+            measured independently from chip flow. The two never touch. (<a href="#health">§08</a>)</p></article>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section id="loop">
+      <div class="shead"><div class="num">02</div><div>
+        <h2>The closed loop, end to end</h2>
+        <p class="lede">One run = one room over a horizon (default 8 hours). The same seeded
+          <em>arrival stream</em> feeds both A/B arms; only the seating <em>policy</em> differs.
+          Walk the five stages, then dive into any of them below.</p></div></div>
+      <div class="flow">
+        <div class="step"><small>Input</small><strong>Room state</strong>
+          <p>12 tables seeded from <code>table_roster.json</code> (~68 seated at hour 0); ~54 unseated
+            players become a seeded <a href="#arrivals">arrival stream</a>.</p></div>
+        <div class="step"><small>Decide</small><strong>Policy seats the seeker</strong>
+          <p>Each arrival is placed by the active <a href="#policies">policy</a> (most-full, random,
+            FairPlay…). FairPlay asks the real backend router.</p></div>
+        <div class="step"><small>Play</small><strong>Hands are dealt</strong>
+          <p>One hand per active table per step via <a href="#hand">PokerKit</a>; chips move, the
+            vulnerable cohort bleeds.</p></div>
+        <div class="step"><small>Decay</small><strong>Players leave</strong>
+          <p>Losing shortens sessions (<a href="#leave">tilt model</a>); tables that fall below 2
+            <a href="#breaks">break</a> and displace their players.</p></div>
+        <div class="step"><small>Measure</small><strong>Causal trace out</strong>
+          <p>Arrivals, routing decisions, seat events, sessions, hourly rollups, summary →
+            <code>room_sim_*.json</code>.</p></div>
+      </div>
+      <div class="callout"><strong>North-star metric:</strong> retained <em>paid seat-time</em> for the
+        vulnerable cohort (<code>new</code>, <code>recreational</code>, <code>promo_hunter</code>) —
+        minutes accrued per hand dealt while seated at a live table. It is a <em>sum</em>, so it rewards
+        keeping more vulnerable players seated and dealing.</div>
+    </section>
+
+    <!-- 03 -->
+    <section id="archetypes">
+      <div class="shead"><div class="num">03</div><div>
+        <h2>Players &amp; archetypes</h2>
+        <p class="lede">Every player is an <strong>archetype</strong> — a vector of "knobs" that biases
+          every decision (looseness, aggression, skill, bluff, timing, tilt sensitivity, soft-play). One
+          parameterized policy plays them all; the stats are <em>measured</em>, not asserted. Defined in
+          <code>playsim/playsim/knobs.py</code>.</p></div></div>
+      <table>
+        <thead><tr><th>Archetype</th><th>Role</th><th>Skill</th><th>Tilt-quit</th><th>Hunts weak?</th><th>Base session (min)</th></tr></thead>
+        <tbody>
+          <tr><td><strong>new</strong> <span class="pill now">cohort</span></td><td>Beginner; the player we most want to protect</td><td>0.20</td><td>0.80 (quits fast)</td><td>no</td><td>20</td></tr>
+          <tr><td><strong>recreational</strong> <span class="pill now">cohort</span></td><td>Casual fish; the volume we want to retain</td><td>0.30</td><td>0.30</td><td>no</td><td>73</td></tr>
+          <tr><td><strong>promo_hunter</strong> <span class="pill now">cohort</span></td><td>Plays the minimum, very risk-averse</td><td>0.40</td><td>0.25</td><td>no</td><td>39</td></tr>
+          <tr><td><strong>regular</strong></td><td>Solid winning player</td><td>0.70</td><td>0.15</td><td>no</td><td>135</td></tr>
+          <tr><td><strong>grinder</strong></td><td>High-volume extractor</td><td>0.85</td><td>0.05</td><td><strong>yes</strong></td><td>325</td></tr>
+          <tr><td><strong>aggressive_predatory</strong></td><td>The shark; targets weak players hard (AF 4.3)</td><td>0.80</td><td>0.10</td><td><strong>yes</strong></td><td>251</td></tr>
+          <tr><td><strong>healthy_anchor</strong></td><td>Strong but <em>doesn't</em> hunt — stabilizes a table</td><td>0.65</td><td>0.10</td><td>no</td><td>209</td></tr>
+          <tr><td><strong>cluster_member</strong></td><td>Coordinated ring: soft-plays its own, hunts outsiders</td><td>0.72</td><td>0.10</td><td><strong>yes</strong> + soft-play</td><td>178</td></tr>
+          <tr><td><strong>shared_device_household</strong></td><td>Same-device family; benign (false-positive trap)</td><td>0.50</td><td>0.20</td><td>no</td><td>119</td></tr>
+          <tr><td><strong>bot_like</strong></td><td>Robotic: deterministic, near-zero timing jitter, never tilts</td><td>0.70</td><td>0.00</td><td>no</td><td>182</td></tr>
+          <tr><td><strong>solver_like</strong> <span class="pill exp">V2</span></td><td>Near-GTO strong reg (benchmark brain)</td><td>0.97</td><td>0.02</td><td>yes</td><td>300</td></tr>
+        </tbody>
+      </table>
+      <div class="callout q"><div class="label"><span class="dot"></span>◆ Questions to investigate</div>
+        <ul>
+          <li>The vulnerable <em>cohort</em> (north-star) is <code>{new, recreational, promo_hunter}</code>,
+            but the backend routing gate only protects <code>{new, recreational}</code>. Should
+            <code>promo_hunter</code> be protected too? Where would that change behavior?</li>
+          <li><code>new</code> has the shortest base session (20 min) <em>and</em> the highest tilt-quit
+            (0.80). How much of the result is driven by new players leaving almost immediately?</li>
+          <li>Only <code>grinder</code>, <code>aggressive_predatory</code>, <code>cluster_member</code>,
+            <code>solver_like</code> have <code>target_weak=True</code>. Try toggling who hunts —
+            does the routing story change?</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section id="arrivals">
+      <div class="shead"><div class="num">04</div><div>
+        <h2>Arrival → table</h2>
+        <p class="lede">Demand is generated <em>once</em> and shared by both arms, so the only thing that
+          differs is <em>where</em> each seeker is placed. <code>playsim/playsim/arrivals.py</code> +
+          the policy seam in <code>policies.py</code>.</p></div></div>
+      <div class="grid">
+        <article class="card half"><div class="label"><span class="dot"></span>The stream</div>
+          <h4>One intent per unseated player</h4>
+          <p>The ~54 players not seated at hour 0 each get <strong>exactly one</strong>
+            <code>ArrivalIntent(player_id, archetype, arrive_at_min)</code>, drawn uniformly over the
+            horizon from a seed. Flat schedule — <em>no</em> health-modulated arrival rate (that would
+            make the two arms see different demand).</p></article>
+        <article class="card half"><div class="label"><span class="dot"></span>The decision</div>
+          <h4>Policy picks a seat — or the seeker balks</h4>
+          <p>The loop hands the seeker + the live table set to <code>policy.choose()</code>. If no
+            acceptable open seat exists, the seeker <strong>balks</strong> (leaves without sitting,
+            zero seat-time). A player arrives <strong>once</strong>; balking is terminal.</p></article>
+      </div>
+      <div class="callout"><strong>"Balk" =</strong> a seeker who arrives, finds no acceptable open seat,
+        and leaves without playing. It's the queueing term, and it's the dominant lever in the findings —
+        a balked vulnerable player contributes nothing to retained seat-time.</div>
+      <div class="callout q"><div class="label"><span class="dot"></span>◆ Questions to investigate</div>
+        <ul>
+          <li>Arrivals are uniform over the horizon. Real lobbies have rush hours. How would a
+            time-varying (but still policy-independent) arrival curve change saturation and balking?</li>
+          <li>A player arrives exactly once. Should players re-queue later in the night? What would that
+            do to the liquidity dynamics?</li>
+          <li>The room starts ~95% full. How sensitive is everything to initial occupancy? (See the
+            <a href="#findings">findings</a> — liquidity is the binding constraint.)</li>
+        </ul></div>
+    </section>
+
+    <!-- 05 -->
+    <section id="hand">
+      <div class="shead"><div class="num">05</div><div>
+        <h2>Playing a hand</h2>
+        <p class="lede">PokerKit is the referee (legal actions, betting, showdown, chip accounting); we
+          control the seeded deck so it's reproducible. The per-hand economics live in one shared helper
+          — <code>apply_hand_accounting</code> in <code>runner.py</code> — used by both the single-table
+          loop and the room loop, so they can't drift.</p></div></div>
+      <div class="grid">
+        <article class="card"><div class="label"><span class="dot"></span>1 · Deal</div>
+          <h4>Button rotates</h4>
+          <p>One hand per active table per step; the dealer advances each hand. Agents act from an
+            observation (hole cards, board, pot, position).</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>2 · Skill edge</div>
+          <h4>A small honest nudge</h4>
+          <p>Heuristic agents don't reliably out-win weaker players (variance dominates), so a small
+            <strong>zero-sum</strong> <code>skill_edge</code> (default 1.6) transfers EV from weak to
+            strong by skill gap. It's a labeled <em>input</em>; health stays <em>derived</em>.</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>3 · Account</div>
+          <h4>Chips, busts, seat-time</h4>
+          <p>Payoffs applied, stacks below 8bb rebuy (40bb start), seat-minutes accrue per dealt hand.
+            This is the chip flow everything downstream is measured from.</p></article>
+      </div>
+      <div class="callout warn"><strong>Honest caveat baked in:</strong> the <code>skill_edge</code>
+        transfer is a deliberate modeling choice — without it, cards + variance drown the predation
+        signal. A trained solver brain (the <code>solver_like</code>/RLCard path) would make the edge
+        <em>emerge</em> instead. Per-seed results are noisy; we always average over seeds.</div>
+      <div class="callout q"><div class="label"><span class="dot"></span>◆ Questions to investigate</div>
+        <ul>
+          <li>How much does <code>skill_edge=1.6</code> drive the predation→decay signal? Sweep it and see
+            where the routing story appears or vanishes.</li>
+          <li>40bb starting stacks + rebuy-at-8bb means fast busts. Try deeper stacks — does survival
+            stretch enough for health-routing to matter?</li>
+        </ul></div>
+    </section>
+
+    <!-- 06 -->
+    <section id="leave">
+      <div class="shead"><div class="num">06</div><div>
+        <h2>When players leave</h2>
+        <p class="lede">This is the heart of the north-star metric. The vulnerable cohort
+          <strong>logs off when its (loss-shortened) session budget is spent</strong>. Losing fast
+          shortens the session — so an unhealthy table directly produces less retained seat-time. Shared
+          helper <code>cohort_should_leave</code> in <code>runner.py</code>.</p></div></div>
+      <pre><code># a cohort player's session budget, in minutes
+loss100 = (-net_bb) / (hands_played/100)   if hands_played &gt;= 15 else 0   # warmup
+tilt    = 1.0 - max(0, loss100)/130 * (0.5 + tilt_quit)                  # losing → shorter
+tilt    = clamp(tilt, 0.12, 1.25)
+budget  = base_session_min(archetype) * spread(0.85..1.15) * tilt        # spread = per-player jitter
+#   → the player leaves once  seat_minutes &gt;= budget</code></pre>
+      <div class="grid" style="margin-top:1.3rem">
+        <article class="card half"><div class="label"><span class="dot"></span>What shortens a session</div>
+          <h4>Loss rate × tilt sensitivity</h4>
+          <p>Faster bleed (high <code>loss100</code>) and a higher <code>tilt_quit</code> knob both shrink
+            the budget. A <code>new</code> player (tilt-quit 0.80, base 20 min) at a predatory table
+            evaporates; a <code>grinder</code> (tilt-quit 0.05, base 325) grinds on.</p></article>
+        <article class="card half"><div class="label"><span class="dot"></span>Why it's load-bearing</div>
+          <h4>Decay is a consequence, not an input</h4>
+          <p><code>loss100</code> comes from <em>real played chips</em>, so play-decay is a genuine
+            downstream effect of who the player was seated with — exactly what routing is supposed to
+            influence.</p></article>
+      </div>
+      <div class="callout q"><div class="label"><span class="dot"></span>◆ Questions to investigate</div>
+        <ul>
+          <li>The loss rate is only counted after a 15-hand warmup. Players who bust inside 15 hands never
+            register a loss rate — does that mask early predation?</li>
+          <li>The tilt curve divides by 130 bb/100 and weights by <code>0.5 + tilt_quit</code>. Are those
+            constants doing too much? Try recalibrating against a target session-length distribution.</li>
+          <li>Only the cohort leaves voluntarily; the field stays put (to keep the experiment controlled).
+            What breaks if predators/regulars also churn?</li>
+        </ul></div>
+    </section>
+
+    <!-- 07 -->
+    <section id="breaks">
+      <div class="shead"><div class="num">07</div><div>
+        <h2>Table breaks &amp; displacement</h2>
+        <p class="lede">A table needs ≥2 players to deal. When departures drop a table below that, it
+          <strong>breaks</strong> — and its remaining player is displaced. <em>This turned out to be the
+          mechanism behind the whole result</em> (<a href="#findings">§11</a>).</p></div></div>
+      <div class="grid">
+        <article class="card half"><div class="label"><span class="dot"></span>Break</div>
+          <h4>Below quorum → table closes</h4>
+          <p>Any table with exactly 1 seated player breaks that step; the lone player re-enters the
+            seeker pool <strong>once</strong> and is re-routed by the active policy.</p></article>
+        <article class="card half"><div class="label"><span class="dot"></span>Re-seek guard</div>
+          <h4>No phantom seats</h4>
+          <p>A displaced player won't be seated at an empty table (that would just be a non-dealing lone
+            seat); if no pair-forming seat exists, they balk. This keeps the eval trace clean.</p></article>
+      </div>
+      <div class="callout warn"><strong>Why this matters so much:</strong> every break displaces a
+        player, and many displaced players can't re-seat (a "break-balk") and lose all further seat-time.
+        Policies that keep tables <em>full</em> break fewer tables. That single fact decides the
+        comparison.</div>
+      <div class="callout q"><div class="label"><span class="dot"></span>◆ Questions to investigate</div>
+        <ul>
+          <li>Real rooms actively <em>balance</em> tables (merge short games) to avoid breaks. Should the
+            sim model an operator-side balancing step, separate from player routing?</li>
+          <li>Displaced players re-seek once then balk. Is that too harsh? How much seat-time is lost to
+            break-balks specifically? (The findings instrument this.)</li>
+        </ul></div>
+    </section>
+
+    <!-- 08 -->
+    <section id="health">
+      <div class="shead"><div class="num">08</div><div>
+        <h2>Predicted vs realized health (the guardrail)</h2>
+        <p class="lede">Two different health measures, kept strictly apart — the spine of the whole
+          design's credibility.</p></div></div>
+      <div class="grid">
+        <article class="card half"><div class="label"><span class="dot"></span>Predicted · drives routing</div>
+          <h4>Composition-driven, top-down</h4>
+          <p>The backend scorer (<code>backend/scoring/health.py</code>) scores a table from <em>who is
+            seated</em> — predation pressure, fragility, cluster severity. Run with
+            <code>P_bleed=0</code> (no realized history), so it's purely compositional. FairPlay routes on
+            this.</p></article>
+        <article class="card half"><div class="label"><span class="dot"></span>Realized · evaluation only</div>
+          <h4>Chip-flow, bottom-up</h4>
+          <p>After the fact, playsim measures what actually happened — how fast the cohort bled, busts,
+            winner concentration. <strong>Never</strong> feeds a routing decision (a structural test
+            enforces <code>room.py</code> can't import it).</p></article>
+      </div>
+      <div class="callout"><strong>Why split them?</strong> If the same formula both <em>chose</em> the
+        seats and <em>graded</em> the outcome, "routing improved health" would be a tautology. Predicted
+        decides; realized judges. The one cross-package seam that reaches the backend is
+        <code>playsim/playsim/router_adapter.py</code>.</div>
+      <div class="callout q"><div class="label"><span class="dot"></span>◆ Questions to investigate</div>
+        <ul>
+          <li>The router rank is <code>0.30·Fit + 0.40·Health + 0.30·ΔHealth</code> (frozen). Does the
+            <code>ΔHealth</code> term ever push a fish toward a predator table because it "improves" that
+            table most? (We probed this — it doesn't, given a clean choice — but worth re-checking under
+            load.)</li>
+          <li>Predicted health holds <code>P_bleed=0</code>. Would giving the router <em>some</em>
+            realized signal help, without creating circularity?</li>
+        </ul></div>
+    </section>
+
+    <!-- 09 -->
+    <section id="policies">
+      <div class="shead"><div class="num">09</div><div>
+        <h2>The policies</h2>
+        <p class="lede">All five live behind one interface (<code>policy.choose(seeker, live_tables)</code>)
+          in <code>policies.py</code>; the room loop is policy-agnostic.</p></div></div>
+      <table>
+        <thead><tr><th>Policy</th><th>Rule</th><th>Backend?</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><strong>most-full</strong> (Standard)</td><td>Seat the fullest table with an open seat (liquidity-seeking — what real rooms do)</td><td>no</td><td><span class="pill now">baseline</span></td></tr>
+          <tr><td><strong>random</strong></td><td>Uniformly random open table (neutral "no intelligence" control)</td><td>no</td><td><span class="pill now">baseline</span></td></tr>
+          <tr><td><strong>fairplay-route</strong></td><td>Best non-gated open table by the real frozen router's rank</td><td><strong>yes</strong></td><td><span class="pill now">headline</span></td></tr>
+          <tr><td><strong>fairplay-protect</strong></td><td>Route, but <em>defer</em> a vulnerable seeker when only sub-threshold seats are open</td><td>yes</td><td><span class="pill exp">experimental</span></td></tr>
+          <tr><td><strong>fairplay-balanced</strong></td><td>Spread fish across healthy-enough tables (fewest fish first)</td><td>yes</td><td><span class="pill no">backfired</span></td></tr>
+        </tbody>
+      </table>
+      <div class="callout">Gated tables (a seated high-band cluster) are removed from a vulnerable
+        seeker's candidate set entirely — the integrity hard-gate. The player could still pick it
+        manually; the policy just won't recommend it.</div>
+    </section>
+
+    <!-- 10 -->
+    <section id="design">
+      <div class="shead"><div class="num">10</div><div>
+        <h2>How we compare (the A/B design)</h2>
+        <p class="lede">A clean counterfactual: identical starting room, identical seeded arrival
+          <em>intents</em>, identical economics — only the seating policy changes. Placements and
+          departures then diverge <em>because of</em> the policy, which is the whole point.</p></div></div>
+      <div class="grid">
+        <article class="card"><div class="label"><span class="dot"></span>Shared</div>
+          <h4>Demand &amp; seeds</h4>
+          <p>Same arrival stream, same per-table seeds. Both arms see identical "who wants a seat,
+            when."</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>Derived</div>
+          <h4>Placements &amp; departures</h4>
+          <p>Where each seeker lands, who bleeds, who leaves, which tables break — all flow from the
+            policy's choices.</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>Honest</div>
+          <h4>Averaged over seeds</h4>
+          <p>Single-seed runs are noisy; the headline is a mean over a pinned seed set. The directional
+            sign is reported, not asserted.</p></article>
+      </div>
+      <div class="callout">Everything is <strong>deterministic</strong>: same
+        <code>(seed, horizon, policy)</code> reproduces byte-for-byte. Each table owns one persistent RNG
+        for its whole life, so replay survives even a mid-run table break.</div>
+    </section>
+
+    <!-- 11 -->
+    <section id="findings">
+      <div class="shead"><div class="num">11</div><div>
+        <h2>Findings: Standard wins (and why)</h2>
+        <p class="lede">Four policies, matched 4-hour and 8-hour horizons, all 12 tables, 3 seeds
+          averaged. Headline = vulnerable-cohort paid seat-hours; we also instrument table breaks and
+          break-balks.</p></div></div>
+
+      <h3>4-hour horizon (240 min)</h3>
+      <table>
+        <thead><tr><th>Policy</th><th>Cohort seat-hrs</th><th>Arrival survival (min)</th><th>Table breaks</th><th>Break-balks</th></tr></thead>
+        <tbody>
+          <tr><td>random</td><td>9.66</td><td>7.9</td><td>27.0</td><td>15.0</td></tr>
+          <tr><td><strong>most-full</strong></td><td class="win">9.99</td><td>8.4</td><td><strong>20.0</strong></td><td>16.7</td></tr>
+          <tr><td>fairplay-route</td><td>9.84</td><td>8.8</td><td>28.7</td><td>26.0</td></tr>
+          <tr><td>fairplay-balanced</td><td class="bad">8.62</td><td class="bad">2.1</td><td class="bad">47.3</td><td class="bad">44.7</td></tr>
+        </tbody>
+      </table>
+
+      <h3>8-hour horizon (480 min)</h3>
+      <table>
+        <thead><tr><th>Policy</th><th>Cohort seat-hrs</th><th>Arrival survival (min)</th><th>Table breaks</th><th>Break-balks</th></tr></thead>
+        <tbody>
+          <tr><td>random</td><td>9.94</td><td>9.0</td><td>25.7</td><td>14.3</td></tr>
+          <tr><td><strong>most-full</strong></td><td class="win">10.06</td><td>8.6</td><td>28.3</td><td>24.3</td></tr>
+          <tr><td>fairplay-route</td><td class="bad">9.16</td><td class="bad">4.5</td><td>37.7</td><td>34.3</td></tr>
+          <tr><td>fairplay-balanced</td><td class="bad">8.62</td><td class="bad">2.0</td><td class="bad">48.7</td><td class="bad">45.7</td></tr>
+        </tbody>
+      </table>
+
+      <div class="grid" style="margin-top:1.4rem">
+        <article class="card half"><div class="label"><span class="dot"></span>What happened</div>
+          <h4>Standard wins or ties; FairPlay fades with time</h4>
+          <p>most-full ≈ random ≈ fairplay at 4h; by 8h fairplay is ~9% behind. More time made
+            health-routing <em>worse</em>, refuting the "give survival time to express" hypothesis.
+            Random ≈ Standard, so Standard isn't an unfairly strong baseline.</p></article>
+        <article class="card half"><div class="label"><span class="dot"></span>Why — verified</div>
+          <h4>Table liveness, not a bad decision</h4>
+          <p>A router probe shows the <em>decision</em> is sound (it picks the healthy table, rank 57 vs
+            35). The loss is <strong>churn</strong>: health-routing scatters players → more tables drop
+            below quorum → more breaks (38 vs 28) → more break-balks (34 vs 24) → seat-time lost.
+            most-full concentrates and keeps tables alive.</p></article>
+      </div>
+      <div class="callout warn"><strong>The fix that backfired:</strong> <code>fairplay-balanced</code>
+        deliberately spread fish to de-concentrate — and was the <em>worst</em> arm, with by far the most
+        breaks (≈48). Spreading thin fragmented the room below quorum. Strong confirmation that at this
+        scale, <strong>liquidity (concentration) beats distribution</strong>.</div>
+      <div class="callout"><strong>Read this as:</strong> a plausible product intervention measurably
+        backfired for a non-obvious systems reason — which is exactly what an honest simulator is for.
+        It is <em>not</em> a verdict that risk-aware routing is bad in a real room. Caveats:
+        synthetic agents, 40bb stacks, near-full room, a throughput-shaped metric; we did not tune toward
+        a positive result.</div>
+    </section>
+
+    <!-- 12 -->
+    <section id="questions">
+      <div class="shead"><div class="num">12</div><div>
+        <h2>Open questions for the team</h2>
+        <p class="lede">The most useful next experiments — pick one and the harness in
+          <a href="#run">§13</a> will run it.</p></div></div>
+      <div class="grid">
+        <article class="card"><div class="label"><span class="dot"></span>Metric</div>
+          <h4>Is throughput the right yardstick?</h4>
+          <p>Cohort seat-time is a sum, so it rewards liquidity. Try a per-player survival or
+            "bad sessions prevented" metric — FairPlay's value is harm-avoidance, not seat count.</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>Scale</div>
+          <h4>Does a less-full room flip it?</h4>
+          <p>At ~95% occupancy, liquidity is the binding constraint. With more open seats, the health
+            benefit might finally show.</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>Policy</div>
+          <h4>Liveness-aware FairPlay</h4>
+          <p>Add a quorum/liquidity term to the rank so health-routing stops stranding tables — unlike
+            the naive spread that backfired.</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>Operator step</div>
+          <h4>Model table-balancing separately</h4>
+          <p>Real rooms balance tables independently of player routing. Should the sim too?</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>Agents</div>
+          <h4>Real brains</h4>
+          <p>Swap heuristic agents for a trained <code>solver_like</code>/RLCard brain so the skill edge
+            emerges instead of being injected.</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>Leave model</div>
+          <h4>Recalibrate tilt</h4>
+          <p>The 15-hand warmup and tilt constants are uncalibrated. Fit them to a target
+            session-length distribution and re-run.</p></article>
+      </div>
+    </section>
+
+    <!-- 13 -->
+    <section id="run">
+      <div class="shead"><div class="num">13</div><div>
+        <h2>Run it yourself</h2>
+        <p class="lede">Everything is seeded and reproducible. From the <code>playsim/</code> directory:</p></div></div>
+      <pre><code>make install                      # one-time: Python 3.12 venv + PokerKit + editable install
+
+# The N-way comparison behind the findings (random / most-full / fairplay / fairplay-balanced)
+.venv/bin/python analysis/room_policy_comparison.py --horizon 240 --seeds 42,7,99
+.venv/bin/python analysis/room_policy_comparison.py --horizon 480 --seeds 42,7,99
+
+# The shipped Standard-vs-FairPlay A/B → writes room_sim_*.json + room_metrics_*.json
+.venv/bin/python -m playsim.cli room-sim --seeds 42,7,99 --horizon 480 --out-dir out
+
+make test                         # full suite (68 tests)</code></pre>
+      <div class="callout">Tip for fast local pokes: add <code>--tables T-22,T-8</code> and a short
+        <code>--horizon 60</code> to iterate in seconds before committing to a full run.</div>
+    </section>
+
+    <!-- 14 -->
+    <section id="map">
+      <div class="shead"><div class="num">14</div><div>
+        <h2>Code &amp; doc map</h2>
+        <p class="lede">Where to read next, by what you want to understand.</p></div></div>
+      <table>
+        <thead><tr><th>You want to understand…</th><th>Read</th></tr></thead>
+        <tbody>
+          <tr><td>The room loop, breaks, lifecycle</td><td><code>playsim/playsim/room.py</code></td></tr>
+          <tr><td>The arrival stream</td><td><code>playsim/playsim/arrivals.py</code></td></tr>
+          <tr><td>The five policies</td><td><code>playsim/playsim/policies.py</code></td></tr>
+          <tr><td>The only backend seam (routing)</td><td><code>playsim/playsim/router_adapter.py</code></td></tr>
+          <tr><td>Archetypes &amp; knobs</td><td><code>playsim/playsim/knobs.py</code></td></tr>
+          <tr><td>Per-hand economics &amp; the leave model</td><td><code>playsim/playsim/runner.py</code></td></tr>
+          <tr><td>Output schema + v1 adapter</td><td><code>playsim/playsim/room_export.py</code></td></tr>
+          <tr><td>The findings write-up (prose)</td><td><code>docs/learn/playsim-room-routing-findings.md</code></td></tr>
+          <tr><td>The reproducible comparison harness</td><td><code>playsim/analysis/room_policy_comparison.py</code></td></tr>
+          <tr><td>The original engine (population / run_session modes)</td><td><code>docs/learn/playsim-engine-modes.html</code></td></tr>
+          <tr><td>Why the LLM is never the detector; freeze-and-replay</td><td><code>docs/learn/ai-hand-generation-decision.md</code></td></tr>
+          <tr><td>Product context</td><td><code>docs/PRD.md</code></td></tr>
+          <tr><td>The brainstorm &amp; plan that produced this</td><td><code>docs/brainstorms/2026-06-23-playsim-routing-comparison-requirements.md</code> · <code>docs/plans/2026-06-23-001-feat-playsim-room-simulator-plan.md</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="foot">
+      Playsim room-simulator team guide · synthetic sandbox data, not real play · seeded &amp; replayable.
+      Pair this with the prose findings in <code>docs/learn/playsim-room-routing-findings.md</code> and PR #43.
+    </div>
+  </main>
+</div>
+</body>
+</html>
