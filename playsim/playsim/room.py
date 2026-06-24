@@ -321,12 +321,18 @@ class RoomSim:
         # the seeker may decline the offered seat. DefaultBehaviorPolicy always
         # accepts (forced placement → no behavior change); the fit-aware policy
         # (Phase 2) may decline on poor fit. Declines fold into balks for now.
-        if table_id is not None and not self.behavior.accept_seat(
-                SeatOffer(archetype, table_id, rec.get("rationale"))):
-            table_id = None
-            rec["table_id"] = None
-            rec["reason"] = "declined"
-            rec["declined"] = True
+        if table_id is not None:
+            t = self.tables[table_id]
+            offer = SeatOffer(
+                archetype, table_id, rec.get("rationale"),
+                table_archetypes=tuple(self.archetype_of[p] for p in t.seated),
+                table_style=t.style, seated_count=len(t.seated), max_seats=t.max_seats,
+            )
+            if not self.behavior.accept_seat(offer):
+                table_id = None
+                rec["table_id"] = None
+                rec["reason"] = "declined"
+                rec["declined"] = True
         self.routing_decisions.append(rec)
         if table_id is not None:
             self._seat_at(pid, table_id, sim_time, origin=origin)
@@ -388,12 +394,16 @@ class RoomSim:
         self.hands_total += 1
 
     def _check_departures(self, tbl: _Table, sim_time: float) -> None:
+        archs = tuple(self.archetype_of[p] for p in tbl.seated)
+        seated_count = len(tbl.seated)
         leavers: list[tuple[int, str]] = []
         for pid in list(tbl.seated):
             leaving, reason = self.behavior.should_leave(LeaveContext(
                 archetype=self.archetype_of[pid], seat_minutes=self.seat_minutes[pid],
                 net_bb=self.net_bb[pid], hands_played=self.hands_played[pid],
                 tilt_quit=self.knobs[pid].tilt_quit, spread=self.spread[pid],
+                table_archetypes=archs, table_style=tbl.style,
+                seated_count=seated_count, max_seats=tbl.max_seats,
             ))
             if leaving:
                 leavers.append((pid, reason or "tilt"))

@@ -159,6 +159,7 @@ def simulate_room(
     tables: list[str] | None = None,
     protect: bool = False,
     protect_threshold: float = 50.0,
+    behavior_name: str = "default",
     debug_trace: bool = False,
     data_root_str: str = "",
 ) -> dict:
@@ -174,6 +175,7 @@ def simulate_room(
     routing uses backend predicted health via the adapter.
     """
     from .arrivals import build_arrival_intents
+    from .behavior import make_behavior
     from .policies import FairPlayProtectPolicy, FairPlayRoutePolicy, StandardPolicy
     from .room import run_room
     from .room_export import build_canonical, derive_room_metrics
@@ -191,8 +193,8 @@ def simulate_room(
         common = dict(root=root, master_seed=s, horizon_min=horizon_min,
                       equity_samples=equity_samples, tables=tables,
                       arrival_intents=intents, debug_trace=debug_trace)
-        std = run_room(StandardPolicy(), **common)
-        fp = run_room(FairPlayRoutePolicy(adapter), **common)
+        std = run_room(StandardPolicy(), **common, behavior=make_behavior(behavior_name, seed=s))
+        fp = run_room(FairPlayRoutePolicy(adapter), **common, behavior=make_behavior(behavior_name, seed=s))
         cstd = build_canonical(std, data_root=data_root_str)
         cfp = build_canonical(fp, data_root=data_root_str)
         std_hours.append(cstd["summary"]["vulnerable_paid_seat_hours"])
@@ -203,7 +205,7 @@ def simulate_room(
                 pr = run_room(
                     FairPlayProtectPolicy(adapter, enabled=True,
                                           safety_threshold=protect_threshold),
-                    **common)
+                    **common, behavior=make_behavior(behavior_name, seed=s))
                 canon_protect = build_canonical(pr, data_root=data_root_str)
 
     n = len(seed_list)

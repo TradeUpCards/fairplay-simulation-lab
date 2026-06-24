@@ -565,6 +565,10 @@ budget  = base_session_min(archetype) * spread(0.85..1.15) * tilt        # sprea
 # --debug-trace adds the full ranked candidate list to every routing decision (verbose)
 .venv/bin/python -m playsim.cli room-sim --seeds 42 --horizon 480 --out-dir out --debug-trace
 
+# --behavior fit-aware swaps in the experimental fit/table-pressure leave model
+# (Phase 2; illustrative until calibrated — modest defaults, sweep weights in analysis)
+.venv/bin/python -m playsim.cli room-sim --seeds 42,7,99 --horizon 480 --behavior fit-aware --out-dir out
+
 make test                         # full suite</code></pre>
       <div class="callout">Tip for fast local pokes: add <code>--tables T-22,T-8</code> and a short
         <code>--horizon 60</code> to iterate in seconds before committing to a full run.</div>
