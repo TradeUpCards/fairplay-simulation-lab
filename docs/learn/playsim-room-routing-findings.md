@@ -247,6 +247,7 @@ and the cause is consistently **table liveness**, not the routing decision.
 ## Related
 
 - Behavioral-model spec: `docs/brainstorms/2026-06-24-behavioral-fidelity-fit-model-requirements.md`
+- Calibration data note (why these numbers stay illustrative): `docs/learn/playsim-calibration-data.md`
 - Brainstorm: `docs/brainstorms/2026-06-23-playsim-routing-comparison-requirements.md`
 - Plan: `docs/plans/2026-06-23-001-feat-playsim-room-simulator-plan.md`
 - Circularity guardrail decision: `docs/learn/ai-hand-generation-decision.md`

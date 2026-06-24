@@ -226,6 +226,7 @@ blocker to building the seam or the model.
 - Should join agency model a "wait for a better seat" option, or only accept/decline/balk?
 
 ## Related
+- Calibration data note (the gate from illustrative → validated): `docs/learn/playsim-calibration-data.md`
 - Findings that motivate this: `docs/learn/playsim-room-routing-findings.md`
 - Team guide: `docs/learn/playsim-room-simulator-guide.html`
 - Current leave model: `playsim/playsim/runner.py` (`cohort_should_leave`, `_effective_session_min`)
