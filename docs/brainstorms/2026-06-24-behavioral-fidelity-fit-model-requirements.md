@@ -52,46 +52,73 @@ of a behavioral model too thin to carry the thesis (see
 - **Backward-compatible by construction.** With the fit weight set to 0, the model must reproduce the
   current loss-rate-only behavior, so existing results are a recoverable special case and the change
   is regression-comparable.
+- **One inspectable behavioral seam.** All player decisions — join/accept-decline, re-seek on table
+  break, and leave/churn — live behind a single `PlayerBehaviorPolicy` component, parallel to the
+  existing `SeatingPolicy`. Player behavior becomes one swappable, testable thing (and the eventual
+  V2 agentic variant is just another implementation of the same seam), instead of logic scattered
+  across `room.py` and `runner.py`.
+- **Self-describing runs.** Every behavioral parameter (weights, tolerances, thresholds, seeds) is
+  serialized verbatim into the output `run_config`, so a run is auditable and replayable from its own
+  artifact with no external state. This is the simulator's observability primitive (see Dependencies).
 
 ## Requirements
 
-**Fit & preference**
-- R1. Each player has a **preference profile** (preferred table style / stakes / pace tolerance),
-  derived from archetype defaults (+ player fields where available).
-- R2. A **behavioral `fit(player, table)` signal**, defined consistently with
+**Player behavioral policy (the seam)**
+- R1. Consolidate **join/accept-decline, re-seek-on-break, and leave/churn** behind a single
+  `PlayerBehaviorPolicy` seam (parallel to `SeatingPolicy`); the room loop calls it rather than
+  embedding the rules. Re-seek on break uses the *same* policy as initial join.
+- R2. **All behavioral parameters are recorded verbatim in the output `run_config`** (weights,
+  tolerances, thresholds, RNG seeds) so every run is self-describing, diff-able across runs, and
+  replayable from its own artifact.
+
+**Fit & preference (archetype-specific tolerance)**
+- R3. Each player has a **preference profile** with archetype-specific tolerances (preferred table
+  style / stakes / pace), derived from archetype defaults (+ player fields where available).
+- R4. A **behavioral `fit(player, table)` signal**, defined consistently with
   `backend/scoring/seating.py`'s `Fit`, that the leave and join models consume.
 
-**Multi-factor leave model**
-- R3. Replace the single-factor leave decision with a **multi-factor leave hazard** combining:
-  chip-loss/tilt (existing), **fit mismatch**, base session length, and optional **stop-loss /
-  win-goal** thresholds; factor weights are configurable.
-- R4. The **leave reason** is recorded in the causal trace per departure (`tilt`, `mismatch`,
+**Leave / churn (probability + session budget)**
+- R5. Replace the single-factor leave decision with a **multi-factor leave hazard / session budget**
+  combining: **loss velocity** (existing tilt), **table pressure**, **fit mismatch**, base session
+  length, and optional **stop-loss / win-goal** thresholds; factor weights are configurable. The
+  decision may be a seeded **probabilistic hazard** rather than a hard threshold (it must still draw
+  from the run's RNG so replay stays byte-identical).
+- R6. **Table pressure** is a behavioral input — the composition-driven aggression/predation a player
+  perceives at their table — distinct from the player's *own* realized loss. (Composition-derived, so
+  it does not reintroduce realized-health-into-routing circularity.)
+- R7. The **leave reason** is recorded per departure (`tilt`, `table_pressure`, `mismatch`,
   `session_complete`, `stop_loss`, `win_goal`).
-- R5. With the fit-mismatch weight = 0, the model **reduces to current behavior** (regression-comparable).
+- R8. With the fit-mismatch and table-pressure weights = 0, the model **reduces to current behavior**
+  (regression-comparable).
 
-**Join agency**
-- R6. An arriving player **accepts or declines** the policy's recommended seat with a fit-dependent
-  probability (models "recommend → human decides"); a decline considers alternatives or balks.
-- R7. The accept/decline outcome and its driver are recorded in the routing-decision trace.
+**Join & re-seek agency**
+- R9. An arriving (or break-displaced) player **accepts or declines** the policy's recommended seat
+  with a fit-dependent probability (models "recommend → human decides"); a decline considers
+  alternatives or balks.
+- R10. The accept/decline outcome and its driver are recorded in the routing-decision trace.
 
 **Calibration & determinism**
-- R8. A **calibration routine** fits the model's parameters to target session-length and churn
+- R11. A **calibration routine** fits the model's parameters to target session-length and churn
   distributions, with the data source documented; uncalibrated runs are labeled illustrative.
-- R9. The model is **seeded and byte-replayable** — no LLM/network call in the simulation loop.
-- R10. Re-run the 4-way A/B (random / most-full / fairplay / fairplay-balanced) under the fit-aware
-  model, plus a **sensitivity sweep** on the fit weight, and report whether the router's Fit dimension
-  now earns retention.
+- R12. The model is **seeded and byte-replayable** — no LLM/network call in the simulation loop.
+- R13. Re-run the 4-way A/B (random / most-full / fairplay / fairplay-balanced) under the fit-aware
+  model, plus a **sensitivity sweep** on the fit and table-pressure weights, and report whether the
+  router's Fit dimension now earns retention.
 
 ## Acceptance Examples
 
-- AE1. **Regression.** Fit weight = 0 → run output matches the current model within seeded tolerance.
-  **Covers R5.**
+- AE1. **Regression.** Fit and table-pressure weights = 0 → run output matches the current model
+  within seeded tolerance. **Covers R8.**
 - AE2. **Fit earns retention.** The same player, all else equal, stays longer at a high-fit table than
-  a low-fit one. **Covers R2, R3.**
-- AE3. **Choice is real.** A player offered a low-fit recommendation can decline; the decline (and its
-  reason) appear in the trace. **Covers R6, R7.**
-- AE4. **Reasons are attributed.** Every departure in the trace carries a leave reason; the mix shifts
-  with table composition. **Covers R4.**
+  a low-fit one. **Covers R4, R5.**
+- AE3. **Table pressure shortens sessions.** A cohort player at a high-predation table leaves sooner
+  than at a low-predation table of equal personal loss. **Covers R5, R6.**
+- AE4. **Choice is real.** A player offered a low-fit recommendation can decline; the decline (and its
+  reason) appear in the trace. **Covers R9, R10.**
+- AE5. **Reasons are attributed.** Every departure carries a leave reason; the mix shifts with table
+  composition. **Covers R7.**
+- AE6. **Runs are self-describing.** The output `run_config` contains every behavioral parameter; a
+  second run from only that artifact reproduces the result. **Covers R2.**
 
 ## Success Criteria
 
