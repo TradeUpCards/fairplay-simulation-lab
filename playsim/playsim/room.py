@@ -25,6 +25,7 @@ from pathlib import Path
 
 from .arrivals import ArrivalIntent, build_arrival_intents
 from .agent import ArchetypeAgent
+from .behavior import DefaultBehaviorPolicy, LeaveContext, SeatOffer
 from .knobs import knobs_for
 from .population import (
     derive_table_seed,
@@ -39,7 +40,6 @@ from .runner import (
     _COHORT as COHORT,
     _WEAK as WEAK,
     apply_hand_accounting,
-    cohort_should_leave,
 )
 from .table import play_hand
 
@@ -111,8 +111,12 @@ class RoomSim:
         tables: list[str] | None = None,
         checkpoints_min: tuple[float, ...] = (120.0, 240.0, 480.0),
         arrival_intents: list[ArrivalIntent] | None = None,
+        debug_trace: bool = False,
+        behavior=None,
     ) -> None:
         self.policy = policy
+        self.behavior = behavior or DefaultBehaviorPolicy()
+        self.debug_trace = debug_trace
         self.master_seed = master_seed
         self.horizon_min = horizon_min
         self.hands_per_hour = hands_per_hour
@@ -290,11 +294,46 @@ class RoomSim:
         if (table_id is not None and require_pair
                 and len(self.tables[table_id].seated) < 1):
             table_id, reason = None, "no_dealable_seat"
-        self.routing_decisions.append({
+        rec = {
             "min": round(sim_time, 2), "player_id": pid, "archetype": archetype,
             "origin": origin, "policy": getattr(self.policy, "name", "?"),
             "table_id": table_id, "reason": reason, "deferred": decision.deferred,
-        })
+        }
+        # FairPlay rationale: for a backend-routed seat, record the chosen table's
+        # rank breakdown so the trace answers "why this table?". Minimal by default;
+        # the full ranked candidate list only under debug_trace. Standard/Random
+        # carry no operator_view, so this is a no-op for them.
+        ov = decision.meta.get("operator_view") if decision.meta else None
+        if ov:
+            if table_id is not None:
+                chosen = next((e for e in ov if e["table_id"] == table_id), None)
+                if chosen:
+                    rec["rationale"] = {
+                        "rank": chosen.get("rank"),
+                        "health": chosen.get("health"),
+                        "delta_health": chosen.get("delta_health"),
+                        "seating_risk": chosen.get("seating_risk"),
+                        "badge": chosen.get("badge"),
+                        "integrity_gated": chosen.get("integrity_gated"),
+                    }
+            if self.debug_trace:
+                rec["candidates"] = ov
+        # the seeker may decline the offered seat. DefaultBehaviorPolicy always
+        # accepts (forced placement → no behavior change); the fit-aware policy
+        # (Phase 2) may decline on poor fit. Declines fold into balks for now.
+        if table_id is not None:
+            t = self.tables[table_id]
+            offer = SeatOffer(
+                archetype, table_id, rec.get("rationale"),
+                table_archetypes=tuple(self.archetype_of[p] for p in t.seated),
+                table_style=t.style, seated_count=len(t.seated), max_seats=t.max_seats,
+            )
+            if not self.behavior.accept_seat(offer):
+                table_id = None
+                rec["table_id"] = None
+                rec["reason"] = "declined"
+                rec["declined"] = True
+        self.routing_decisions.append(rec)
         if table_id is not None:
             self._seat_at(pid, table_id, sim_time, origin=origin)
             return
@@ -355,17 +394,21 @@ class RoomSim:
         self.hands_total += 1
 
     def _check_departures(self, tbl: _Table, sim_time: float) -> None:
-        leavers: list[int] = []
+        archs = tuple(self.archetype_of[p] for p in tbl.seated)
+        seated_count = len(tbl.seated)
+        leavers: list[tuple[int, str]] = []
         for pid in list(tbl.seated):
-            if self.archetype_of[pid] not in COHORT:
-                continue
-            if cohort_should_leave(
-                self.seat_minutes[pid], self.net_bb[pid], self.hands_played[pid],
-                self.archetype_of[pid], self.knobs[pid].tilt_quit, self.spread[pid],
-            ):
-                leavers.append(pid)
-        for pid in leavers:
-            self._depart(pid, tbl, sim_time, reason="tilt")
+            leaving, reason = self.behavior.should_leave(LeaveContext(
+                archetype=self.archetype_of[pid], seat_minutes=self.seat_minutes[pid],
+                net_bb=self.net_bb[pid], hands_played=self.hands_played[pid],
+                tilt_quit=self.knobs[pid].tilt_quit, spread=self.spread[pid],
+                table_archetypes=archs, table_style=tbl.style,
+                seated_count=seated_count, max_seats=tbl.max_seats,
+            ))
+            if leaving:
+                leavers.append((pid, reason or "tilt"))
+        for pid, reason in leavers:
+            self._depart(pid, tbl, sim_time, reason=reason)
 
     def _handle_breaks(self, sim_time: float) -> None:
         for tid in sorted(self.tables):
@@ -379,9 +422,14 @@ class RoomSim:
                     "min": round(sim_time, 2), "table_id": tid, "event": "break",
                 })
                 for pid in displaced:
-                    # displaced players re-seek once via the active policy
-                    self._route_seeker(pid, self.archetype_of[pid], sim_time,
-                                       origin="break_displace", require_pair=True)
+                    if self.behavior.reseek_on_break(self.archetype_of[pid]):
+                        # displaced players re-seek once via the active policy
+                        self._route_seeker(pid, self.archetype_of[pid], sim_time,
+                                           origin="break_displace", require_pair=True)
+                    else:
+                        if self.left_at_minute[pid] is None:
+                            self.left_at_minute[pid] = round(self.seat_minutes[pid], 1)
+                        self.departed.add(pid)
 
     # --- checkpoints / run ------------------------------------------------
 

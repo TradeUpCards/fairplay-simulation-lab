@@ -105,6 +105,31 @@ def test_room_requires_minimum_population():
                 equity_samples=6, tables=["T-does-not-exist"])
 
 
+def test_fairplay_decisions_carry_minimal_rationale(adapter):
+    """A backend-routed seat records the chosen table's rank breakdown (default),
+    so the trace answers 'why this table?' — without the full candidate list."""
+    r = run_room(make_policy("fairplay_route", adapter), master_seed=42,
+                 horizon_min=40, equity_samples=6, tables=TABLES)
+    seated = [d for d in r.routing_decisions if d["table_id"] is not None]
+    assert seated, "expected at least one seated FairPlay routing decision"
+    d = seated[0]
+    assert set(d["rationale"]) == {"rank", "health", "delta_health",
+                                   "seating_risk", "badge", "integrity_gated"}
+    assert "candidates" not in d        # full candidate list stays out of the default trace
+
+
+def test_standard_decisions_have_no_rationale():
+    r = _standard_run()
+    assert all("rationale" not in d for d in r.routing_decisions)  # no backend = no rationale
+
+
+def test_debug_trace_adds_full_candidate_list(adapter):
+    r = run_room(make_policy("fairplay_route", adapter), master_seed=42,
+                 horizon_min=40, equity_samples=6, tables=TABLES, debug_trace=True)
+    seated = [d for d in r.routing_decisions if d["table_id"] is not None]
+    assert any("candidates" in d and d["candidates"] for d in seated)
+
+
 def test_routing_never_consults_realized_health():
     """Structural guardrail: the orchestrator must not import playsim/health.py —
     routing uses only backend predicted health via the policy/adapter."""
