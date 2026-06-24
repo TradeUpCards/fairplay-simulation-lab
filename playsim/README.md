@@ -64,12 +64,20 @@ docker compose run --rm playsim population \
 | Command | What it does |
 |---|---|
 | `run --table T` | play a table, print the calibration report, write db/phh/features |
-| `routing` | **the health loop** — Standard vs FairPlay, reports ΔHealth |
+| `routing` | **the health loop (fixed rosters)** — Standard vs FairPlay, reports ΔHealth |
+| `room-sim` | **the closed-loop room A/B** — seekers arrive over a horizon, a policy seats them, writes `room_sim_*`/`room_metrics_*`. Add `--behavior fit-aware`, `--debug-trace`. See `docs/learn/playsim-room-simulator-guide.html` |
 | `health --table T` | play a table out (persistent stacks) and score its health |
 | `population` | simulate `data/players.json` + `data/table_roster.json` into playsim-native hand JSON |
 | `replay --table T` | re-run a seed twice and assert byte-identical (determinism) |
 | `calibrate` | tune `postflop_aggression` until realized AF ≈ targets |
 | `tables` | list demo tables and archetypes |
+
+> **Room simulator (current focus).** The closed-loop, per-hand, multi-table room A/B (`room-sim`)
+> compares table-routing *policies* (most-full / random / FairPlay router) over a shared seeded
+> arrival stream, with a swappable `PlayerBehaviorPolicy` for leave/accept/re-seek. Start with the
+> team guide (`docs/learn/playsim-room-simulator-guide.html`); the findings and the behavioral-model
+> spec live in `docs/learn/playsim-room-routing-findings.md` and
+> `docs/brainstorms/2026-06-24-behavioral-fidelity-fit-model-requirements.md`.
 
 ```bash
 python -m playsim.cli run --table case_c --hands 500 --seed 42 \

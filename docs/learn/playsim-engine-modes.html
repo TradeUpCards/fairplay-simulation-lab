@@ -585,8 +585,10 @@
         <a href="#usage"><b>08</b><span>How to run</span></a>
       </nav>
       <div class="rail-note">
-        This page describes the current playsim project after adding fixture-backed population runs and quota-leave.
-        It distinguishes what exists now from the planned room-scale router.
+        This page covers the <strong>population</strong> and <strong>run_session</strong> engine modes.
+        The <strong>room-scale router it once called "planned" is now built</strong> — the closed-loop
+        room simulator. For that, start with
+        <a href="playsim-room-simulator-guide.html">the room simulator team guide</a>.
       </div>
     </aside>
 
@@ -598,6 +600,14 @@
           playsim is the deterministic poker simulator for FairPlay. It does not assign risk scores directly.
           It deals synthetic poker hands, lets archetype agents act through a real poker engine, and exports the
           hand histories and derived features that scoring and model-building can consume.
+        </p>
+        <p style="margin-top:1rem;padding:.9rem 1.1rem;border-left:4px solid var(--cyan);
+          background:rgba(88,199,214,.06);border-radius:12px;color:var(--ink)">
+          <strong>Update (2026-06):</strong> the room-scale router described below as "planned" /
+          "not yet" has since shipped — the closed-loop <code>room-sim</code> compares Standard vs
+          FairPlay routing over a seeded arrival stream. This page documents the underlying engine
+          modes; for the room simulator, its findings, and the behavioral model, see
+          <a href="playsim-room-simulator-guide.html">the room simulator guide</a>.
         </p>
         <div class="badges">
           <span class="badge">Seeded and replayable</span>

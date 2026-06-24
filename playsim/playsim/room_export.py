@@ -58,8 +58,27 @@ def _realized_summary(result: RoomResult) -> dict:
         # ── protect-specific (0 unless FairPlay-protect ran) ──
         "balk_count": len(result.balked),
         "deferred_count": len(result.deferred),
+        "declined_count": len(result.declined),
         "prevented_bad_sessions": len(result.deferred),
+        # ── cohort acceptance funnel (separates the acceptance channel from the
+        #    retention channel; offered = accepted + declined + balked + deferred) ──
+        "funnel": _cohort_funnel(result),
     }
+
+
+def _cohort_funnel(result: RoomResult) -> dict:
+    """Per-arm acceptance funnel for vulnerable-cohort *arrivals*: offered ->
+    accepted / declined / balked / deferred. Lets a routing win be attributed to
+    the acceptance channel vs the retention channel rather than conflated."""
+    arr = [d for d in result.routing_decisions
+           if d.get("origin") == "arrival" and d.get("archetype") in COHORT]
+    accepted = sum(1 for d in arr if d["table_id"] is not None)
+    declined = sum(1 for d in arr if d.get("reason") == "declined")
+    deferred = sum(1 for d in arr if d.get("deferred"))
+    balked = sum(1 for d in arr if d["table_id"] is None
+                 and d.get("reason") in ("no_open_seat", "no_dealable_seat"))
+    return {"offered": len(arr), "accepted": accepted, "declined": declined,
+            "balked": balked, "deferred": deferred}
 
 
 def build_canonical(result: RoomResult, *, data_root: str = "") -> dict:

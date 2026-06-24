@@ -207,8 +207,47 @@ Everything is seeded and deterministic — same `(seed, horizon, policy)` reprod
 
 ---
 
+## Update — fit-aware behavior (Phase 2/3): the verdict holds and deepens
+
+We later added a fit-aware behavioral model (`FitAwareBehaviorPolicy`) behind the player-behavior
+seam: leaving becomes a multi-factor session-budget shrink (loss + composition **table-pressure** +
+style **fit-mismatch**), so the simulator can finally reward the router's `Fit` dimension. We then
+swept the fit/pressure weight (`w`) across Standard vs FairPlay-route (4h, 6 tables, 3 seeds; via
+`playsim/analysis/fit_sensitivity_sweep.py`):
+
+| weight `w` | Standard seat-hrs | FairPlay seat-hrs | Δ | Standard breaks | FairPlay breaks |
+|---|---|---|---|---|---|
+| 0.00 (= default model) | 4.20 | 3.92 | **−0.28** | 3.3 | 2.0 |
+| 0.15 (modest default) | 4.31 | 3.80 | **−0.51** | 3.3 | 6.3 |
+| 0.30 | 4.22 | 3.51 | **−0.72** | 4.0 | 6.3 |
+| 0.50 | 3.90 | 3.20 | **−0.70** | 4.0 | 9.0 |
+
+Two things matter here:
+
+1. **The anti-circularity guard passed.** The risk was that fit-aware leaving would make FairPlay win
+   *by construction* (the leave model rewarding exactly what the router optimizes — predicted-vs-
+   predicted circularity). It did **not**: FairPlay's deficit *grows* with `w` (−0.28 → −0.72). The
+   liquidity/breaks mechanism dominates the composition-reward channel, so the result is not a
+   tautology of the model's own assumptions.
+
+2. **It deepens the core finding.** FairPlay's table breaks climb **2.0 → 9.0** as players get more
+   responsive, while Standard's barely move. Making players *more sensitive to table conditions* — the
+   regime where smart routing should matter most — makes greedy health-concentration **more fragile**:
+   clustered cohort tables collapse together when players turn flighty. Richer behavior amplifies the
+   churn penalty rather than surfacing a health benefit.
+
+**Still illustrative, not validated.** This is an uncalibrated parametric model; the numbers are
+directional. Calibration to real session-length / churn data (the gate before any retention *claim*)
+remains future work. But across the default model, the fit-aware model, and a weight sweep — and
+against random, most-full, and a load-balanced variant — Standard is consistently at least as good,
+and the cause is consistently **table liveness**, not the routing decision.
+
+---
+
 ## Related
 
+- Behavioral-model spec: `docs/brainstorms/2026-06-24-behavioral-fidelity-fit-model-requirements.md`
+- Calibration data note (why these numbers stay illustrative): `docs/learn/playsim-calibration-data.md`
 - Brainstorm: `docs/brainstorms/2026-06-23-playsim-routing-comparison-requirements.md`
 - Plan: `docs/plans/2026-06-23-001-feat-playsim-room-simulator-plan.md`
 - Circularity guardrail decision: `docs/learn/ai-hand-generation-decision.md`

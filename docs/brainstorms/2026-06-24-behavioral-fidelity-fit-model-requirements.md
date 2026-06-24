@@ -49,7 +49,9 @@ sequenced so scope stays bounded and each phase is independently shippable:
   default parameters** (see "buildable vs validated" below).
 - **Phase 3 — calibration, funnel reporting, sensitivity sweeps.** Fit parameters to data; report the
   acceptance/retention **funnel** separately; sweep fit/pressure weights. **This is where the
-  anti-circularity guards live** — no retention *claim* before this phase.
+  anti-circularity guards live** — no retention *claim* before this phase. *(Status: funnel reporting
+  ships in the room_sim summary, and the sweep harness in `playsim/analysis/fit_sensitivity_sweep.py`;
+  calibration awaits real session-length / churn data — until then runs stay illustrative.)*
 - **Phase 4 — optional agentic / RL behavior experiment** (does emergent behavior differ from the
   calibrated parametric model?).
 
@@ -224,6 +226,7 @@ blocker to building the seam or the model.
 - Should join agency model a "wait for a better seat" option, or only accept/decline/balk?
 
 ## Related
+- Calibration data note (the gate from illustrative → validated): `docs/learn/playsim-calibration-data.md`
 - Findings that motivate this: `docs/learn/playsim-room-routing-findings.md`
 - Team guide: `docs/learn/playsim-room-simulator-guide.html`
 - Current leave model: `playsim/playsim/runner.py` (`cohort_should_leave`, `_effective_session_min`)

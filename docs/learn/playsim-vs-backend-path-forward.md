@@ -93,11 +93,15 @@ them, so the detector grades emergent stats (the "no grading its own homework" g
 Freeze `simulate_routing(...)` (Standard-vs-FairPlay, multi-seed) to a derived JSON; build the
 frontend comparison panel. Label it honestly: **V1 is a fixed counterfactual, not router proof.**
 
-**Phase 3 — V3 router-in-the-loop (the strong backtest).**
-playsim starts from a room snapshot, calls canonical `backend/scoring/router.py`, seats the cohort
-where the router recommends, then scores realized health **independently** (first-principles chip
-flow — never re-running `Health(T)`, to avoid circularity). Now allowed since single-owner removed the
-import boundary.
+**Phase 3 — V3 router-in-the-loop (the strong backtest). ✅ SHIPPED.**
+The closed-loop `room-sim` does exactly this: it starts from the hour-0 room, routes a seeded arrival
+stream through the canonical `backend/scoring/router.py` (via the one cross-package seam,
+`playsim/playsim/router_adapter.py`), and scores realized health **independently** from first-principles
+chip flow — never re-running `Health(T)`, preserving the circularity guardrail. Finding so far: Standard
+(most-full) beats FairPlay routing in this model, driven by table-liveness/churn — see
+`docs/learn/playsim-room-routing-findings.md`. A fit-aware behavioral model + sensitivity sweeps are
+layered on top (`docs/brainstorms/2026-06-24-behavioral-fidelity-fit-model-requirements.md`); results
+stay illustrative pending calibration (`docs/learn/playsim-calibration-data.md`).
 
 **Phase 4 — V2 brains.**
 Swap `RLCardAgent`/`solver_like` in behind the existing `act()` seam so the skill edge **emerges**
