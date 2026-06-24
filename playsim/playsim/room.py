@@ -25,6 +25,7 @@ from pathlib import Path
 
 from .arrivals import ArrivalIntent, build_arrival_intents
 from .agent import ArchetypeAgent
+from .behavior import DefaultBehaviorPolicy, LeaveContext, SeatOffer
 from .knobs import knobs_for
 from .population import (
     derive_table_seed,
@@ -39,7 +40,6 @@ from .runner import (
     _COHORT as COHORT,
     _WEAK as WEAK,
     apply_hand_accounting,
-    cohort_should_leave,
 )
 from .table import play_hand
 
@@ -112,8 +112,10 @@ class RoomSim:
         checkpoints_min: tuple[float, ...] = (120.0, 240.0, 480.0),
         arrival_intents: list[ArrivalIntent] | None = None,
         debug_trace: bool = False,
+        behavior=None,
     ) -> None:
         self.policy = policy
+        self.behavior = behavior or DefaultBehaviorPolicy()
         self.debug_trace = debug_trace
         self.master_seed = master_seed
         self.horizon_min = horizon_min
@@ -316,6 +318,15 @@ class RoomSim:
                     }
             if self.debug_trace:
                 rec["candidates"] = ov
+        # the seeker may decline the offered seat. DefaultBehaviorPolicy always
+        # accepts (forced placement → no behavior change); the fit-aware policy
+        # (Phase 2) may decline on poor fit. Declines fold into balks for now.
+        if table_id is not None and not self.behavior.accept_seat(
+                SeatOffer(archetype, table_id, rec.get("rationale"))):
+            table_id = None
+            rec["table_id"] = None
+            rec["reason"] = "declined"
+            rec["declined"] = True
         self.routing_decisions.append(rec)
         if table_id is not None:
             self._seat_at(pid, table_id, sim_time, origin=origin)
@@ -377,17 +388,17 @@ class RoomSim:
         self.hands_total += 1
 
     def _check_departures(self, tbl: _Table, sim_time: float) -> None:
-        leavers: list[int] = []
+        leavers: list[tuple[int, str]] = []
         for pid in list(tbl.seated):
-            if self.archetype_of[pid] not in COHORT:
-                continue
-            if cohort_should_leave(
-                self.seat_minutes[pid], self.net_bb[pid], self.hands_played[pid],
-                self.archetype_of[pid], self.knobs[pid].tilt_quit, self.spread[pid],
-            ):
-                leavers.append(pid)
-        for pid in leavers:
-            self._depart(pid, tbl, sim_time, reason="tilt")
+            leaving, reason = self.behavior.should_leave(LeaveContext(
+                archetype=self.archetype_of[pid], seat_minutes=self.seat_minutes[pid],
+                net_bb=self.net_bb[pid], hands_played=self.hands_played[pid],
+                tilt_quit=self.knobs[pid].tilt_quit, spread=self.spread[pid],
+            ))
+            if leaving:
+                leavers.append((pid, reason or "tilt"))
+        for pid, reason in leavers:
+            self._depart(pid, tbl, sim_time, reason=reason)
 
     def _handle_breaks(self, sim_time: float) -> None:
         for tid in sorted(self.tables):
@@ -401,9 +412,14 @@ class RoomSim:
                     "min": round(sim_time, 2), "table_id": tid, "event": "break",
                 })
                 for pid in displaced:
-                    # displaced players re-seek once via the active policy
-                    self._route_seeker(pid, self.archetype_of[pid], sim_time,
-                                       origin="break_displace", require_pair=True)
+                    if self.behavior.reseek_on_break(self.archetype_of[pid]):
+                        # displaced players re-seek once via the active policy
+                        self._route_seeker(pid, self.archetype_of[pid], sim_time,
+                                           origin="break_displace", require_pair=True)
+                    else:
+                        if self.left_at_minute[pid] is None:
+                            self.left_at_minute[pid] = round(self.seat_minutes[pid], 1)
+                        self.departed.add(pid)
 
     # --- checkpoints / run ------------------------------------------------
 
