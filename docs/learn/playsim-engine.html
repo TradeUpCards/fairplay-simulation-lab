@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The playsim Engine — How It Works, In Depth</title>
+<style>
+:root{
+  --bg:#070f09; --bg2:#0c1810; --bg3:#102013; --border:#1b3221; --border2:#244a2e;
+  --text:#e4f2e6; --muted:#8fb89a; --dim:#3a5a42;
+  --gold:#e3c46a; --gold2:#c9a84c; --gold-bg:rgba(227,196,106,.1);
+  --blue:#5b9bf5; --teal:#33e0c4; --purple:#b98cff; --red:#ef6f6f; --amber:#f5b743; --green:#46c98b;
+  --sb:280px; --pad:clamp(28px,4.5vw,80px); --r:10px;
+  --eng:#33e0c4; --llm:#b98cff;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;line-height:1.7;display:flex;min-height:100dvh}
+#sidebar{position:fixed;top:0;left:0;width:var(--sb);height:100dvh;overflow-y:auto;background:var(--bg2);border-right:1px solid var(--border);z-index:400;display:flex;flex-direction:column;transition:transform .24s ease;scrollbar-width:thin}
+.sb-top{padding:22px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.sb-diamond{width:28px;height:28px;flex-shrink:0;background:linear-gradient(135deg,var(--gold2),var(--gold) 60%,#f0d98a);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:flex;align-items:center;justify-content:center;font-size:11px;color:#0a140c;font-weight:900}
+.sb-name{font-size:13.5px;font-weight:800;color:var(--gold)}
+.sb-tag{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);line-height:1.5}
+nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--muted);font-size:12.5px;text-decoration:none;border-left:2px solid transparent;transition:all .14s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.03)}
+nav a.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-bg)}
+.nav-n{font-family:'Courier New',monospace;font-size:10px;color:var(--dim);min-width:18px;text-align:right}
+.sb-foot{margin-top:auto;padding:14px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--dim);line-height:1.8}
+.sb-foot a{color:var(--muted);text-decoration:none;display:block;padding:2px 0}
+.sb-foot a:hover{color:var(--gold)}
+#hbg{display:none;position:fixed;top:14px;left:14px;z-index:500;width:42px;height:42px;border-radius:9px;background:var(--bg2);border:1px solid var(--border2);color:var(--gold);font-size:18px;cursor:pointer;align-items:center;justify-content:center}
+#overlay{display:none;position:fixed;inset:0;z-index:390;background:rgba(0,0,0,.6)}#overlay.open{display:block}
+#main{margin-left:var(--sb);flex:1;min-width:0;padding:0 var(--pad) 120px;max-width:1180px}
+.hero{padding:clamp(40px,7vh,80px) 0 clamp(26px,4vh,44px);border-bottom:1px solid var(--border);margin-bottom:40px}
+.hero .kicker{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.hero .kicker::before{content:'';width:26px;height:1px;background:var(--gold2)}
+.hero h1{font-size:clamp(25px,4.2vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1.12;margin-bottom:14px}
+.hero h1 em{color:var(--gold);font-style:normal}
+.hero p{font-size:clamp(15px,1.8vw,18px);color:var(--muted);max-width:730px;line-height:1.65}
+.crosslink{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.crosslink a{font-size:12px;padding:6px 13px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);background:var(--bg3);text-decoration:none}
+.crosslink a:hover{border-color:var(--gold2);color:var(--gold)}
+.crosslink a.here{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+
+.tldr{background:linear-gradient(135deg,rgba(227,196,106,.08),rgba(51,224,196,.05));border:1px solid var(--border2);border-left:3px solid var(--gold);border-radius:var(--r);padding:22px 26px;margin-bottom:46px}
+.tldr .lab{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--gold2);margin-bottom:10px}
+.tldr p{font-size:16px;color:var(--text);line-height:1.62}
+.tldr b{color:var(--gold)} .tldr .e{color:var(--eng);font-weight:700} .tldr .a{color:var(--llm);font-weight:700}
+
+.sec{margin-bottom:58px;scroll-margin-top:24px}
+.sec h2{font-size:clamp(18px,2.4vw,25px);font-weight:800;margin-bottom:8px;letter-spacing:-.01em;display:flex;align-items:baseline;gap:12px}
+.sec h2 .secn{font-family:'Courier New',monospace;font-size:14px;color:var(--gold2);font-weight:700}
+.sec .lede{color:var(--muted);font-size:15px;margin-bottom:22px;max-width:780px}
+.sec h3{font-size:16px;margin:26px 0 10px;color:var(--text)}
+.sec p{color:var(--muted);font-size:14.5px;margin-bottom:12px;max-width:820px}
+.sec p b{color:var(--text)} .sec li b{color:var(--text)}
+.sec ul{margin:6px 0 14px 4px;list-style:none;max-width:820px}
+.sec li{padding:5px 0 5px 18px;position:relative;color:var(--muted);font-size:14px;line-height:1.6}
+.sec li::before{content:'▸';position:absolute;left:0;color:var(--gold2);font-size:11px;top:7px}
+code{font-family:'Courier New',monospace;font-size:.9em;background:rgba(255,255,255,.05);padding:1px 5px;border-radius:4px;color:var(--gold)}
+pre{background:#06100a;border:1px solid var(--border);border-radius:8px;padding:15px 18px;overflow-x:auto;margin:12px 0 16px;font-size:12.5px;line-height:1.6}
+pre code{background:none;padding:0;color:var(--muted)}
+pre .c{color:var(--dim)} pre .k{color:var(--purple)} pre .s{color:var(--green)} pre .f{color:var(--teal)}
+
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;margin:14px 0}
+.flow .box{flex:1;min-width:120px;padding:14px 16px;border-right:1px solid var(--border);background:var(--bg2)}
+.flow .box:last-child{border-right:none}
+.flow .box .t{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:6px}
+.flow .box h4{font-size:13.5px;color:var(--eng);margin-bottom:5px}
+.flow .box p{font-size:12px;color:var(--muted);margin:0;line-height:1.5}
+.flow .box.ai h4{color:var(--llm)} .flow .box.gold h4{color:var(--gold)}
+
+.callout{border:1px solid var(--border2);border-radius:var(--r);padding:15px 19px;font-size:14px;color:var(--muted);margin:16px 0;background:var(--bg3);line-height:1.6}
+.callout b{color:var(--text)}
+.callout.warn{border-color:rgba(239,111,111,.4);background:rgba(239,111,111,.05)}
+.callout.warn b{color:var(--red)}
+.callout.good{border-color:rgba(70,201,139,.35);background:rgba(70,201,139,.05)}
+.callout.good b{color:var(--green)}
+.callout .lab{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+
+details.drill{border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);overflow:hidden;margin:10px 0}
+details.drill>summary{list-style:none;cursor:pointer;padding:13px 18px;display:flex;align-items:center;gap:12px;transition:background .14s}
+details.drill>summary::-webkit-details-marker{display:none}
+details.drill>summary:hover{background:var(--bg3)}
+details.drill .chev{color:var(--dim);font-size:12px;transition:transform .2s}
+details.drill[open] .chev{transform:rotate(90deg)}
+details.drill .dt{flex:1;font-size:14px;font-weight:700;color:var(--text)}
+details.drill .tag{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:4px;background:var(--gold-bg);color:var(--gold)}
+details.drill .body{padding:2px 18px 18px;font-size:13.5px;color:var(--muted);line-height:1.65}
+details.drill .body p{font-size:13.5px;max-width:none}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin:8px 0 14px}
+.tbl th{background:var(--bg2);text-align:left;padding:10px 13px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold2);font-weight:700;border-bottom:1px solid var(--border)}
+.tbl td{padding:10px 13px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl b{color:var(--text)} .tbl code{font-size:.85em}
+.pill{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.pill.y{background:rgba(70,201,139,.13);color:var(--green)} .pill.n{background:rgba(239,111,111,.13);color:var(--red)}
+.pill.m{background:rgba(245,183,67,.14);color:var(--amber)}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.card{border:1px solid var(--border2);border-radius:var(--r);padding:16px 18px;background:var(--bg2)}
+.card h4{font-size:14px;margin-bottom:7px}
+.card.no h4{color:var(--red)} .card.yes h4{color:var(--green)}
+.card p{font-size:13px;margin:0}
+
+@media(max-width:900px){.two{grid-template-columns:1fr}.flow{flex-direction:column}.flow .box{border-right:none;border-bottom:1px solid var(--border)}}
+@media(max-width:1000px){#hbg{display:flex}#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#overlay.open{display:block}#main{margin-left:0;padding-top:64px}}
+</style>
+</head>
+<body>
+<button id="hbg" aria-label="Menu">☰</button>
+<div id="overlay"></div>
+<aside id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo"><div class="sb-diamond">◆</div><div class="sb-name">FairPlay IQ · Learn</div></div>
+    <div class="sb-tag">The playsim engine<br>in depth</div>
+  </div>
+  <nav>
+    <a href="#overview" class="nav-link"><span class="nav-n">A</span>Overview</a>
+    <a href="#philosophy" class="nav-link"><span class="nav-n">B</span>Philosophy</a>
+    <a href="#hands" class="nav-link"><span class="nav-n">C</span>Hands, not outcomes</a>
+    <a href="#outputs" class="nav-link"><span class="nav-n">D</span>Output formats</a>
+    <a href="#determinism" class="nav-link"><span class="nav-n">E</span>Determinism</a>
+    <a href="#parallel" class="nav-link"><span class="nav-n">F</span>Parallelization</a>
+    <a href="#health" class="nav-link"><span class="nav-n">G</span>Table health</a>
+    <a href="#future" class="nav-link"><span class="nav-n">H</span>Future brains</a>
+    <a href="#map" class="nav-link"><span class="nav-n">I</span>Module map</a>
+  </nav>
+  <div class="sb-foot">
+    <span style="color:var(--muted)">Related:</span>
+    <a href="poker-sim-walkthrough.html">→ Play-sim walkthrough</a>
+    <a href="ai-hand-generation-decision.md">→ AI hand-gen decision</a>
+    <a href="../archetype-play-profiles.md">→ Archetype profiles</a>
+  </div>
+</aside>
+<main id="main">
+<div class="hero">
+  <div class="kicker">FairPlay IQ · Engine reference · playsim/</div>
+  <h1>How the <em>playsim</em> engine works</h1>
+  <p>A deterministic, seeded poker simulator: archetype agents play real No-Limit Hold'em hands on the
+  PokerKit engine, and the signals our system consumes — looseness, aggression, soft-play, robotic timing,
+  paid seat-time — <em>emerge from play</em> rather than being asserted. This is the deep reference: the
+  philosophy, what it deals, what it emits, how it parallelizes, how it scores health, why it's reproducible,
+  and exactly where a learned poker brain plugs in.</p>
+  <div class="crosslink">
+    <a class="here" href="#overview">You are here: the engine reference</a>
+    <a href="poker-sim-walkthrough.html">The gentle walkthrough</a>
+  </div>
+</div>
+
+<div class="tldr">
+  <div class="lab">The engine in one breath</div>
+  <p><span class="e">One parameterized policy + ten knob-sets</span> drive agents that play real hands on
+  <b>PokerKit</b> (the referee). We <span class="e">control the deck from a single seeded RNG</span>, so a run
+  is byte-for-byte reproducible. Played hands are aggregated into <b>Contract-1 features</b> (integrity loop)
+  and <b>realized table health → paid seat-time</b> (health/routing loop). Health is computed
+  <b>independently from chip flow</b> — never by re-running the scoring engine — so the routing backtest isn't
+  a tautology. A learned brain (<span class="a">RLCard / OpenSpiel / PokerRL</span>) drops in behind one
+  <code>act()</code> method, with PokerKit still refereeing.</p>
+</div>
+
+<!-- A · OVERVIEW -->
+<section class="sec" id="overview">
+  <h2><span class="secn">A</span>Overview</h2>
+  <p class="lede">playsim lives in its own top-level folder (<code>playsim/</code>), separate from the canonical
+  <code>scoring/</code> engine and the <code>data/</code> fixtures. It answers a single question: <em>if these
+  archetypes actually played, what would the room look like?</em></p>
+
+  <div class="flow">
+    <div class="box"><div class="t">roster</div><h4>archetypes</h4><p>seats + their knob-sets</p></div>
+    <div class="box"><div class="t">runner</div><h4>seeded session</h4><p>rotate button, loop hands</p></div>
+    <div class="box gold"><div class="t">table.py</div><h4>PokerKit referee</h4><p>legal moves · showdown · chips</p></div>
+    <div class="box"><div class="t">agent</div><h4>knob-driven policy</h4><p>equity → knobs → action</p></div>
+    <div class="box ai"><div class="t">features / health</div><h4>emergent signals</h4><p>vpip · AF · seat-time</p></div>
+  </div>
+
+  <p>The same decision engine becomes a recreational, a grinder, or a colluding cluster member purely by its
+  <b>knob vector</b> — so the differences between archetypes are auditable, not ten hand-written programs.
+  Everything is built on the design in <a href="../archetype-play-profiles.md" style="color:var(--gold)">archetype-play-profiles.md</a>
+  and explained gently in the <a href="poker-sim-walkthrough.html" style="color:var(--gold)">play-sim walkthrough</a>;
+  this page is the engineering depth behind it.</p>
+
+  <h3>Two loops, one engine</h3>
+  <div class="two">
+    <div class="card"><h4 style="color:var(--eng)">Integrity loop — <code>run</code></h4><p>Does the detector
+    <em>catch</em> bad behavior? Stacks reset each hand for stable feature calibration; soft-play and the bot's
+    flat timing emerge from play.</p></div>
+    <div class="card"><h4 style="color:var(--eng)">Health/routing loop — <code>routing</code></h4><p>Does
+    routing retain more <b>paid seat-time</b>? Stacks persist, players log off when tilted, and the same cohort
+    is compared across two table compositions under matched seeds.</p></div>
+  </div>
+</section>
+
+<!-- B · PHILOSOPHY -->
+<section class="sec" id="philosophy">
+  <h2><span class="secn">B</span>Philosophy</h2>
+  <p class="lede">Four convictions shape every design choice. They're worth internalizing because they explain
+  the things that look unusual (why we control the deck, why health is computed twice, why there's a
+  "skill-edge" fudge).</p>
+
+  <details class="drill" open>
+    <summary><span class="dt">1 · Signals must emerge from play — never be asserted</span><span class="tag">core</span><span class="chev">▶</span></summary>
+    <div class="body">
+      <p>The static generator <em>writes</em> each player's <code>vpip</code>, <code>soft_play_delta</code>,
+      <code>timing_regularity</code>. That makes the detector grade its own homework — it just reads back a
+      field it was handed. playsim instead has an agent <b>play hands in character</b> and <b>measures</b> the
+      stats from how it played. A colluder actually checks down to a teammate; a bot actually has flat action
+      timing. If a signal can be recomputed from the played hands, it's a genuine test of the detector.</p>
+    </div>
+  </details>
+
+  <details class="drill">
+    <summary><span class="dt">2 · The engine is the referee; the agent only decides</span><span class="tag">PokerKit</span><span class="chev">▶</span></summary>
+    <div class="body">
+      <p><b>PokerKit</b> (UofT Computer Poker Research Group, MIT, the same group behind the PHH format) owns
+      legality, betting rounds, side pots, showdown evaluation, and chip distribution. An agent can <em>never</em>
+      make an illegal move — it proposes an action and the engine validates and applies it. This separation is
+      what lets us swap the agent's "brain" (heuristic today, a learned solver tomorrow) without touching game
+      logic, and it's why the simulation is correct poker rather than an approximation.</p>
+    </div>
+  </details>
+
+  <details class="drill">
+    <summary><span class="dt">3 · Derive, don't assert — and don't validate against yourself</span><span class="tag">guardrail</span><span class="chev">▶</span></summary>
+    <div class="body">
+      <p>The health/routing backtest asks "does routing produce healthier tables?" If the same model that
+      <em>scores</em> health also <em>generates</em> the outcomes, the answer is a tautology. So playsim computes
+      health from <b>first-principles chip flow</b> (who won, lost, busted) — completely independent of the
+      scoring engine's <code>Health(T)</code> formula. See <a href="#health" style="color:var(--gold)">§G</a>;
+      this is the single most important correctness property of the health loop.</p>
+    </div>
+  </details>
+
+  <details class="drill">
+    <summary><span class="dt">4 · Be honest about what's modeled vs. emergent</span><span class="tag">the skill-edge</span><span class="chev">▶</span></summary>
+    <div class="body">
+      <p>Heuristic agents (equity thresholds + knobs) do <em>not</em> reliably win chips off weaker players —
+      cards and variance dominate, and a calling station will stack a grinder on a lucky seed. Rather than
+      pretend a skill edge emerges when it doesn't, the engine applies a small, transparent, <b>zero-sum
+      per-hand skill-EV transfer</b> (<code>skill_edge</code>) from weaker to stronger contestants — a real,
+      measurable bb/100 quantity. It's a behavioral <em>input</em>; health and seat-time stay <em>derived</em>
+      from the resulting chip flow. A trained brain (§H) would make the edge genuinely emergent and the transfer
+      unnecessary. We document it rather than hide it.</p>
+    </div>
+  </details>
+</section>
+
+<!-- C · HANDS NOT OUTCOMES -->
+<section class="sec" id="hands">
+  <h2><span class="secn">C</span>Does it deal hands, or hand outcomes?</h2>
+  <p class="lede">It deals <b>real hands, street by street</b> — then derives outcomes from them. This is the
+  difference between a genuine simulation and a statistics generator.</p>
+
+  <div class="two">
+    <div class="card no"><h4>✗ What it is NOT</h4><p>It does not sample an outcome ("P-104 loses 40bb this
+    hand") from a distribution. There is no shortcut that skips the play.</p></div>
+    <div class="card yes"><h4>✓ What it actually does</h4><p>Deals hole cards, runs preflop → flop → turn →
+    river betting with real positions/stacks/pot odds, deals the board, resolves showdown via PokerKit's
+    evaluator, distributes chips.</p></div>
+  </div>
+
+  <p>On every decision the agent (1) estimates <b>equity</b> — preflop via a Chen-style percentile over all
+  1326 combos, postflop via Monte-Carlo vs. random opponent ranges using PokerKit's hand evaluator; (2) lets
+  its <b>knobs bias</b> the thresholds (looseness lowers the equity needed to continue, aggression turns a
+  marginal call into a raise); (3) picks an action <em>and a size</em>. The hand is a real object with a full
+  action log, board, and per-player payoffs.</p>
+
+  <details class="drill">
+    <summary><span class="dt">The one nuance: a post-hand outcome adjustment</span><span class="tag">honest</span><span class="chev">▶</span></summary>
+    <div class="body">
+      <p>After a hand resolves, the <b>skill-edge transfer</b> (§B-4) adjusts the payoffs by a small zero-sum
+      amount based on the skill gap among the players who contested the pot. So the <em>play</em> is fully
+      dealt and refereed, but the <em>realized chip result</em> carries a modeled skill correction on top. This
+      is the only place an "outcome" is touched directly — and it's deliberately small, zero-sum, and
+      documented. Set <code>skill_edge=0</code> for pure-emergent play (then the integrity signals are
+      untouched; only the health-loop economics lose their reliable edge).</p>
+    </div>
+  </details>
+
+  <pre><code><span class="c"># table.py — one decision, refereed by PokerKit</span>
+obs = Observation(street, hole, board, to_call, pot, min_raise_to, max_raise_to, ...)
+d   = agent.act(obs, rng)                 <span class="c"># fold / check_call / raise(amount)</span>
+<span class="k">if</span> d.kind == <span class="s">"raise"</span> <span class="k">and</span> state.can_complete_bet_or_raise_to(d.amount):
+    state.complete_bet_or_raise_to(d.amount)   <span class="c"># engine enforces legality</span>
+<span class="k">elif</span> d.kind == <span class="s">"fold"</span> <span class="k">and</span> state.can_fold():
+    state.fold()
+<span class="k">else</span>:
+    state.check_or_call()</code></pre>
+</section>
+
+<!-- D · OUTPUTS -->
+<section class="sec" id="outputs">
+  <h2><span class="secn">D</span>Output formats</h2>
+  <p class="lede">One session produces up to four artifacts, each aimed at a different consumer. All are
+  JSON-serializable and emitted by the CLI flags or the <code>service</code> layer.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Artifact</th><th>Shape</th><th>Consumer</th><th>How</th></tr></thead>
+    <tbody>
+      <tr><td><b>Contract-1 features</b></td><td>per-player <code>vpip, pfr, aggression_factor, avg_pot_bb, timing_regularity, soft_play_delta, net_bb</code></td><td>the scoring engine / pit-boss UI</td><td><code>--features</code> · <code>features.aggregate()</code></td></tr>
+      <tr><td><b>PHH hand histories</b></td><td>per-hand record, variant <code>NT</code>, + action log (PHH-shaped, TOML-compatible)</td><td>the PHH ecosystem / replay</td><td><code>--phh</code> · <code>phh.session_to_phh()</code></td></tr>
+      <tr><td><b>SQLite database</b></td><td>tables <code>runs · players · features · hands</code></td><td>querying / persistence</td><td><code>--db</code> · <code>store.save_result()</code></td></tr>
+      <tr><td><b>Service JSON</b></td><td><code>meta · players · features · calibration · health · paid_seat_time</code></td><td>a UI / HTTP API</td><td><code>service.simulate() / simulate_routing()</code></td></tr>
+    </tbody>
+  </table>
+
+  <p>The <b>service layer</b> is the single integration surface: <code>simulate(table, hands, seed)</code>
+  returns a plain dict with no PokerKit or dataclass objects leaking out. A UI calls it in-process, behind a
+  thin FastAPI route, or a batch job commits its output as a <b>frozen fixture</b> the frontend reads
+  statically (the determinism-friendly default). PHH is the interoperability format; SQLite is the
+  query/replay store; Contract-1 features are the seam to scoring.</p>
+</section>
+
+<!-- E · DETERMINISM -->
+<section class="sec" id="determinism">
+  <h2><span class="secn">E</span>Determinism — exactly how</h2>
+  <p class="lede">Same <code>(roster, seed, params)</code> → byte-identical result, every time. This is a hard
+  rule (the demo must replay from frozen fixtures), and it's achieved by routing <em>all</em> randomness through
+  one seeded source.</p>
+
+  <ul>
+    <li><b>One RNG seeds everything.</b> A single <code>random.Random(seed)</code> drives the deck shuffle,
+    every agent's mixed-strategy coin-flips and bet-sizing jitter, the Monte-Carlo equity sampling, and the
+    leave-model session jitter. Nothing reads the global <code>random</code> or wall-clock time.</li>
+    <li><b>We control the deck — we don't trust PokerKit's shuffle.</b> Dealing automations are turned
+    <em>off</em>; we shuffle our own 52-card deck with the seeded RNG and deal each card explicitly via
+    <code>state.deal_hole(c)</code> / <code>state.deal_board(c)</code>. Determinism is by construction, not by
+    hoping the library's internal RNG is seeded.</li>
+    <li><b>The button rotates by remapping players to seats</b> (<code>seat = (dealer + s) % n</code>), so
+    positions rotate without touching PokerKit's blind posting — and the rotation is a pure function of the
+    hand index.</li>
+    <li><b>The <code>replay</code> command asserts it</b> — it runs the same seed twice and checks the features
+    and every hand's payoffs/board are identical.</li>
+  </ul>
+
+  <pre><code><span class="c"># table.py — deterministic dealing from our own seeded deck</span>
+rng = random.Random(seed)
+deck = FULL_DECK[:]; rng.shuffle(deck); it = iter(deck)
+<span class="c"># dealing automations OFF → we supply every card</span>
+<span class="k">for</span> _ <span class="k">in</span> range(2):
+    <span class="k">for</span> seat <span class="k">in</span> range(n):
+        state.deal_hole(next(it))            <span class="c"># hole cards</span>
+<span class="k">while</span> state.can_deal_board():
+    <span class="k">for</span> _ <span class="k">in</span> range(state.board_dealing_count):
+        state.deal_board(next(it))           <span class="c"># flop=3, turn=1, river=1</span></code></pre>
+
+  <div class="callout good"><b>Freeze-and-replay.</b> Because a run is a pure function of its inputs, the
+  expensive work happens <b>once, offline</b>; the output is committed as JSON and the demo replays the frozen
+  file. The seed <em>is</em> the artifact. This is the same pattern the rest of the lab uses for its fixtures.</div>
+</section>
+
+<!-- F · PARALLELIZATION -->
+<section class="sec" id="parallel">
+  <h2><span class="secn">F</span>Parallelization scheme</h2>
+  <p class="lede">Be precise here: a <em>single</em> session is sequential and deterministic by design. The
+  parallelism lives one level up — across <b>seeds</b> — and the determinism is exactly what makes it
+  embarrassingly parallel.</p>
+
+  <h3>Why a single hand can't parallelize</h3>
+  <p>Poker is inherently sequential within a hand: each action depends on the prior one (you can't decide the
+  turn before the flop is dealt and acted on), and each agent's RNG draws must happen in a fixed order or
+  determinism breaks. So <code>play_hand</code> and the hand loop in <code>run_session</code> are deliberately
+  single-threaded.</p>
+
+  <h3>Where it does parallelize — the Monte-Carlo over seeds</h3>
+  <p>The health/routing result averages many independent seeded runs (individual fish run hot/cold; the
+  <em>population</em> mean is the signal). Each <code>(roster, seed)</code> pair is a <b>pure, independent
+  function</b> — no shared state, no ordering constraint between runs. That's the textbook
+  embarrassingly-parallel shape.</p>
+
+  <div class="callout"><b>Current state (honest):</b> the seed loop in <code>service.simulate_routing()</code>
+  runs <b>sequentially</b> today — correctness and reproducibility first. Because each run is independent and
+  deterministic, dropping it onto a <code>multiprocessing.Pool</code> (or a job queue / Ray / Spark) over seeds
+  is a near-trivial change with <b>no determinism risk</b>: worker <em>i</em> gets seed <em>i</em>, results are
+  reduced by averaging. The Monte-Carlo equity inside an agent is likewise per-decision and could be vectorized,
+  but it's intentionally cheap (~12–30 samples) instead.</p></div>
+
+  <pre><code><span class="c"># the parallelization seam (today: a sequential loop; trivially a Pool.map)</span>
+runs = [compare_routing(
+            run_session(std_roster, hands, seed=s, ...),
+            run_session(fp_roster,  hands, seed=s, ...))
+        <span class="k">for</span> s <span class="k">in</span> range(seed, seed + seeds)]      <span class="c"># &lt;- map over workers</span>
+headline = average(runs)                              <span class="c"># &lt;- reduce</span></code></pre>
+</section>
+
+<!-- G · TABLE HEALTH -->
+<section class="sec" id="health">
+  <h2><span class="secn">G</span>How it calculates table health</h2>
+  <p class="lede">The key question, answered plainly: playsim does <b>not</b> call the canonical
+  <code>scoring/</code> engine, and it does <b>not</b> copy its <code>Health(T)</code> formula. It computes a
+  <b>separate, independent health measurement from raw chip flow</b> — on purpose.</p>
+
+  <div class="callout warn"><div class="lab">why independence is mandatory</div><b>If playsim computed health
+  by re-running the scoring engine's model, the routing backtest would be circular</b> — the router would
+  "succeed" by construction because the outcome was generated from its own assumptions. Independence is the
+  whole point: realized health (bottom-up, from chips) is a genuine, external check on the scoring engine's
+  predicted <code>Health(T)</code> (top-down).</div>
+
+  <h3>What playsim's <code>health.py</code> measures (first-principles)</h3>
+  <ul>
+    <li><b>Recreational loss velocity</b> — bb bled per 100 <em>cohort hands actually played</em> (normalized
+    by cohort hands, not session hands, so a table where the cohort quits fast isn't wrongly flattered).</li>
+    <li><b>Winnings concentration</b> — the top winner's share of all winnings (predation concentration).</li>
+    <li><b>Beginner bust rate</b> — rec/new rebuys per 100 cohort hands.</li>
+    <li><b>Predation</b> — net bb the skilled cohort extracted per 100 session hands.</li>
+  </ul>
+  <p>These combine into a transparent 0–100 <code>health_score</code> (bleed-dominant) and a band
+  (<code>healthy / fragile / beginner_unfriendly</code>). For the <b>north-star</b> health/routing loop they
+  feed the real outcome: <b>retained paid seat-time</b> — players log off when their tilt-shortened session
+  budget runs out, so a faster bleed → shorter sessions → less seat-time.</p>
+
+  <h3>How the two health views meet</h3>
+  <div class="flow">
+    <div class="box gold"><div class="t">scoring/ (canonical)</div><h4>predicted Health(T)</h4><p>top-down, from composition</p></div>
+    <div class="box"><div class="t">playsim</div><h4>realized health</h4><p>bottom-up, from chip flow</p></div>
+    <div class="box ai"><div class="t">the backtest</div><h4>predicted vs. realized</h4><p>agreement = the model is right</p></div>
+  </div>
+  <p>So the relationship is: the canonical <code>scoring/</code> engine remains the source of truth for the
+  <em>scores the product ships</em>; playsim is the <em>independent world</em> those scores are validated
+  against. They share no health code — by design.</p>
+</section>
+
+<!-- H · FUTURE BRAINS -->
+<section class="sec" id="future">
+  <h2><span class="secn">H</span>Where RLCard / OpenSpiel / PokerRL plug in</h2>
+  <p class="lede">The whole engine is built around one swappable seam: the <b>agent brain</b>. Anything that can
+  map a game state to an action — a heuristic, a CFR solver, a trained net — slots in behind the same
+  interface, with PokerKit still refereeing legality.</p>
+
+  <h3>The seam</h3>
+  <pre><code><span class="c"># every brain implements exactly this:</span>
+<span class="k">class</span> <span class="f">Brain</span>:
+    <span class="k">def</span> <span class="f">act</span>(self, obs: Observation, rng) -> Decision: ...
+
+<span class="c"># Observation: street, hole, board, to_call, pot, min/max_raise_to,</span>
+<span class="c">#              my_stack, n_active, live_opponent_ids, ...</span>
+<span class="c"># Decision:    fold | check_call | raise(amount)   (+ flags for stats)</span></code></pre>
+  <p>The heuristic <code>ArchetypeAgent</code> implements it today. A learned brain is just a different
+  implementation; <code>playsim/baselines.py</code> already contains the <code>RLCardAgent</code> adapter
+  scaffold and the immediately-usable built-in <code>solver_like</code> archetype.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Framework</th><th>What it gives</th><th>Adapter work</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><b>RLCard</b></td><td>trained DQN/NFSP/CFR agents; a discrete NLHE action space (fold / check-call / raise-½-pot / raise-pot / all-in)</td><td>map our <code>Observation</code> → RLCard state encoding; map its discrete action → a sized <code>Decision</code></td><td><span class="pill m">scaffold in baselines.py</span></td></tr>
+      <tr><td><b>OpenSpiel</b></td><td>CFR / CFR+ / MCCFR solvers and RL policies; reference implementations</td><td>wrap an OpenSpiel policy; translate its action id → <code>Decision</code>; NLHE needs a betting/card abstraction</td><td><span class="pill n">future</span></td></tr>
+      <tr><td><b>PokerRL</b></td><td>Deep-CFR / NFSP <em>training</em> infrastructure for large NLHE</td><td>train offline, export the policy, wrap the exported net in a <code>Brain</code> that runs inference in <code>act()</code></td><td><span class="pill n">future</span></td></tr>
+    </tbody>
+  </table>
+
+  <details class="drill">
+    <summary><span class="dt">What stays the same, and what gets better</span><span class="tag">design payoff</span><span class="chev">▶</span></summary>
+    <div class="body">
+      <p><b>Unchanged:</b> PokerKit still refereeing (legal moves, showdown, chips); the seeded deck and
+      determinism; the feature aggregation; the health/seat-time metrics; the output formats. You only replace
+      what's inside <code>act()</code>.</p>
+      <p><b>Better:</b> a genuine solver brain plays a real, consistent chip-EV edge — so the
+      <code>skill_edge</code> transfer (§B-4) becomes unnecessary and the predation→decay→seat-time signal
+      becomes <em>fully emergent</em> instead of modeled. That's the principled end-state; the heuristic + skill-
+      edge model is the pragmatic V1 that ships today.</p>
+      <p><b>One caveat:</b> an external brain that uses its own RNG or GPU non-determinism would break
+      reproducibility. The adapter must either be deterministic given our seed, or its outputs must be
+      generated once and <b>frozen</b> (§E) — the same escape hatch the rest of the lab uses for any
+      non-deterministic source.</p>
+    </div>
+  </details>
+</section>
+
+<!-- I · MODULE MAP -->
+<section class="sec" id="map">
+  <h2><span class="secn">I</span>Module map</h2>
+  <p class="lede">The whole engine is ~12 small modules. Where to look for each concern:</p>
+  <table class="tbl">
+    <thead><tr><th>Module</th><th>Responsibility</th></tr></thead>
+    <tbody>
+      <tr><td><code>knobs.py</code></td><td>the 11 archetypes as knob vectors + empirical targets + session lengths; loads <code>calibration.json</code></td></tr>
+      <tr><td><code>equity.py</code></td><td>preflop Chen percentile + Monte-Carlo postflop equity (PokerKit evaluator)</td></tr>
+      <tr><td><code>agent.py</code></td><td>the one parameterized policy — <code>act(obs, rng)</code>; soft-play, target-weak, station-leak, bot timing</td></tr>
+      <tr><td><code>table.py</code></td><td>one hand on PokerKit: seeded deck, betting loop, board dealing, payoffs</td></tr>
+      <tr><td><code>runner.py</code></td><td>seeded session: button rotation, 3 modes (reset / persist / retention), leave model, skill-edge transfer</td></tr>
+      <tr><td><code>features.py</code></td><td>played hands → Contract-1 features (the emergent signals)</td></tr>
+      <tr><td><code>health.py</code></td><td>independent realized health + retention/paid-seat-time + Standard-vs-FairPlay comparison</td></tr>
+      <tr><td><code>calibrate.py</code></td><td>the AF tuning loop → <code>calibration.json</code></td></tr>
+      <tr><td><code>phh.py</code> · <code>store.py</code></td><td>PHH export · SQLite persistence</td></tr>
+      <tr><td><code>service.py</code></td><td>the JSON API surface for a UI / HTTP layer</td></tr>
+      <tr><td><code>baselines.py</code></td><td>V2 — RLCard adapter scaffold; the seam for learned brains</td></tr>
+      <tr><td><code>cli.py</code></td><td><code>run · routing · health · replay · calibrate · tables</code></td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>Run it:</b> <code>make install &amp;&amp; make routing</code> (local, Python 3.12) or
+  <code>docker compose run --rm playsim routing</code> (zero local setup). <code>make replay</code> proves a
+  run is byte-identical.</div>
+</section>
+
+</main>
+<script>
+(function(){var h=document.getElementById('hbg'),s=document.getElementById('sidebar'),o=document.getElementById('overlay');if(!h)return;h.onclick=function(){s.classList.add('open');o.classList.add('open')};o.onclick=function(){s.classList.remove('open');o.classList.remove('open')}})();
+(function(){var l=[].slice.call(document.querySelectorAll('.nav-link')),s=[].slice.call(document.querySelectorAll('.sec'));if(!l.length)return;var o=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){l.forEach(function(x){x.classList.remove('active')});var a=document.querySelector('.nav-link[href="#'+e.target.id+'"]');if(a)a.classList.add('active')}})},{rootMargin:'-15% 0px -75% 0px'});s.forEach(function(x){o.observe(x)})})();
+</script>
+</body>
+</html>
