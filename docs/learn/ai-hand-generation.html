@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Where AI Belongs in FairPlay — Generating Poker Hands, the Right Way</title>
+<style>
+:root{
+  --bg:#070f09; --bg2:#0c1810; --bg3:#102013; --border:#1b3221; --border2:#244a2e;
+  --text:#e4f2e6; --muted:#8fb89a; --dim:#3a5a42;
+  --gold:#e3c46a; --gold2:#c9a84c; --gold-bg:rgba(227,196,106,.1);
+  --blue:#5b9bf5; --teal:#33e0c4; --purple:#b98cff; --red:#ef6f6f; --amber:#f5b743; --green:#46c98b;
+  --sb:272px; --pad:clamp(28px,4.5vw,80px); --r:10px;
+  --engine:#33e0c4; --llm:#b98cff;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;line-height:1.7;display:flex;min-height:100dvh}
+#sidebar{position:fixed;top:0;left:0;width:var(--sb);height:100dvh;overflow-y:auto;background:var(--bg2);border-right:1px solid var(--border);z-index:400;display:flex;flex-direction:column;transition:transform .24s ease;scrollbar-width:thin}
+.sb-top{padding:22px 20px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.sb-diamond{width:28px;height:28px;flex-shrink:0;background:linear-gradient(135deg,var(--gold2),var(--gold) 60%,#f0d98a);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:flex;align-items:center;justify-content:center;font-size:11px;color:#0a140c;font-weight:900}
+.sb-name{font-size:13.5px;font-weight:800;color:var(--gold)}
+.sb-tag{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);line-height:1.5}
+nav a{display:flex;align-items:center;gap:10px;padding:7px 20px;color:var(--muted);font-size:12.5px;text-decoration:none;border-left:2px solid transparent;transition:all .14s}
+nav a:hover{color:var(--text);background:rgba(255,255,255,.03)}
+nav a.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-bg)}
+.nav-n{font-family:'Courier New',monospace;font-size:10px;color:var(--dim);min-width:18px;text-align:right}
+.sb-foot{margin-top:auto;padding:14px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--dim);line-height:1.8}
+.sb-foot a{color:var(--muted);text-decoration:none;display:block;padding:2px 0}
+.sb-foot a:hover{color:var(--gold)}
+#hbg{display:none;position:fixed;top:14px;left:14px;z-index:500;width:42px;height:42px;border-radius:9px;background:var(--bg2);border:1px solid var(--border2);color:var(--gold);font-size:18px;cursor:pointer;align-items:center;justify-content:center}
+#overlay{display:none;position:fixed;inset:0;z-index:390;background:rgba(0,0,0,.6)}#overlay.open{display:block}
+#main{margin-left:var(--sb);flex:1;min-width:0;padding:0 var(--pad) 120px;max-width:1180px}
+.hero{padding:clamp(40px,7vh,80px) 0 clamp(26px,4vh,44px);border-bottom:1px solid var(--border);margin-bottom:40px}
+.hero .kicker{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.hero .kicker::before{content:'';width:26px;height:1px;background:var(--gold2)}
+.hero h1{font-size:clamp(25px,4.2vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1.12;margin-bottom:14px}
+.hero h1 em{color:var(--gold);font-style:normal}
+.hero p{font-size:clamp(15px,1.8vw,18px);color:var(--muted);max-width:720px;line-height:1.65}
+.crosslink{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.crosslink a{font-size:12px;padding:6px 13px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);background:var(--bg3);text-decoration:none}
+.crosslink a:hover{border-color:var(--gold2);color:var(--gold)}
+.crosslink a.here{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+
+/* TL;DR banner */
+.tldr{background:linear-gradient(135deg,rgba(227,196,106,.08),rgba(51,224,196,.05));border:1px solid var(--border2);border-left:3px solid var(--gold);border-radius:var(--r);padding:22px 26px;margin-bottom:46px}
+.tldr .lab{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--gold2);margin-bottom:10px}
+.tldr p{font-size:16px;color:var(--text);line-height:1.6}
+.tldr b{color:var(--gold)}
+.tldr .eng{color:var(--engine);font-weight:700}.tldr .ai{color:var(--llm);font-weight:700}
+
+.sec{margin-bottom:58px;scroll-margin-top:24px}
+.sec h2{font-size:clamp(18px,2.4vw,25px);font-weight:800;margin-bottom:8px;letter-spacing:-.01em;display:flex;align-items:baseline;gap:12px}
+.sec h2 .secn{font-family:'Courier New',monospace;font-size:14px;color:var(--gold2);font-weight:700}
+.sec .lede{color:var(--muted);font-size:15px;margin-bottom:24px;max-width:780px}
+
+/* the seam diagram */
+.seam{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch;margin:8px 0 14px;border:1px solid var(--border2);border-radius:var(--r);overflow:hidden}
+.seam .side{padding:20px 22px}
+.seam .eng{background:rgba(51,224,196,.05)}
+.seam .ai{background:rgba(185,140,255,.05)}
+.seam .mid{display:flex;align-items:center;justify-content:center;background:var(--bg2);padding:0 4px;border-left:1px solid var(--border);border-right:1px solid var(--border);font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--dim);writing-mode:vertical-rl;text-orientation:mixed}
+.seam h4{font-size:14px;margin-bottom:4px}
+.seam .eng h4{color:var(--engine)}.seam .ai h4{color:var(--llm)}
+.seam .tag{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin-bottom:12px}
+.seam ul{list-style:none;font-size:13px;color:var(--muted)}
+.seam li{padding:4px 0 4px 16px;position:relative;line-height:1.5}
+.seam li::before{content:'▸';position:absolute;left:0;font-size:10px}
+.seam .eng li::before{color:var(--engine)}.seam .ai li::before{color:var(--llm)}
+.seam b{color:var(--text)}
+
+/* fact cards */
+.facts{display:grid;gap:12px}
+.fact{border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);overflow:hidden}
+.fact>summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:flex-start;gap:14px;transition:background .14s}
+.fact>summary::-webkit-details-marker{display:none}
+.fact>summary:hover{background:var(--bg3)}
+.fact .fn{flex-shrink:0;width:26px;height:26px;border-radius:6px;background:var(--gold-bg);color:var(--gold);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace}
+.fact .fh{flex:1}
+.fact .fh .ft{font-size:15px;font-weight:700;color:var(--text);line-height:1.4}
+.fact .fh .fmeta{font-size:11px;color:var(--dim);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.vbadge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:4px;background:rgba(70,201,139,.13);color:var(--green)}
+.fact .chev{flex-shrink:0;color:var(--dim);font-size:13px;transition:transform .2s;margin-top:4px}
+.fact[open] .chev{transform:rotate(90deg)}
+.fact .body{padding:2px 20px 20px 60px;font-size:13.5px;color:var(--muted);line-height:1.7}
+.fact .body p{margin-bottom:10px}
+.fact .body b{color:var(--text)}
+.fact .conseq{margin-top:12px;border-left:2px solid var(--gold2);background:var(--gold-bg);border-radius:0 6px 6px 0;padding:9px 14px;font-size:13px}
+.fact .conseq b{color:var(--gold)}
+.fact .src{margin-top:12px;font-size:11px;color:var(--dim);font-family:'Courier New',monospace}
+.fact .src a{color:var(--muted)}
+
+/* ranked table */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.tbl th{background:var(--bg2);text-align:left;padding:11px 14px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--gold2);font-weight:700;border-bottom:1px solid var(--border)}
+.tbl td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .rank{font-family:'Courier New',monospace;font-weight:800;font-size:14px}
+.tbl b{color:var(--text)}
+.tbl tr.adopt{background:rgba(70,201,139,.06)}
+.tbl tr.reject{opacity:.62}
+.pill{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.pill.full{background:rgba(70,201,139,.13);color:var(--green)}
+.pill.part{background:rgba(245,183,67,.14);color:var(--amber)}
+.pill.no{background:rgba(239,111,111,.13);color:var(--red)}
+.vd{font-size:11px;font-weight:800}
+.vd.y{color:var(--green)}.vd.maybe{color:var(--amber)}.vd.n{color:var(--red)}
+
+/* where-AI cards */
+.aiuses{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.aiuse{border:1px solid rgba(185,140,255,.28);background:rgba(185,140,255,.05);border-radius:var(--r);padding:18px 20px}
+.aiuse .n{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--llm);margin-bottom:8px;font-weight:700}
+.aiuse h4{font-size:15px;margin-bottom:8px;color:var(--text)}
+.aiuse p{font-size:13px;color:var(--muted);line-height:1.6}
+.aiuse .rule{margin-top:11px;font-size:11px;color:var(--dim);border-top:1px solid var(--border);padding-top:9px}
+.aiuse .rule b{color:var(--llm)}
+
+/* objection / defense */
+.obj{border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);overflow:hidden;margin-bottom:10px}
+.obj>summary{list-style:none;cursor:pointer;padding:15px 20px;display:flex;align-items:center;gap:13px;transition:background .14s}
+.obj>summary::-webkit-details-marker{display:none}
+.obj>summary:hover{background:var(--bg3)}
+.obj .qi{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:rgba(239,111,111,.14);color:var(--red);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
+.obj .qt{flex:1;font-size:14.5px;color:var(--text);font-style:italic}
+.obj .chev{color:var(--dim);font-size:13px;transition:transform .2s}
+.obj[open] .chev{transform:rotate(90deg)}
+.obj .ans{padding:4px 20px 19px 57px;font-size:13.5px;color:var(--muted);line-height:1.7}
+.obj .ans .lab{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:7px}
+.obj .ans b{color:var(--text)}
+
+/* glossary */
+.gloss{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gterm{border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:var(--bg2)}
+.gterm h4{font-size:13.5px;color:var(--gold);margin-bottom:5px}
+.gterm h4 .lic{font-size:9px;font-weight:700;color:var(--green);background:rgba(70,201,139,.12);padding:1px 6px;border-radius:3px;margin-left:6px;letter-spacing:.05em}
+.gterm h4 .lic.cc{color:var(--amber);background:rgba(245,183,67,.12)}
+.gterm p{font-size:12.5px;color:var(--muted);line-height:1.55}
+.gterm a{color:var(--muted);font-size:11px;font-family:'Courier New',monospace}
+
+.verdict{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:26px 28px;margin-top:10px}
+.verdict h2{margin-bottom:14px}
+.rec{margin-top:8px;border-left:3px solid var(--gold);background:var(--gold-bg);border-radius:0 8px 8px 0;padding:16px 20px;font-size:15px;color:var(--muted);line-height:1.65}
+.rec b{color:var(--text)}
+.callout{border:1px solid var(--border2);border-radius:var(--r);padding:16px 20px;font-size:13.5px;color:var(--muted);margin:18px 0;background:var(--bg3)}
+.callout b{color:var(--text)}
+.check{font-size:11px;color:var(--dim);margin-top:30px;border-top:1px dashed var(--border2);padding-top:16px}
+.check b{color:var(--muted)}
+.check ul{margin:8px 0 0 18px}.check li{margin:4px 0}
+
+@media(max-width:900px){.aiuses{grid-template-columns:1fr}.gloss{grid-template-columns:1fr}.seam{grid-template-columns:1fr}.seam .mid{writing-mode:horizontal-tb;padding:6px;border:none;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}}
+@media(max-width:1000px){#hbg{display:flex}#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#overlay.open{display:block}#main{margin-left:0;padding-top:64px}}
+</style>
+</head>
+<body>
+<button id="hbg" aria-label="Menu">☰</button>
+<div id="overlay"></div>
+<aside id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo"><div class="sb-diamond">◆</div><div class="sb-name">FairPlay IQ · Learn</div></div>
+    <div class="sb-tag">Where AI belongs<br>in hand generation</div>
+  </div>
+  <nav>
+    <a href="#evo" class="nav-link"><span class="nav-n">A</span>Evolution: v1 → v2</a>
+    <a href="#decision" class="nav-link"><span class="nav-n">B</span>The simulator &amp; agent brains</a>
+    <a href="#seam" class="nav-link"><span class="nav-n">C</span>The two loops</a>
+    <a href="#facts" class="nav-link"><span class="nav-n">D</span>The facts, as constraints</a>
+    <a href="#options" class="nav-link"><span class="nav-n">E</span>Options we weighed</a>
+    <a href="#whereai" class="nav-link"><span class="nav-n">F</span>Where AI goes now</a>
+    <a href="#defend" class="nav-link"><span class="nav-n">G</span>Defend it — two fronts</a>
+    <a href="#gloss" class="nav-link"><span class="nav-n">H</span>Sources &amp; glossary</a>
+  </nav>
+  <div class="sb-foot">
+    <span style="color:var(--muted)">Companion files:</span>
+    <a href="ai-hand-generation-decision.md">→ Decision doc (markdown)</a>
+    <a href="../graph/simulator-signal-gap.md">→ Simulator signal gap</a>
+    <a href="../../CLAUDE.md">→ Project hard rules</a>
+  </div>
+</aside>
+<main id="main">
+<div class="hero">
+  <div class="kicker">FairPlay IQ · Decision v2 (evolved from v1) · Built to defend on two fronts</div>
+  <h1>We <em>are</em> using AI agents for gameplay. The decision is <em>how</em>.</h1>
+  <p>The team committed to AI agents in gameplay — so this guide is about doing it <b>correctly</b>, not
+  arguing it away. It shows the evolution from v1 ("the LLM never plays") to v2 ("agents play — but
+  tool-grounded, scoped, and frozen"), with the evidence, so you can defend the call against <em>both</em> the
+  "no LLM in gameplay" skeptic and the "make agents do everything" maximalist.</p>
+  <div class="crosslink">
+    <a class="here" href="#evo">You are here: the v2 decision &amp; how it evolved</a>
+    <a href="ai-hand-generation-decision.md">Decision doc</a>
+  </div>
+</div>
+
+<div class="tldr">
+  <div class="lab">The decision in one sentence</div>
+  <p>Build <b>one agent-based simulator</b> (PokerKit environment, an agent per seat). Choose each agent's
+  <b>brain</b> — <span class="eng">seeded policy</span> vs. <span class="ai">live LLM</span> — <b>per seat</b>,
+  by whether <em>reasoning</em> is the product there. Run <b>two loops</b>: a <span class="eng">deterministic
+  health/routing backtest</span> (the headline) and a <span class="ai">scoped LLM collusion case</span>
+  (integrity). <b>Freeze every run</b> so the demo is reproducible — and never generate health outcomes from
+  the health model itself.</p>
+</div>
+
+<!-- A · EVOLUTION -->
+<section class="sec" id="evo">
+  <h2><span class="secn">A</span>Evolution: v1 → v2 (a history, not a retcon)</h2>
+  <p class="lede">The v1 reasoning still holds. What changed is the <b>driver of the integrity-critical
+  actions</b> — and four things made that flip defensible rather than a cave.</p>
+
+  <table class="tbl" style="margin-bottom:18px">
+    <thead><tr><th></th><th>v1 — research-driven</th><th>v2 — this decision</th></tr></thead>
+    <tbody>
+      <tr><td class="rank">Who plays</td>
+        <td>Deterministic engine + parametric policies. The LLM <b>never</b> plays.</td>
+        <td><b>Tool-grounded LLM agents</b> play the <b>collusion showcase</b>; policies play the rest.</td></tr>
+      <tr><td class="rank">LLM role</td>
+        <td>Explanation only (AI Investigator).</td>
+        <td>Explanation <b>+ scoped, tool-grounded gameplay</b> for one behavior-under-test case.</td></tr>
+      <tr><td class="rank">Determinism</td>
+        <td>Native (policies are seeded).</td>
+        <td><b>Freeze-and-replay</b> — agents generate once offline, output committed, demo replays it.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="aiuses">
+    <div class="aiuse" style="border-color:rgba(227,196,106,.28);background:rgba(227,196,106,.05)"><div class="n" style="color:var(--gold)">What flipped · 1</div><h4>Team direction</h4><p>The team is adamant about AI agents in gameplay. We take that as given and engineer it to be correct.</p></div>
+    <div class="aiuse" style="border-color:rgba(227,196,106,.28);background:rgba(227,196,106,.05)"><div class="n" style="color:var(--gold)">What flipped · 2</div><h4>The research reconciles it</h4><p><b>ToolPoker:</b> raw LLM agents fail, but agents that <b>call a solver tool</b> reach pro-level play. "AI agents playing," done right, means tool-grounded.</p></div>
+    <div class="aiuse" style="border-color:rgba(227,196,106,.28);background:rgba(227,196,106,.05)"><div class="n" style="color:var(--gold)">What flipped · 3</div><h4>Freeze = determinism</h4><p>The rule is a reproducible <em>simulator</em>, not a reproducible <em>generator</em>. Generate offline once, commit, replay the frozen file. The seed is the file.</p></div>
+    <div class="aiuse" style="border-color:rgba(227,196,106,.28);background:rgba(227,196,106,.05)"><div class="n" style="color:var(--gold)">What flipped · 4</div><h4>Emergent collusion</h4><p>Two agents sharing a side-channel produce <b>real</b> soft-play the scorer catches — a story a scripted policy can't truthfully tell.</p></div>
+  </div>
+  <p style="font-size:13px;color:var(--muted);margin-top:14px"><b style="color:var(--text)">Nothing from v1 is thrown away.</b> The engine, the PHH
+  calibration, the freeze pattern, and the detector wall all remain. This also converges with the "clean
+  compromise" (agents = policies) — v2 just keeps <em>one</em> tool-grounded-LLM case where an LLM genuinely
+  playing earns its cost.</p>
+</section>
+
+<!-- B · DECISION -->
+<section class="sec" id="decision">
+  <h2><span class="secn">B</span>The decision: an agent-based simulator, and each agent's brain</h2>
+  <p class="lede"><b>"Agent" does not mean "LLM."</b> A table is an environment, each seat is an agent, the room
+  is the simulation — Pluribus, RLCard, OpenSpiel are all "agents," none are LLMs. The architecture is fixed.
+  The only choice is each agent's <b>brain</b> (game-state → action), and there are four — all still agents in
+  the same simulator.</p>
+
+  <table class="tbl" style="margin-bottom:18px">
+    <thead><tr><th>Agent brain</th><th>Deterministic?</th><th>Cost</th><th>Right for</th></tr></thead>
+    <tbody>
+      <tr><td><b>Heuristic rules</b> (hand-coded archetype)</td><td><span class="pill full">Yes (seeded)</span></td><td><span class="pill full">~0</span></td><td>most archetypes — hits target VPIP/PFR/aggression</td></tr>
+      <tr><td><b>Equilibrium / RL</b> (CFR · RLCard · OpenSpiel)</td><td><span class="pill full">Yes (seeded)</span></td><td><span class="pill full">Low</span></td><td>when you want bots that genuinely play <em>well</em></td></tr>
+      <tr class="adopt"><td><b>LLM + tools</b> (reasons, calls a solver)</td><td><span class="pill part">No (freeze it)</span></td><td><span class="pill no">High</span></td><td>when <em>reasoning / emergence</em> is the product — collusion</td></tr>
+      <tr class="reject"><td><b>Raw LLM</b> (no tools)</td><td><span class="pill no">No</span></td><td><span class="pill no">High</span></td><td>rarely — plays badly (ToolPoker)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="rec">
+    <b>The criterion:</b> give a seat an <b>LLM + tools</b> brain only when the <b>behavior is what's being
+    tested</b> (the coordinated-pair collusion; optionally bot-like). Every other seat — and the entire 8-hour
+    room — gets a <b>seeded</b> brain. <b>Freeze and replay</b> all of it; live agents sit behind a feature flag.
+    This isn't "agents vs. policies" — it's <em>one</em> simulator where we pick a brain per seat.
+  </div>
+
+  <div class="callout" style="border-color:rgba(70,201,139,.3)">
+    <b>Why the one LLM-brained case is worth it:</b> it closes the gap our own
+    <a href="../graph/simulator-signal-gap.md" style="color:var(--teal)">simulator-signal-gap.md</a> named
+    ("derive, don't assert"). Today we <em>assert</em> <code>soft_play_delta</code>; with two tool-grounded
+    agents secretly colluding, we <em>derive</em> it from real play — "two AI agents colluded; our system
+    caught them," which a scripted policy cannot honestly claim.
+  </div>
+</section>
+
+<!-- C · THE TWO LOOPS -->
+<section class="sec" id="seam">
+  <h2><span class="secn">C</span>The two loops — and why each wants a different brain</h2>
+  <p class="lede">The simulator serves <b>two</b> validation loops. They're easy to conflate, and they want
+  different brains. The first is the headline.</p>
+
+  <div class="seam">
+    <div class="side eng">
+      <div class="tag">Headline · seeded brains · controlled</div>
+      <h4>◆ Health / routing loop</h4>
+      <ul>
+        <li><b>Question:</b> does the router's seating <em>produce healthier tables</em>?</li>
+        <li><b>Generate:</b> the whole table, all archetypes, over 8 hours</li>
+        <li><b>Measure:</b> realized <code>Health(T)</code> — winnings concentration, rec-loss velocity, retention</li>
+        <li><b>Validates:</b> <code>ΔHealth</code>, the router, the whole table-health thesis</li>
+        <li><b>Brain:</b> <b>seeded policies</b> — a controlled experiment needs reproducible inputs</li>
+      </ul>
+    </div>
+    <div class="mid">TWO&nbsp;LOOPS</div>
+    <div class="side ai">
+      <div class="tag">Integrity · LLM+tools · emergence</div>
+      <h4>✦ Integrity loop</h4>
+      <ul>
+        <li><b>Question:</b> does the scorer <em>catch</em> bad behavior?</li>
+        <li><b>Generate:</b> the colluding pair</li>
+        <li><b>Measure:</b> <code>SOFT_PLAYS_AGAINST</code> fires from real play</li>
+        <li><b>Validates:</b> the evidence / integrity engine</li>
+        <li><b>Brain:</b> <b>LLM + tools</b> — emergence of the collusion is the product</li>
+      </ul>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--muted);margin-top:10px">The <b style="color:var(--text)">health/routing loop is the closed-loop backtest of
+  the product's core claim.</b> The router predicts <code>ΔHealth</code> when it seats a player; the only way to
+  know it was right is to <b>play the table out and measure realized health</b>, then compare. Today
+  <code>room_metrics_*.json</code> <em>assert</em> the Standard-vs-FairPlay divergence; the simulator
+  <em>derives</em> it — the demo's third link made real.</p>
+
+  <div class="callout" style="border-color:rgba(239,111,111,.4);background:rgba(239,111,111,.05)">
+    <b style="color:var(--red)">⚠ The circularity guardrail — makes or breaks the backtest.</b> If the same model that
+    <em>scores</em> health also <em>generates</em> the gameplay, the validation is a <b>tautology</b> — the
+    router "succeeds" by construction. The generator's sense of who wins, loses, busts, and leaves must come
+    from <b>independent first-principles poker economics</b> (actual chip flow, equity realized by the engine,
+    EV by skill) — <b>never from re-running <code>Health(T)</code>'s own formula.</b> Then realized health,
+    measured bottom-up, is a genuine <em>independent</em> check on the router's top-down prediction.
+  </div>
+</section>
+
+<!-- C · FACTS -->
+<section class="sec" id="facts">
+  <h2><span class="secn">D</span>The five facts — now <em>constraints</em>, not vetoes</h2>
+  <p class="lede">In v1 these argued <em>against</em> LLM gameplay. In v2 they don't forbid agents — they
+  <b>shape how we use them</b> (tool-grounded not raw; frozen not live; persona = archetype). Most cleared
+  <b>3-of-3 adversarial verification</b>; a few (badged "verified vs. source") were checked directly against
+  the primary source afterward. Click any fact to drill in.</p>
+
+  <div class="facts">
+    <details class="fact" open>
+      <summary>
+        <span class="fn">1</span>
+        <span class="fh"><span class="ft">The data has no archetype labels — and almost nothing FairPlay needs.</span>
+        <span class="fmeta"><span class="vbadge">verified 3-0 ×4</span> PHH format spec · arXiv 2312.11753v3</span></span>
+        <span class="chev">▶</span>
+      </summary>
+      <div class="body">
+        <p>The PHH format's <b>complete</b> field inventory — required (<code>variant, antes,
+        blinds_or_straddles, starting_stacks, actions</code>) and optional (<code>players, seats, venue,
+        time…</code>) — contains <b>no field for player style, skill, rating, or archetype</b> (the
+        <code>players</code> field is just names/mononyms). Worse for us, it also lacks <b>account metadata,
+        table-selection behavior, mocked devices, cluster/household relationships, long-session health
+        metrics, and integrity labels</b> — essentially the <em>entire</em> FairPlay substrate.</p>
+        <div class="conseq"><b>So the founding premise is false.</b> "The AI learns the archetypes from the
+        data" can't happen — there are no archetypes <em>in</em> the data, nor the device/relationship/health
+        substrate we score on. Whether you fine-tune or prompt, <b>you must construct it all yourself.</b>
+        That removes the main reason to reach for a learned model at all.</div>
+        <div class="src">Source: arXiv 2312.11753v3 · <a href="https://github.com/uoftcprg/phh-std">github.com/uoftcprg/phh-std</a> · full field list also at phh.readthedocs.io</div>
+      </div>
+    </details>
+
+    <details class="fact">
+      <summary>
+        <span class="fn">1b</span>
+        <span class="fh"><span class="ft">And the corpus is the wrong shape — ~620M of its hands are heads-up bots.</span>
+        <span class="fmeta"><span class="vbadge">verified vs. source</span> Zenodo API · record 17136841</span></span>
+        <span class="chev">▶</span>
+      </summary>
+      <div class="body">
+        <p>The dataset is big — <b>~20.3 GB, ~641.7M hands</b> — but the headline number is a trap. About
+        <b>620M of those are ACPC computer-competition hands</b>: <b>278.8M heads-up (2-player) no-limit</b> +
+        <b>341M heads-up/3-player fixed-limit</b>, all <em>bot-vs-bot</em>. Only <b>21.6M</b> are real-money,
+        multi-handed online NLHE (HandHQ, 2009); add 10k Pluribus + 83 WSOP hands.</p>
+        <div class="conseq"><b>Heads-up bot hands are useless for FairPlay.</b> We score 6-max <b>table
+        composition, collusion, and human account behavior</b> — none of which exist in 2-player bot play. The
+        usable slice is ~<b>3%</b> of the headline, and it's a <em>realism reference for distributions</em>,
+        never a FairPlay simulator. (This is also why "but it's 600M+ hands!" is not the argument it sounds like.)</div>
+        <div class="src">Source: <a href="https://zenodo.org/api/records/17136841">zenodo.org/api/records/17136841</a> (verbatim composition + 20.3 GB file size)</div>
+      </div>
+    </details>
+
+    <details class="fact">
+      <summary>
+        <span class="fn">2</span>
+        <span class="fh"><span class="ft">Our own hard rules forbid LLM-generated hands in the simulator.</span>
+        <span class="fmeta"><span class="vbadge">project rule</span> CLAUDE.md</span></span>
+        <span class="chev">▶</span>
+      </summary>
+      <div class="body">
+        <p>CLAUDE.md is explicit: <b>"The simulator and scoring are seeded and reproducible"</b> and
+        <b>"The LLM is never the detector."</b> LLM hand generation is non-deterministic by nature, and at our
+        stated scale of <b>50–150 hands per case</b> it is slow and costly. A non-deterministic generator in the
+        demo spine breaks the definition of done: <em>"run the whole demo from static fixtures, then swap to
+        computed data without changing the story."</em></p>
+        <div class="conseq"><b>Determinism is non-negotiable here.</b> The only way any LLM-in-the-loop
+        generation survives this rule is the <b>"frozen JSON"</b> escape hatch — generate once, commit the
+        output, replay deterministically (Approach C, and only for a handful of showcase hands).</div>
+        <div class="src">Source: project <a href="../../CLAUDE.md">CLAUDE.md</a> · echoed in DECISIONS.md D0/D1</div>
+      </div>
+    </details>
+
+    <details class="fact">
+      <summary>
+        <span class="fn">3</span>
+        <span class="fh"><span class="ft">A mature, MIT-licensed, deterministic engine already does the hard part.</span>
+        <span class="fmeta"><span class="vbadge">verified 3-0 ×6</span> PokerKit · arXiv 2308.07327 (IEEE ToG)</span></span>
+        <span class="chev">▶</span>
+      </summary>
+      <div class="body">
+        <p><b>PokerKit</b> — from the <em>same</em> University of Toronto group that publishes PHH — is pure
+        Python, MIT-licensed, supports No-Limit Texas Hold'em with full legal-move / game-state / showdown
+        logic, evaluates <b>&gt;1,000,000 hands/second</b>, and deals deterministically via explicit card
+        control. The paper positions it expressly <em>"for developing, testing, and benchmarking poker
+        AI."</em></p>
+        <div class="conseq"><b>The gameplay substrate is solved and free.</b> We don't build a poker engine or
+        train a bot — we drive a battle-tested one. That's why the engine path is <em>less</em> effort than the
+        LLM path, not more.</div>
+        <div class="src">Source: arXiv 2308.07327 · <a href="https://github.com/uoftcprg/pokerkit">github.com/uoftcprg/pokerkit</a> (MIT)</div>
+      </div>
+    </details>
+
+    <details class="fact">
+      <summary>
+        <span class="fn">4</span>
+        <span class="fh"><span class="ft">Our archetype targets are already fields we own.</span>
+        <span class="fmeta"><span class="vbadge">in-repo</span> data/players.json</span></span>
+        <span class="chev">▶</span>
+      </summary>
+      <div class="body">
+        <p><code>players.json</code> already carries <code>vpip</code>, <code>pfr</code>,
+        <code>aggression_factor</code>, <code>avg_pot_size_bb</code>, <code>soft_play_delta</code>,
+        <code>timing_regularity</code>. A parametric archetype policy is simply: <em>"play seeded hands so the
+        realized statistics hit these target values, and for cluster members inject the seeded
+        soft-play / chip-dump."</em></p>
+        <div class="conseq"><b>No model training is needed to express an archetype.</b> The archetype <em>is</em>
+        a set of target statistics we already defined. The engine just plays toward them.</div>
+        <div class="src">Source: <code>data/players.json</code> · classifier thresholds in <code>scoring/classify.py</code></div>
+      </div>
+    </details>
+
+    <details class="fact">
+      <summary>
+        <span class="fn">5</span>
+        <span class="fh"><span class="ft">Standalone LLMs are weak poker players — and the fix is exactly our approach.</span>
+        <span class="fmeta"><span class="vbadge">verified vs. source</span> PokerBench 2501.08328 · ToolPoker 2602.00528</span></span>
+        <span class="chev">▶</span>
+      </summary>
+      <div class="body">
+        <p>Two papers converge. <b>PokerBench</b> (AAAI 2025) shows LLMs need fine-tuning to approach optimal
+        play and is GTO-anchored — not a style resource. <b>ToolPoker</b> (arXiv 2602.00528) finds LLMs
+        <b>fail against traditional algorithms</b>, with three recurring flaws — heuristic play, factual
+        mistakes, and a <em>"knowing-doing gap"</em> (actions diverge from their own reasoning) — and only
+        reach strong play by <b>bolting on external CFR/equity solvers</b>. That is precisely our
+        engine-plays / LLM-explains split.</p>
+        <div class="conseq"><b>The "use AI for styled hands" plan assumes a solved problem that isn't.</b>
+        Style-conditioned LLM poker has no robust prior art, and the literature's own answer to "LLMs are bad
+        at poker" is <em>add a solver</em> — i.e. use the engine. <b>Honest caveat:</b> one new contrarian
+        paper (PokerSkill, 2605.30094) claims expert play without solvers; we bet on the reproducible
+        solver-backed path, not a single fresh result.</div>
+        <div class="src">Sources: arXiv 2501.08328 (PokerBench) · arXiv 2602.00528 (ToolPoker) · cf. 2605.30094 (PokerSkill, contra)</div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- E · OPTIONS -->
+<section class="sec" id="options">
+  <h2><span class="secn">E</span>The options we weighed — and why ★ wins</h2>
+  <p class="lede">Re-ranked for v2. The chosen approach (★) is a hybrid; v1's Approach A is now the
+  <em>substrate</em> and the graceful fallback — it's exactly where the "clean compromise" lands.</p>
+
+  <table class="tbl">
+    <thead><tr><th>#</th><th>Approach</th><th>Determinism</th><th>Cost</th><th>Realism</th><th>Effort</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr class="adopt">
+        <td class="rank" style="color:var(--green)">★</td>
+        <td><b>Agent-based sim; seeded brains for the room/routing loop + LLM-brained collusion case; all frozen</b></td>
+        <td><span class="pill full">Full (frozen)</span></td><td><span class="pill part">Med (once)</span></td>
+        <td><span class="pill full">High where it matters</span></td><td>Med-High</td>
+        <td><span class="vd y">✅ Adopt — v2 decision</span></td>
+      </tr>
+      <tr>
+        <td class="rank" style="color:var(--teal)">A</td>
+        <td><b>Engine + parametric policies everywhere</b> (incl. a <em>scripted</em> pair); LLM only explains</td>
+        <td><span class="pill full">Full</span></td><td><span class="pill full">~0</span></td>
+        <td><span class="pill part">Good</span></td><td>Medium</td>
+        <td><span class="vd maybe">Substrate &amp; fallback — the "clean compromise"</span></td>
+      </tr>
+      <tr>
+        <td class="rank" style="color:var(--amber)">B</td>
+        <td><b>Tool-grounded agents for ALL gameplay</b> (RLCard · OpenSpiel · Deep-CFR/NFSP lineage)</td>
+        <td><span class="pill full">Full (frozen)</span></td><td><span class="pill no">High</span></td>
+        <td><span class="pill full">High</span></td><td>High</td>
+        <td><span class="vd maybe">Only if team insists — pays the tax everywhere</span></td>
+      </tr>
+      <tr class="reject">
+        <td class="rank" style="color:var(--red)">C</td>
+        <td><b>Raw LLM agents</b> (no solver tool), engine enforces legality only</td>
+        <td><span class="pill part">Frozen only</span></td><td><span class="pill no">High</span></td>
+        <td><span class="pill no">Weak/odd play</span></td><td>Low-Med</td>
+        <td><span class="vd n">✗ Reject for canonical play — flavor only</span></td>
+      </tr>
+      <tr class="reject">
+        <td class="rank">D</td>
+        <td><b>Fine-tune a sequence model</b> on the 21.6M PHH hands</td>
+        <td><span class="pill part">Hard</span></td><td><span class="pill no">Train cost</span></td>
+        <td><span class="pill part">Unproven</span></td><td>High</td>
+        <td><span class="vd n">✗ Reject — no labels, low ROI</span></td>
+      </tr>
+      <tr class="reject">
+        <td class="rank">E</td>
+        <td><b>Status quo</b> — assert integrity signals as fields</td>
+        <td><span class="pill full">Full</span></td><td><span class="pill full">None</span></td>
+        <td><span class="pill no">Can't prove signals fire</span></td><td>None</td>
+        <td><span class="vd n">Demo-only fallback</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-size:13px;color:var(--muted);margin-top:14px"><b style="color:var(--text)">★ over B:</b> agents add nothing to the deterministic
+  8-hour room, and "agents everywhere" multiplies cost, QA, and iteration latency — all upstream of what's
+  graded; scoping the LLM to one case buys ~80% of the story for ~20% of the cost. <b style="color:var(--text)">★ over A /
+  the compromise:</b> A is nearly identical and excellent, but its pair is <em>scripted</em> — ★ keeps one
+  tool-grounded case so the collusion is <b>emergent</b>. <b style="color:var(--text)">★ degrades to A</b> if the team wants zero
+  LLM-in-gameplay. <b>C</b> dies on Fact 5 (raw LLMs play badly); <b>D</b> on Fact 1 (no labels).</p>
+</section>
+
+<!-- F · WHERE AI GOES -->
+<section class="sec" id="whereai">
+  <h2><span class="secn">F</span>Where the AI agents go now</h2>
+  <p class="lede">v2 adds a <em>fourth</em> home — agents that genuinely <b>play</b> — but scoped and frozen.
+  The other three are language-side and unchanged.</p>
+
+  <div class="aiuse" style="margin-bottom:14px;border-color:rgba(51,224,196,.4);background:rgba(51,224,196,.06)">
+    <div class="n" style="color:var(--engine)">Home 0 · NEW in v2 · gameplay</div>
+    <h4 style="color:var(--engine)">Tool-grounded agents that play the collusion showcase</h4>
+    <p>LLM agents whose persona <em>is</em> the archetype, reasoning in character but <b>calling a CFR/equity
+    solver</b> for the action (ToolPoker pattern), refereed by PokerKit. Two agents share a side-channel →
+    <b>emergent collusion</b> the scorer catches. Generated once, <b>frozen</b>, committed as fixtures.</p>
+    <div class="rule" style="border-color:var(--border2)"><b style="color:var(--engine)">Guardrails:</b> tool-grounded (not raw) · offline + frozen (live only behind a feature flag) · one showcase, not every hand · still not the detector.</div>
+  </div>
+
+  <div class="aiuses">
+    <div class="aiuse">
+      <div class="n">Home 1 · already the plan</div>
+      <h4>The AI Investigator</h4>
+      <p>Explains the structured evidence packet to a pit boss in plain language — why it's risky, why it
+      might be innocent, what a human should do. This is the headline AI feature of the capstone.</p>
+      <div class="rule"><b>Guardrail:</b> reads only the structured packet, never raw rows; never the detector.</div>
+    </div>
+    <div class="aiuse">
+      <div class="n">Home 2 · training sim (offline)</div>
+      <h4>Coaching &amp; table-talk</h4>
+      <p>The bot's <em>decisions</em> come from the engine/solver (deterministic, fast, actually strong). The
+      LLM sits on top for narration and "here's why that line was a mistake" coaching.</p>
+      <div class="rule"><b>Guardrail:</b> separate decision from explanation — and keep it <b>offline /
+      operator-facing</b>. A player-facing coach that advises <em>during live play</em> is Real-Time
+      Assistance (RTA), which poker treats as cheating.</div>
+    </div>
+    <div class="aiuse">
+      <div class="n">Home 3 · evals</div>
+      <h4>Adversarial scenario authoring</h4>
+      <p>The LLM proposes <em>specs</em> for sneakier collusion or trickier false-positives; a human reviews
+      them; the engine then plays them out deterministically. The LLM authors the <em>test</em>, not the hands.</p>
+      <div class="rule"><b>Guardrail:</b> human-in-the-loop; engine produces the actual play.</div>
+    </div>
+  </div>
+</section>
+
+<!-- G · DEFEND -->
+<section class="sec" id="defend">
+  <h2><span class="secn">G</span>Defend it — on two fronts</h2>
+  <p class="lede">v2 gets pushback from <em>two</em> directions: the <b>determinism skeptic</b> ("don't put an
+  LLM in gameplay") and the <b>maximalist</b> ("make agents do everything"). Rehearse both until you can give
+  them cold.</p>
+
+  <p style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--llm);margin:6px 0 10px">Front 1 — the determinism skeptic</p>
+
+  <details class="obj" open>
+    <summary><span class="qi">?</span><span class="qt">"Putting an LLM in gameplay breaks our seeded/reproducible rule."</span><span class="chev">▶</span></summary>
+    <div class="ans"><div class="lab">Your answer</div>
+      It doesn't touch the reproducible path. The agents generate <b>offline, once</b>; we <b>commit</b> the
+      output; the demo replays the <b>frozen</b> file. The seed <em>is</em> the file — the same "frozen JSON"
+      pattern our <code>DECISIONS.md</code> D0-option-C already endorses. Live agents only run behind a feature
+      flag for an optional "watch it generate" view, never in the canonical demo.
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="qi">?</span><span class="qt">"LLMs play bad poker — the hands won't be realistic."</span><span class="chev">▶</span></summary>
+    <div class="ans"><div class="lab">Your answer</div>
+      Raw ones do (ToolPoker, 2602.00528). Ours are <b>tool-grounded</b> — they reason in-persona but call a
+      <b>CFR/equity solver</b> for the action, which is the research's own fix and how LLM agents reach pro-level
+      play. PokerKit referees legality, and we validate the output falls <b>in-distribution vs. the 21.6M real
+      PHH hands</b>. Realism is checked, not trusted.
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="qi">?</span><span class="qt">"Isn't the LLM now the detector — the thing the rules forbid?"</span><span class="chev">▶</span></summary>
+    <div class="ans"><div class="lab">Your answer</div>
+      No. The <b>gameplay agent</b> and the <b>scorer</b> are separate components. The agent <em>creates</em>
+      behavior (offline, frozen); the structured scorer <em>finds</em> risk from the hand stream; the
+      Investigator only <em>explains</em>. Nothing about agents playing moves the LLM into the detection path.
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="qi">?</span><span class="qt">"Then fine-tune a model on the 21.6 million PHH hands."</span><span class="chev">▶</span></summary>
+    <div class="ans"><div class="lab">Your answer</div>
+      Those hands have <b>no archetype labels</b> and are CC-BY 2009-era data. Fine-tuning still makes us
+      synthesize the conditioning signal ourselves, it's hard to make deterministic and controllable, and it's
+      the <b>highest-effort, lowest-ROI</b> option for a capstone (Approach D). We'd spend the whole sprint on a
+      model that we then can't fully steer — versus parametric policies we can dial to any target stat today.
+    </div>
+  </details>
+
+  <p style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin:22px 0 10px">Common follow-ups (either front)</p>
+
+  <details class="obj">
+    <summary><span class="qi">?</span><span class="qt">"It's 600+ million hands — surely that's enough to learn realistic play from."</span><span class="chev">▶</span></summary>
+    <div class="ans"><div class="lab">Your answer</div>
+      It's a headline trap. <b>~620M of those ~641M hands are ACPC computer-competition hands — heads-up or
+      3-handed bots playing bots.</b> FairPlay scores <b>6-max table composition, collusion, and human account
+      behavior</b>, none of which exist in 2-player bot logs. The genuinely relevant slice — real-money,
+      multi-handed human NLHE — is the <b>21.6M HandHQ subset (~3%)</b>, and even that has no account
+      metadata, devices, relationships, or integrity labels. Big number, wrong shape.
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="qi">?</span><span class="qt">"Let's make it a slick AI coach that helps players improve in real time."</span><span class="chev">▶</span></summary>
+    <div class="ans"><div class="lab">Your answer</div>
+      A real-time coach that advises a player <b>during live play is Real-Time Assistance (RTA)</b> — the poker
+      world treats that as cheating, which is the exact behavior FairPlay exists to flag. An <b>offline</b>
+      practice-vs-bots trainer is fine (that's what GTO Wizard's trainer is), but cleanest of all for an
+      <em>operator</em> product is to frame any sim as <b>operator training / demo</b>, not a player decision
+      coach. We don't want to ship the thing we detect.
+    </div>
+  </details>
+
+  <p style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--llm);margin:22px 0 10px">Front 2 — the maximalist</p>
+
+  <details class="obj">
+    <summary><span class="qi">?</span><span class="qt">"Why not give every seat an LLM brain — agents for the whole simulation?"</span><span class="chev">▶</span></summary>
+    <div class="ans"><div class="lab">Your answer</div>
+      The whole sim <em>is</em> agents already — just with <b>seeded brains</b>. Giving them LLM brains
+      <b>breaks the headline</b>: the health/routing loop is a controlled experiment (Standard vs. FairPlay,
+      same seed, only the routing differs), and a live LLM injects variance you can't attribute, so "routing
+      improved health" stops being provable. It also multiplies cost, QA, and iteration latency — all upstream
+      of what's graded. LLM brains earn their cost only where <em>emergence</em> is the product: the one
+      collusion case.
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="qi">?</span><span class="qt">"A rules engine isn't real AI — this isn't ambitious enough."</span><span class="chev">▶</span></summary>
+    <div class="ans"><div class="lab">Your answer</div>
+      It's plenty ambitious where it counts: <b>tool-grounded LLM agents</b> (the agentic + tool-use frontier)
+      that <em>emergently collude</em>, plus the <b>AI Investigator</b> doing judgment-over-structure. We just
+      don't spend agents on filler hands that only need to hit a VPIP target — a deterministic policy does that
+      instantly. <b>Restraint is the sophistication</b> for a responsible-AI integrity product: the story is
+      "we used AI exactly where it adds value, and kept it out of the detector on purpose."
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="qi">?</span><span class="qt">"An LLM bot would make a great training opponent for new players."</span><span class="chev">▶</span></summary>
+    <div class="ans"><div class="lab">Your answer</div>
+      Agreed that we want a great opponent — so the <b>decisions</b> should come from the engine + a solver
+      baseline (Approach B), which actually plays well and does it deterministically. The LLM sits on top for
+      <b>coaching and table-talk</b>. Decision-making and explanation are different jobs; we put each where it's
+      strongest. An LLM making the play decisions would be weaker, slower, and unrepeatable.
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="qi">?</span><span class="qt">"How would we even know the generated hands are realistic?"</span><span class="chev">▶</span></summary>
+    <div class="ans"><div class="lab">Your answer</div>
+      This is the best question — and only the engine path can answer it. We fit per-stake VPIP/PFR/aggression
+      <b>distributions from the 21.6M real PHH hands</b>, then check our generated hands fall <b>in-distribution</b>.
+      That's a measurable, defensible realism test. With an LLM black box you have no distribution to check
+      against — you're trusting vibes. Determinism plus a real reference corpus is what makes realism
+      <em>provable</em> instead of asserted.
+    </div>
+  </details>
+
+  <details class="obj">
+    <summary><span class="qi">?</span><span class="qt">"Isn't this just avoiding the hard AI work?"</span><span class="chev">▶</span></summary>
+    <div class="ans"><div class="lab">Your answer</div>
+      The opposite — we put the hard AI work exactly where it pays off: <b>tool-grounded agents that emergently
+      collude</b> and the <b>derivation of integrity signals from their real play</b>, plus the AI Investigator
+      explaining it without overclaiming. What we <em>don't</em> do is burn the budget making an LLM hallucinate
+      legal betting sequences for 200 filler players — that's effort upstream of what's graded, for no gain.
+    </div>
+  </details>
+</section>
+
+<!-- G · SOURCES -->
+<section class="sec" id="gloss">
+  <h2><span class="secn">H</span>Sources &amp; glossary — the receipts</h2>
+  <p class="lede">Everything cited is primary and verified. Note the licensing split: the <em>code/format</em> is
+  MIT; the <em>dataset</em> is CC-BY-4.0.</p>
+
+  <div class="gloss">
+    <div class="gterm">
+      <h4>PHH format <span class="lic">MIT</span></h4>
+      <p>The "Poker Hand History" file format — an open, TOML-based spec for recording hands across 11 variants
+      incl. No-Limit Texas Hold'em. Human- &amp; machine-readable. <b>No style/archetype fields.</b></p>
+      <a href="https://github.com/uoftcprg/phh-std">phh-std · arXiv 2312.11753</a>
+    </div>
+    <div class="gterm">
+      <h4>PHH dataset <span class="lic cc">CC-BY-4.0</span></h4>
+      <p><b>~20.3 GB / ~641.7M hands</b>, but <b>~620M are heads-up/3-player ACPC <em>bot</em> hands</b>; only
+      <b>21.6M</b> are real-money multi-handed NLHE (HandHQ 2009). Realism reference, not a sim. Reuse needs
+      <b>attribution</b>.</p>
+      <a href="https://zenodo.org/api/records/17136841">Zenodo 17136841 (API)</a>
+    </div>
+    <div class="gterm">
+      <h4>PokerKit <span class="lic">MIT</span></h4>
+      <p>Pure-Python deterministic poker engine from UofT — legal moves, state, showdown, &gt;1M hand-evals/s.
+      <b>The engine we drive</b> for Approach A.</p>
+      <a href="https://github.com/uoftcprg/pokerkit">pokerkit · arXiv 2308.07327</a>
+    </div>
+    <div class="gterm">
+      <h4>Slumbot2019 <span class="lic">MIT</span></h4>
+      <p>Open CFR / CFR+ / MCCFR solver for Hold'em-like games by Eric Jackson. A <b>skilled-baseline</b>
+      component for Approach B (research-grade, not turnkey).</p>
+      <a href="https://github.com/ericgjackson/slumbot2019">ericgjackson/slumbot2019</a>
+    </div>
+    <div class="gterm">
+      <h4>PokerBench / ToolPoker</h4>
+      <p>The LLM-poker evidence: LLMs need fine-tuning (PokerBench) and <b>fail vs. algorithms</b> until bolted
+      to solvers (ToolPoker). <em>Contra:</em> PokerSkill (2605.30094) claims solver-free expert play.</p>
+      <a href="https://arxiv.org/abs/2602.00528">2501.08328 · 2602.00528 · 2605.30094</a>
+    </div>
+    <div class="gterm">
+      <h4>RLCard / OpenSpiel <span class="lic">open</span></h4>
+      <p>RL/equilibrium environments (RLCard, OpenSpiel) and the Deep-CFR / NFSP lineage — optional
+      <b>skilled-baseline</b> bots for Approach B's training-sim path. We don't train a world-class bot.</p>
+      <a href="https://rlcard.org/">rlcard.org · deepmind/open_spiel</a>
+    </div>
+    <div class="gterm">
+      <h4>CFR / Pluribus</h4>
+      <p>Counterfactual Regret Minimization — the algorithm family behind superhuman poker bots (Pluribus).
+      <b>Not an LLM.</b> The precedent that strong poker AI is solver-shaped, not language-shaped.</p>
+      <a href="https://www.science.org/doi/10.1126/science.aay2400">Brown &amp; Sandholm 2019</a>
+    </div>
+  </div>
+
+  <div class="check">
+    <b>Self-check — can you explain all of these without scrolling up?</b>
+    <ul>
+      <li>What flipped between v1 and v2 — and which four things made the flip defensible?</li>
+      <li>The decision criterion: <em>which</em> hands get a tool-grounded LLM agent, and which get a policy?</li>
+      <li>How does freeze-and-replay satisfy "seeded &amp; reproducible" while still letting agents play?</li>
+      <li>Why tool-grounded and not raw LLM agents? (ToolPoker / Fact 5)</li>
+      <li>Front 1 vs Front 2: give the one-line answer to "this breaks determinism" <em>and</em> to "use agents everywhere."</li>
+      <li>Why is emergent collusion a better demo than a scripted coordinated-pair policy?</li>
+    </ul>
+    If you can answer these, you can defend the decision to anyone in the room — from either direction.
+  </div>
+</section>
+
+</main>
+<script>
+(function(){var h=document.getElementById('hbg'),s=document.getElementById('sidebar'),o=document.getElementById('overlay');if(!h)return;h.onclick=function(){s.classList.add('open');o.classList.add('open')};o.onclick=function(){s.classList.remove('open');o.classList.remove('open')}})();
+(function(){var l=[].slice.call(document.querySelectorAll('.nav-link')),s=[].slice.call(document.querySelectorAll('.sec'));if(!l.length)return;var o=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){l.forEach(function(x){x.classList.remove('active')});var a=document.querySelector('.nav-link[href="#'+e.target.id+'"]');if(a)a.classList.add('active')}})},{rootMargin:'-15% 0px -75% 0px'});s.forEach(function(x){o.observe(x)})})();
+</script>
+</body>
+</html>
