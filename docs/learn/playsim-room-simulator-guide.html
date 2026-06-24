@@ -339,6 +339,18 @@ budget  = base_session_min(archetype) * spread(0.85..1.15) * tilt        # sprea
             downstream effect of who the player was seated with — exactly what routing is supposed to
             influence.</p></article>
       </div>
+      <div class="callout"><strong>The behavior seam (Phase 1–2).</strong> Player decisions —
+        accept/decline, leave, re-seek-on-break — now live behind one swappable
+        <code>PlayerBehaviorPolicy</code> (in <code>playsim/playsim/behavior.py</code>), parallel to the
+        operator-side <code>SeatingPolicy</code>. <code>DefaultBehaviorPolicy</code> is exactly the rules
+        above. The experimental <code>FitAwareBehaviorPolicy</code> (run with
+        <code>--behavior fit-aware</code>) makes leaving a multi-factor budget shrink — loss + a
+        composition-only <em>table-pressure</em> term + a <em>style-fit</em> mismatch term — and can
+        optionally decline a bad-fit offer. It reduces <em>exactly</em> to the default at zero weights,
+        ships on deliberately modest defaults, and is <strong>illustrative until calibrated</strong>
+        (Phase 3). See <code>docs/brainstorms/2026-06-24-behavioral-fidelity-fit-model-requirements.md</code>.
+        Note the circularity guard: table-pressure overlaps the router's predicted health, so its weight
+        is meant to be swept/calibrated, never trusted at face value.</div>
       <div class="callout q"><div class="label"><span class="dot"></span>◆ Questions to investigate</div>
         <ul>
           <li>The loss rate is only counted after a 15-hand warmup. Players who bust inside 15 hands never
@@ -594,6 +606,8 @@ make test                         # full suite</code></pre>
           <tr><td>The only backend seam (routing)</td><td><code>playsim/playsim/router_adapter.py</code></td></tr>
           <tr><td>Archetypes &amp; knobs</td><td><code>playsim/playsim/knobs.py</code></td></tr>
           <tr><td>Per-hand economics &amp; the leave model</td><td><code>playsim/playsim/runner.py</code></td></tr>
+          <tr><td>Player behavior seam (accept / leave / re-seek) + fit-aware model</td><td><code>playsim/playsim/behavior.py</code></td></tr>
+          <tr><td>The fit-aware behavioral model spec (Phases, calibration, circularity guard)</td><td><code>docs/brainstorms/2026-06-24-behavioral-fidelity-fit-model-requirements.md</code></td></tr>
           <tr><td>Output schema + v1 adapter</td><td><code>playsim/playsim/room_export.py</code></td></tr>
           <tr><td>The findings write-up (prose)</td><td><code>docs/learn/playsim-room-routing-findings.md</code></td></tr>
           <tr><td>The reproducible comparison harness</td><td><code>playsim/analysis/room_policy_comparison.py</code></td></tr>
