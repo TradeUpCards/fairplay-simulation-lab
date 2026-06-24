@@ -72,10 +72,13 @@ class RoomResult:
     starting_stack_bb: int
     skill_edge: float
     equity_samples: int
+    agent_model: str
+    agent_version: str
     arrival_intents: list[ArrivalIntent]
     routing_decisions: list[dict]
     seat_events: list[dict]
     sessions: list[dict]
+    hourly: list[dict]
     table_timelines: dict
     checkpoints: dict
     hands_total: int
@@ -162,6 +165,8 @@ class RoomSim:
         self.deferred: list[int] = []
         self.checkpoints: dict[str, dict] = {}
         self._next_checkpoint = 0
+        self.hourly: list[dict] = []
+        self._next_hour = 1
 
         # build tables from hour-0 roster, seat the initial players (no routing)
         self.tables: dict[str, _Table] = {}
@@ -379,6 +384,24 @@ class RoomSim:
                 "hands_total": self.hands_total,
             }
 
+    def _maybe_hourly(self, sim_time: float) -> None:
+        """Time-resolved cumulative paid-seat-time rollup at each hour boundary —
+        consistent with the seat_minutes north-star (not session wall-clock)."""
+        while self._next_hour * 60.0 <= sim_time + 1e-9:
+            hour = self._next_hour
+            self._next_hour += 1
+            seated_now = [pid for t in self.tables.values() for pid in t.seated]
+            self.hourly.append({
+                "hour": hour,
+                "cumulative_paid_seat_min": round(sum(self.seat_minutes.values()), 1),
+                "cohort_paid_seat_min": round(
+                    sum(self.seat_minutes[p] for p in self.seat_minutes
+                        if self.archetype_of.get(p) in COHORT), 1),
+                "active_players": len(seated_now),
+                "active_tables": sum(1 for t in self.tables.values() if len(t.seated) >= 2),
+                "hands_total": self.hands_total,
+            })
+
     def run(self) -> RoomResult:
         max_steps = int(self.horizon_min / self.min_per_hand) + 2
         idx = [0]  # mutable arrival cursor
@@ -388,6 +411,7 @@ class RoomSim:
                 break
             self._seat_arrivals(sim_time, idx)
             self._maybe_checkpoint(sim_time)
+            self._maybe_hourly(sim_time)
             active = False
             for tid in sorted(self.tables):
                 tbl = self.tables[tid]
@@ -418,9 +442,11 @@ class RoomSim:
             hands_per_hour=self.hands_per_hour, min_per_hand=self.min_per_hand,
             starting_stack_bb=self.starting_stack_bb, skill_edge=self.skill_edge,
             equity_samples=self.equity_samples,
+            agent_model=ArchetypeAgent.agent_model,
+            agent_version=ArchetypeAgent.agent_version,
             arrival_intents=self.arrival_intents,
             routing_decisions=self.routing_decisions, seat_events=self.seat_events,
-            sessions=self.sessions, table_timelines=table_timelines,
+            sessions=self.sessions, hourly=self.hourly, table_timelines=table_timelines,
             checkpoints=self.checkpoints, hands_total=self.hands_total,
             archetype_of=dict(self.archetype_of), net_bb=dict(self.net_bb),
             seat_minutes={k: round(v, 1) for k, v in self.seat_minutes.items()},

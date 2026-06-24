@@ -49,6 +49,12 @@ class Decision:
 
 
 class ArchetypeAgent:
+    # Provenance — every corpus this brain produces is attributable to it.
+    # RLCard/OpenSpiel/CFR brains are out of MVP scope; the seam + metadata exist
+    # now so future brains are tracked.
+    agent_model = "archetype-knobs"
+    agent_version = "v1"
+
     def __init__(self, player_id: int, knobs: Knobs, equity_samples: int = 30):
         self.player_id = player_id
         self.k = knobs
