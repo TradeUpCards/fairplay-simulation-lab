@@ -21,6 +21,28 @@ _REC = frozenset({"new", "recreational", "promo_hunter"})
 _PREDATOR = frozenset({"aggressive_predatory", "grinder", "cluster_member", "solver_like"})
 
 
+def realized_health_score(
+    rec_loss_velocity: float, winnings_concentration: float, bust_rate: float,
+) -> tuple[float, str]:
+    """Transparent realized health (score, band) from first-principles chip-flow
+    terms — the **single source** for both the single-table session health
+    (``compute_health``) and the room-scale realized summary
+    (``room_export._realized_summary``). The recreational bleed rate dominates;
+    over-concentration and beginner busts add secondary penalties.
+    """
+    score = 100.0
+    score -= min(50.0, max(0.0, rec_loss_velocity) * 0.05)            # bleed (primary)
+    score -= min(18.0, max(0.0, winnings_concentration - 0.6) * 45.0)  # concentration
+    score -= min(24.0, bust_rate * 0.55)                             # beginner busts
+    score = round(max(0.0, score), 1)
+    band = (
+        "healthy" if score >= 65
+        else "fragile" if score >= 42
+        else "beginner_unfriendly"
+    )
+    return score, band
+
+
 def compute_health(result: SimResult) -> dict:
     if not result.persist_stacks:
         raise ValueError("health needs a persist_stacks=True session (bust dynamics)")
@@ -56,20 +78,9 @@ def compute_health(result: SimResult) -> dict:
     # 4) predation — net bb the predator cohort extracted (per 100 session hands)
     predation_bb = round(sum(max(net[pid], 0) for pid in pred_ids) / per100, 2)
 
-    # Transparent health score (higher = healthier). The recreational bleed rate
-    # is the dominant term (it's the most discriminating, first-principles signal);
-    # busts and over-concentration add secondary penalties. Tuned so a predator
-    # table lands "beginner_unfriendly" and a balanced one lands "healthy".
-    score = 100.0
-    score -= min(50.0, max(0.0, rec_loss_velocity) * 0.05)          # bleed (primary)
-    score -= min(18.0, max(0.0, winnings_concentration - 0.6) * 45.0)  # concentration
-    score -= min(24.0, bust_rate * 0.55)                            # beginner busts
-    score = round(max(0.0, score), 1)
-    band = (
-        "healthy" if score >= 65
-        else "fragile" if score >= 42
-        else "beginner_unfriendly"
-    )
+    # Transparent health score (higher = healthier) — single source in
+    # realized_health_score so the room-scale realized summary cannot drift.
+    score, band = realized_health_score(rec_loss_velocity, winnings_concentration, bust_rate)
 
     return {
         "health_score": score,

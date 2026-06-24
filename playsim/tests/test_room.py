@@ -96,6 +96,15 @@ def test_shared_arrival_stream_across_arms(adapter):
     assert std.arrival_intents == fp.arrival_intents == intents
 
 
+def test_room_requires_minimum_population():
+    """An empty/unmatched table set must fail loudly, not emit a silently-empty
+    'successful' comparison."""
+    from playsim.room import RoomSim
+    with pytest.raises(ValueError):
+        RoomSim(StandardPolicy(), master_seed=42, horizon_min=10,
+                equity_samples=6, tables=["T-does-not-exist"])
+
+
 def test_routing_never_consults_realized_health():
     """Structural guardrail: the orchestrator must not import playsim/health.py —
     routing uses only backend predicted health via the policy/adapter."""

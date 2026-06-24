@@ -25,7 +25,7 @@ from pathlib import Path
 
 from .arrivals import ArrivalIntent, build_arrival_intents
 from .agent import ArchetypeAgent
-from .knobs import knobs_for, session_min_for
+from .knobs import knobs_for
 from .population import (
     derive_table_seed,
     format_player_id,
@@ -35,13 +35,13 @@ from .population import (
     parse_player_id,
 )
 from .router_adapter import make_table_dict
-from .runner import _effective_session_min, apply_hand_accounting
+from .runner import (
+    _COHORT as COHORT,
+    _WEAK as WEAK,
+    apply_hand_accounting,
+    cohort_should_leave,
+)
 from .table import play_hand
-
-# Mirrors runner._COHORT / _WEAK — the vulnerable north-star cohort and the set
-# the predator/cluster agents treat as prey.
-COHORT = frozenset({"new", "recreational", "promo_hunter"})
-WEAK = COHORT
 
 
 @dataclass
@@ -189,6 +189,20 @@ class RoomSim:
                 self._ensure_player(pid, self.classifications[raw])
                 self._seat_at(pid, tid, sim_time=0.0, origin="initial")
 
+        # Mirror run_session's "need at least 2 players" guard: a room with no
+        # tables or fewer than 2 simulatable players (initial seated + arrivals)
+        # cannot produce a meaningful comparison — fail loudly rather than emit a
+        # silently-empty "successful" room_sim.
+        if not self.tables:
+            raise ValueError("no tables matched the requested set")
+        simulatable = ({pid for t in self.tables.values() for pid in t.seated}
+                       | {a.player_id for a in self.arrival_intents})
+        if len(simulatable) < 2:
+            raise ValueError(
+                "room needs at least 2 simulatable players "
+                "(check --tables and classifications coverage)"
+            )
+
     # --- player / seat bookkeeping ---------------------------------------
 
     def _ensure_player(self, pid: int, archetype: str) -> None:
@@ -264,17 +278,25 @@ class RoomSim:
             for tid, t in sorted(self.tables.items())
         ]
 
-    def _route_seeker(self, pid: int, archetype: str, sim_time: float, origin: str) -> None:
+    def _route_seeker(self, pid: int, archetype: str, sim_time: float, origin: str,
+                      require_pair: bool = False) -> None:
         from .policies import Seeker
         decision = self.policy.choose(Seeker(pid, archetype), self._live_tables())
+        table_id = decision.table_id
+        reason = decision.reason
+        # On a break re-seek, refuse a table that has no one else seated — seating
+        # a lone player there produces a non-dealing seat (phantom churn in the
+        # trace). Treat it as a balk instead.
+        if (table_id is not None and require_pair
+                and len(self.tables[table_id].seated) < 1):
+            table_id, reason = None, "no_dealable_seat"
         self.routing_decisions.append({
             "min": round(sim_time, 2), "player_id": pid, "archetype": archetype,
             "origin": origin, "policy": getattr(self.policy, "name", "?"),
-            "table_id": decision.table_id, "reason": decision.reason,
-            "deferred": decision.deferred,
+            "table_id": table_id, "reason": reason, "deferred": decision.deferred,
         })
-        if decision.seated:
-            self._seat_at(pid, decision.table_id, sim_time, origin=origin)
+        if table_id is not None:
+            self._seat_at(pid, table_id, sim_time, origin=origin)
             return
         # not seated -> terminal (arrive once / re-seek once)
         if self.left_at_minute[pid] is None:
@@ -337,13 +359,10 @@ class RoomSim:
         for pid in list(tbl.seated):
             if self.archetype_of[pid] not in COHORT:
                 continue
-            hp = self.hands_played[pid]
-            loss100 = (-self.net_bb[pid]) / (hp / 100.0) if hp >= 15 else 0.0
-            budget = _effective_session_min(
-                session_min_for(self.archetype_of[pid]),
-                self.knobs[pid].tilt_quit, loss100, self.spread[pid],
-            )
-            if self.seat_minutes[pid] >= budget:
+            if cohort_should_leave(
+                self.seat_minutes[pid], self.net_bb[pid], self.hands_played[pid],
+                self.archetype_of[pid], self.knobs[pid].tilt_quit, self.spread[pid],
+            ):
                 leavers.append(pid)
         for pid in leavers:
             self._depart(pid, tbl, sim_time, reason="tilt")
@@ -362,7 +381,7 @@ class RoomSim:
                 for pid in displaced:
                     # displaced players re-seek once via the active policy
                     self._route_seeker(pid, self.archetype_of[pid], sim_time,
-                                       origin="break_displace")
+                                       origin="break_displace", require_pair=True)
 
     # --- checkpoints / run ------------------------------------------------
 

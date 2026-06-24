@@ -10,6 +10,7 @@ never fed back into a seating decision.
 
 from __future__ import annotations
 
+from .health import realized_health_score
 from .room import COHORT, RoomResult
 
 SCHEMA_VERSION = "room_sim/1.0"
@@ -31,15 +32,10 @@ def _realized_summary(result: RoomResult) -> dict:
     cohort_busts = sum(result.busts.get(p, 0) for p in cohort)
     bust_rate = round(cohort_busts / per100, 2)
 
-    # Realized health — mirrors playsim/health.compute_health (independent of the
-    # backend predicted health used for routing; this is the evaluation side).
-    score = 100.0
-    score -= min(50.0, max(0.0, rec_loss_velocity) * 0.05)
-    score -= min(18.0, max(0.0, winnings_concentration - 0.6) * 45.0)
-    score -= min(24.0, bust_rate * 0.55)
-    score = round(max(0.0, score), 1)
-    band = ("healthy" if score >= 65 else "fragile" if score >= 42
-            else "beginner_unfriendly")
+    # Realized health — shared kernel with playsim/health.compute_health (single
+    # source). Independent of the backend predicted health used for routing; this
+    # is the evaluation side.
+    score, band = realized_health_score(rec_loss_velocity, winnings_concentration, bust_rate)
 
     cohort_seat_min = sum(result.seat_minutes.get(p, 0.0) for p in cohort)
     breaks = sum(1 for e in result.seat_events if e.get("event") == "break")

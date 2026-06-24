@@ -214,7 +214,7 @@ def simulate_room(
         "standard_mean": round(std_mean, 3),
         "fairplay_route_mean": round(fp_mean, 3),
         "delta_hours": round(fp_mean - std_mean, 3),
-        "delta_pct": round((fp_mean - std_mean) / std_mean * 100, 1) if std_mean > 0 else None,
+        "delta_pct": round((fp_mean - std_mean) / std_mean * 100, 1) if std_mean > 0 else 0.0,
         "routing_helped": fp_mean >= std_mean,
         "per_seed": {"standard": std_hours, "fairplay_route": fp_hours},
     }

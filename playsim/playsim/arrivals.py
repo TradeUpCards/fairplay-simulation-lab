@@ -54,7 +54,9 @@ def build_arrival_intents(
     health/demand modulation: arrival times are drawn from a flat uniform.
     """
     classifications = load_classifications(root)
-    pool = unseated_pool(root)
+    # only classified players can be simulated; skip any players.json/
+    # classifications.json drift rather than crashing the whole room sim
+    pool = [pid for pid in unseated_pool(root) if pid in classifications]
     rng = random.Random(derive_table_seed(seed, "arrivals"))
 
     intents: list[ArrivalIntent] = []

@@ -38,6 +38,22 @@ def _effective_session_min(
     return base_session_min * spread * tilt
 
 
+def cohort_should_leave(
+    seat_minutes: float, net_bb: float, hands_played: int,
+    archetype: str, tilt_quit: float, spread: float,
+) -> bool:
+    """The retention tilt-leave decision for one cohort player.
+
+    Shared by ``run_session`` and the room orchestrator so both arms decay under
+    the *same* leave model (no warmup/loss-rate drift between the two). A player
+    logs off once their (loss-shortened) session budget is spent; the loss rate is
+    only counted after a 15-hand warmup.
+    """
+    loss100 = (-net_bb) / (hands_played / 100.0) if hands_played >= 15 else 0.0
+    budget = _effective_session_min(session_min_for(archetype), tilt_quit, loss100, spread)
+    return seat_minutes >= budget
+
+
 @dataclass(frozen=True)
 class Player:
     player_id: int
@@ -263,13 +279,10 @@ def run_session(
             for pid in order:
                 if pid not in cohort:
                     continue
-                hp = hands_played[pid]
-                loss100 = (-net_session[pid]) / (hp / 100.0) if hp >= 15 else 0.0
-                budget = _effective_session_min(
-                    session_min_for(arch_of[pid]), knobs[pid].tilt_quit,
-                    loss100, spread[pid],
-                )
-                if seat_minutes[pid] >= budget:
+                if cohort_should_leave(
+                    seat_minutes[pid], net_session[pid], hands_played[pid],
+                    arch_of[pid], knobs[pid].tilt_quit, spread[pid],
+                ):
                     leavers.add(pid)
         if quota_targets is not None:
             for pid in order:
