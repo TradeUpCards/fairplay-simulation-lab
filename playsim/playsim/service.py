@@ -159,6 +159,7 @@ def simulate_room(
     tables: list[str] | None = None,
     protect: bool = False,
     protect_threshold: float = 50.0,
+    debug_trace: bool = False,
     data_root_str: str = "",
 ) -> dict:
     """Run the closed-loop room A/B and return JSON-serializable results.
@@ -189,7 +190,7 @@ def simulate_room(
         intents = build_arrival_intents(horizon_min, seed=s, root=root)
         common = dict(root=root, master_seed=s, horizon_min=horizon_min,
                       equity_samples=equity_samples, tables=tables,
-                      arrival_intents=intents)
+                      arrival_intents=intents, debug_trace=debug_trace)
         std = run_room(StandardPolicy(), **common)
         fp = run_room(FairPlayRoutePolicy(adapter), **common)
         cstd = build_canonical(std, data_root=data_root_str)

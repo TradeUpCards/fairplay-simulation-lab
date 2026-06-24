@@ -111,8 +111,10 @@ class RoomSim:
         tables: list[str] | None = None,
         checkpoints_min: tuple[float, ...] = (120.0, 240.0, 480.0),
         arrival_intents: list[ArrivalIntent] | None = None,
+        debug_trace: bool = False,
     ) -> None:
         self.policy = policy
+        self.debug_trace = debug_trace
         self.master_seed = master_seed
         self.horizon_min = horizon_min
         self.hands_per_hour = hands_per_hour
@@ -290,11 +292,31 @@ class RoomSim:
         if (table_id is not None and require_pair
                 and len(self.tables[table_id].seated) < 1):
             table_id, reason = None, "no_dealable_seat"
-        self.routing_decisions.append({
+        rec = {
             "min": round(sim_time, 2), "player_id": pid, "archetype": archetype,
             "origin": origin, "policy": getattr(self.policy, "name", "?"),
             "table_id": table_id, "reason": reason, "deferred": decision.deferred,
-        })
+        }
+        # FairPlay rationale: for a backend-routed seat, record the chosen table's
+        # rank breakdown so the trace answers "why this table?". Minimal by default;
+        # the full ranked candidate list only under debug_trace. Standard/Random
+        # carry no operator_view, so this is a no-op for them.
+        ov = decision.meta.get("operator_view") if decision.meta else None
+        if ov:
+            if table_id is not None:
+                chosen = next((e for e in ov if e["table_id"] == table_id), None)
+                if chosen:
+                    rec["rationale"] = {
+                        "rank": chosen.get("rank"),
+                        "health": chosen.get("health"),
+                        "delta_health": chosen.get("delta_health"),
+                        "seating_risk": chosen.get("seating_risk"),
+                        "badge": chosen.get("badge"),
+                        "integrity_gated": chosen.get("integrity_gated"),
+                    }
+            if self.debug_trace:
+                rec["candidates"] = ov
+        self.routing_decisions.append(rec)
         if table_id is not None:
             self._seat_at(pid, table_id, sim_time, origin=origin)
             return
