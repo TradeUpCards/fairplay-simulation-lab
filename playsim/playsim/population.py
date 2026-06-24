@@ -49,6 +49,12 @@ def load_table_roster(root: Path | None = None) -> list[dict]:
     return list(raw["tables"])
 
 
+def load_relationships(root: Path | None = None) -> dict:
+    """Raw ``data/relationships.json`` (clusters/households/overlaps) for the
+    backend integrity scorer + cluster-band index."""
+    return _load_json(data_dir(root) / "relationships.json")
+
+
 def hands_target(player: dict, cap: int) -> int:
     return min(int(player.get("lifetime_hands", 0)), cap)
 
