@@ -40,6 +40,27 @@ def _realized_summary(result: RoomResult) -> dict:
     cohort_seat_min = sum(result.seat_minutes.get(p, 0.0) for p in cohort)
     breaks = sum(1 for e in result.seat_events if e.get("event") == "break")
     departures = sum(1 for e in result.seat_events if e.get("event") == "leave")
+    terminal_reasons = {"tilt", "tilt_bleed", "profit_taking", "time_budget_complete"}
+    reseek_reasons = {"table_thinning", "table_break", "bad_fit_decline", "boredom_low_action"}
+    exits_by_reason: dict[str, int] = {}
+    for s in result.sessions:
+        reason = s.get("exit_reason", "")
+        exits_by_reason[reason] = exits_by_reason.get(reason, 0) + 1
+    reseek_attempts_by_reason: dict[str, int] = {}
+    reseek_success_by_reason: dict[str, int] = {}
+    for d in result.routing_decisions:
+        origin = d.get("origin", "")
+        reason = None
+        if origin == "break_displace" or origin == "wait_table_break":
+            reason = "table_break"
+        elif origin in reseek_reasons:
+            reason = origin
+        elif origin.startswith("wait_"):
+            reason = origin.removeprefix("wait_")
+        if reason in reseek_reasons:
+            reseek_attempts_by_reason[reason] = reseek_attempts_by_reason.get(reason, 0) + 1
+            if d.get("table_id") is not None:
+                reseek_success_by_reason[reason] = reseek_success_by_reason.get(reason, 0) + 1
 
     return {
         # ── primary (R21) ──
@@ -59,7 +80,16 @@ def _realized_summary(result: RoomResult) -> dict:
         "balk_count": len(result.balked),
         "deferred_count": len(result.deferred),
         "declined_count": len(result.declined),
+        "wait_balk_count": len(result.wait_balked),
         "prevented_bad_sessions": len(result.deferred),
+        "exit_funnel": {
+            "exits_by_reason": exits_by_reason,
+            "terminal_exits": sum(exits_by_reason.get(r, 0) for r in terminal_reasons),
+            "reseek_exits": sum(exits_by_reason.get(r, 0) for r in reseek_reasons),
+            "reseek_attempts_by_reason": reseek_attempts_by_reason,
+            "reseek_success_by_reason": reseek_success_by_reason,
+            "wait_balks": len(result.wait_balked),
+        },
         # ── cohort acceptance funnel (separates the acceptance channel from the
         #    retention channel; offered = accepted + declined + balked + deferred) ──
         "funnel": _cohort_funnel(result),
@@ -73,7 +103,7 @@ def _cohort_funnel(result: RoomResult) -> dict:
     arr = [d for d in result.routing_decisions
            if d.get("origin") == "arrival" and d.get("archetype") in COHORT]
     accepted = sum(1 for d in arr if d["table_id"] is not None)
-    declined = sum(1 for d in arr if d.get("reason") == "declined")
+    declined = sum(1 for d in arr if d.get("reason") in {"declined", "bad_fit_decline"})
     deferred = sum(1 for d in arr if d.get("deferred"))
     balked = sum(1 for d in arr if d["table_id"] is None
                  and d.get("reason") in ("no_open_seat", "no_dealable_seat"))
@@ -92,6 +122,8 @@ def build_canonical(result: RoomResult, *, data_root: str = "") -> dict:
         "starting_stack_bb": result.starting_stack_bb,
         "skill_edge": result.skill_edge,
         "equity_samples": result.equity_samples,
+        "behavior": result.behavior_name,
+        "behavior_params": result.behavior_params,
     }
     meta = {
         "schema_version": SCHEMA_VERSION,

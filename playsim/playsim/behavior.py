@@ -22,7 +22,7 @@ from __future__ import annotations
 import math
 import random
 from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
+from typing import Literal, Protocol, runtime_checkable
 
 from .knobs import session_min_for
 from .runner import _COHORT, cohort_should_leave
@@ -76,6 +76,15 @@ class PlayerBehaviorPolicy(Protocol):
         """Return True if a player displaced by a table break re-seeks a seat."""
         ...
 
+    def exit_action(self, reason: str, archetype: str) -> Literal["terminal", "reseek"]:
+        """Return whether an exit reason ends the player's day or means they
+        still want a different seat."""
+        ...
+
+    def wait_tolerance_min(self, reason: str, archetype: str) -> float:
+        """How long a re-seeking player will wait before finally balking."""
+        ...
+
 
 class DefaultBehaviorPolicy:
     """Behavior-preserving baseline — exactly today's rules."""
@@ -96,6 +105,12 @@ class DefaultBehaviorPolicy:
 
     def reseek_on_break(self, archetype: str) -> bool:
         return True  # displaced players re-seek once (current behavior)
+
+    def exit_action(self, reason: str, archetype: str) -> Literal["terminal", "reseek"]:
+        return "reseek" if reason == "table_break" else "terminal"
+
+    def wait_tolerance_min(self, reason: str, archetype: str) -> float:
+        return 0.0
 
 
 # --- Phase 2: fit-aware parametric model ---------------------------------------
@@ -202,6 +217,111 @@ class FitAwareBehaviorPolicy:
     def reseek_on_break(self, archetype: str) -> bool:
         return True
 
+    def exit_action(self, reason: str, archetype: str) -> Literal["terminal", "reseek"]:
+        return "reseek" if reason == "table_break" else "terminal"
+
+    def wait_tolerance_min(self, reason: str, archetype: str) -> float:
+        return 0.0
+
+
+class ReasonAwareBehaviorPolicy(FitAwareBehaviorPolicy):
+    """Reason-aware lifecycle model.
+
+    Separates "done for the day" exits from "done with this table" exits:
+
+    * tilt/bleed, profit-taking, and time-budget completion are terminal;
+    * table-thinning, table-break displacement, bad-fit decline, and boredom are
+      re-seek reasons with a finite wait tolerance.
+
+    This is intentionally still parametric and seeded. It is a design/probing
+    model, not calibrated real-world behavior.
+    """
+
+    name = "reason_aware"
+
+    def __init__(
+        self,
+        *,
+        w_pressure: float = 0.15,
+        w_fit: float = 0.10,
+        decline_enabled: bool = False,
+        decline_strength: float = 0.6,
+        seed: int = 0,
+        profit_take_bb: float = 80.0,
+        min_profit_take_min: float = 25.0,
+        thinning_wait_min: float = 18.0,
+        break_wait_min: float = 24.0,
+        decline_wait_min: float = 10.0,
+        boredom_wait_min: float = 12.0,
+    ) -> None:
+        super().__init__(
+            w_pressure=w_pressure,
+            w_fit=w_fit,
+            decline_enabled=decline_enabled,
+            decline_strength=decline_strength,
+            seed=seed,
+        )
+        self.profit_take_bb = profit_take_bb
+        self.min_profit_take_min = min_profit_take_min
+        self.thinning_wait_min = thinning_wait_min
+        self.break_wait_min = break_wait_min
+        self.decline_wait_min = decline_wait_min
+        self.boredom_wait_min = boredom_wait_min
+
+    def should_leave(self, ctx: LeaveContext) -> tuple[bool, str]:
+        if ctx.archetype not in _COHORT:
+            return (False, "")
+
+        if ctx.net_bb >= self.profit_take_bb and ctx.seat_minutes >= self.min_profit_take_min:
+            return (True, "profit_taking")
+
+        # A thin, still-dealing table is a "find a better table" reason, not a
+        # player being done. This is evaluated before tilt so thin-table churn is
+        # attributed separately from bleed.
+        if (
+            ctx.seated_count <= 2
+            and ctx.max_seats >= 4
+            and ctx.seat_minutes >= 5.0
+        ):
+            return (True, "table_thinning")
+
+        hp = ctx.hands_played
+        loss100 = (-ctx.net_bb) / (hp / 100.0) if hp >= 15 else 0.0
+        pressure = table_pressure(ctx.table_archetypes, ctx.seated_count, ctx.max_seats)
+
+        if (
+            ctx.seated_count <= 3
+            and ctx.seat_minutes >= 30.0
+            and loss100 <= 0.0
+            and pressure < 0.25
+        ):
+            return (True, "boredom_low_action")
+
+        leaving, reason = super().should_leave(ctx)
+        if not leaving:
+            return (False, "")
+        if reason == "session_complete":
+            return (True, "time_budget_complete")
+        if reason == "tilt":
+            return (True, "tilt_bleed")
+        return (True, reason)
+
+    def exit_action(self, reason: str, archetype: str) -> Literal["terminal", "reseek"]:
+        if reason in {"table_thinning", "table_break", "bad_fit_decline", "boredom_low_action"}:
+            return "reseek"
+        return "terminal"
+
+    def wait_tolerance_min(self, reason: str, archetype: str) -> float:
+        if reason == "table_break":
+            return self.break_wait_min
+        if reason == "table_thinning":
+            return self.thinning_wait_min
+        if reason == "bad_fit_decline":
+            return self.decline_wait_min
+        if reason == "boredom_low_action":
+            return self.boredom_wait_min
+        return 0.0
+
 
 def make_behavior(name: str = "default", *, seed: int = 0, **kwargs) -> PlayerBehaviorPolicy:
     """Config switch -> behavior policy instance."""
@@ -209,4 +329,6 @@ def make_behavior(name: str = "default", *, seed: int = 0, **kwargs) -> PlayerBe
         return DefaultBehaviorPolicy()
     if name in ("fit_aware", "fit-aware"):
         return FitAwareBehaviorPolicy(seed=seed, **kwargs)
+    if name in ("reason_aware", "reason-aware"):
+        return ReasonAwareBehaviorPolicy(seed=seed, **kwargs)
     raise ValueError(f"unknown behavior {name!r}")

@@ -23,6 +23,7 @@ import argparse
 import statistics as st
 
 from playsim.arrivals import build_arrival_intents
+from playsim.behavior import make_behavior
 from playsim.policies import (
     FairPlayBalancedPolicy,
     FairPlayRoutePolicy,
@@ -32,12 +33,13 @@ from playsim.policies import (
 from playsim.room import COHORT, RoomSim
 from playsim.router_adapter import RouterAdapter
 
-METRICS = ("seat_hrs", "arr_surv", "breaks", "break_balks", "arr_balks")
+METRICS = ("seat_hrs", "arr_surv", "breaks", "break_balks", "arr_balks", "wait_balks")
 
 
-def _run(policy, seed, horizon, equity, tables, intents):
+def _run(policy, seed, horizon, equity, tables, intents, behavior):
     r = RoomSim(policy, master_seed=seed, horizon_min=horizon,
-                equity_samples=equity, tables=tables, arrival_intents=intents).run()
+                equity_samples=equity, tables=tables, arrival_intents=intents,
+                behavior=make_behavior(behavior, seed=seed)).run()
     vuln = {a.player_id for a in intents if a.archetype in COHORT}
     arr_seated = {e["player_id"] for e in r.seat_events
                   if e.get("origin") == "arrival" and e["player_id"] in vuln}
@@ -51,6 +53,7 @@ def _run(policy, seed, horizon, equity, tables, intents):
         "arr_balks": sum(1 for d in r.routing_decisions
                          if d.get("origin") == "arrival" and d["table_id"] is None
                          and d["archetype"] in COHORT),
+        "wait_balks": len(r.wait_balked),
     }
 
 
@@ -60,6 +63,8 @@ def main(argv=None) -> int:
     ap.add_argument("--seeds", default="42,7,99", help="comma-separated seed set")
     ap.add_argument("--equity", type=int, default=6, help="Monte-Carlo equity samples")
     ap.add_argument("--tables", default=None, help="comma table ids (default: all)")
+    ap.add_argument("--behavior", choices=["default", "fit-aware", "reason-aware"],
+                    default="default")
     ap.add_argument("--data-root", default=None)
     args = ap.parse_args(argv)
 
@@ -78,19 +83,21 @@ def main(argv=None) -> int:
     for seed in seeds:
         intents = build_arrival_intents(args.horizon, seed=seed, root=args.data_root)
         for name, fac in factories.items():
-            res = _run(fac(seed), seed, args.horizon, args.equity, tables, intents)
+            res = _run(fac(seed), seed, args.horizon, args.equity, tables, intents,
+                       args.behavior)
             for m in METRICS:
                 agg[name][m].append(res[m])
             print(f"seed={seed} {name}: seat_hrs={res['seat_hrs']:.2f} "
                   f"arr_surv={res['arr_surv']:.1f}m breaks={res['breaks']} "
-                  f"break_balks={res['break_balks']}", flush=True)
+                  f"break_balks={res['break_balks']} wait_balks={res['wait_balks']}", flush=True)
 
-    print(f"\n=== MEANS over {seeds} (horizon {args.horizon:.0f}min) ===")
-    print(f"{'policy':13} {'seat_hrs':>9} {'arr_surv':>9} {'breaks':>7} {'brk_balks':>10}")
+    print(f"\n=== MEANS over {seeds} (horizon {args.horizon:.0f}min, behavior={args.behavior}) ===")
+    print(f"{'policy':13} {'seat_hrs':>9} {'arr_surv':>9} {'breaks':>7} {'brk_balks':>10} {'wait_balks':>10}")
     for name in factories:
         a = agg[name]
         print(f"{name:13} {st.mean(a['seat_hrs']):>9.2f} {st.mean(a['arr_surv']):>9.1f} "
-              f"{st.mean(a['breaks']):>7.1f} {st.mean(a['break_balks']):>10.1f}")
+              f"{st.mean(a['breaks']):>7.1f} {st.mean(a['break_balks']):>10.1f} "
+              f"{st.mean(a['wait_balks']):>10.1f}")
     return 0
 
 

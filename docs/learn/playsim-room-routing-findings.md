@@ -184,7 +184,7 @@ cd playsim && make install          # one-time: 3.12 venv + PokerKit + editable 
 # The shipped Standard-vs-FairPlay-route A/B (writes room_sim_*.json + room_metrics_*.json)
 .venv/bin/python -m playsim.cli room-sim --seeds 42,7,99 --horizon 480 --out-dir out
 
-# Full suite (64 tests)
+# Full suite (currently 88 tests)
 make test
 ```
 
@@ -241,6 +241,86 @@ directional. Calibration to real session-length / churn data (the gate before an
 remains future work. But across the default model, the fit-aware model, and a weight sweep — and
 against random, most-full, and a load-balanced variant — Standard is consistently at least as good,
 and the cause is consistently **table liveness**, not the routing decision.
+
+---
+
+## Update — reason-aware re-seating (Phase 3 probe): split "done for the day" from "done with this table"
+
+We added a **reason-aware** player lifecycle model behind the existing `PlayerBehaviorPolicy` seam.
+This does not change the router. It changes what happens after a player exits a table:
+
+| exit reason | modeled action |
+|---|---|
+| `tilt_bleed` | terminal / low willingness to keep playing |
+| `profit_taking` | terminal positive exit |
+| `time_budget_complete` | terminal neutral exit |
+| `table_thinning` | re-seek with wait tolerance |
+| `table_break` | re-seek with longer wait tolerance |
+| `bad_fit_decline` | optional wait / retry |
+| `boredom_low_action` | re-seek with wait tolerance |
+
+Why this matters: the original default model treated voluntary/tilt exits as terminal and allowed
+only immediate break-displacement re-seating. That is too coarse for the FairPlay thesis. A player
+leaving because a thin table is dying is not necessarily done for the day; they may still want to
+play if FairPlay or the room can find a dealable replacement seat.
+
+### Short-horizon check
+
+To smoke-test the mechanism, we ran the N-way comparison at a 2-hour horizon with the same seed set
+and compared `default` versus `reason-aware` behavior:
+
+```bash
+cd playsim
+.venv/bin/python analysis/room_policy_comparison.py --horizon 120 --seeds 42,7,99 --equity 6 --behavior default
+.venv/bin/python analysis/room_policy_comparison.py --horizon 120 --seeds 42,7,99 --equity 6 --behavior reason-aware
+```
+
+Default behavior:
+
+| policy | cohort seat-hrs | arrival survival (min) | table breaks | break-displacement balks | wait balks |
+|---|---:|---:|---:|---:|---:|
+| random | 10.18 | 10.7 | 12.3 | 5.0 | 0.0 |
+| most-full | 9.63 | 8.8 | 12.7 | 9.7 | 0.0 |
+| fairplay | 10.44 | 11.2 | 12.0 | 9.7 | 0.0 |
+| fairplay-balanced | 9.03 | 5.5 | 29.0 | 27.7 | 0.0 |
+
+Reason-aware behavior:
+
+| policy | cohort seat-hrs | arrival survival (min) | table breaks | break-displacement balks | wait balks |
+|---|---:|---:|---:|---:|---:|
+| random | 9.01 | 9.9 | 27.0 | 15.3 | 0.0 |
+| most-full | 8.87 | 9.6 | 16.7 | 14.0 | 3.0 |
+| fairplay | 8.89 | 10.0 | 23.0 | 21.0 | 5.3 |
+| fairplay-balanced | 7.97 | 5.6 | 46.0 | 43.0 | 32.0 |
+
+Read this carefully: this is a **mechanism probe**, not a new validated result. At 2 hours, the
+default model is noisy and FairPlay can win. Under reason-aware behavior, FairPlay and most-full are
+roughly tied on cohort seat-hours, but FairPlay still creates more breaks and more delayed re-seat
+failures (`wait_balks`). The new model therefore does **not** erase the liveness/churn concern; it
+makes the concern more attributable by separating:
+
+- terminal churn: tilt/bleed, profit-taking, time-budget completion;
+- re-seat churn: table-thinning exits, table-break displacement, bad-fit declines, and wait expiry.
+
+### New design approach
+
+Going forward, room-sim results should be reported as a funnel, not a single churn bucket:
+
+`offered -> accepted -> seated -> retained`
+
+and separately:
+
+- `terminal_exits_by_reason`
+- `reseek_attempts_by_reason`
+- `reseek_success_by_reason`
+- `wait_balks`
+- `break_displacement_balks`
+- vulnerable paid seat-hours
+
+This keeps the interpretation honest. If FairPlay loses because players leave satisfied after a time
+budget or profit-taking exit, that is not a routing failure. If FairPlay loses because thin-table
+players still want to play but cannot find a dealable replacement seat before their wait tolerance
+expires, the next product problem is liquidity/table balancing, not necessarily seat-quality ranking.
 
 ---
 

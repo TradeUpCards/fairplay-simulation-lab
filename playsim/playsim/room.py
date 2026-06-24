@@ -74,6 +74,8 @@ class RoomResult:
     equity_samples: int
     agent_model: str
     agent_version: str
+    behavior_name: str
+    behavior_params: dict
     arrival_intents: list[ArrivalIntent]
     routing_decisions: list[dict]
     seat_events: list[dict]
@@ -92,6 +94,7 @@ class RoomResult:
     balked: list[int]
     deferred: list[int]
     declined: list[int]
+    wait_balked: list[int]
 
 
 class RoomSim:
@@ -169,6 +172,8 @@ class RoomSim:
         self.balked: list[int] = []
         self.deferred: list[int] = []
         self.declined: list[int] = []
+        self.wait_balked: list[int] = []
+        self.pending_seek: list[dict] = []
         self.checkpoints: dict[str, dict] = {}
         self._next_checkpoint = 0
         self.hourly: list[dict] = []
@@ -272,6 +277,58 @@ class RoomSim:
             "event": "leave", "reason": reason,
         })
 
+    def _behavior_exit_action(self, reason: str, archetype: str) -> str:
+        fn = getattr(self.behavior, "exit_action", None)
+        if fn is not None:
+            return fn(reason, archetype)
+        if reason == "table_break" and self.behavior.reseek_on_break(archetype):
+            return "reseek"
+        return "terminal"
+
+    def _wait_tolerance_min(self, reason: str, archetype: str) -> float:
+        fn = getattr(self.behavior, "wait_tolerance_min", None)
+        if fn is None:
+            return 0.0
+        return max(0.0, float(fn(reason, archetype)))
+
+    def _queue_reseek(self, pid: int, archetype: str, sim_time: float, reason: str) -> bool:
+        tolerance = self._wait_tolerance_min(reason, archetype)
+        if tolerance <= 0:
+            return False
+        if any(p["player_id"] == pid for p in self.pending_seek):
+            return True
+        self.pending_seek.append({
+            "player_id": pid,
+            "archetype": archetype,
+            "reason": reason,
+            "queued_at_min": round(sim_time, 2),
+            "next_try_min": round(sim_time + self.min_per_hand, 4),
+            "expire_min": round(sim_time + tolerance, 4),
+            "attempts": 0,
+        })
+        self.seat_events.append({
+            "min": round(sim_time, 2),
+            "player_id": pid,
+            "event": "wait_start",
+            "reason": reason,
+            "wait_tolerance_min": round(tolerance, 2),
+        })
+        return True
+
+    def _mark_unseated_terminal(self, pid: int, reason: str, *, deferred: bool = False,
+                                declined: bool = False, waited: bool = False) -> None:
+        if self.left_at_minute[pid] is None:
+            self.left_at_minute[pid] = round(self.seat_minutes[pid], 1)
+        self.departed.add(pid)
+        if waited:
+            self.wait_balked.append(pid)
+        elif declined:
+            self.declined.append(pid)
+        elif deferred:
+            self.deferred.append(pid)
+        else:
+            self.balked.append(pid)
+
     # --- routing ----------------------------------------------------------
 
     def _live_tables(self) -> list[dict]:
@@ -285,7 +342,9 @@ class RoomSim:
         ]
 
     def _route_seeker(self, pid: int, archetype: str, sim_time: float, origin: str,
-                      require_pair: bool = False) -> None:
+                      require_pair: bool = False, queue_on_fail: bool = True,
+                      exit_reason: str | None = None,
+                      terminal_on_fail: bool = True) -> bool:
         from .policies import Seeker
         decision = self.policy.choose(Seeker(pid, archetype), self._live_tables())
         table_id = decision.table_id
@@ -333,22 +392,71 @@ class RoomSim:
             if not self.behavior.accept_seat(offer):
                 table_id = None
                 rec["table_id"] = None
-                rec["reason"] = "declined"
+                rec["reason"] = "bad_fit_decline"
                 rec["declined"] = True
         self.routing_decisions.append(rec)
         if table_id is not None:
             self._seat_at(pid, table_id, sim_time, origin=origin)
+            return True
+        fail_reason = (
+            "bad_fit_decline" if rec.get("declined")
+            else "table_break" if origin == "break_displace"
+            else exit_reason or reason
+        )
+        if (
+            queue_on_fail
+            and self._behavior_exit_action(fail_reason, archetype) == "reseek"
+            and self._queue_reseek(pid, archetype, sim_time, fail_reason)
+        ):
+            return False
+        if not terminal_on_fail:
+            return False
+        # not seated and not waiting -> terminal for this run
+        self._mark_unseated_terminal(
+            pid,
+            fail_reason,
+            deferred=decision.deferred,
+            declined=bool(rec.get("declined")),
+        )
+        return False
+
+    def _process_pending_seekers(self, sim_time: float) -> None:
+        if not self.pending_seek:
             return
-        # not seated -> terminal (arrive once / re-seek once)
-        if self.left_at_minute[pid] is None:
-            self.left_at_minute[pid] = round(self.seat_minutes[pid], 1)
-        self.departed.add(pid)
-        if rec.get("declined"):
-            self.declined.append(pid)   # declined a bad-fit offer (distinct from balk)
-        elif decision.deferred:
-            self.deferred.append(pid)
-        else:
-            self.balked.append(pid)
+        keep: list[dict] = []
+        for pending in self.pending_seek:
+            if pending["player_id"] in self.departed:
+                continue
+            if pending["next_try_min"] > sim_time:
+                keep.append(pending)
+                continue
+            if sim_time > pending["expire_min"]:
+                self._mark_unseated_terminal(
+                    pending["player_id"], pending["reason"], waited=True,
+                )
+                self.seat_events.append({
+                    "min": round(sim_time, 2),
+                    "player_id": pending["player_id"],
+                    "event": "wait_balk",
+                    "reason": pending["reason"],
+                    "attempts": pending["attempts"],
+                })
+                continue
+            pending["attempts"] += 1
+            seated = self._route_seeker(
+                pending["player_id"],
+                pending["archetype"],
+                sim_time,
+                origin=f"wait_{pending['reason']}",
+                require_pair=pending["reason"] in {"table_break", "table_thinning"},
+                queue_on_fail=False,
+                exit_reason=pending["reason"],
+                terminal_on_fail=False,
+            )
+            if not seated and pending["player_id"] not in self.departed:
+                pending["next_try_min"] = round(sim_time + self.min_per_hand, 4)
+                keep.append(pending)
+        self.pending_seek = keep
 
     def _seat_arrivals(self, sim_time: float, _idx: list[int]) -> None:
         intents = self.arrival_intents
@@ -412,7 +520,19 @@ class RoomSim:
             if leaving:
                 leavers.append((pid, reason or "tilt"))
         for pid, reason in leavers:
-            self._depart(pid, tbl, sim_time, reason=reason)
+            if self._behavior_exit_action(reason, self.archetype_of[pid]) == "reseek":
+                self._remove_from_table(pid, tbl)
+                self._close_presence(pid, sim_time, exit_reason=reason)
+                self.seat_events.append({
+                    "min": round(sim_time, 2), "player_id": pid, "table_id": tbl.table_id,
+                    "event": "leave", "reason": reason,
+                })
+                self._route_seeker(
+                    pid, self.archetype_of[pid], sim_time,
+                    origin=reason, require_pair=True, exit_reason=reason,
+                )
+            else:
+                self._depart(pid, tbl, sim_time, reason=reason)
 
     def _handle_breaks(self, sim_time: float) -> None:
         for tid in sorted(self.tables):
@@ -426,10 +546,11 @@ class RoomSim:
                     "min": round(sim_time, 2), "table_id": tid, "event": "break",
                 })
                 for pid in displaced:
-                    if self.behavior.reseek_on_break(self.archetype_of[pid]):
+                    if self._behavior_exit_action("table_break", self.archetype_of[pid]) == "reseek":
                         # displaced players re-seek once via the active policy
                         self._route_seeker(pid, self.archetype_of[pid], sim_time,
-                                           origin="break_displace", require_pair=True)
+                                           origin="break_displace", require_pair=True,
+                                           exit_reason="table_break")
                     else:
                         if self.left_at_minute[pid] is None:
                             self.left_at_minute[pid] = round(self.seat_minutes[pid], 1)
@@ -502,6 +623,7 @@ class RoomSim:
             sim_time = round(s * self.min_per_hand, 4)
             if sim_time > self.horizon_min:
                 break
+            self._process_pending_seekers(sim_time)
             self._seat_arrivals(sim_time, idx)
             self._maybe_checkpoint(sim_time)
             self._maybe_hourly(sim_time)
@@ -537,6 +659,11 @@ class RoomSim:
             equity_samples=self.equity_samples,
             agent_model=ArchetypeAgent.agent_model,
             agent_version=ArchetypeAgent.agent_version,
+            behavior_name=getattr(self.behavior, "name", self.behavior.__class__.__name__),
+            behavior_params={
+                k: v for k, v in getattr(self.behavior, "__dict__", {}).items()
+                if isinstance(v, (str, int, float, bool, type(None)))
+            },
             arrival_intents=self.arrival_intents,
             routing_decisions=self.routing_decisions, seat_events=self.seat_events,
             sessions=self.sessions, hourly=self.hourly, table_timelines=table_timelines,
@@ -546,7 +673,7 @@ class RoomSim:
             hands_played=dict(self.hands_played), busts=dict(self.busts),
             left_at_minute=dict(self.left_at_minute),
             balked=list(self.balked), deferred=list(self.deferred),
-            declined=list(self.declined),
+            declined=list(self.declined), wait_balked=list(self.wait_balked),
         )
 
 

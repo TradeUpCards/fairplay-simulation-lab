@@ -11,6 +11,7 @@ from playsim.behavior import (
     DefaultBehaviorPolicy,
     FitAwareBehaviorPolicy,
     LeaveContext,
+    ReasonAwareBehaviorPolicy,
     SeatOffer,
     make_behavior,
     style_fit,
@@ -71,7 +72,7 @@ def test_custom_policy_can_decline_seats():
     r = _run(AlwaysDecline())
     arrivals = [d for d in r.routing_decisions if d["origin"] == "arrival"]
     assert arrivals
-    assert all(d["table_id"] is None and d["reason"] == "declined" for d in arrivals)
+    assert all(d["table_id"] is None and d["reason"] == "bad_fit_decline" for d in arrivals)
 
 
 # --- Phase 2: fit-aware model --------------------------------------------
@@ -153,3 +154,39 @@ def test_fitaware_cohort_only():
 def test_make_behavior_factory():
     assert isinstance(make_behavior("default"), DefaultBehaviorPolicy)
     assert isinstance(make_behavior("fit-aware", seed=3), FitAwareBehaviorPolicy)
+    assert isinstance(make_behavior("reason-aware", seed=3), ReasonAwareBehaviorPolicy)
+
+
+# --- Phase 3: reason-aware lifecycle --------------------------------------
+
+def test_reasonaware_exit_taxonomy():
+    pol = ReasonAwareBehaviorPolicy()
+
+    leaving, reason = pol.should_leave(LeaveContext(
+        "new", 30.0, 100.0, 40, 0.8, 1.0,
+        table_archetypes=("new", "recreational", "healthy_anchor"),
+        seated_count=3, max_seats=6,
+    ))
+    assert leaving and reason == "profit_taking"
+    assert pol.exit_action(reason, "new") == "terminal"
+
+    leaving, reason = pol.should_leave(LeaveContext(
+        "new", 6.0, 0.0, 8, 0.8, 1.0,
+        table_archetypes=("new", "healthy_anchor"),
+        seated_count=2, max_seats=6,
+    ))
+    assert leaving and reason == "table_thinning"
+    assert pol.exit_action(reason, "new") == "reseek"
+
+    leaving, reason = pol.should_leave(LeaveContext(
+        "new", 999.0, -999.0, 200, 0.8, 1.0,
+        table_archetypes=("new", "aggressive_predatory", "grinder"),
+        seated_count=3, max_seats=6,
+    ))
+    assert leaving and reason in {"tilt_bleed", "table_pressure", "mismatch"}
+
+
+def test_reasonaware_wait_tolerances():
+    pol = ReasonAwareBehaviorPolicy()
+    assert pol.wait_tolerance_min("table_break", "new") > pol.wait_tolerance_min("bad_fit_decline", "new")
+    assert pol.wait_tolerance_min("tilt_bleed", "new") == 0.0

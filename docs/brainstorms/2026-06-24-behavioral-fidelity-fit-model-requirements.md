@@ -50,8 +50,9 @@ sequenced so scope stays bounded and each phase is independently shippable:
 - **Phase 3 — calibration, funnel reporting, sensitivity sweeps.** Fit parameters to data; report the
   acceptance/retention **funnel** separately; sweep fit/pressure weights. **This is where the
   anti-circularity guards live** — no retention *claim* before this phase. *(Status: funnel reporting
-  ships in the room_sim summary, and the sweep harness in `playsim/analysis/fit_sensitivity_sweep.py`;
-  calibration awaits real session-length / churn data — until then runs stay illustrative.)*
+  ships in the room_sim summary, the sweep harness in `playsim/analysis/fit_sensitivity_sweep.py`,
+  and a reason-aware re-seating lifecycle ships behind `--behavior reason-aware`; calibration awaits
+  real session-length / churn data — until then runs stay illustrative.)*
 - **Phase 4 — optional agentic / RL behavior experiment** (does emergent behavior differ from the
   calibrated parametric model?).
 
@@ -91,6 +92,13 @@ blocker to building the seam or the model.
   existing `SeatingPolicy`. Player behavior becomes one swappable, testable thing (and the eventual
   V2 agentic variant is just another implementation of the same seam), instead of logic scattered
   across `room.py` and `runner.py`.
+- **Separate terminal exits from re-seat exits.** A player who leaves because they are tilted, done
+  with their time budget, or taking profit should not be treated the same as a player whose table is
+  dying. The reason-aware model treats `table_thinning`, `table_break`, `bad_fit_decline`, and
+  `boredom_low_action` as re-seat reasons with finite wait tolerance, while `tilt_bleed`,
+  `profit_taking`, and `time_budget_complete` are terminal by default. This is the lifecycle
+  distinction needed to test the FairPlay counter-hypothesis: thin tables may churn seats without
+  ending player demand.
 - **Self-describing runs.** Every behavioral parameter (weights, tolerances, thresholds, seeds) is
   serialized verbatim into the output `run_config`, so a run is auditable and replayable from its own
   artifact with no external state. This is the simulator's observability primitive (see Dependencies).
@@ -125,7 +133,8 @@ blocker to building the seam or the model.
   assumed) and swept from 0, and it should prefer router-independent components (pace, volatility)
   where possible.
 - R7. The **leave reason** is recorded per departure (`tilt`, `table_pressure`, `mismatch`,
-  `session_complete`, `stop_loss`, `win_goal`).
+  `session_complete`, `stop_loss`, `win_goal`, and in the reason-aware model `tilt_bleed`,
+  `table_thinning`, `profit_taking`, `time_budget_complete`, `boredom_low_action`).
 - R8. With the fit-mismatch and table-pressure weights = 0, the model **reduces to current behavior**
   (regression-comparable).
 
@@ -139,6 +148,9 @@ blocker to building the seam or the model.
 - R11. **Funnel reporting:** the summary separates `offered → accepted → retained`, plus `balks` and
   `declines`, per arm — so a routing win is attributed to the acceptance channel vs the retention
   channel rather than conflated into one seat-time number.
+- R11b. **Exit/re-seat funnel reporting:** the summary separates terminal exits from re-seat exits:
+  `exits_by_reason`, `reseek_attempts_by_reason`, `reseek_success_by_reason`, and `wait_balks`.
+  This prevents normal positive/neutral exits from being misread as FairPlay-caused churn.
 
 **Calibration & determinism**
 - R12. A **calibration routine** fits the model's parameters to target session-length and churn
@@ -170,6 +182,9 @@ blocker to building the seam or the model.
   reason) appear in the trace. **Covers R9, R10.**
 - AE5. **Reasons are attributed.** Every departure carries a leave reason; the mix shifts with table
   composition. **Covers R7.**
+- AE5b. **Re-seat willingness is reason-aware.** A `table_break` or `table_thinning` exit can re-seek
+  and wait before terminal balk; `tilt_bleed`, `profit_taking`, and `time_budget_complete` remain
+  terminal by default. **Covers R11b.**
 - AE6. **Runs are self-describing.** The output `run_config` contains every behavioral parameter; a
   second run from only that artifact reproduces the result. **Covers R2.**
 - AE7. **Decisions are explainable.** Every backend-routed seating in `routing_decisions` carries the

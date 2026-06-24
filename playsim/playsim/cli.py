@@ -294,8 +294,9 @@ def main(argv=None) -> int:
     rs.add_argument("--tables", help="comma-separated table ids (default: all in table_roster.json)")
     rs.add_argument("--protect", action="store_true", help="also run the experimental FairPlay-protect arm")
     rs.add_argument("--protect-threshold", type=float, default=50.0, help="protect safety threshold (untuned)")
-    rs.add_argument("--behavior", choices=["default", "fit-aware"], default="default",
-                    help="player behavior model (fit-aware = experimental, illustrative until calibrated)")
+    rs.add_argument("--behavior", choices=["default", "fit-aware", "reason-aware"], default="default",
+                    help=("player behavior model (fit-aware/reason-aware are experimental, "
+                          "illustrative until calibrated)"))
     rs.add_argument("--out-dir", default=".", help="directory for room_sim_*/room_metrics_* outputs")
     rs.add_argument("--debug-trace", action="store_true",
                     help="attach the full ranked candidate list to each routing decision (verbose)")
