@@ -35,6 +35,29 @@ Consequence: the current "FairPlay loses to Standard" result is real *for this m
 of a behavioral model too thin to carry the thesis (see
 `docs/learn/playsim-room-routing-findings.md`). This spec closes that gap on the behavioral side.
 
+## Phasing (this spec modifies the room-sim plan; it does not replace it)
+
+The closed-loop room simulator already exists and ships in PR #43. This spec is the **next layer**,
+sequenced so scope stays bounded and each phase is independently shippable:
+
+- **Phase 1 — `PlayerBehaviorPolicy` seam (behavior-preserving).** Extract today's player decisions
+  (cohort tilt-leave, always-accept, re-seek-once) from `room.py`/`runner.py` into one swappable seam,
+  with the *current* rules as the default implementation. Small refactor, guarded by the existing
+  determinism tests (same pattern as the `apply_hand_accounting` extraction). **Buildable now.**
+- **Phase 2 — fit-aware parametric model behind the seam.** Multi-factor leave (loss + table-pressure
+  + fit-mismatch + session budget), fit-aware join, archetype tolerances. Ships with **documented
+  default parameters** (see "buildable vs validated" below).
+- **Phase 3 — calibration, funnel reporting, sensitivity sweeps.** Fit parameters to data; report the
+  acceptance/retention **funnel** separately; sweep fit/pressure weights. **This is where the
+  anti-circularity guards live** — no retention *claim* before this phase.
+- **Phase 4 — optional agentic / RL behavior experiment** (does emergent behavior differ from the
+  calibrated parametric model?).
+
+**Buildable vs validated (load-bearing).** Phases 1–2 can ship on documented default parameters and
+are *not* blocked by the absence of calibration data. Calibration (Phase 3) is required only to make
+**numeric retention claims**; until then, outputs are labeled illustrative. Missing data is never a
+blocker to building the seam or the model.
+
 ## Key Decisions
 
 - **Parametric, not agentic (for v1).** A calibrated parametric stay/leave/choose model preserves
@@ -49,6 +72,15 @@ of a behavioral model too thin to carry the thesis (see
   session-length / churn data, its retention numbers are labeled **illustrative, not validated**. No
   simulation validates the thesis on hand-authored parameters — only calibration (or a production A/B)
   does.
+- **Avoid predicted-vs-predicted circularity (the table-pressure trap).** The composition signal that
+  makes a player *leave* (table pressure) is essentially the inverse of the composition signal the
+  router *optimizes* (`backend Health = 100 − P_pred − P_frag − P_clus`). If the leave model rewards
+  exactly what the router avoids, **FairPlay wins by construction** — the "baked-in numbers" critique
+  in a new form that the existing predicted-vs-*realized* guardrail does not catch (both sides are
+  composition). Guards: (a) table-pressure *strength* is calibrated to real leave behavior, not
+  assumed; (b) the pressure weight is swept from 0, and any FairPlay win that appears *only* at high
+  pressure weight is reported as an internal-consistency / mechanism check, **not evidence**;
+  (c) prefer including pressure signals the router does *not* use (pace, volatility) to reduce overlap.
 - **Backward-compatible by construction.** With the fit weight set to 0, the model must reproduce the
   current loss-rate-only behavior, so existing results are a recoverable special case and the change
   is regression-comparable.
@@ -83,9 +115,13 @@ of a behavioral model too thin to carry the thesis (see
   length, and optional **stop-loss / win-goal** thresholds; factor weights are configurable. The
   decision may be a seeded **probabilistic hazard** rather than a hard threshold (it must still draw
   from the run's RNG so replay stays byte-identical).
-- R6. **Table pressure** is a behavioral input — the composition-driven aggression/predation a player
-  perceives at their table — distinct from the player's *own* realized loss. (Composition-derived, so
-  it does not reintroduce realized-health-into-routing circularity.)
+- R6. **Table pressure** is a behavioral input — a composition-derived signal (aggressor load,
+  predator/vulnerable ratio, active-cluster pressure, short-handed fragility) the player perceives,
+  computed **without any future chip-flow / realized outcome**, distinct from the player's *own*
+  realized loss. Because this overlaps the router's predicted-health terms, it carries the
+  **predicted-vs-predicted circularity guard** (see Key Decisions): its weight is calibrated (not
+  assumed) and swept from 0, and it should prefer router-independent components (pace, volatility)
+  where possible.
 - R7. The **leave reason** is recorded per departure (`tilt`, `table_pressure`, `mismatch`,
   `session_complete`, `stop_loss`, `win_goal`).
 - R8. With the fit-mismatch and table-pressure weights = 0, the model **reduces to current behavior**
@@ -94,16 +130,31 @@ of a behavioral model too thin to carry the thesis (see
 **Join & re-seek agency**
 - R9. An arriving (or break-displaced) player **accepts or declines** the policy's recommended seat
   with a fit-dependent probability (models "recommend → human decides"); a decline considers
-  alternatives or balks.
+  alternatives or balks. **Decline is a separately-toggleable channel, default OFF in the first
+  fit-aware build**, so the *retention* channel is measured before the *acceptance* channel is added
+  (decline-because-bad-fit can otherwise manufacture a routing win through acceptance alone).
 - R10. The accept/decline outcome and its driver are recorded in the routing-decision trace.
+- R11. **Funnel reporting:** the summary separates `offered → accepted → retained`, plus `balks` and
+  `declines`, per arm — so a routing win is attributed to the acceptance channel vs the retention
+  channel rather than conflated into one seat-time number.
 
 **Calibration & determinism**
-- R11. A **calibration routine** fits the model's parameters to target session-length and churn
+- R12. A **calibration routine** fits the model's parameters to target session-length and churn
   distributions, with the data source documented; uncalibrated runs are labeled illustrative.
-- R12. The model is **seeded and byte-replayable** — no LLM/network call in the simulation loop.
-- R13. Re-run the 4-way A/B (random / most-full / fairplay / fairplay-balanced) under the fit-aware
+- R13. The model is **seeded and byte-replayable** — no LLM/network call in the simulation loop.
+- R14. Re-run the 4-way A/B (random / most-full / fairplay / fairplay-balanced) under the fit-aware
   model, plus a **sensitivity sweep** on the fit and table-pressure weights, and report whether the
   router's Fit dimension now earns retention.
+
+**Decision-trace fidelity (room_sim schema)**
+- R15. Each **backend-routed** `routing_decisions` entry carries a minimal **rationale** in the
+  *default* trace — the chosen table's `rank`, `health`, `delta_health`, `seating_risk`, `badge`,
+  `integrity_gated` (alongside the existing `reason` and `table_id`) — so the artifact answers "why
+  *this* table?" without re-running. Standard/Random carry no rationale (no backend decision). *(Shipped.)*
+- R16. A **`--debug-trace`** tier attaches the **full ranked candidate list** to each decision and is
+  the home for any future verbose per-hand/per-player internals; the default `room_sim_*` stays the
+  compact decision/session/summary trace. Per-hand hand histories remain a *separate* artifact
+  (`playsim_hand_histories_*`), never inlined into `room_sim_*`. *(Shipped.)*
 
 ## Acceptance Examples
 
@@ -119,6 +170,9 @@ of a behavioral model too thin to carry the thesis (see
   composition. **Covers R7.**
 - AE6. **Runs are self-describing.** The output `run_config` contains every behavioral parameter; a
   second run from only that artifact reproduces the result. **Covers R2.**
+- AE7. **Decisions are explainable.** Every backend-routed seating in `routing_decisions` carries the
+  six rationale fields; `--debug-trace` adds the full candidate list; Standard/Random carry neither.
+  **Covers R15, R16.**
 
 ## Success Criteria
 
@@ -142,6 +196,9 @@ of a behavioral model too thin to carry the thesis (see
 - Real-time / production lobby routing (an explicit product non-goal).
 - Claiming real-world validation of the routing→retention thesis without real data or a production A/B.
   The simulator tests "given this behavioral model, does routing help"; it does not prove the thesis.
+- **External LLM-observability tooling (LangChain / LangSmith) for the deterministic sim.** The
+  simulation has no LLM in its loop; its observability primitive is the causal trace + `run_config` +
+  `--debug-trace`. (LLM tracing belongs only to the AI Investigator subsystem, if anywhere — not here.)
 
 ## Dependencies / Assumptions
 

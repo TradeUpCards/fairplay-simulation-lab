@@ -562,9 +562,18 @@ budget  = base_session_min(archetype) * spread(0.85..1.15) * tilt        # sprea
 # The shipped Standard-vs-FairPlay A/B → writes room_sim_*.json + room_metrics_*.json
 .venv/bin/python -m playsim.cli room-sim --seeds 42,7,99 --horizon 480 --out-dir out
 
-make test                         # full suite (68 tests)</code></pre>
+# --debug-trace adds the full ranked candidate list to every routing decision (verbose)
+.venv/bin/python -m playsim.cli room-sim --seeds 42 --horizon 480 --out-dir out --debug-trace
+
+make test                         # full suite</code></pre>
       <div class="callout">Tip for fast local pokes: add <code>--tables T-22,T-8</code> and a short
         <code>--horizon 60</code> to iterate in seconds before committing to a full run.</div>
+      <div class="callout"><strong>Reading "why this table?":</strong> every backend-routed entry in
+        <code>routing_decisions</code> carries a compact <code>rationale</code> (<code>rank</code>,
+        <code>health</code>, <code>delta_health</code>, <code>seating_risk</code>, <code>badge</code>,
+        <code>integrity_gated</code>) by default. <code>--debug-trace</code> adds the full ranked
+        candidate list; per-hand internals live in the separate
+        <code>playsim_hand_histories_*</code> artifact, never inlined here.</div>
     </section>
 
     <!-- 14 -->
