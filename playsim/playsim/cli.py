@@ -181,6 +181,8 @@ def _room_sim(args) -> int:
         horizon_min=args.horizon, equity_samples=args.samples,
         tables=args.tables.split(",") if args.tables else None,
         protect=args.protect, protect_threshold=args.protect_threshold,
+        behavior_name=args.behavior,
+        debug_trace=args.debug_trace,
         data_root_str=str(args.data_root or ""),
     )
     c = res["comparison"]
@@ -292,7 +294,11 @@ def main(argv=None) -> int:
     rs.add_argument("--tables", help="comma-separated table ids (default: all in table_roster.json)")
     rs.add_argument("--protect", action="store_true", help="also run the experimental FairPlay-protect arm")
     rs.add_argument("--protect-threshold", type=float, default=50.0, help="protect safety threshold (untuned)")
+    rs.add_argument("--behavior", choices=["default", "fit-aware"], default="default",
+                    help="player behavior model (fit-aware = experimental, illustrative until calibrated)")
     rs.add_argument("--out-dir", default=".", help="directory for room_sim_*/room_metrics_* outputs")
+    rs.add_argument("--debug-trace", action="store_true",
+                    help="attach the full ranked candidate list to each routing decision (verbose)")
     rs.add_argument("--gzip", action="store_true", help="write .json.gz outputs")
     rs.add_argument("--compact", action="store_true", help="compact JSON")
     rs.set_defaults(fn=_room_sim)
