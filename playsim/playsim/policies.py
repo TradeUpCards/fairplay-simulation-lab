@@ -138,6 +138,61 @@ class FairPlayProtectPolicy:
                                "operator_view": p.operator_view})
 
 
+class FairPlayBalancedPolicy:
+    """FairPlay routing with a liquidity / load-balancing term.
+
+    Plain FairPlay-route is a greedy per-seeker health maximizer: it piles
+    vulnerable seekers onto the single healthiest table, which (a) strands later
+    arrivals and (b) concentrates fish so a fish-heavy table collapses all at once
+    when they tilt out together. This variant instead spreads seekers across the
+    set of *healthy-enough* open tables, picking the one with the fewest vulnerable
+    players already seated — so no single healthy table accumulates (and then loses)
+    the whole cohort. Falls back to plain route when no table clears the floor.
+
+    Experimental: tests whether de-concentrating recovers the FairPlay thesis.
+    """
+
+    name = "fairplay_balanced"
+
+    def __init__(self, adapter: RouterAdapter, *, health_floor: float = 50.0) -> None:
+        self.adapter = adapter
+        self.health_floor = health_floor
+
+    def choose(self, seeker: Seeker, live_tables: list[dict]) -> PolicyDecision:
+        p = self.adapter.recommend(seeker.player_id, live_tables)
+        if p.table_id is None:
+            return PolicyDecision(None, "no_open_seat",
+                                  {"operator_view": p.operator_view})
+        ov = {e["table_id"]: e for e in p.operator_view}
+        cls = self.adapter.classifications
+
+        def vuln_count(t: dict) -> int:
+            return sum(1 for pid in t.get("seated_player_ids", [])
+                       if cls.get(pid) in VULNERABLE_ARCHETYPES)
+
+        acceptable = [
+            t for t in live_tables
+            if t.get("open_seats", 0) > 0
+            and t["table_id"] in ov
+            and ov[t["table_id"]]["badge"] != "hidden_gated"
+            and ov[t["table_id"]]["health"] >= self.health_floor
+        ]
+        if not acceptable:
+            # nothing clears the health floor -> behave like plain route
+            return PolicyDecision(p.table_id, p.badge or "available",
+                                  {"rank": p.rank, "health": p.health,
+                                   "health_band": p.health_band,
+                                   "operator_view": p.operator_view})
+        # spread: fewest fish already seated, tie-break higher health then id
+        best = min(acceptable, key=lambda t: (vuln_count(t),
+                                              -ov[t["table_id"]]["health"], t["table_id"]))
+        e = ov[best["table_id"]]
+        return PolicyDecision(best["table_id"], "balanced",
+                              {"rank": e["rank"], "health": e["health"],
+                               "health_band": e["health_band"],
+                               "operator_view": p.operator_view})
+
+
 def make_policy(name: str, adapter: RouterAdapter | None = None, **kwargs):
     """Config switch -> policy instance. The room loop calls the same ``choose``
     regardless of which policy this returns."""
@@ -153,4 +208,8 @@ def make_policy(name: str, adapter: RouterAdapter | None = None, **kwargs):
         if adapter is None:
             raise ValueError("fairplay_protect requires a RouterAdapter")
         return FairPlayProtectPolicy(adapter, **kwargs)
+    if name == "fairplay_balanced":
+        if adapter is None:
+            raise ValueError("fairplay_balanced requires a RouterAdapter")
+        return FairPlayBalancedPolicy(adapter, **kwargs)
     raise ValueError(f"unknown policy {name!r}")

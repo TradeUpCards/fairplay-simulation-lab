@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from playsim.policies import (
+    FairPlayBalancedPolicy,
     FairPlayProtectPolicy,
     FairPlayRoutePolicy,
     RandomPolicy,
@@ -139,6 +140,28 @@ def test_protect_does_not_defer_non_vulnerable(adapter):
     assert strict.choose(grinder, [table]).table_id == "T-low"  # seated, not deferred
 
 
+# --- FairPlay-balanced (load-balancing variant) --------------------------
+
+def test_balanced_spreads_away_from_fish_heavy_table(adapter):
+    cls = adapter.classifications
+    rec = [int(p[2:]) for p, a in cls.items() if a == "recreational"][:2]
+    nonv = [int(p[2:]) for p, a in cls.items()
+            if a in ("grinder", "healthy_anchor", "regular")][:2]
+    fishy = _table("T-fishy", rec, max_seats=6)       # 2 vulnerable already seated
+    clean = _table("T-clean", nonv, max_seats=6)      # 0 vulnerable
+    pol = FairPlayBalancedPolicy(adapter, health_floor=0.0)  # floor 0 -> both acceptable
+    d = pol.choose(Seeker(104, "new"), [fishy, clean])
+    assert d.table_id == "T-clean"     # de-concentrates: avoids piling onto the fish table
+
+
+def test_balanced_never_routes_to_gated(adapter):
+    gated = _table("T-gate", [198, 199, 200], max_seats=6)
+    ok = _table("T-ok", [62, 70], max_seats=6)
+    d = FairPlayBalancedPolicy(adapter, health_floor=0.0).choose(Seeker(104, "new"),
+                                                                 [gated, ok])
+    assert d.table_id == "T-ok"
+
+
 # --- config switch --------------------------------------------------------
 
 def test_make_policy_switch(adapter):
@@ -146,5 +169,7 @@ def test_make_policy_switch(adapter):
     assert isinstance(make_policy("fairplay_route", adapter), FairPlayRoutePolicy)
     assert isinstance(make_policy("fairplay_protect", adapter, enabled=True),
                       FairPlayProtectPolicy)
+    assert isinstance(make_policy("fairplay_balanced", adapter), FairPlayBalancedPolicy)
+    assert isinstance(make_policy("random", seed=3), RandomPolicy)
     with pytest.raises(ValueError):
         make_policy("fairplay_route")  # adapter required
