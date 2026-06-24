@@ -7,8 +7,11 @@ from play** instead of being typed in. Seeded and **byte-for-byte replayable**.
 
 This is the engine specified in [`docs/archetype-play-profiles.md`](../docs/archetype-play-profiles.md)
 and [`docs/learn/poker-sim-walkthrough.html`](../docs/learn/poker-sim-walkthrough.html).
-It lives in its own folder and does **not** touch teammate-owned `sim/`,
-`scoring/`, or `data/`.
+playsim does **not** perform scoring itself — structured risk scoring lives in
+`backend/scoring/`. The room-scale FairPlay routing policy *can* call backend
+`scoring`/`router` at **decision time** (via `playsim/router_adapter.py`, the one
+cross-package seam); realized chip-flow health stays playsim-side and
+evaluation-only. (The legacy `backend/sim/` is deprecated; `playsim` supersedes it.)
 
 > **Where this sits in the AI decision** ([`docs/learn/ai-hand-generation-decision.md`](../docs/learn/ai-hand-generation-decision.md)):
 > these are **seeded-brain agents** — the deterministic substrate that powers

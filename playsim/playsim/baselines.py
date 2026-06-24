@@ -39,9 +39,14 @@ class RLCardAgent:
         a built-in heuristic fallback is used so the adapter is runnable.
     """
 
+    agent_model = "rlcard"
+    agent_version = "external"
+
     def __init__(self, player_id: int, model_path: str | None = None):
         self.player_id = player_id
         self.model_path = model_path
+        # provenance reflects the loaded checkpoint when one is supplied
+        self.agent_version = model_path if model_path else "heuristic-fallback"
         self._agent = None
         self._load()
 

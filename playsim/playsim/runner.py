@@ -38,6 +38,22 @@ def _effective_session_min(
     return base_session_min * spread * tilt
 
 
+def cohort_should_leave(
+    seat_minutes: float, net_bb: float, hands_played: int,
+    archetype: str, tilt_quit: float, spread: float,
+) -> bool:
+    """The retention tilt-leave decision for one cohort player.
+
+    Shared by ``run_session`` and the room orchestrator so both arms decay under
+    the *same* leave model (no warmup/loss-rate drift between the two). A player
+    logs off once their (loss-shortened) session budget is spent; the loss rate is
+    only counted after a 15-hand warmup.
+    """
+    loss100 = (-net_bb) / (hands_played / 100.0) if hands_played >= 15 else 0.0
+    budget = _effective_session_min(session_min_for(archetype), tilt_quit, loss100, spread)
+    return seat_minutes >= budget
+
+
 @dataclass(frozen=True)
 class Player:
     player_id: int
@@ -99,6 +115,64 @@ def _members_by_player(roster: list[Player]) -> dict[int, frozenset[int]]:
     return out
 
 
+def apply_hand_accounting(
+    rec: HandRecord,
+    order: list[int],
+    *,
+    stacks: dict[int, int],
+    net_session: dict[int, float],
+    busts: dict[int, int],
+    seat_minutes: dict[int, float],
+    hands_played: dict[int, int],
+    knobs: dict,
+    bb: int,
+    start: int,
+    min_per_hand: float,
+    rebuy_threshold_bb: int,
+    skill_edge: float,
+    persist_stacks: bool,
+) -> None:
+    """Apply one played hand's economics to the running per-player accounting.
+
+    Shared by ``run_session`` (fixed roster) and the room orchestrator
+    (``room.py``, multi-table) so the two cannot drift. Mutates the passed dicts
+    in place, preserving the exact order ``run_session`` has always used:
+
+    1. zero-sum ``skill_edge`` transfer on ``rec.payoffs`` (no RNG — keeps replay
+       byte-identical);
+    2. per-seat ``hands_played`` + ``seat_minutes`` accrual;
+    3. ``persist_stacks`` payoff -> ``net_session`` -> bust/rebuy.
+
+    The retention tilt-leave / quota-leave decision stays in the caller and reads
+    the state this helper updates (``net_session``, ``seat_minutes``,
+    ``hands_played``, ``stacks``). ``seat_minutes`` accrual lives here (step 2)
+    because it precedes the loss computation the caller's budget check depends on.
+    """
+    # (1) skill-edge zero-sum transfer
+    if skill_edge > 0:
+        contest = ({a.player_id for a in rec.actions if a.street > 0}
+                   | set(rec.showdown_player_ids)) & set(rec.payoffs)
+        if len(contest) >= 2:
+            sk = {pid: knobs[pid].skill for pid in contest}
+            mean_sk = sum(sk.values()) / len(sk)
+            pot_chips = rec.pot_bb * bb
+            for pid in contest:
+                rec.payoffs[pid] += int(round((sk[pid] - mean_sk) * skill_edge * pot_chips))
+    # (2) seat-time + hand counts accrue for everyone dealt in
+    for pid in order:
+        hands_played[pid] += 1
+        seat_minutes[pid] += min_per_hand
+    # (3) chip accounting: apply payoffs, rebuy busted stacks
+    if persist_stacks:
+        for pid in order:
+            payoff = rec.payoffs.get(pid, 0)
+            stacks[pid] += payoff
+            net_session[pid] += payoff / bb
+            if stacks[pid] < rebuy_threshold_bb * bb:   # busted -> always rebuy
+                busts[pid] += 1
+                stacks[pid] = start
+
+
 def run_session(
     roster: list[Player],
     n_hands: int,
@@ -146,7 +220,6 @@ def run_session(
     members = _members_by_player(roster)
     weak_ids = frozenset(p.player_id for p in roster if p.archetype in _WEAK)
     start = starting_stack_bb * bb
-    n = len(roster)
     pids = [p.player_id for p in roster]
 
     min_per_hand = 60.0 / hands_per_hour
@@ -182,48 +255,35 @@ def run_session(
         rec = play_hand(
             seat_agents, order, seat_stacks, sb, bb, rng, h, members, weak_ids
         )
-        # Skill-edge model: heuristic play alone yields no reliable chip-EV edge,
-        # so we apply a small ZERO-SUM transfer among contestants from weaker to
-        # stronger players — the bb/100 skill gap that variance otherwise hides.
-        # It's a behavioral *input* (a known poker quantity); health/seat-time
-        # stay *derived* from the resulting chip flow (no circularity). A real
-        # solver brain (playsim.baselines) would make this emerge instead.
-        if skill_edge > 0:
-            contest = ({a.player_id for a in rec.actions if a.street > 0}
-                       | set(rec.showdown_player_ids)) & set(rec.payoffs)
-            if len(contest) >= 2:
-                sk = {pid: knobs[pid].skill for pid in contest}
-                mean_sk = sum(sk.values()) / len(sk)
-                pot_chips = rec.pot_bb * bb
-                for pid in contest:
-                    rec.payoffs[pid] += int(round((sk[pid] - mean_sk) * skill_edge * pot_chips))
+        # Per-hand economics (skill-edge zero-sum transfer, seat-time/hand-count
+        # accrual, payoff/bust accounting) live in a shared helper so the room
+        # orchestrator (room.py) reuses the exact same logic — see
+        # apply_hand_accounting. The skill_edge transfer is a behavioral *input*
+        # (a known bb/100 quantity); health/seat-time stay *derived* from the
+        # resulting chip flow (no circularity).
+        apply_hand_accounting(
+            rec, order,
+            stacks=stacks, net_session=net_session, busts=busts,
+            seat_minutes=seat_minutes, hands_played=hands_played,
+            knobs=knobs, bb=bb, start=start, min_per_hand=min_per_hand,
+            rebuy_threshold_bb=rebuy_threshold_bb, skill_edge=skill_edge,
+            persist_stacks=persist_stacks,
+        )
         hands.append(rec)
-
         dealt_player_hands += m
-        for pid in order:
-            hands_played[pid] += 1
-            seat_minutes[pid] += min_per_hand     # paid seat-time accrues
 
         leavers: set[int] = set()
-        if persist_stacks:
+        if persist_stacks and retention:
+            # the cohort logs off when its (tilt-shortened) session is spent;
+            # the field stays put, keeping the experiment controlled
             for pid in order:
-                payoff = rec.payoffs.get(pid, 0)
-                stacks[pid] += payoff
-                net_session[pid] += payoff / bb
-                if stacks[pid] < rebuy_threshold_bb * bb:   # busted → always rebuy
-                    busts[pid] += 1
-                    stacks[pid] = start
-                # the cohort logs off when its (tilt-shortened) session is spent;
-                # the field stays put, keeping the experiment controlled
-                if retention and pid in cohort:
-                    hp = hands_played[pid]
-                    loss100 = (-net_session[pid]) / (hp / 100.0) if hp >= 15 else 0.0
-                    budget = _effective_session_min(
-                        session_min_for(arch_of[pid]), knobs[pid].tilt_quit,
-                        loss100, spread[pid],
-                    )
-                    if seat_minutes[pid] >= budget:
-                        leavers.add(pid)
+                if pid not in cohort:
+                    continue
+                if cohort_should_leave(
+                    seat_minutes[pid], net_session[pid], hands_played[pid],
+                    arch_of[pid], knobs[pid].tilt_quit, spread[pid],
+                ):
+                    leavers.add(pid)
         if quota_targets is not None:
             for pid in order:
                 target = quota_targets.get(pid)
