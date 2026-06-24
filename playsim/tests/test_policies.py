@@ -9,6 +9,7 @@ import pytest
 from playsim.policies import (
     FairPlayProtectPolicy,
     FairPlayRoutePolicy,
+    RandomPolicy,
     Seeker,
     StandardPolicy,
     make_policy,
@@ -29,6 +30,26 @@ def adapter() -> RouterAdapter:
 def _table(tid, seated, max_seats=6, style="moderate", trend="stable"):
     return make_table_dict(tid, seated, max_seats,
                            style_volatility_label=style, paid_seat_time_trend=trend)
+
+
+# --- Random (neutral baseline) -------------------------------------------
+
+def test_random_policy_deterministic_and_seats_open():
+    tables = [
+        _table("T-1", [62], max_seats=6),                          # open
+        _table("T-2", [70, 71, 72, 73, 74, 75], max_seats=6),      # full
+    ]
+    a = RandomPolicy(seed=5)
+    b = RandomPolicy(seed=5)
+    seq_a = [a.choose(Seeker(104, "new"), tables).table_id for _ in range(6)]
+    seq_b = [b.choose(Seeker(104, "new"), tables).table_id for _ in range(6)]
+    assert seq_a == seq_b                       # same seed -> identical sequence
+    assert all(t == "T-1" for t in seq_a)       # only the open table is ever chosen
+
+
+def test_random_policy_balks_when_full():
+    full = _table("T-1", [62, 70, 71, 72, 73, 60], max_seats=6)
+    assert not RandomPolicy(seed=1).choose(Seeker(104, "new"), [full]).seated
 
 
 # --- Standard -------------------------------------------------------------

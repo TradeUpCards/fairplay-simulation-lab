@@ -18,6 +18,7 @@ seat exists at all): ``PolicyDecision.deferred`` separates them for metrics.
 
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass, field
 
 from .router_adapter import RouterAdapter
@@ -43,6 +44,28 @@ class PolicyDecision:
     @property
     def seated(self) -> bool:
         return self.table_id is not None
+
+
+class RandomPolicy:
+    """Uniformly random open table — the *neutral* baseline (no routing intelligence
+    at all). Isolates a health/liquidity policy's effect from the do-nothing case.
+    Seeded for deterministic replay; balks only when no seat is open room-wide."""
+
+    name = "random"
+
+    def __init__(self, seed: int = 0) -> None:
+        self.rng = random.Random(seed)
+
+    def choose(self, seeker: Seeker, live_tables: list[dict]) -> PolicyDecision:
+        candidates = sorted(
+            (t for t in live_tables if t.get("open_seats", 0) > 0),
+            key=lambda t: t["table_id"],
+        )
+        if not candidates:
+            return PolicyDecision(None, "no_open_seat")
+        t = self.rng.choice(candidates)
+        return PolicyDecision(t["table_id"], "random",
+                              {"seated_count": t.get("seated_count", 0)})
 
 
 class StandardPolicy:
@@ -118,6 +141,8 @@ class FairPlayProtectPolicy:
 def make_policy(name: str, adapter: RouterAdapter | None = None, **kwargs):
     """Config switch -> policy instance. The room loop calls the same ``choose``
     regardless of which policy this returns."""
+    if name == "random":
+        return RandomPolicy(seed=kwargs.get("seed", 0))
     if name == "standard":
         return StandardPolicy()
     if name == "fairplay_route":
