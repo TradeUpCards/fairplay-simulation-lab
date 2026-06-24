@@ -103,3 +103,51 @@ def build_canonical(result: RoomResult, *, data_root: str = "") -> dict:
         "table_timelines": result.table_timelines,
         "summary": _realized_summary(result),
     }
+
+
+def derive_room_metrics(canonical: dict) -> dict:
+    """Derive the v1 ``room_metrics_*`` shape (``{meta, hours}``) from the canonical
+    room_sim dict. Pure function of ``canonical`` — no fixture/file reads. This is a
+    temporary compatibility view for the existing frontend; the canonical output is
+    the source of truth. ``reward_fee_ratio`` is not modeled in the MVP.
+    """
+    rc = canonical["run_config"]
+    horizon_hours = int(round(rc["horizon_min"] / 60.0)) or 1
+    path = "standard" if rc["policy"] == "standard" else "fairplay"
+
+    hours = []
+    for hr in canonical["hourly"]:
+        h = hr["hour"]
+        cum = int(round(hr["cumulative_paid_seat_min"]))
+        projected = int(round(cum / h * horizon_hours)) if h else cum
+        hours.append({
+            "hour": h,
+            "cumulative_paid_seat_time_minutes": cum,
+            "active_players": hr["active_players"],
+            "active_healthy_tables": hr["active_healthy_tables"],
+            "new_player_retention_pct": hr["cohort_retention_pct"],
+            "avg_casual_session_length_minutes": hr["avg_casual_session_min"],
+            "early_table_breaks": hr["early_table_breaks"],
+            "projected_eod_paid_seat_time_minutes": projected,
+            "reward_fee_ratio": 0.0,   # not modeled in MVP
+            "high_risk_seating_formations": hr["high_risk_formations"],
+            "hour_note": (f"Hour {h}: {hr['active_players']} active players, "
+                          f"{hr['active_healthy_tables']} healthy tables, "
+                          f"{hr['cohort_retention_pct']}% cohort retention."),
+        })
+
+    meta = {
+        "schema_version": "0.2.0-derived",
+        "path": path,
+        "generated": "playsim-room-sim",
+        "derived_from": "room_sim canonical output",
+        "horizon_hours": horizon_hours,
+        "master_seed": rc["master_seed"],
+        "policy": rc["policy"],
+        "agent_model": canonical["meta"]["agent_model"],
+        "fixture_note": canonical["meta"]["fixture_note"],
+        "note": ("Derived compatibility view for the v1 frontend; the room_sim "
+                 "canonical output is the source of truth. reward_fee_ratio is not "
+                 "modeled in the MVP."),
+    }
+    return {"meta": meta, "hours": hours}

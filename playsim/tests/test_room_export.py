@@ -9,7 +9,7 @@ import pytest
 
 from playsim.policies import StandardPolicy, make_policy
 from playsim.room import run_room
-from playsim.room_export import build_canonical
+from playsim.room_export import build_canonical, derive_room_metrics
 from playsim.router_adapter import RouterAdapter
 
 REPO = Path(__file__).resolve().parents[2]
@@ -96,3 +96,41 @@ def test_summary_counts_track_room_result():
     doc = build_canonical(doc_r)
     assert doc["summary"]["balk_count"] == len(doc_r.balked)
     assert doc["summary"]["deferred_count"] == len(doc_r.deferred) == 0  # standard never defers
+
+
+# --- U7: derived v1 room_metrics adapter ---------------------------------
+
+def test_v1_adapter_is_pure_function_of_canonical():
+    doc = _canonical(StandardPolicy())
+    a = derive_room_metrics(doc)
+    b = derive_room_metrics(doc)
+    assert a == b                       # same canonical in -> same v1 out, no I/O
+
+
+def test_v1_adapter_schema_matches_existing_fixture():
+    fixture = json.loads((REPO / "data/room_metrics_standard.json").read_text())
+    v1 = derive_room_metrics(_canonical(StandardPolicy()))
+    assert set(v1) == set(fixture)                       # {meta, hours}
+    assert set(v1["hours"][0]) == set(fixture["hours"][0])  # per-hour field parity
+
+
+def test_v1_adapter_value_and_unit_fidelity():
+    doc = _canonical(StandardPolicy())
+    v1 = derive_room_metrics(doc)
+    last = v1["hours"][-1]
+    # cumulative paid seat-time is an int in minutes, matching canonical's final hour
+    assert isinstance(last["cumulative_paid_seat_time_minutes"], int)
+    assert last["cumulative_paid_seat_time_minutes"] == int(round(
+        doc["hourly"][-1]["cumulative_paid_seat_min"]))
+    # retention is an int percentage in [0, 100]
+    assert isinstance(last["new_player_retention_pct"], int)
+    assert 0 <= last["new_player_retention_pct"] <= 100
+    # active players a non-negative int
+    assert isinstance(last["active_players"], int) and last["active_players"] >= 0
+
+
+def test_v1_adapter_path_label_from_policy(adapter):
+    std = derive_room_metrics(_canonical(StandardPolicy()))
+    fp = derive_room_metrics(_canonical(make_policy("fairplay_route", adapter)))
+    assert std["meta"]["path"] == "standard"
+    assert fp["meta"]["path"] == "fairplay"

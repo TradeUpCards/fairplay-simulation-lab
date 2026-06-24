@@ -391,6 +391,11 @@ class RoomSim:
             hour = self._next_hour
             self._next_hour += 1
             seated_now = [pid for t in self.tables.values() for pid in t.seated]
+            active_tables = sum(1 for t in self.tables.values() if len(t.seated) >= 2)
+            cohort_seen = [p for p in self.archetype_of if self.archetype_of[p] in COHORT]
+            cohort_active = [pid for pid in seated_now if self.archetype_of.get(pid) in COHORT]
+            cohort_durs = [s["duration_min"] for s in self.sessions if s["archetype"] in COHORT]
+            breaks_so_far = sum(1 for e in self.seat_events if e.get("event") == "break")
             self.hourly.append({
                 "hour": hour,
                 "cumulative_paid_seat_min": round(sum(self.seat_minutes.values()), 1),
@@ -398,9 +403,27 @@ class RoomSim:
                     sum(self.seat_minutes[p] for p in self.seat_minutes
                         if self.archetype_of.get(p) in COHORT), 1),
                 "active_players": len(seated_now),
-                "active_tables": sum(1 for t in self.tables.values() if len(t.seated) >= 2),
+                "active_tables": active_tables,
+                "active_healthy_tables": active_tables,   # proxy: per-hour realized health not classified
+                "cohort_retention_pct": round(100 * len(cohort_active) / max(len(cohort_seen), 1)),
+                "avg_casual_session_min": round(sum(cohort_durs) / len(cohort_durs)) if cohort_durs else 0,
+                "early_table_breaks": breaks_so_far,
+                "high_risk_formations": self._seating_formations(),
                 "hands_total": self.hands_total,
             })
+
+    def _seating_formations(self) -> int:
+        """Count seated cluster formations (>=2 members of one cluster co-seated).
+        A composition proxy for 'high-risk seating formations' — no backend call."""
+        total = 0
+        for t in self.tables.values():
+            by_cluster: dict[str, int] = {}
+            for pid in t.seated:
+                cid = self.cluster_of.get(pid)
+                if cid:
+                    by_cluster[cid] = by_cluster.get(cid, 0) + 1
+            total += sum(1 for n in by_cluster.values() if n >= 2)
+        return total
 
     def run(self) -> RoomResult:
         max_steps = int(self.horizon_min / self.min_per_hand) + 2
