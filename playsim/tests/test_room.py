@@ -81,7 +81,11 @@ def test_sessions_are_well_formed():
         assert {"player_id", "table_id", "start_min", "end_min",
                 "duration_min", "hands", "net_bb", "exit_reason"} <= set(s)
         assert s["duration_min"] >= 0
-        assert s["exit_reason"] in {"tilt", "break", "horizon"}
+        assert s["exit_reason"] in {
+            "tilt", "break", "horizon", "tilt_bleed", "table_pressure",
+            "mismatch", "time_budget_complete", "profit_taking",
+            "table_thinning", "boredom_low_action",
+        }
 
 
 def test_shared_arrival_stream_across_arms(adapter):
@@ -137,3 +141,25 @@ def test_routing_never_consults_realized_health():
     assert "from .health" not in src
     assert "import health" not in src
     assert "playsim.health" not in src
+
+
+def test_reasonaware_table_thinning_reseek_path():
+    class ThinTableLeave:
+        name = "thin-table-test"
+        def accept_seat(self, offer): return True
+        def should_leave(self, ctx):
+            if ctx.archetype in COHORT and ctx.seat_minutes >= 0.75:
+                return (True, "table_thinning")
+            return (False, "")
+        def reseek_on_break(self, archetype): return True
+        def exit_action(self, reason, archetype):
+            return "reseek" if reason == "table_thinning" else "terminal"
+        def wait_tolerance_min(self, reason, archetype):
+            return 3.0 if reason == "table_thinning" else 0.0
+
+    r = run_room(StandardPolicy(), master_seed=42, horizon_min=6,
+                 equity_samples=6, tables=["T-22"], behavior=ThinTableLeave())
+    assert any(s["exit_reason"] == "table_thinning" for s in r.sessions)
+    assert any(d["origin"] == "table_thinning" for d in r.routing_decisions)
+    assert any(e["event"] == "seat" and e["origin"] == "table_thinning"
+               for e in r.seat_events)

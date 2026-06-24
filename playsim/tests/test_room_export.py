@@ -96,6 +96,7 @@ def test_summary_counts_track_room_result():
     doc = build_canonical(doc_r)
     assert doc["summary"]["balk_count"] == len(doc_r.balked)
     assert doc["summary"]["deferred_count"] == len(doc_r.deferred) == 0  # standard never defers
+    assert doc["summary"]["wait_balk_count"] == len(doc_r.wait_balked)
 
 
 # --- Phase 3: cohort acceptance funnel -----------------------------------
@@ -108,6 +109,14 @@ def test_funnel_present_and_sums():
     assert f["offered"] == f["accepted"] + f["declined"] + f["balked"] + f["deferred"]
     assert f["declined"] == 0  # default behavior never declines
     assert doc["summary"]["declined_count"] == 0
+
+
+def test_exit_funnel_present():
+    doc = _canonical(StandardPolicy())
+    f = doc["summary"]["exit_funnel"]
+    assert {"exits_by_reason", "terminal_exits", "reseek_exits",
+            "reseek_attempts_by_reason", "reseek_success_by_reason",
+            "wait_balks"} <= set(f)
 
 
 def test_funnel_captures_declines_when_enabled(adapter):

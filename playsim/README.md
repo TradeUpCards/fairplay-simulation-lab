@@ -65,7 +65,7 @@ docker compose run --rm playsim population \
 |---|---|
 | `run --table T` | play a table, print the calibration report, write db/phh/features |
 | `routing` | **the health loop (fixed rosters)** — Standard vs FairPlay, reports ΔHealth |
-| `room-sim` | **the closed-loop room A/B** — seekers arrive over a horizon, a policy seats them, writes `room_sim_*`/`room_metrics_*`. Add `--behavior fit-aware`, `--debug-trace`. See `docs/learn/playsim-room-simulator-guide.html` |
+| `room-sim` | **the closed-loop room A/B** — seekers arrive over a horizon, a policy seats them, writes `room_sim_*`/`room_metrics_*`. Add `--behavior fit-aware` or `--behavior reason-aware`, plus `--debug-trace`. See `docs/learn/playsim-room-simulator-guide.html` |
 | `health --table T` | play a table out (persistent stacks) and score its health |
 | `population` | simulate `data/players.json` + `data/table_roster.json` into playsim-native hand JSON |
 | `replay --table T` | re-run a seed twice and assert byte-identical (determinism) |
