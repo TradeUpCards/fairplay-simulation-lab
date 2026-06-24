@@ -98,6 +98,31 @@ def test_summary_counts_track_room_result():
     assert doc["summary"]["deferred_count"] == len(doc_r.deferred) == 0  # standard never defers
 
 
+# --- Phase 3: cohort acceptance funnel -----------------------------------
+
+def test_funnel_present_and_sums():
+    doc = _canonical(StandardPolicy())
+    f = doc["summary"]["funnel"]
+    assert set(f) == {"offered", "accepted", "declined", "balked", "deferred"}
+    # every cohort arrival is exactly one outcome
+    assert f["offered"] == f["accepted"] + f["declined"] + f["balked"] + f["deferred"]
+    assert f["declined"] == 0  # default behavior never declines
+    assert doc["summary"]["declined_count"] == 0
+
+
+def test_funnel_captures_declines_when_enabled(adapter):
+    from playsim.behavior import FitAwareBehaviorPolicy
+    from playsim.room import run_room
+    r = run_room(make_policy("fairplay_route", adapter), master_seed=42, horizon_min=120,
+                 equity_samples=6, tables=["T-11", "T-8", "T-22", "T-1", "T-3", "T-5"],
+                 behavior=FitAwareBehaviorPolicy(decline_enabled=True, decline_strength=1.0, seed=42))
+    doc = build_canonical(r)
+    f = doc["summary"]["funnel"]
+    assert f["offered"] == f["accepted"] + f["declined"] + f["balked"] + f["deferred"]
+    assert f["declined"] >= 1                                   # decline channel active
+    assert doc["summary"]["declined_count"] == len(r.declined)
+
+
 # --- U7: derived v1 room_metrics adapter ---------------------------------
 
 def test_v1_adapter_is_pure_function_of_canonical():

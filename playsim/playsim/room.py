@@ -91,6 +91,7 @@ class RoomResult:
     left_at_minute: dict
     balked: list[int]
     deferred: list[int]
+    declined: list[int]
 
 
 class RoomSim:
@@ -167,6 +168,7 @@ class RoomSim:
         self.hands_total = 0
         self.balked: list[int] = []
         self.deferred: list[int] = []
+        self.declined: list[int] = []
         self.checkpoints: dict[str, dict] = {}
         self._next_checkpoint = 0
         self.hourly: list[dict] = []
@@ -341,7 +343,9 @@ class RoomSim:
         if self.left_at_minute[pid] is None:
             self.left_at_minute[pid] = round(self.seat_minutes[pid], 1)
         self.departed.add(pid)
-        if decision.deferred:
+        if rec.get("declined"):
+            self.declined.append(pid)   # declined a bad-fit offer (distinct from balk)
+        elif decision.deferred:
             self.deferred.append(pid)
         else:
             self.balked.append(pid)
@@ -542,6 +546,7 @@ class RoomSim:
             hands_played=dict(self.hands_played), busts=dict(self.busts),
             left_at_minute=dict(self.left_at_minute),
             balked=list(self.balked), deferred=list(self.deferred),
+            declined=list(self.declined),
         )
 
 
