@@ -61,6 +61,16 @@ def _realized_summary(result: RoomResult) -> dict:
             reseek_attempts_by_reason[reason] = reseek_attempts_by_reason.get(reason, 0) + 1
             if d.get("table_id") is not None:
                 reseek_success_by_reason[reason] = reseek_success_by_reason.get(reason, 0) + 1
+    instr = result.instrumentation
+    break_to_reseat_success = sum(
+        1 for d in result.routing_decisions
+        if d.get("origin") in {"break_displace", "wait_table_break"}
+        and d.get("table_id") is not None
+    )
+    break_to_wait_balk = sum(
+        1 for e in result.seat_events
+        if e.get("event") == "wait_balk" and e.get("reason") == "table_break"
+    )
 
     return {
         # ── primary (R21) ──
@@ -81,7 +91,20 @@ def _realized_summary(result: RoomResult) -> dict:
         "deferred_count": len(result.deferred),
         "declined_count": len(result.declined),
         "wait_balk_count": len(result.wait_balked),
+        "no_good_existing_seat_count": instr.get("no_good_existing_seat_count", 0),
+        "empty_table_available_count": instr.get("empty_table_available_count", 0),
+        "sub_quorum_table_available_count": instr.get("sub_quorum_table_available_count", 0),
+        "break_to_reseat_success": break_to_reseat_success,
+        "break_to_wait_balk": break_to_wait_balk,
+        "table_reactivation_count": instr.get("table_reactivation_count", 0),
+        "forming_seat_count": instr.get("forming_seat_count", 0),
+        "formation_activation_count": instr.get("formation_activation_count", 0),
         "prevented_bad_sessions": len(result.deferred),
+        "formation_gap": {
+            **instr,
+            "break_to_reseat_success": break_to_reseat_success,
+            "break_to_wait_balk": break_to_wait_balk,
+        },
         "exit_funnel": {
             "exits_by_reason": exits_by_reason,
             "terminal_exits": sum(exits_by_reason.get(r, 0) for r in terminal_reasons),
@@ -122,6 +145,9 @@ def build_canonical(result: RoomResult, *, data_root: str = "") -> dict:
         "starting_stack_bb": result.starting_stack_bb,
         "skill_edge": result.skill_edge,
         "equity_samples": result.equity_samples,
+        "arrival_mode": result.arrival_mode,
+        "arrival_rate_per_hour": result.arrival_rate_per_hour,
+        "formation_mode": result.formation_mode,
         "behavior": result.behavior_name,
         "behavior_params": result.behavior_params,
     }
@@ -148,6 +174,7 @@ def build_canonical(result: RoomResult, *, data_root: str = "") -> dict:
         "sessions": result.sessions,
         "hourly": result.hourly,
         "table_timelines": result.table_timelines,
+        "instrumentation": result.instrumentation,
         "summary": _realized_summary(result),
     }
 

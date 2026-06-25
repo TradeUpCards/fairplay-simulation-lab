@@ -47,11 +47,19 @@ def build_arrival_intents(
     seed: int,
     root: Path | None = None,
     warmup_min: float = 0.0,
+    mode: str = "fixture-once",
+    arrival_rate_per_hour: float | None = None,
 ) -> list[ArrivalIntent]:
-    """Deterministic, policy-independent arrival stream over ``[warmup, horizon]``.
+    """Deterministic, policy-independent arrival stream.
 
-    Same ``seed`` -> byte-identical list. One intent per unseated player. No
-    health/demand modulation: arrival times are drawn from a flat uniform.
+    ``fixture-once`` preserves the original MVP behavior: every unseated fixture
+    player produces exactly one intent, with flat-uniform arrival time over the
+    horizon.
+
+    ``continuous`` is a conservative rate-controlled variation: intents arrive as
+    a seeded Poisson process, drawing without replacement from the existing
+    unseated fixture pool. It does not invent synthetic players; if the pool is
+    exhausted, demand stops.
     """
     classifications = load_classifications(root)
     # only classified players can be simulated; skip any players.json/
@@ -59,10 +67,33 @@ def build_arrival_intents(
     pool = [pid for pid in unseated_pool(root) if pid in classifications]
     rng = random.Random(derive_table_seed(seed, "arrivals"))
 
+    if mode not in {"fixture-once", "continuous"}:
+        raise ValueError(f"unknown arrival mode {mode!r}")
+
     intents: list[ArrivalIntent] = []
-    for pid in pool:
-        arrive_at = round(rng.uniform(warmup_min, horizon_min), 1)
-        intents.append(ArrivalIntent(parse_player_id(pid), classifications[pid], arrive_at))
+    if mode == "fixture-once":
+        for pid in pool:
+            arrive_at = round(rng.uniform(warmup_min, horizon_min), 1)
+            intents.append(ArrivalIntent(parse_player_id(pid), classifications[pid], arrive_at))
+    else:
+        if horizon_min <= warmup_min or not pool:
+            return []
+        rate_per_hour = (
+            float(arrival_rate_per_hour)
+            if arrival_rate_per_hour is not None
+            else len(pool) / max((horizon_min - warmup_min) / 60.0, 1e-9)
+        )
+        if rate_per_hour <= 0:
+            raise ValueError("arrival_rate_per_hour must be positive for continuous arrivals")
+        shuffled_pool = list(pool)
+        rng.shuffle(shuffled_pool)
+        t = float(warmup_min)
+        rate_per_min = rate_per_hour / 60.0
+        for pid in shuffled_pool:
+            t += rng.expovariate(rate_per_min)
+            if t > horizon_min:
+                break
+            intents.append(ArrivalIntent(parse_player_id(pid), classifications[pid], round(t, 1)))
 
     # stable order by time then id so consumers iterate deterministically
     intents.sort(key=lambda a: (a.arrive_at_min, a.player_id))

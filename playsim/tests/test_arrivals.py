@@ -73,3 +73,21 @@ def test_arrival_times_within_horizon():
     assert all(0.0 <= it.arrive_at_min <= 480 for it in intents)
     # sorted by (time, id)
     assert intents == sorted(intents, key=lambda a: (a.arrive_at_min, a.player_id))
+
+
+def test_continuous_arrivals_are_seeded_and_rate_limited():
+    root = _root()
+    a = build_arrival_intents(
+        480, seed=42, root=root, mode="continuous", arrival_rate_per_hour=2.0,
+    )
+    b = build_arrival_intents(
+        480, seed=42, root=root, mode="continuous", arrival_rate_per_hour=2.0,
+    )
+    fixture = build_arrival_intents(480, seed=42, root=root)
+    ids = [it.player_id for it in a]
+
+    assert a == b
+    assert 0 < len(a) < len(fixture)
+    assert len(ids) == len(set(ids))
+    assert all(0.0 <= it.arrive_at_min <= 480 for it in a)
+    assert a == sorted(a, key=lambda it: (it.arrive_at_min, it.player_id))

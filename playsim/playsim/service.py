@@ -160,6 +160,9 @@ def simulate_room(
     protect: bool = False,
     protect_threshold: float = 50.0,
     behavior_name: str = "default",
+    arrival_mode: str = "fixture-once",
+    arrival_rate_per_hour: float | None = None,
+    formation_mode: str = "none",
     debug_trace: bool = False,
     data_root_str: str = "",
 ) -> dict:
@@ -186,19 +189,29 @@ def simulate_room(
 
     std_hours: list[float] = []
     fp_hours: list[float] = []
+    std_no_good: list[int] = []
+    fp_no_good: list[int] = []
     canon_std = canon_fp = canon_protect = None
 
     for i, s in enumerate(seed_list):
-        intents = build_arrival_intents(horizon_min, seed=s, root=root)
+        intents = build_arrival_intents(
+            horizon_min, seed=s, root=root, mode=arrival_mode,
+            arrival_rate_per_hour=arrival_rate_per_hour,
+        )
         common = dict(root=root, master_seed=s, horizon_min=horizon_min,
                       equity_samples=equity_samples, tables=tables,
-                      arrival_intents=intents, debug_trace=debug_trace)
+                      arrival_intents=intents, arrival_mode=arrival_mode,
+                      arrival_rate_per_hour=arrival_rate_per_hour,
+                      formation_mode=formation_mode,
+                      debug_trace=debug_trace)
         std = run_room(StandardPolicy(), **common, behavior=make_behavior(behavior_name, seed=s))
         fp = run_room(FairPlayRoutePolicy(adapter), **common, behavior=make_behavior(behavior_name, seed=s))
         cstd = build_canonical(std, data_root=data_root_str)
         cfp = build_canonical(fp, data_root=data_root_str)
         std_hours.append(cstd["summary"]["vulnerable_paid_seat_hours"])
         fp_hours.append(cfp["summary"]["vulnerable_paid_seat_hours"])
+        std_no_good.append(cstd["summary"]["no_good_existing_seat_count"])
+        fp_no_good.append(cfp["summary"]["no_good_existing_seat_count"])
         if i == 0:
             canon_std, canon_fp = cstd, cfp
             if protect:
@@ -220,6 +233,12 @@ def simulate_room(
         "delta_pct": round((fp_mean - std_mean) / std_mean * 100, 1) if std_mean > 0 else 0.0,
         "routing_helped": fp_mean >= std_mean,
         "per_seed": {"standard": std_hours, "fairplay_route": fp_hours},
+        "formation_gap": {
+            "no_good_existing_seat_by_policy": {
+                "standard": std_no_good,
+                "fairplay_route": fp_no_good,
+            }
+        },
     }
 
     out = {

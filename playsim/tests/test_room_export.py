@@ -33,7 +33,8 @@ def _canonical(policy, horizon=120, **kw):
 def test_canonical_carries_full_causal_trace():
     doc = _canonical(StandardPolicy())
     for key in ("meta", "run_config", "arrival_intents", "routing_decisions",
-                "seat_events", "sessions", "hourly", "table_timelines", "summary"):
+                "seat_events", "sessions", "hourly", "table_timelines",
+                "instrumentation", "summary"):
         assert key in doc
     assert doc["arrival_intents"]          # non-empty
     assert doc["routing_decisions"]
@@ -97,6 +98,26 @@ def test_summary_counts_track_room_result():
     assert doc["summary"]["balk_count"] == len(doc_r.balked)
     assert doc["summary"]["deferred_count"] == len(doc_r.deferred) == 0  # standard never defers
     assert doc["summary"]["wait_balk_count"] == len(doc_r.wait_balked)
+
+
+def test_formation_gap_metrics_surface_in_summary():
+    doc_r = run_room(StandardPolicy(), master_seed=42, horizon_min=60,
+                     equity_samples=6, tables=TABLES)
+    doc = build_canonical(doc_r)
+    s = doc["summary"]
+    for k in (
+        "no_good_existing_seat_count",
+        "empty_table_available_count",
+        "sub_quorum_table_available_count",
+        "break_to_reseat_success",
+        "break_to_wait_balk",
+        "table_reactivation_count",
+        "forming_seat_count",
+        "formation_activation_count",
+    ):
+        assert k in s
+    assert s["formation_gap"]["routing_attempts"] == len(doc_r.routing_decisions)
+    assert s["no_good_existing_seat_count"] == doc_r.instrumentation["no_good_existing_seat_count"]
 
 
 # --- Phase 3: cohort acceptance funnel -----------------------------------
