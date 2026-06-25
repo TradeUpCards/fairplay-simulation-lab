@@ -1,0 +1,526 @@
+{
+  "meta": {
+    "contract": "3 \u2014 evidence packet (P3 produces, P4 consumes)",
+    "schema": [
+      "case_id",
+      "case_type",
+      "scores",
+      "top_evidence",
+      "counter_evidence",
+      "uncertainties",
+      "recommended_action",
+      "allowed_actions"
+    ],
+    "count": 7,
+    "note": "Structured evidence only \u2014 no raw player/session rows. The AI Investigator sees this and nothing else."
+  },
+  "packets": [
+    {
+      "case_id": "CASE-A",
+      "case_type": "table_health_risk",
+      "title": "New player bad table mix",
+      "subjects": {
+        "entities": {
+          "new_player": "P-104",
+          "table_aggressors": [
+            "P-176",
+            "P-177"
+          ],
+          "seeded_table_label": "T-22",
+          "healthy_alternative_label": "T-8",
+          "good_fit_label": "T-14"
+        },
+        "primary_group": null,
+        "false_positive_trap": false
+      },
+      "scores": {
+        "table_health": 38.0,
+        "health_band": "beginner_unfriendly",
+        "table_health_score": 38,
+        "new_player_seating_risk": "high",
+        "occupancy": "3/6",
+        "predicted_state": "fragile_beginner_unfriendly",
+        "reroute_target_seating_risk": "low",
+        "archetype": "new"
+      },
+      "top_evidence": [
+        {
+          "code": "predation_pressure",
+          "detail": "Predation pressure 40/45 \u2014 skill-weighted aggressor load 2.0 against 0 recreational/new seat(s).",
+          "signals": {
+            "aggressor_weight": 2.0,
+            "vulnerable": 0,
+            "pressure": 2.0
+          }
+        },
+        {
+          "code": "fragility",
+          "detail": "Fragility 22/25 \u2014 3/6 seats, paid-seat-time trend 'flat'. Short-handed concentrates exposure.",
+          "signals": {
+            "occupancy": 0.5,
+            "trend": "flat",
+            "trend_penalty": 7.0
+          }
+        },
+        {
+          "code": "active_cluster_severity",
+          "detail": "No flagged cluster actively seated (P_clus 0).",
+          "signals": {
+            "clusters": {}
+          }
+        },
+        {
+          "code": "observed_bleed",
+          "detail": "No observed recreational truncation yet (composition-led snapshot).",
+          "signals": {
+            "truncated": 0,
+            "considered": 0,
+            "observed": false
+          }
+        },
+        {
+          "code": "fit",
+          "detail": "Fit 90/100 \u2014 new at a 'beginner_friendly' table.",
+          "signals": {
+            "archetype": "new",
+            "style": "beginner_friendly",
+            "matrix_row": "new"
+          }
+        },
+        {
+          "code": "delta_health",
+          "detail": "\u0394Health +3.6 \u2014 marginal change to table composition health if seated (P_bleed held fixed).",
+          "signals": {
+            "delta_health": 3.6
+          }
+        },
+        {
+          "code": "vulnerable_on_band",
+          "detail": "new player at a 'healthy' table (Health 94). New/recreational players are the cohort this protects \u2014 risk low.",
+          "signals": {
+            "archetype": "new",
+            "band": "healthy",
+            "health": 94.0
+          }
+        },
+        {
+          "code": "recent_registration",
+          "detail": "Account registered 4 day(s) ago (<= 14); treat as a new, vulnerable player.",
+          "signals": {
+            "registered_days_ago": 4.0
+          }
+        }
+      ],
+      "counter_evidence": [
+        {
+          "code": "no_material_counter_evidence",
+          "detail": "Counter-evidence was assessed; no material exculpatory signal was found in the available evidence. Absence of counter-evidence is not corroboration \u2014 weigh the primary signals against the uncertainties.",
+          "signals": {}
+        }
+      ],
+      "uncertainties": [
+        "This is an elevated-for-review signal, not a determination of wrongdoing. A human operator decides; no automatic action is taken.",
+        "All signals are simulated fields on synthetic data \u2014 not real device telemetry, KYC, location, or real-time gameplay/RTA.",
+        "Health and seating scores are composition-based projections of table state, not realized outcomes \u2014 an unhealthy mix is a risk, not proof of harm."
+      ],
+      "recommended_action": "reroute",
+      "allowed_actions": [
+        "accept",
+        "override",
+        "monitor",
+        "suppress_table_for_player",
+        "escalate"
+      ],
+      "provenance": {
+        "produced_by": "P3 / scoring.evidence",
+        "prd_ref": "PRD \u00a76 New Player Case / \u00a77 Eval A",
+        "sources": [
+          "health/seating/classifications",
+          "seeded_case_labels"
+        ],
+        "note": "Structured evidence only \u2014 assembled from frozen P3 outputs; no raw rows."
+      }
+    },
+    {
+      "case_id": "CASE-B",
+      "case_type": "table_health_risk",
+      "title": "Strong grinder health concern not integrity",
+      "subjects": {
+        "entities": {
+          "grinder": "P-164"
+        },
+        "primary_group": null,
+        "false_positive_trap": true
+      },
+      "scores": {
+        "archetype": "grinder"
+      },
+      "top_evidence": [
+        {
+          "code": "high_volume_professional",
+          "detail": "High-volume grind (285,000 lifetime hands) with strong postflop aggression (AF 2.80); a table-health consideration, explicitly NOT an integrity flag.",
+          "signals": {
+            "lifetime_hands": 285000.0,
+            "aggression_factor": 2.8,
+            "sessions_last_30d": 26.0
+          }
+        }
+      ],
+      "counter_evidence": [
+        {
+          "code": "benign_explanation",
+          "detail": "No integrity signals (no device link, soft-play, or correlated win/loss). The pattern is explained by skill / legitimate play, not coordination \u2014 a health lens, not an integrity accusation.",
+          "signals": {
+            "is_false_positive_trap": true
+          }
+        }
+      ],
+      "uncertainties": [
+        "This is an elevated-for-review signal, not a determination of wrongdoing. A human operator decides; no automatic action is taken.",
+        "All signals are simulated fields on synthetic data \u2014 not real device telemetry, KYC, location, or real-time gameplay/RTA.",
+        "Health and seating scores are composition-based projections of table state, not realized outcomes \u2014 an unhealthy mix is a risk, not proof of harm."
+      ],
+      "recommended_action": "monitor",
+      "allowed_actions": [
+        "accept",
+        "override",
+        "monitor",
+        "suppress_table_for_player",
+        "escalate"
+      ],
+      "provenance": {
+        "produced_by": "P3 / scoring.evidence",
+        "prd_ref": "PRD \u00a77 Eval B",
+        "sources": [
+          "health/seating/classifications",
+          "seeded_case_labels"
+        ],
+        "note": "Structured evidence only \u2014 assembled from frozen P3 outputs; no raw rows."
+      }
+    },
+    {
+      "case_id": "CASE-C",
+      "case_type": "integrity_risk",
+      "title": "True coordinated cluster integrity review",
+      "subjects": {
+        "entities": {
+          "account_A": "P-198",
+          "account_B": "P-199",
+          "account_C": "P-200",
+          "cluster_id": "CL-001",
+          "device_link_group": "DG-001",
+          "seeded_table_label": "T-11"
+        },
+        "primary_group": "CL-001",
+        "false_positive_trap": false
+      },
+      "scores": {
+        "integrity_band": "high",
+        "convergence_count": 4,
+        "group_kind": "cluster"
+      },
+      "top_evidence": [
+        {
+          "code": "device_link",
+          "detail": "Shared device link (DG-001) ties cluster accounts to the same device group.",
+          "signals": {
+            "device_group_id": "DG-001"
+          }
+        },
+        {
+          "code": "timing_correlation",
+          "detail": "Pairwise session-timing correlation up to 0.88 (>= 0.8) across members.",
+          "signals": {
+            "max_timing_correlation": 0.88
+          }
+        },
+        {
+          "code": "co_seating",
+          "detail": "Repeated co-seating: 14/18 shared tables (rate 0.78 >= 0.6).",
+          "signals": {
+            "rate": 0.778,
+            "shared_tables": 14,
+            "opportunities": 18
+          }
+        },
+        {
+          "code": "soft_play",
+          "detail": "Within-cluster soft-play: soft_play_delta down to -0.82 (<= -0.6) \u2014 value given away in member-vs-member hands.",
+          "signals": {
+            "min_soft_play_delta": -0.82
+          }
+        },
+        {
+          "code": "outsider_targeting",
+          "detail": "Outsider-pressure signal present (coordinated aggression toward non-members); corroborating context, not a primary family.",
+          "signals": {}
+        },
+        {
+          "code": "casual_exit_impact",
+          "detail": "Elevated casual-player exit impact at affected tables.",
+          "signals": {}
+        }
+      ],
+      "counter_evidence": [
+        {
+          "code": "no_material_counter_evidence",
+          "detail": "Counter-evidence was assessed; no material exculpatory signal was found in the available evidence. Absence of counter-evidence is not corroboration \u2014 weigh the primary signals against the uncertainties.",
+          "signals": {}
+        }
+      ],
+      "uncertainties": [
+        "This is an elevated-for-review signal, not a determination of wrongdoing. A human operator decides; no automatic action is taken.",
+        "All signals are simulated fields on synthetic data \u2014 not real device telemetry, KYC, location, or real-time gameplay/RTA.",
+        "Convergent signals are consistent with coordination but can also reflect benign shared context (household, friends, similar schedules); none is individually conclusive.",
+        "Primary integrity review case. Three convergent signals: device link (A/B), timing correlation (C to both), repeated co-seating, within-cluster soft_play_delta. Counter-evidence: no individual signal alone proves collusion \u2014 all three must converge."
+      ],
+      "recommended_action": "hold_for_pitboss_review",
+      "allowed_actions": [
+        "accept",
+        "override",
+        "monitor",
+        "suppress_table_for_player",
+        "escalate"
+      ],
+      "provenance": {
+        "produced_by": "P3 / scoring.evidence",
+        "prd_ref": "PRD \u00a76 Coordinated Cluster Case / \u00a77 Eval C",
+        "sources": [
+          "integrity_scores",
+          "seeded_case_labels"
+        ],
+        "note": "Structured evidence only \u2014 assembled from frozen P3 outputs; no raw rows."
+      }
+    },
+    {
+      "case_id": "CASE-D",
+      "case_type": "integrity_risk",
+      "title": "Regular overlap not over escalated",
+      "subjects": {
+        "entities": {
+          "player_1": "P-142",
+          "player_2": "P-143",
+          "overlap_record": "OVL-001"
+        },
+        "primary_group": "OVL-001",
+        "false_positive_trap": true
+      },
+      "scores": {
+        "integrity_band": "low",
+        "convergence_count": 0,
+        "group_kind": "regular_overlap"
+      },
+      "top_evidence": [],
+      "counter_evidence": [
+        {
+          "code": "legitimate_regular_counter_evidence",
+          "detail": "High co-seating (rate 0.50) but no device link, no soft-play, no correlated win/loss \u2014 explained by shared stake/time preference, not coordination.",
+          "signals": {
+            "co_seating_rate": 0.5
+          }
+        }
+      ],
+      "uncertainties": [
+        "This is an elevated-for-review signal, not a determination of wrongdoing. A human operator decides; no automatic action is taken.",
+        "All signals are simulated fields on synthetic data \u2014 not real device telemetry, KYC, location, or real-time gameplay/RTA.",
+        "Convergent signals are consistent with coordination but can also reflect benign shared context (household, friends, similar schedules); none is individually conclusive.",
+        "TRAP for over-eager classifiers. High overlap without collusion signals is expected for players who share a preferred session window.",
+        "Flagged in the data as a false-positive trap: the convergent-looking overlap has a benign explanation (see counter-evidence)."
+      ],
+      "recommended_action": "monitor",
+      "allowed_actions": [
+        "accept",
+        "override",
+        "monitor",
+        "suppress_table_for_player",
+        "escalate"
+      ],
+      "provenance": {
+        "produced_by": "P3 / scoring.evidence",
+        "prd_ref": "PRD \u00a77 Eval D",
+        "sources": [
+          "integrity_scores",
+          "seeded_case_labels"
+        ],
+        "note": "Structured evidence only \u2014 assembled from frozen P3 outputs; no raw rows."
+      }
+    },
+    {
+      "case_id": "CASE-E",
+      "case_type": "integrity_risk",
+      "title": "Shared device household false positive",
+      "subjects": {
+        "entities": {
+          "H1": "P-192",
+          "H2": "P-193",
+          "device_group": "DG-002",
+          "household_id": "H-01"
+        },
+        "primary_group": "H-01",
+        "false_positive_trap": true
+      },
+      "scores": {
+        "integrity_band": "neutral",
+        "convergence_count": 1,
+        "group_kind": "household"
+      },
+      "top_evidence": [
+        {
+          "code": "device_link",
+          "detail": "Shared device (DG-002) \u2014 expected for a household; not incriminating on its own.",
+          "signals": {
+            "device_group_id": "DG-002"
+          }
+        }
+      ],
+      "counter_evidence": [
+        {
+          "code": "household_counter_evidence",
+          "detail": "Divergent session profiles and low co-seating (rate 0.09); no soft-play, no correlated profitability. Shared-device overlap is explained by household, not collusion.",
+          "signals": {
+            "co_seating_rate": 0.091,
+            "P-192_preferred_time": "evening",
+            "P-193_preferred_time": "morning_afternoon",
+            "vpip_difference": 0.08,
+            "avg_session_diff_minutes": 35.0
+          }
+        }
+      ],
+      "uncertainties": [
+        "This is an elevated-for-review signal, not a determination of wrongdoing. A human operator decides; no automatic action is taken.",
+        "All signals are simulated fields on synthetic data \u2014 not real device telemetry, KYC, location, or real-time gameplay/RTA.",
+        "Convergent signals are consistent with coordination but can also reflect benign shared context (household, friends, similar schedules); none is individually conclusive.",
+        "FALSE POSITIVE TRAP. Same mocked device, but radically different session profiles \u2014 H1 plays evenings (~145 min), H2 plays mornings (~110 min), different vpip/pfr. Low co-seating rate (2 of 22). No soft-play, no correlated profit. Must produce monitor-only outcome, NOT escalation or suppression.",
+        "Flagged in the data as a false-positive trap: the convergent-looking overlap has a benign explanation (see counter-evidence)."
+      ],
+      "recommended_action": "monitor",
+      "allowed_actions": [
+        "accept",
+        "override",
+        "monitor",
+        "suppress_table_for_player",
+        "escalate"
+      ],
+      "provenance": {
+        "produced_by": "P3 / scoring.evidence",
+        "prd_ref": "PRD \u00a76 Shared-Device False Positive / \u00a77 Eval E",
+        "sources": [
+          "integrity_scores",
+          "seeded_case_labels"
+        ],
+        "note": "Structured evidence only \u2014 assembled from frozen P3 outputs; no raw rows."
+      }
+    },
+    {
+      "case_id": "CASE-F",
+      "case_type": "promo_abuse",
+      "title": "Promo abuse not collusion",
+      "subjects": {
+        "entities": {
+          "promo_abuser": "P-184"
+        },
+        "primary_group": null,
+        "false_positive_trap": false
+      },
+      "scores": {
+        "archetype": "promo_hunter"
+      },
+      "top_evidence": [
+        {
+          "code": "promo_redemption_rate",
+          "detail": "21 promo redemptions in 30d with short ~32-min sessions \u2014 promo abuse, a health/economics concern, not collusion.",
+          "signals": {
+            "promo_redemptions_30d": 21.0,
+            "avg_session_minutes": 32.0
+          }
+        }
+      ],
+      "counter_evidence": [
+        {
+          "code": "no_material_counter_evidence",
+          "detail": "Counter-evidence was assessed; no material exculpatory signal was found in the available evidence. Absence of counter-evidence is not corroboration \u2014 weigh the primary signals against the uncertainties.",
+          "signals": {}
+        }
+      ],
+      "uncertainties": [
+        "This is an elevated-for-review signal, not a determination of wrongdoing. A human operator decides; no automatic action is taken.",
+        "All signals are simulated fields on synthetic data \u2014 not real device telemetry, KYC, location, or real-time gameplay/RTA.",
+        "A promo-redemption pattern indicates bonus optimization, which is a policy/health matter and distinct from collusion or cheating."
+      ],
+      "recommended_action": "flag_promo_team",
+      "allowed_actions": [
+        "accept",
+        "override",
+        "monitor",
+        "suppress_table_for_player",
+        "escalate"
+      ],
+      "provenance": {
+        "produced_by": "P3 / scoring.evidence",
+        "prd_ref": "PRD \u00a77 Eval F",
+        "sources": [
+          "health/seating/classifications",
+          "seeded_case_labels"
+        ],
+        "note": "Structured evidence only \u2014 assembled from frozen P3 outputs; no raw rows."
+      }
+    },
+    {
+      "case_id": "CASE-G",
+      "case_type": "bot_account",
+      "title": "Bot like similarity own review queue",
+      "subjects": {
+        "entities": {
+          "bot_candidate": "P-221"
+        },
+        "primary_group": "P-221",
+        "false_positive_trap": false
+      },
+      "scores": {
+        "integrity_band": "manual_review",
+        "convergence_count": 0,
+        "group_kind": "bot_account"
+      },
+      "top_evidence": [
+        {
+          "code": "bot_fingerprint",
+          "detail": "Account-level bot-similarity 0.87 (>= 0.8) with timing regularity 0.88. Routed to a dedicated bot-review queue, separate from collusion review.",
+          "signals": {
+            "bot_similarity_score": 0.87,
+            "timing_regularity": 0.88
+          }
+        }
+      ],
+      "counter_evidence": [
+        {
+          "code": "no_material_counter_evidence",
+          "detail": "Counter-evidence was assessed; no material exculpatory signal was found in the available evidence. Absence of counter-evidence is not corroboration \u2014 weigh the primary signals against the uncertainties.",
+          "signals": {}
+        }
+      ],
+      "uncertainties": [
+        "This is an elevated-for-review signal, not a determination of wrongdoing. A human operator decides; no automatic action is taken.",
+        "All signals are simulated fields on synthetic data \u2014 not real device telemetry, KYC, location, or real-time gameplay/RTA.",
+        "Bot-similarity is a heuristic that warrants review, not proof of automation; route to the bot-review queue, do not enforce.",
+        "Account-level bot signal \u2014 own review queue, not collusion."
+      ],
+      "recommended_action": "route_to_bot_review_queue",
+      "allowed_actions": [
+        "accept",
+        "override",
+        "monitor",
+        "suppress_table_for_player",
+        "escalate"
+      ],
+      "provenance": {
+        "produced_by": "P3 / scoring.evidence",
+        "prd_ref": "PRD \u00a77 Eval G",
+        "sources": [
+          "integrity_scores",
+          "seeded_case_labels"
+        ],
+        "note": "Structured evidence only \u2014 assembled from frozen P3 outputs; no raw rows."
+      }
+    }
+  ]
+}
