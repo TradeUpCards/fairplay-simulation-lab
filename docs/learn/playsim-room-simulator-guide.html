@@ -116,7 +116,7 @@
       <a href="#arrivals"><b>04</b><span>Arrival → table</span></a>
       <a href="#hand"><b>05</b><span>Playing a hand</span></a>
       <a href="#leave"><b>06</b><span>When players leave</span></a>
-      <a href="#breaks"><b>07</b><span>Table breaks</span></a>
+      <a href="#breaks"><b>07</b><span>Breaks &amp; formation</span></a>
       <a href="#health"><b>08</b><span>Predicted vs realized</span></a>
       <a href="#policies"><b>09</b><span>The policies</span></a>
       <div class="grp">The experiment</div>
@@ -147,6 +147,7 @@
         <span class="badge">Signals emerge from play</span>
         <span class="badge">Standard vs FairPlay A/B</span>
         <span class="badge">Reason-aware re-seating</span>
+        <span class="badge">Forming-table experiment</span>
         <span class="badge">Honest negative result</span>
       </div>
     </header>
@@ -253,11 +254,12 @@
           the policy seam in <code>policies.py</code>.</p></div></div>
       <div class="grid">
         <article class="card half"><div class="label"><span class="dot"></span>The stream</div>
-          <h4>One intent per unseated player</h4>
-          <p>The ~54 players not seated at hour 0 each get <strong>exactly one</strong>
+          <h4>Fixture-once by default; continuous as a probe</h4>
+          <p>In the baseline, the ~54 players not seated at hour 0 each get <strong>exactly one</strong>
             <code>ArrivalIntent(player_id, archetype, arrive_at_min)</code>, drawn uniformly over the
             horizon from a seed. Flat schedule — <em>no</em> health-modulated arrival rate (that would
-            make the two arms see different demand).</p></article>
+            make the two arms see different demand). The experimental <code>continuous</code> mode uses
+            the same fixture pool without replacement, but spaces arrivals by a seeded rate.</p></article>
         <article class="card half"><div class="label"><span class="dot"></span>The decision</div>
           <h4>Policy picks a seat — or the seeker balks</h4>
           <p>The loop hands the seeker + the live table set to <code>policy.choose()</code>. If no
@@ -267,6 +269,11 @@
       <div class="callout"><strong>"Balk" =</strong> a seeker who arrives, finds no acceptable open seat,
         and leaves without playing. It's the queueing term, and it's the dominant lever in the findings —
         a balked vulnerable player contributes nothing to retained seat-time.</div>
+      <div class="callout"><strong>Why continuous arrivals were added:</strong> the original
+        fixture-once stream is useful for a clean baseline, but it makes liquidity a one-way drain.
+        <code>--arrival-mode continuous --arrival-rate-per-hour N</code> gives us a policy-independent
+        way to test whether the Standard-vs-FairPlay result changes when demand keeps regenerating.
+        Both arms still consume the same generated arrival events.</div>
       <div class="callout q"><div class="label"><span class="dot"></span>◆ Questions to investigate</div>
         <ul>
           <li>Arrivals are uniform over the horizon. Real lobbies have rush hours. How would a
@@ -374,24 +381,35 @@ budget  = base_session_min(archetype) * spread(0.85..1.15) * tilt        # sprea
     <!-- 07 -->
     <section id="breaks">
       <div class="shead"><div class="num">07</div><div>
-        <h2>Table breaks &amp; displacement</h2>
-        <p class="lede">A table needs ≥2 players to deal. When departures drop a table below that, it
-          <strong>breaks</strong> — and its remaining player is displaced. <em>This turned out to be the
-          mechanism behind the whole result</em> (<a href="#findings">§11</a>).</p></div></div>
+        <h2>Table breaks, displacement &amp; formation</h2>
+        <p class="lede">A table needs ≥2 players to deal. In the baseline, departures that leave one
+          player cause a <strong>break</strong> and displacement. In the forming experiment, an empty
+          table can hold a waiting player without dealing or accruing paid seat-time. <em>This table-
+          liveness mechanism turned out to be the center of the whole result</em> (<a href="#findings">§11</a>).</p></div></div>
       <div class="grid">
         <article class="card half"><div class="label"><span class="dot"></span>Break</div>
           <h4>Below quorum → table closes</h4>
-          <p>Any table with exactly 1 seated player breaks that step; the lone player re-enters the
-            seeker pool <strong>once</strong> and is re-routed by the active policy.</p></article>
-        <article class="card half"><div class="label"><span class="dot"></span>Re-seek guard</div>
-          <h4>No phantom seats</h4>
-          <p>A displaced player won't be seated at an empty table (that would just be a non-dealing lone
-            seat); if no pair-forming seat exists, they balk. This keeps the eval trace clean.</p></article>
+          <p>With <code>--formation-mode none</code>, any table with exactly 1 seated player breaks that
+            step; the lone player re-enters the seeker pool and is re-routed by the active policy.</p></article>
+        <article class="card half"><div class="label"><span class="dot"></span>Forming</div>
+          <h4>Empty → forming → active</h4>
+          <p>With <code>--formation-mode forming</code>, a seeker may seed an empty table. The table stays
+            <code>forming</code> until a second player joins; only then does it become active and start
+            accruing paid seat-time.</p></article>
       </div>
       <div class="callout warn"><strong>Why this matters so much:</strong> every break displaces a
         player, and many displaced players can't re-seat (a "break-balk") and lose all further seat-time.
         Policies that keep tables <em>full</em> break fewer tables. That single fact decides the
         comparison.</div>
+      <div class="callout"><strong>Why formation mode was added:</strong> the baseline can prove that
+        thin-table churn hurts FairPlay, but it cannot test FairPlay's counter-claim: route a vulnerable
+        player away from predators, let that table grow, and preserve a healthier session. Forming mode
+        adds that missing state while keeping the metric honest: solo waiting time is not paid seat-time.</div>
+      <div class="callout"><strong>What to watch:</strong> new output fields include
+        <code>no_good_existing_seat_count</code>, <code>empty_table_available_count</code>,
+        <code>sub_quorum_table_available_count</code>, <code>forming_seat_count</code>,
+        <code>formation_activation_count</code>, and <code>table_reactivation_count</code>. These tell us
+        whether formation opportunities existed and whether they became real active tables.</div>
       <div class="callout"><strong>Current lifecycle nuance:</strong> under <code>reason-aware</code>,
         a break-displaced player can wait and retry before becoming a terminal <code>wait_balk</code>.
         This lets the sim test the FairPlay counter-hypothesis: thin tables may create re-seat churn
@@ -560,6 +578,10 @@ budget  = base_session_min(archetype) * spread(0.85..1.15) * tilt        # sprea
           <h4>Liveness-aware FairPlay</h4>
           <p>Add a quorum/liquidity term to the rank so health-routing stops stranding tables — unlike
             the naive spread that backfired.</p></article>
+        <article class="card"><div class="label"><span class="dot"></span>Formation</div>
+          <h4>Does table growth change the result?</h4>
+          <p>Run the 2x2: <code>{fixture-once, continuous} × {none, forming}</code>. This separates
+            demand regeneration from the ability to seed and activate fresh healthy tables.</p></article>
         <article class="card"><div class="label"><span class="dot"></span>Operator step</div>
           <h4>Model table-balancing separately</h4>
           <p>Real rooms balance tables independently of player routing. Should the sim too?</p></article>
@@ -599,6 +621,10 @@ budget  = base_session_min(archetype) * spread(0.85..1.15) * tilt        # sprea
 # (Phase 3 probe; reports wait_balks and exit/re-seat funnels)
 .venv/bin/python -m playsim.cli room-sim --seeds 42,7,99 --horizon 480 --behavior reason-aware --out-dir out
 
+# Formation experiment: no paid solo seats; tables activate only at quorum
+.venv/bin/python -m playsim.cli room-sim --seeds 42,7,99 --horizon 480 \
+  --arrival-mode continuous --arrival-rate-per-hour 8 --formation-mode forming --out-dir out
+
 make test                         # full suite</code></pre>
       <div class="callout">Tip for fast local pokes: add <code>--tables T-22,T-8</code> and a short
         <code>--horizon 60</code> to iterate in seconds before committing to a full run.</div>
@@ -625,6 +651,7 @@ make test                         # full suite</code></pre>
           <tr><td>Archetypes &amp; knobs</td><td><code>playsim/playsim/knobs.py</code></td></tr>
           <tr><td>Per-hand economics &amp; the leave model</td><td><code>playsim/playsim/runner.py</code></td></tr>
           <tr><td>Player behavior seam (accept / leave / re-seek), fit-aware behavior, reason-aware lifecycle</td><td><code>playsim/playsim/behavior.py</code></td></tr>
+          <tr><td>Why forming tables were added, how to run the 2x2, and what remains illustrative</td><td><code>docs/learn/playsim-table-formation-gap.md</code></td></tr>
           <tr><td>The behavioral model spec (phases, calibration, circularity guard, re-seat lifecycle)</td><td><code>docs/brainstorms/2026-06-24-behavioral-fidelity-fit-model-requirements.md</code></td></tr>
           <tr><td>Why the numbers stay illustrative + the path to calibration data</td><td><code>docs/learn/playsim-calibration-data.md</code></td></tr>
           <tr><td>Output schema + v1 adapter</td><td><code>playsim/playsim/room_export.py</code></td></tr>

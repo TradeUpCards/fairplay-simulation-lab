@@ -147,8 +147,8 @@ details.drill .body p{font-size:13.5px;max-width:none}
   <p style="margin-top:1rem;padding:.85rem 1.1rem;border-left:4px solid #58c7d6;background:rgba(88,199,214,.06);border-radius:12px">
   <strong>Where this fits (2026-06):</strong> this is the <em>core engine</em> reference. The
   closed-loop <strong>room simulator</strong> (Standard-vs-FairPlay routing over a seeded arrival
-  stream, with swappable default, fit-aware, and reason-aware player-behavior models) is built on top
-  of it — for that, see
+  stream, with swappable default, fit-aware, and reason-aware player-behavior models, plus an
+  explicit forming-table experiment) is built on top of it — for that, see
   <a href="playsim-room-simulator-guide.html">the room simulator guide</a> and the findings in
   <code>docs/learn/playsim-room-routing-findings.md</code>.</p>
   <div class="crosslink">
@@ -164,7 +164,7 @@ details.drill .body p{font-size:13.5px;max-width:none}
   is byte-for-byte reproducible. Played hands are aggregated into <b>Contract-1 features</b> (integrity loop)
   and <b>realized table health → paid seat-time</b> (health/routing loop). Room-scale runs start from
   the fixed hour-0 fixture room (12 tables, 68 seated players), then route a seeded arrival stream and
-  record exits, breaks, re-seat attempts, and wait-balks. Health is computed
+  record exits, breaks, re-seat attempts, wait-balks, and optional forming-table activations. Health is computed
   <b>independently from chip flow</b> — never by re-running the scoring engine — so the routing backtest isn't
   a tautology. A learned brain (<span class="a">RLCard / OpenSpiel / PokerRL</span>) drops in behind one
   <code>act()</code> method, with PokerKit still refereeing.</p>
@@ -224,7 +224,7 @@ details.drill .body p{font-size:13.5px;max-width:none}
       <tr>
         <td><b><code>room-sim</code></b></td>
         <td>Fixture room plus a seeded arrival stream and policy choice</td>
-        <td>Standard-vs-FairPlay routing comparisons, table liveness, re-seat behavior, wait-balks, and paid seat-time.</td>
+        <td>Standard-vs-FairPlay routing comparisons, table liveness, re-seat behavior, wait-balks, optional table formation, and paid seat-time.</td>
         <td>Calls the policy/router adapter after every room event using current open-seat state.</td>
       </tr>
     </tbody>
@@ -265,6 +265,13 @@ result = run_session(players, n_hands=100, seed=42)</code></pre>
     <b>Important boundary:</b> population mode is a deterministic hand-corpus and feature-production path, not a
     room-routing test. Dynamic seating and re-seating live in <code>room-sim</code>, where the policy sees current
     table occupancy and open-seat state after each arrival or leave event.
+  </div>
+  <div class="callout">
+    <b>Table formation experiment:</b> the original room sim only drained fixed hour-0 tables, which structurally
+    favored most-full routing. <code>room-sim</code> now supports <code>--formation-mode forming</code>, where a
+    seeker can seed an empty table in <code>forming</code> state. That seat does <em>not</em> accrue paid
+    seat-time until another player joins and the table becomes active, so the experiment can test table growth
+    without paying for parked solo seats. See <code>docs/learn/playsim-table-formation-gap.md</code>.
   </div>
 </section>
 
@@ -557,11 +564,11 @@ headline = average(runs)                              <span class="c"># &lt;- re
       <tr><td><code>runner.py</code></td><td>seeded session: button rotation, 3 modes (reset / persist / retention), leave model, skill-edge transfer</td></tr>
       <tr><td><code>features.py</code></td><td>played hands → Contract-1 features (the emergent signals)</td></tr>
       <tr><td><code>health.py</code></td><td>independent realized health + retention/paid-seat-time + Standard-vs-FairPlay comparison</td></tr>
-      <tr><td><code>arrivals.py</code></td><td>policy-independent seeded arrival stream from players not seated at hour 0</td></tr>
+      <tr><td><code>arrivals.py</code></td><td>policy-independent seeded arrival stream from players not seated at hour 0; supports fixture-once and continuous modes</td></tr>
       <tr><td><code>policies.py</code></td><td>room seating policies: random, most-full, FairPlay route/protect/balanced</td></tr>
       <tr><td><code>router_adapter.py</code></td><td>the only playsim module that imports backend scoring/router for FairPlay decisions</td></tr>
       <tr><td><code>behavior.py</code></td><td>player behavior seam: default, fit-aware, and reason-aware accept/leave/re-seat logic</td></tr>
-      <tr><td><code>room.py</code></td><td>closed-loop multi-table room orchestrator: arrivals, seating, hands, exits, breaks, wait/re-seat lifecycle</td></tr>
+      <tr><td><code>room.py</code></td><td>closed-loop multi-table room orchestrator: arrivals, seating, hands, exits, breaks, wait/re-seat lifecycle, forming-table state</td></tr>
       <tr><td><code>room_export.py</code></td><td>canonical <code>room_sim_*</code> output plus summary/funnel metrics and derived v1 adapter</td></tr>
       <tr><td><code>calibrate.py</code></td><td>the AF tuning loop → <code>calibration.json</code></td></tr>
       <tr><td><code>phh.py</code> · <code>store.py</code></td><td>PHH export · SQLite persistence</td></tr>
