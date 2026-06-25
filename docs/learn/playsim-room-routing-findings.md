@@ -331,4 +331,4 @@ expires, the next product problem is liquidity/table balancing, not necessarily 
 - Brainstorm: `docs/brainstorms/2026-06-23-playsim-routing-comparison-requirements.md`
 - Plan: `docs/plans/2026-06-23-001-feat-playsim-room-simulator-plan.md`
 - Circularity guardrail decision: `docs/learn/ai-hand-generation-decision.md`
-- playsim engine modes: `docs/learn/playsim-engine-modes.html`
+- playsim engine reference: `docs/learn/playsim-engine.html`
