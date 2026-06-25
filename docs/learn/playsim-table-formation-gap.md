@@ -1,17 +1,20 @@
-# Playsim model limitation: no table formation / growth — and why it biases Standard vs FairPlay
+# Playsim table formation: the former gap, the new experiment, and why it matters
 
 **Date:** 2026-06-25
 **Audience:** playsim owners (P2b/P2c) + anyone quoting the room-routing findings
-**Status:** open limitation / proposed model fix — *not* a defect report; it builds on
-the honest findings in `docs/learn/playsim-room-routing-findings.md`.
+**Status:** implemented as an explicit experiment behind `--formation-mode forming`;
+baseline behavior remains available with `--formation-mode none`. This is *not* a
+defect report; it builds on the honest findings in
+`docs/learn/playsim-room-routing-findings.md`.
 **Source code:** `playsim/playsim/room.py`
 
 ---
 
 ## TL;DR
 
-The room simulator can only **drain**: tables are a fixed roster, pre-filled at
-start, and they can **shrink and break but never form or grow from short-handed**.
+The original room simulator could only **drain**: tables were a fixed roster,
+pre-filled at start, and they could **shrink and break but never form or grow from
+short-handed**.
 Combined with finite one-shot arrivals, room liquidity decreases monotonically over
 the horizon. This **structurally favors concentration (Standard / most-full)** and
 **denies health-routing (FairPlay) its natural real-world mechanism** — seating a
@@ -20,13 +23,14 @@ healthy. So the documented "Standard beats FairPlay, and the gap grows by 8h" re
 is *partly an artifact of the missing formation dynamic*, not only a property of the
 routing policy.
 
-This is arguably a **more fundamental gap than calibration or the metric**: it's not
-that the retention numbers are uncalibrated (they are), it's that the model cannot
-*represent* the dynamic by which full healthy tables come to exist in a real room.
+The new implementation keeps that baseline intact and adds a controlled forming-table
+variation. The purpose is not to assume FairPlay improves; it is to test whether the
+old result changes once the model can represent the dynamic by which full healthy
+tables come to exist in a real room.
 
 ---
 
-## What the code does (evidence)
+## What the baseline code did (evidence)
 
 - **Fixed table set, created once.** `self.tables` is loaded from the table roster at
   init (`room.py:183-186`). No table is created during the run; the count only ever
@@ -47,9 +51,9 @@ that the retention numbers are uncalibrated (they are), it's that the model cann
   And `StandardPolicy` picks the **most-full** open table, so it effectively never
   seeds an empty one until everything else is full.
 
-Net: the only way to have dealable tables is to keep the pre-seeded ones alive →
-concentration is rewarded by construction; scattering is punished with no recovery
-path.
+Net: under `--formation-mode none`, the only way to have dealable tables is to keep
+the pre-seeded ones alive → concentration is rewarded by construction; scattering is
+punished with no recovery path.
 
 ---
 
@@ -91,7 +95,7 @@ tweak inside the current representation.
 
 ---
 
-## Implementation status: instrumentation, arrivals, and forming mode
+## Implemented change: instrumentation, arrivals, and forming mode
 
 The first implementation is now a controlled room-sim variation, not just a note:
 
@@ -103,6 +107,16 @@ The first implementation is now a controlled room-sim variation, not just a note
   a seeker can seed an empty table. The table state becomes `forming`; it does not
   deal hands or accrue paid seat-time until a second player joins and the table
   becomes `active`.
+- **Forming is explicit table state, not a paid solo seat.** The lifecycle is now
+  `empty -> forming -> active -> empty/broken`. A one-player forming table is
+  preserved as a waiting table in forming mode instead of being immediately broken,
+  but it still produces zero paid seat-time until quorum.
+- **Why this was the right first change.** It directly tests the team's table-
+  formation thesis: FairPlay may look worse because it routes players toward thinner
+  but healthier tables, and the old sim had no way for those tables to recover. If
+  forming mode narrows the Standard-vs-FairPlay gap and reduces break-balk churn, the
+  missing dynamic mattered. If it does not, the weakness is deeper than table
+  formation alone.
 - **Default behavior remains conservative.** `--formation-mode none` is the default.
   It preserves the prior headline behavior and keeps this as an explicit experiment,
   not a silent change to the routing result.
@@ -113,6 +127,20 @@ The first implementation is now a controlled room-sim variation, not just a note
 This deliberately does **not** prove FairPlay improves. It gives us a way to test
 whether the missing formation dynamic materially changes the Standard-vs-FairPlay
 comparison.
+
+### Why we made these changes
+
+Reviewers correctly called out that "make one-player tables dealable" would corrupt
+the headline metric: a parked solo player should not count as paid seat-time. The
+implemented approach models formation without paying for it. It lets a player wait at
+a forming table, allows another compatible seeker to activate it, and keeps the A/B
+comparison clean because both policies see the same seeded demand stream.
+
+The change also creates attribution. The supported 2x2 lets us separate two effects:
+whether demand regeneration matters (`fixture-once` vs `continuous`) and whether
+table formation matters (`none` vs `forming`). That distinction is important because
+continuous arrivals and forming tables both add liquidity; without the 2x2, a better
+result would not tell us which lever helped.
 
 ### New controls
 
@@ -159,6 +187,11 @@ New fields in `room_sim_*.json`:
 
 - **A forming seat is not paid seat-time.** Seat-time accrues only while hands are
   dealt at tables with at least two players.
+- **No liveness-aware FairPlay policy yet.** Forming mode gives policies a new state
+  to work with, but the current FairPlay policy still ranks existing candidates by the
+  frozen router. A future liveness-aware policy should decide when to seed or grow a
+  forming healthy table; it should not simply prefer the fullest dealable table, or it
+  collapses into Standard.
 - **Health scoring still penalizes short-handed active tables.** Under current
   health scoring, clean 2/6 and 3/6 tables top out around 80 and 85 because
   `P_frag` penalizes low occupancy. To model intentional short-handed poker well,

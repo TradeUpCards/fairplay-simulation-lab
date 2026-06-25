@@ -2,7 +2,8 @@
 
 **Date:** 2026-06-24
 **Audience:** teammates + agents picking up the playsim routing work
-**Status:** findings from the MVP closed-loop room simulator (PR #43, branch `feat/playsim-room-simulator`)
+**Status:** findings from the MVP closed-loop room simulator (PR #43, branch `feat/playsim-room-simulator`);
+follow-up formation probes now live behind explicit arrival/formation flags.
 **Source code:** `playsim/playsim/{room,router_adapter,policies,arrivals,room_export}.py`
 **Reproduce:** `playsim/analysis/room_policy_comparison.py`
 
@@ -27,6 +28,11 @@ intervention measurably backfires for a non-obvious systems reason.
 
 **Important:** this is a result about *this synthetic model at this scale*, not a verdict on real
 poker rooms. See [Caveats](#caveats).
+
+**Follow-up now implemented:** the sim can now run the table-formation probe that this result
+motivated. Use `--arrival-mode fixture-once|continuous` and `--formation-mode none|forming` to test
+whether the result changes when demand can continue and empty tables can enter a non-paid `forming`
+state before becoming active.
 
 ---
 
@@ -65,6 +71,10 @@ single-table `run_session` loop:
   `backend/scoring`. It owns the `int ↔ "P-*"` id seam and assembles backend-shaped table dicts.
 - Canonical output + a derived v1 adapter (`room_export.py`): `room_sim_{standard,fairplay}.json`
   (full causal trace) is the source of truth; `room_metrics_*` is a derived compatibility view.
+- A controlled **formation probe**: the original `fixture-once` / `formation none` behavior remains
+  the baseline, while `continuous` arrivals and `formation forming` let us test whether the old
+  result was partly caused by a one-way liquidity drain. A forming seat is not paid seat-time; the
+  table must reach quorum before hands are dealt.
 
 ### The guardrail (load-bearing)
 
@@ -161,6 +171,10 @@ policy in the tree (behind the seam) because the negative result is itself the f
   `skill_edge=1.6` transfer, 40bb stacks, one arrival per unseated player, break-at-<2, a near-full
   12-table room. Different assumptions could flip the result. This is **not** evidence that
   risk-aware routing is bad in a real room.
+- **Original formation gap.** The headline tables above use the baseline room model, where the room
+  mostly drains from a fixed hour-0 roster. That structurally favors policies that keep existing
+  tables full. The new forming-mode experiment exists specifically to test whether allowing
+  `empty -> forming -> active` table growth narrows or flips that result.
 - **The metric is throughput-shaped.** Cohort paid seat-time is a sum, so it structurally rewards
   liquidity. A per-player-survival or harm-avoided metric might rank the policies differently — worth
   exploring.
@@ -184,6 +198,10 @@ cd playsim && make install          # one-time: 3.12 venv + PokerKit + editable 
 # The shipped Standard-vs-FairPlay-route A/B (writes room_sim_*.json + room_metrics_*.json)
 .venv/bin/python -m playsim.cli room-sim --seeds 42,7,99 --horizon 480 --out-dir out
 
+# Formation follow-up: compare {fixture-once, continuous} × {none, forming}
+.venv/bin/python analysis/room_policy_comparison.py --horizon 480 --seeds 42,7,99 \
+  --arrival-mode continuous --arrival-rate-per-hour 8 --formation-mode forming
+
 # Full suite (currently 88 tests)
 make test
 ```
@@ -204,6 +222,11 @@ Everything is seeded and deterministic — same `(seed, horizon, policy)` reprod
    count.
 4. **Scale sensitivity.** Re-run with a less-full room (more open seats) — liquidity may stop being
    the binding constraint, letting the health benefit show.
+5. **Table formation 2x2.** Run `{fixture-once, continuous} × {none, forming}` and report both the
+   headline seat-hours and the formation mechanics: `no_good_existing_seat_count`,
+   `forming_seat_count`, `formation_activation_count`, and `table_reactivation_count`. This is the
+   direct test of whether FairPlay was penalized by the old model's inability to seed and grow a
+   fresh healthy table.
 
 ---
 
