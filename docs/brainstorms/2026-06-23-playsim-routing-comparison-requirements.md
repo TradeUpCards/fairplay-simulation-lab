@@ -5,6 +5,16 @@ topic: playsim-routing-comparison
 
 # Playsim Routing Comparison — Closed-Loop Room Simulator
 
+> **Historical snapshot (origin requirements, 2026-06-23).** This is the original brainstorm that the
+> room simulator was built from; most of R1–R22 shipped as written. It is *not* maintained as a living
+> doc, and the project has moved past it in two ways: (1) **the empirical result flipped** — Standard
+> (most-full) beats FairPlay routing for table-liveness reasons, not the optimistic framing below; and
+> (2) a whole **behavioral-fidelity layer** was added afterward (the `PlayerBehaviorPolicy` seam +
+> fit-aware model, the `Random` / `FairPlay-balanced` policies, the acceptance funnel, and the
+> calibration gate). For current state see `docs/learn/playsim-room-routing-findings.md` (findings),
+> `docs/brainstorms/2026-06-24-behavioral-fidelity-fit-model-requirements.md` (behavioral model), and
+> `docs/learn/playsim-room-simulator-guide.html` (the team guide).
+
 ## Summary
 
 Turn playsim's hand-authored routing comparison into a real closed-loop room simulator: a shared seeded stream of seekers arrives over a configurable horizon (default 8 hours), each placed by a swappable seating policy, so retained paid seat-time and table health emerge as genuine consequences of routing *decisions* rather than of pre-built table compositions. Standard (most-full open table) is compared against FairPlay routing (the frozen backend router) on an identical arrival stream, built incrementally and validated at 2h → 4h → 8h.
