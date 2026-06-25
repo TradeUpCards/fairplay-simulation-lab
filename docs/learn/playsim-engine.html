@@ -147,7 +147,8 @@ details.drill .body p{font-size:13.5px;max-width:none}
   <p style="margin-top:1rem;padding:.85rem 1.1rem;border-left:4px solid #58c7d6;background:rgba(88,199,214,.06);border-radius:12px">
   <strong>Where this fits (2026-06):</strong> this is the <em>core engine</em> reference. The
   closed-loop <strong>room simulator</strong> (Standard-vs-FairPlay routing over a seeded arrival
-  stream, with a swappable player-behavior model) is built on top of it — for that, see
+  stream, with swappable default, fit-aware, and reason-aware player-behavior models) is built on top
+  of it — for that, see
   <a href="playsim-room-simulator-guide.html">the room simulator guide</a> and the findings in
   <code>docs/learn/playsim-room-routing-findings.md</code>.</p>
   <div class="crosslink">
@@ -161,7 +162,9 @@ details.drill .body p{font-size:13.5px;max-width:none}
   <p><span class="e">One parameterized policy + ten knob-sets</span> drive agents that play real hands on
   <b>PokerKit</b> (the referee). We <span class="e">control the deck from a single seeded RNG</span>, so a run
   is byte-for-byte reproducible. Played hands are aggregated into <b>Contract-1 features</b> (integrity loop)
-  and <b>realized table health → paid seat-time</b> (health/routing loop). Health is computed
+  and <b>realized table health → paid seat-time</b> (health/routing loop). Room-scale runs start from
+  the fixed hour-0 fixture room (12 tables, 68 seated players), then route a seeded arrival stream and
+  record exits, breaks, re-seat attempts, and wait-balks. Health is computed
   <b>independently from chip flow</b> — never by re-running the scoring engine — so the routing backtest isn't
   a tautology. A learned brain (<span class="a">RLCard / OpenSpiel / PokerRL</span>) drops in behind one
   <code>act()</code> method, with PokerKit still refereeing.</p>
@@ -196,6 +199,72 @@ details.drill .body p{font-size:13.5px;max-width:none}
     <div class="card"><h4 style="color:var(--eng)">Health/routing loop — <code>routing</code></h4><p>Does
     routing retain more <b>paid seat-time</b>? Stacks persist, players log off when tilted, and the same cohort
     is compared across two table compositions under matched seeds.</p></div>
+  </div>
+
+  <h3 id="modes">Engine modes: population, run_session, and room-sim</h3>
+  <p>The engine can be entered three ways. The first two are the original hand/session engines; the third is the
+  closed-loop room simulator that now handles dynamic arrivals, routing, table breakage, and re-seat behavior.</p>
+  <table class="tbl">
+    <thead>
+      <tr><th>Mode</th><th>Input</th><th>What it is good for</th><th>Routing behavior</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b><code>population</code></b></td>
+        <td><code>data/players.json</code>, <code>data/table_roster.json</code>, and derived classifications</td>
+        <td>Deterministic fixture-backed hand corpus, Contract-1 feature generation, and hour-0 roster replay.</td>
+        <td>Does not call the router. It replays the seated fixture roster and uses quota-leave.</td>
+      </tr>
+      <tr>
+        <td><b><code>run_session</code></b></td>
+        <td>Caller-provided <code>Player(...)</code> objects and a seed</td>
+        <td>Small custom experiments, demos, tests, and calibration runs outside the fixture files.</td>
+        <td>No live room routing. It plays one explicit table/session and returns a <code>SimResult</code>.</td>
+      </tr>
+      <tr>
+        <td><b><code>room-sim</code></b></td>
+        <td>Fixture room plus a seeded arrival stream and policy choice</td>
+        <td>Standard-vs-FairPlay routing comparisons, table liveness, re-seat behavior, wait-balks, and paid seat-time.</td>
+        <td>Calls the policy/router adapter after every room event using current open-seat state.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="two">
+    <div class="card">
+      <h4 style="color:var(--gold)">Population quota-leave</h4>
+      <p><code>population_run.run_population</code> loads the fixture tables, derives a stable per-table seed,
+      passes each player's target hands into <code>run_session</code>, and merges hands/features afterward.
+      A player leaves after reaching <code>min(lifetime_hands, cap)</code>, which keeps low-volume fixture
+      players from being over-dealt.</p>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--gold)">Free-form sessions</h4>
+      <p><code>run_session</code> initializes agents, controls the deck from a seeded RNG, rotates the dealer,
+      calls <code>play_hand</code>, updates stacks and seat minutes, records leave/bust events, and aggregates
+      the result. It is the reusable table loop under both fixture and room-scale experiments.</p>
+    </div>
+  </div>
+
+  <pre><code># Fixture-backed population corpus
+python -m playsim.cli population --hands-cap 60 --seed 42
+
+# Closed-loop room routing comparison
+python -m playsim.cli room-sim --policy fairplay --seed 42 --behavior reason-aware
+
+# Free-form session from Python
+from playsim.runner import Player, run_session
+
+players = [
+    Player(player_id=1, archetype="recreational"),
+    Player(player_id=2, archetype="grinder"),
+]
+result = run_session(players, n_hands=100, seed=42)</code></pre>
+
+  <div class="callout">
+    <b>Important boundary:</b> population mode is a deterministic hand-corpus and feature-production path, not a
+    room-routing test. Dynamic seating and re-seating live in <code>room-sim</code>, where the policy sees current
+    table occupancy and open-seat state after each arrival or leave event.
   </div>
 </section>
 
@@ -488,16 +557,22 @@ headline = average(runs)                              <span class="c"># &lt;- re
       <tr><td><code>runner.py</code></td><td>seeded session: button rotation, 3 modes (reset / persist / retention), leave model, skill-edge transfer</td></tr>
       <tr><td><code>features.py</code></td><td>played hands → Contract-1 features (the emergent signals)</td></tr>
       <tr><td><code>health.py</code></td><td>independent realized health + retention/paid-seat-time + Standard-vs-FairPlay comparison</td></tr>
+      <tr><td><code>arrivals.py</code></td><td>policy-independent seeded arrival stream from players not seated at hour 0</td></tr>
+      <tr><td><code>policies.py</code></td><td>room seating policies: random, most-full, FairPlay route/protect/balanced</td></tr>
+      <tr><td><code>router_adapter.py</code></td><td>the only playsim module that imports backend scoring/router for FairPlay decisions</td></tr>
+      <tr><td><code>behavior.py</code></td><td>player behavior seam: default, fit-aware, and reason-aware accept/leave/re-seat logic</td></tr>
+      <tr><td><code>room.py</code></td><td>closed-loop multi-table room orchestrator: arrivals, seating, hands, exits, breaks, wait/re-seat lifecycle</td></tr>
+      <tr><td><code>room_export.py</code></td><td>canonical <code>room_sim_*</code> output plus summary/funnel metrics and derived v1 adapter</td></tr>
       <tr><td><code>calibrate.py</code></td><td>the AF tuning loop → <code>calibration.json</code></td></tr>
       <tr><td><code>phh.py</code> · <code>store.py</code></td><td>PHH export · SQLite persistence</td></tr>
       <tr><td><code>service.py</code></td><td>the JSON API surface for a UI / HTTP layer</td></tr>
       <tr><td><code>baselines.py</code></td><td>V2 — RLCard adapter scaffold; the seam for learned brains</td></tr>
-      <tr><td><code>cli.py</code></td><td><code>run · routing · health · replay · calibrate · tables</code></td></tr>
+      <tr><td><code>cli.py</code></td><td><code>run · routing · room-sim · health · replay · calibrate · tables</code></td></tr>
     </tbody>
   </table>
-  <div class="callout"><b>Run it:</b> <code>make install &amp;&amp; make routing</code> (local, Python 3.12) or
-  <code>docker compose run --rm playsim routing</code> (zero local setup). <code>make replay</code> proves a
-  run is byte-identical.</div>
+  <div class="callout"><b>Run it:</b> <code>make install &amp;&amp; make routing</code> for the legacy fixed-roster
+  health loop, or <code>.venv/bin/python -m playsim.cli room-sim --seeds 42,7,99 --horizon 480 --behavior reason-aware --out-dir out</code>
+  for the current room-scale lifecycle probe. <code>make replay</code> proves a run is byte-identical.</div>
 </section>
 
 </main>
