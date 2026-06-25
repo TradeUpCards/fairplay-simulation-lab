@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FairPlay — Path to Demo &amp; Optional Tracks</title>
+<style>
+  :root{
+    --fg:#1b1e21; --muted:#586068; --line:#d7dbdf; --bg:#fbfcfd;
+    --good-bg:#eaf6ee; --good-bd:#9cd3ad; --good-fg:#1d6b38;
+    --warn-bg:#fdf4e3; --warn-bd:#e6c478; --warn-fg:#8a5a00;
+    --bad-bg:#fbeae8; --bad-bd:#e3a99e; --bad-fg:#a3341f;
+    --part-bg:#eef2fb; --part-bd:#b6c6ec; --part-fg:#2b4b86;
+    --accent:#2f6fb3;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55; font-size:15.5px;}
+  .wrap{max-width:960px; margin:0 auto; padding:0 22px 80px;}
+  header.top{padding:30px 0 14px; border-bottom:2px solid var(--line); margin-bottom:8px;}
+  h1{font-size:1.72rem; margin:0 0 6px;}
+  .purpose{color:var(--muted); margin:0 0 12px; font-size:1.02rem;}
+  .badges{display:flex; gap:8px; flex-wrap:wrap;}
+  .badge{display:inline-block; font-size:.74rem; font-weight:600; padding:3px 9px; border-radius:20px;
+    border:1px solid var(--line); background:#fff; color:var(--muted);}
+  .badge.date{background:#eef2fb; border-color:var(--part-bd); color:var(--part-fg);}
+  .badge.focus{background:var(--warn-bg); border-color:var(--warn-bd); color:var(--warn-fg);}
+  h2{font-size:1.32rem; margin:34px 0 10px; padding-top:12px; border-top:1px solid var(--line);}
+  h2 .num{color:var(--accent); font-weight:800; margin-right:8px;}
+  h3{font-size:1.08rem; margin:22px 0 6px;}
+  p{margin:9px 0;}
+  code{font-family:"SF Mono",Consolas,Menlo,monospace; font-size:.86em; background:#eef1f4; padding:1px 5px; border-radius:4px;}
+  code.path{white-space:nowrap; background:#f3f5f7; color:#33414d;}
+  ul,ol{margin:9px 0; padding-left:22px;} li{margin:6px 0;}
+  small,.small{font-size:.85rem; color:var(--muted);}
+  table{border-collapse:collapse; width:100%; margin:16px 0; font-size:.875rem;}
+  th,td{border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top;}
+  th{background:#eef2fb; font-weight:600;}
+  tbody tr:nth-child(even){background:#fafbfc;}
+  .eff{display:inline-block; font-size:.72rem; font-weight:700; padding:1px 7px; border-radius:4px;}
+  .eff.s{background:var(--good-bg); color:var(--good-fg);}
+  .eff.m{background:var(--warn-bg); color:var(--warn-fg);}
+  .eff.l{background:var(--bad-bg); color:var(--bad-fg);}
+  .reuse{color:var(--good-fg); font-weight:600;} .new{color:var(--accent); font-weight:600;}
+  .call{border-radius:9px; padding:13px 16px; margin:16px 0; border:1px solid;}
+  .call .h{font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; margin-bottom:5px;}
+  .call.good{background:var(--good-bg); border-color:var(--good-bd);} .call.good .h{color:var(--good-fg);}
+  .call.warn{background:var(--warn-bg); border-color:var(--warn-bd);} .call.warn .h{color:var(--warn-fg);}
+  .call.bad{background:var(--bad-bg); border-color:var(--bad-bd);} .call.bad .h{color:var(--bad-fg);}
+  .call.focus{background:#fff6e8; border-color:var(--warn-bd);} .call.focus .h{color:var(--warn-fg);}
+  nav.toc{background:#fff; border:1px solid var(--line); border-radius:9px; padding:12px 18px; margin:16px 0;}
+  nav.toc a{color:var(--accent); text-decoration:none;}
+  .step{border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:6px; padding:12px 15px; margin:12px 0; background:#fff;}
+  .step h4{margin:0 0 6px; font-size:1rem;}
+  .spine{font-family:Consolas,monospace; background:#10212e; color:#dbe7f0; padding:12px 14px; border-radius:8px;
+    font-size:.84rem; overflow:auto; margin:14px 0;} .spine b{color:#7fd1a6;}
+  .pill{display:inline-block;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:6px;}
+  .pill.core{background:#e7eefb;color:#2b4b86;} .pill.opt{background:#efe9f7;color:#5a3a86;}
+  footer{margin-top:40px; padding-top:14px; border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>FairPlay — Path to Demo &amp; Optional Tracks</h1>
+  <p class="purpose">The concrete remaining steps to a complete demo — plus two optional expansions (Sargon's DES economics layer and a human training-simulator POC), scoped honestly against effort and the core objective.</p>
+  <div class="badges">
+    <span class="badge focus">Core path first · extras are deliberate choices</span>
+    <span class="badge date">2026-06-25</span>
+    <span class="badge">Draft for review</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <ol>
+    <li><a href="#s1">1 · The core demo — remaining critical path <span class="pill core">must-do</span></a></li>
+    <li><a href="#s2">2 · Optional Track A — DES room-economics layer <span class="pill opt">additive</span></a></li>
+    <li><a href="#s3">3 · Optional Track B — Training-sim POC <span class="pill opt">additive</span></a></li>
+    <li><a href="#s4">4 · Sequencing, effort &amp; recommendation</a></li>
+  </ol>
+</nav>
+
+<!-- =============== 1 =============== -->
+<h2 id="s1"><span class="num">1.</span>The core demo — remaining critical path <span class="pill core">must-do</span></h2>
+
+<p>This is the PRD demo and the actual objective. The spine:</p>
+<div class="spine">lobby recommendation &nbsp;→&nbsp; pit-boss review/override &nbsp;→&nbsp; Standard-vs-FairPlay 8h sim &nbsp;→&nbsp; <b>eval evidence</b></div>
+<p>The left two-thirds (lobby, pit-boss, scoring) is <strong>built and computed</strong>. The gap is the right end: the <strong>AI Investigator (P4)</strong> — the project's third pillar — does not exist yet (zero LLM code in the repo). Everything below is P4-shaped and unblocks the demo's headline moment. <span class="small">(Full status: <code class="path">docs/learn/demo-readiness.html</code>.)</span></p>
+
+<div class="step">
+  <h4>Step 1 — Evidence Packet (Contract 3) <span class="eff m">EFFORT: M</span></h4>
+  <p>The structured object the AI is <em>allowed</em> to see — the seam that enforces "the LLM is never the detector."</p>
+  <p><span class="reuse">Reuses:</span> P3 already produces every input — scores, reason codes, and counter-evidence live in <code class="path">backend/scoring/{health,integrity,seating,classify,router}.py</code> → <code class="path">data/derived/*.json</code>. <span class="new">New:</span> a small assembler that emits one packet per case.</p>
+  <ul>
+    <li>Lock the schema (resolves open decision D3): <code>case_id, case_type, scores, top_evidence, counter_evidence, uncertainties, recommended_action, allowed_actions</code> — structured fields only, <strong>no raw player rows</strong>.</li>
+    <li>Write the assembler; emit packets for the 3 mandatory cases (A new-player, C cluster, E shared-device) first, then F/G.</li>
+    <li><strong>Unlocks:</strong> something for the AI to consume; and a demo talking point — "the AI never touches raw data; here is the exact, bounded evidence it sees."</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h4>Step 2 — AI Investigator (P4) <span class="eff m">EFFORT: M</span></h4>
+  <p>The headline demo moment: the operator opens a case and the AI <em>writes the case</em> — grounded, hedged, counter-evidence surfaced, recommending a <strong>human</strong> action, never accusing.</p>
+  <p><span class="reuse">Reuses:</span> the evidence packet (Step 1); the latest Claude model (check <code class="path">docs/.../claude-api</code> reference for the current id — don't hardcode). <span class="new">New:</span> the guardrail prompt + output checks + UI wiring.</p>
+  <ul>
+    <li>Guardrail system prompt: only use packet evidence · surface counter-evidence · uncertainty language · distinguish health-risk from integrity-risk · always recommend a human action · never state a player cheated.</li>
+    <li>One call: packet in → safe summary out. Add hard-rule output validators (reject/flag any accusation or enforcement language).</li>
+    <li>Wire the summary into the existing pit-boss case view (alongside the structured scorecard).</li>
+    <li><strong>Unlocks:</strong> the third pillar made visible; answers the skeptic's "where's the AI?"; demonstrates the guardrails live.</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h4>Step 3 — Eval harness <span class="eff s">EFFORT: S–M</span></h4>
+  <p>Grades the AI's summaries so "it's trustworthy" is shown, not asserted.</p>
+  <p><span class="reuse">Reuses:</span> the 7 seeded cases (<code class="path">data/seeded_case_labels.json</code>) and the existing <code class="path">EvalPanel.tsx</code> UI shell. <span class="new">New:</span> a rubric + runner.</p>
+  <ul>
+    <li>Rubric: grounded (no facts outside the packet) · no over-claiming · counter-evidence present · always a human action.</li>
+    <li>Run over all 7 cases; render pass/fail in the EvalPanel (today only A/C/E have real pass/fail).</li>
+    <li><strong>Unlocks:</strong> the PRD's "AI rubric" eval row that is currently "not yet."</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h4>Step 4 — (optional) Promote playsim into the sim paths <span class="eff s">EFFORT: S</span></h4>
+  <p>Replace the hand-authored <code class="path">data/room_metrics_*.json</code> with computed simulator output so the 8h divergence is real, not presenter-authored.</p>
+  <p><span class="reuse">Reuses:</span> <code class="path">playsim/playsim/room_export.py::derive_room_metrics()</code> — the schema already matches (a test pins it). <span class="new">New:</span> a promotion script + swap. Do this only after Steps 1–3.</p>
+</div>
+
+<div class="call good">
+  <div class="h">Core-path summary</div>
+  Steps 1→2→3 are the whole gap to a thesis-complete demo, and <strong>Step 1 is the unlock</strong>. None of them require more simulator depth. This is the work that turns "a health dashboard" into "an AI copilot that explains its reasoning safely."
+</div>
+
+<!-- =============== 2 =============== -->
+<h2 id="s2"><span class="num">2.</span>Optional Track A — DES room-economics layer <span class="pill opt">additive · strengthens FairPlay economics</span></h2>
+
+<p><strong>What it is (Sargon's Idea 1):</strong> a fast discrete-event simulation above playsim that models the room as <em>events</em> (arrival, seat, decline, leave, re-seat, break, wait-timeout) instead of dealing every hand. It runs thousands of room-days quickly and produces <strong>confidence intervals and sensitivity sweeps</strong> the current hand-by-hand sim can't (it does ~3 min/run, a few seeds, means not CIs).</p>
+
+<p><strong>What it adds to the demo:</strong> turns the Standard-vs-FairPlay beat from "means over 3 seeds" into an investor-grade decision surface — "across 10,000 room-days, here's the paid-seat-time distribution by policy, and here's <em>what would have to be true</em> for FairPlay to win."</p>
+
+<table>
+  <thead><tr><th>MVP step</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td><span class="reuse">Reuse</span> the room loop &amp; behavioral params</td><td>DES = the shipped room loop <em>minus hand-dealing</em>. Transition rates derive from the <strong>same calibrated <code>PlayerBehaviorPolicy</code></strong> — single source of truth, so the two models can't quietly contradict.</td></tr>
+    <tr><td><span class="new">New</span>: <code class="path">playsim/playsim/des.py</code></td><td>Seeded event queue + a <code>SeatEconomicsModel</code> (accept / churn / re-seat / wait-balk / table-survival probabilities). Standard, Random, FairPlay, most-full policies.</td></tr>
+    <tr><td><span class="new">New</span>: analysis harness</td><td>Run 1,000+ room-days; emit summary JSON with CIs + sensitivity sweeps over arrival rate and liquidity.</td></tr>
+  </tbody>
+</table>
+
+<div class="call warn">
+  <div class="h">Honest caveat (Sargon's, and correct)</div>
+  <strong>Scale is not validity.</strong> DES inherits playsim's hand-authored leave model, so a "FairPlay wins/loses" result from playsim-derived priors is <em>the same baked-in story at scale</em>, not independent evidence. Lead with <strong>sensitivity ranges</strong> ("what would have to be true"), treat priors as coverage, and reserve verdicts for real operator data. Frame outputs as <em>illustrative until calibrated</em>.
+</div>
+<p class="small"><strong>Effort:</strong> <span class="eff s">SMALL — days</span> — it reuses the room loop and params; the only new work is the event queue and the analysis harness.</p>
+
+<!-- =============== 3 =============== -->
+<h2 id="s3"><span class="num">3.</span>Optional Track B — Training-simulator POC <span class="pill opt">additive · AI-product demo</span></h2>
+
+<p><strong>Your vision:</strong> a human plays heads-up/short-handed against configurable bots, as a <em>POC</em> (not hardened production), to: <strong>(1)</strong> learn to play better against specific player types, <strong>(2)</strong> identify player types when they're not known up front, and <strong>(3)</strong> get AI-assisted post-hand analysis on what they could have done differently and <em>why</em> it's better against that type.</p>
+
+<div class="call good">
+  <div class="h">Why this is cheaper than it looks — and tied to the core work</div>
+  Two of the three pieces already exist in <code class="path">playsim/</code>, and the third <strong>reuses the exact architecture of the core demo's AI Investigator</strong>: structured summary → guardrailed LLM → explanation. Capability #3 (the coach) is the AI Investigator pointed at a teaching question instead of a risk question. So building it sharpens the same AI muscle the demo needs. <span class="small">(Per Sargon: the "LLM is never the detector" rule is about <em>risk detection</em>, not teaching — an LLM coach is fine.)</span>
+</div>
+
+<h3>The three capabilities → concrete build</h3>
+<table>
+  <thead><tr><th>Capability</th><th>Reuses (exists)</th><th>New (to build)</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>1. Train vs player types</strong></td>
+      <td><span class="reuse">Bot personalities already exist</span> as archetypes in <code class="path">playsim/playsim/agent.py</code> + <code class="path">knobs.py</code> (grinder, calling-station/recreational, aggressive/predator, rock-like reg, <code>solver_like</code>, <code>bot_like</code>). The hand engine is <code class="path">table.py</code> (real NLHE on PokerKit).</td>
+      <td>A human seat + action UI (fold/call/raise), table-state rendering, bot-style picker, fixed blinds/stacks.</td>
+    </tr>
+    <tr>
+      <td><strong>2. Identify types blind</strong> <span class="small">(a classification mini-game)</span></td>
+      <td><span class="reuse">This is the human-facing mirror of P3 classification</span> — the same behavioral signals the scoring engine reads (VPIP/PFR/aggression/showdown) from <code class="path">playsim/playsim/features.py</code>. Strong thematic tie-in to FairPlay.</td>
+      <td>Hide the bot labels; after N hands the human guesses the archetype; reveal + score the guess (optionally show the model's read alongside).</td>
+    </tr>
+    <tr>
+      <td><strong>3. AI post-hand coaching</strong> <span class="small">(the make-or-break)</span></td>
+      <td><span class="reuse">Per-decision equity</span> from <code class="path">playsim/playsim/equity.py</code> (Chen percentile + Monte-Carlo). <span class="reuse">Same pattern</span> as the AI Investigator (structured summary → LLM).</td>
+      <td>A hand-summary assembler (the human's decisions + board + opponent archetype/tendencies + equity at each decision) → a <strong>coach LLM call</strong>: "you could have done X; vs a calling-station that's better because Y."</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="call warn">
+  <div class="h">De-risk first: coaching quality</div>
+  Sargon is right that <strong>coaching is the make-or-break</strong>. "You should have folded" reads thin. Credible coaching needs the structured per-decision context (equity vs the opponent's likely range + the archetype's known leak) feeding the LLM. <strong>Build the coach first</strong> on a handful of canned hands before any polish on the table UI — if the coaching is good, the POC lands; if it's shallow, no UI saves it.
+</div>
+
+<h3>POC scope (bounded, not production)</h3>
+<ul>
+  <li>Heads-up or 3-handed; one human vs 1–2 bots; <strong>3 bot styles</strong> to start; fixed blinds/stacks.</li>
+  <li>Hand-history review + the post-hand coach; the blind "guess the type" round.</li>
+  <li>No real-money language, no multiplayer, no accounts, no RL required (the policy seam can take an RL bot <em>later</em> — <code class="path">playsim/playsim/baselines.py</code> already scaffolds an <code>act()</code> adapter).</li>
+  <li><strong>Milestone question:</strong> "can a user play 20 hands against distinct styles and come away understanding what each bot does differently — with coaching that actually explains why?"</li>
+</ul>
+
+<div class="call bad">
+  <div class="h">The honest tradeoff (so you choose with eyes open)</div>
+  Per Sargon, the training game is <strong>largely orthogonal to FairPlay's mission</strong> — it shares the engine, not the thesis. It advances the <em>capstone / AI-product</em> goal far more than the <em>FairPlay product</em> goal. That's a fine reason to build it — but it is a <strong>second product</strong>, and its UI + coaching make it the <span class="eff l">LARGER — week+</span> track even as a POC. Don't let it crowd out the core path (Section 1) before that's done.
+</div>
+
+<!-- =============== 4 =============== -->
+<h2 id="s4"><span class="num">4.</span>Sequencing, effort &amp; recommendation</h2>
+
+<table>
+  <thead><tr><th>Track</th><th>What it buys</th><th>Effort</th><th>On the FairPlay thesis?</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Core path</strong> (evidence packet → AI Investigator → eval)</td><td>The actual PRD demo — the AI half that doesn't exist yet</td><td><span class="eff m">M</span> (bounded)</td><td><strong>Yes — it IS the thesis</strong></td></tr>
+    <tr><td><strong>Track A — DES</strong></td><td>Investor-grade economics: CIs, sensitivity, "what must be true"</td><td><span class="eff s">S — days</span></td><td>Yes — strengthens the FairPlay economics beat</td></tr>
+    <tr><td><strong>Track B — Training POC</strong></td><td>A visible, ambitious AI product; capstone "wow"</td><td><span class="eff l">L — week+</span></td><td>No — shares the engine, not the mission</td></tr>
+  </tbody>
+</table>
+
+<h3>Recommended sequence</h3>
+<ol>
+  <li><strong>Do the core path first (Steps 1–3).</strong> It's the refocus, it's the thesis, and it's bounded. Nothing else should start before this is moving.</li>
+  <li><strong>Then DES (Track A) if the goal is the FairPlay business case</strong> — it's a cheap, days-scale additive win that reuses the room loop and makes the economics beat investor-grade.</li>
+  <li><strong>Then the Training POC (Track B) if the goal is a visible AI-product capstone</strong> — bigger, separate, but it reuses the engine + bots and (crucially) the <em>same AI-coach architecture</em> as Step 2, so it compounds rather than diverges. De-risk coaching first.</li>
+</ol>
+
+<div class="call focus">
+  <div class="h">The one-line decision</div>
+  <strong>Core path is non-negotiable and comes first.</strong> After that, DES if you're selling FairPlay economics; the Training POC if you're selling an AI product — and the Training POC is worth it partly <em>because</em> it reuses the AI Investigator you'll have just built. Pick based on which story you're telling; don't run A and B at once without clear ownership.
+</div>
+
+<footer>
+  <p class="small">Draft for review — 2026-06-25, on <code>main</code> at write time. Companion docs: <code class="path">docs/learn/demo-readiness.html</code> (current status), <code class="path">docs/learn/playsim-review.html</code> (simulator deep-dive), <code class="path">docs/learn/playsim-next-simulation-ideas.md</code> (Sargon's source proposal), <code class="path">docs/learn/playsim-calibration-data.md</code> (why scale ≠ validity).</p>
+</footer>
+
+</div>
+</body>
+</html>
