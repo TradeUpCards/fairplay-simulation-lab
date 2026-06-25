@@ -56,10 +56,19 @@ class _Table:
     rng: random.Random
     seated: list[int] = field(default_factory=list)
     hands_dealt: int = 0
+    ever_broken: bool = False
 
     @property
     def open_seats(self) -> int:
         return max(0, self.max_seats - len(self.seated))
+
+    @property
+    def state(self) -> str:
+        if len(self.seated) >= 2:
+            return "active"
+        if len(self.seated) == 1:
+            return "forming"
+        return "broken_empty" if self.ever_broken else "empty"
 
 
 @dataclass
@@ -72,10 +81,14 @@ class RoomResult:
     starting_stack_bb: int
     skill_edge: float
     equity_samples: int
+    arrival_mode: str
+    arrival_rate_per_hour: float | None
+    formation_mode: str
     agent_model: str
     agent_version: str
     behavior_name: str
     behavior_params: dict
+    instrumentation: dict
     arrival_intents: list[ArrivalIntent]
     routing_decisions: list[dict]
     seat_events: list[dict]
@@ -115,6 +128,9 @@ class RoomSim:
         tables: list[str] | None = None,
         checkpoints_min: tuple[float, ...] = (120.0, 240.0, 480.0),
         arrival_intents: list[ArrivalIntent] | None = None,
+        arrival_mode: str = "fixture-once",
+        arrival_rate_per_hour: float | None = None,
+        formation_mode: str = "none",
         debug_trace: bool = False,
         behavior=None,
     ) -> None:
@@ -131,6 +147,11 @@ class RoomSim:
         self.start = starting_stack_bb * bb
         self.rebuy_threshold_bb = rebuy_threshold_bb
         self.skill_edge = skill_edge
+        self.arrival_mode = arrival_mode
+        self.arrival_rate_per_hour = arrival_rate_per_hour
+        if formation_mode not in {"none", "forming"}:
+            raise ValueError(f"unknown formation mode {formation_mode!r}")
+        self.formation_mode = formation_mode
         self.checkpoints_min = checkpoints_min
 
         self.players_by_id = load_players_by_id(root)
@@ -143,7 +164,11 @@ class RoomSim:
         # arrival stream is policy-independent; allow injection so both arms share it
         self.arrival_intents = (
             arrival_intents if arrival_intents is not None
-            else build_arrival_intents(horizon_min, seed=master_seed, root=root)
+            else build_arrival_intents(
+                horizon_min, seed=master_seed, root=root,
+                mode=arrival_mode,
+                arrival_rate_per_hour=arrival_rate_per_hour,
+            )
         )
         # restrict arrivals to classified players (always true for the fixture)
         self.arrival_intents = [a for a in self.arrival_intents
@@ -178,6 +203,15 @@ class RoomSim:
         self._next_checkpoint = 0
         self.hourly: list[dict] = []
         self._next_hour = 1
+        self.instrumentation = {
+            "routing_attempts": 0,
+            "no_good_existing_seat_count": 0,
+            "empty_table_available_count": 0,
+            "sub_quorum_table_available_count": 0,
+            "table_reactivation_count": 0,
+            "forming_seat_count": 0,
+            "formation_activation_count": 0,
+        }
 
         # build tables from hour-0 roster, seat the initial players (no routing)
         self.tables: dict[str, _Table] = {}
@@ -237,14 +271,23 @@ class RoomSim:
 
     def _seat_at(self, pid: int, table_id: str, sim_time: float, origin: str) -> None:
         tbl = self.tables[table_id]
+        active_before = len(tbl.seated) >= 2
         tbl.seated.append(pid)
+        active_after = len(tbl.seated) >= 2
+        track_formation = origin != "initial"
+        if track_formation and not active_after:
+            self.instrumentation["forming_seat_count"] += 1
+        if track_formation and not active_before and active_after:
+            self.instrumentation["formation_activation_count"] += 1
+        if track_formation and not active_before and active_after and tbl.ever_broken:
+            self.instrumentation["table_reactivation_count"] += 1
         self._presence[pid] = {
             "table_id": table_id, "start_min": round(sim_time, 2),
             "start_net": self.net_bb[pid], "start_hands": self.hands_played[pid],
         }
         self.seat_events.append({
             "min": round(sim_time, 2), "player_id": pid, "table_id": table_id,
-            "event": "seat", "origin": origin,
+            "event": "seat", "origin": origin, "table_state_after": tbl.state,
         })
 
     def _close_presence(self, pid: int, sim_time: float, exit_reason: str) -> None:
@@ -341,24 +384,56 @@ class RoomSim:
             for tid, t in sorted(self.tables.items())
         ]
 
+    def _formation_gap_snapshot(self) -> dict:
+        """Passive instrumentation for the missing table-formation dynamic.
+
+        "Good existing seat" is intentionally conservative here: an open seat at
+        an already-dealable table (>=2 seated). It does not use backend health or
+        fit scores, so the metric stays policy-independent and cheap.
+        """
+        open_tables = [t for t in self.tables.values() if t.open_seats > 0]
+        active_open = [t for t in open_tables if len(t.seated) >= 2]
+        empty_open = [t for t in open_tables if len(t.seated) == 0]
+        sub_quorum_open = [t for t in open_tables if 0 < len(t.seated) < 2]
+        snap = {
+            "no_good_existing_seat": not active_open,
+            "empty_table_available": bool(empty_open),
+            "sub_quorum_table_available": bool(sub_quorum_open),
+            "active_open_table_count": len(active_open),
+            "empty_open_table_count": len(empty_open),
+            "sub_quorum_open_table_count": len(sub_quorum_open),
+        }
+        self.instrumentation["routing_attempts"] += 1
+        if snap["no_good_existing_seat"]:
+            self.instrumentation["no_good_existing_seat_count"] += 1
+        if snap["empty_table_available"]:
+            self.instrumentation["empty_table_available_count"] += 1
+        if snap["sub_quorum_table_available"]:
+            self.instrumentation["sub_quorum_table_available_count"] += 1
+        return snap
+
     def _route_seeker(self, pid: int, archetype: str, sim_time: float, origin: str,
                       require_pair: bool = False, queue_on_fail: bool = True,
                       exit_reason: str | None = None,
                       terminal_on_fail: bool = True) -> bool:
         from .policies import Seeker
+        formation_gap = self._formation_gap_snapshot()
         decision = self.policy.choose(Seeker(pid, archetype), self._live_tables())
         table_id = decision.table_id
         reason = decision.reason
-        # On a break re-seek, refuse a table that has no one else seated — seating
-        # a lone player there produces a non-dealing seat (phantom churn in the
-        # trace). Treat it as a balk instead.
+        # By default, break/table-thinning re-seek requires a currently dealable
+        # partner. In formation mode, allow the player to seed an empty table;
+        # no paid seat-time accrues until another player joins and the table
+        # becomes active (>=2 seated).
         if (table_id is not None and require_pair
                 and len(self.tables[table_id].seated) < 1):
-            table_id, reason = None, "no_dealable_seat"
+            if self.formation_mode != "forming":
+                table_id, reason = None, "no_dealable_seat"
         rec = {
             "min": round(sim_time, 2), "player_id": pid, "archetype": archetype,
             "origin": origin, "policy": getattr(self.policy, "name", "?"),
             "table_id": table_id, "reason": reason, "deferred": decision.deferred,
+            "formation_gap": formation_gap,
         }
         # FairPlay rationale: for a backend-routed seat, record the chosen table's
         # rank breakdown so the trace answers "why this table?". Minimal by default;
@@ -538,7 +613,10 @@ class RoomSim:
         for tid in sorted(self.tables):
             tbl = self.tables[tid]
             if 0 < len(tbl.seated) < 2:
+                if self.formation_mode == "forming":
+                    continue
                 displaced = list(tbl.seated)
+                tbl.ever_broken = True
                 for pid in displaced:
                     self._remove_from_table(pid, tbl)
                     self._close_presence(pid, sim_time, exit_reason="break")
@@ -648,7 +726,7 @@ class RoomSim:
         table_timelines = {
             tid: {"max_seats": t.max_seats, "style_volatility_label": t.style,
                   "paid_seat_time_trend": t.trend, "hands_dealt": t.hands_dealt,
-                  "final_seated": list(t.seated)}
+                  "final_seated": list(t.seated), "final_state": t.state}
             for tid, t in sorted(self.tables.items())
         }
         return RoomResult(
@@ -657,6 +735,9 @@ class RoomSim:
             hands_per_hour=self.hands_per_hour, min_per_hand=self.min_per_hand,
             starting_stack_bb=self.starting_stack_bb, skill_edge=self.skill_edge,
             equity_samples=self.equity_samples,
+            arrival_mode=self.arrival_mode,
+            arrival_rate_per_hour=self.arrival_rate_per_hour,
+            formation_mode=self.formation_mode,
             agent_model=ArchetypeAgent.agent_model,
             agent_version=ArchetypeAgent.agent_version,
             behavior_name=getattr(self.behavior, "name", self.behavior.__class__.__name__),
@@ -664,6 +745,7 @@ class RoomSim:
                 k: v for k, v in getattr(self.behavior, "__dict__", {}).items()
                 if isinstance(v, (str, int, float, bool, type(None)))
             },
+            instrumentation=dict(self.instrumentation),
             arrival_intents=self.arrival_intents,
             routing_decisions=self.routing_decisions, seat_events=self.seat_events,
             sessions=self.sessions, hourly=self.hourly, table_timelines=table_timelines,

@@ -91,6 +91,98 @@ tweak inside the current representation.
 
 ---
 
+## Implementation status: instrumentation, arrivals, and forming mode
+
+The first implementation is now a controlled room-sim variation, not just a note:
+
+- **No new synthetic players.** Continuous arrivals draw from the existing unseated
+  fixture pool without replacement.
+- **Continuous arrivals are supported.** The same seeded arrival stream is generated
+  once per seed and injected into every policy arm, preserving the A/B invariant.
+- **Forming tables are supported behind a flag.** With `--formation-mode forming`,
+  a seeker can seed an empty table. The table state becomes `forming`; it does not
+  deal hands or accrue paid seat-time until a second player joins and the table
+  becomes `active`.
+- **Default behavior remains conservative.** `--formation-mode none` is the default.
+  It preserves the prior headline behavior and keeps this as an explicit experiment,
+  not a silent change to the routing result.
+- **Continuation propensity is not modeled yet.** Players still use reason-based
+  re-seek + wait tolerance, not a decaying willingness-to-continue score. That means
+  repeated failed formation attempts are not yet accumulated as frustration/fatigue.
+
+This deliberately does **not** prove FairPlay improves. It gives us a way to test
+whether the missing formation dynamic materially changes the Standard-vs-FairPlay
+comparison.
+
+### New controls
+
+```bash
+.venv/bin/python -m playsim.cli room-sim \
+  --arrival-mode fixture-once \
+  --formation-mode none \
+  --seeds 42,7,99 --horizon 480 --out-dir out
+
+.venv/bin/python -m playsim.cli room-sim \
+  --arrival-mode fixture-once \
+  --formation-mode forming \
+  --seeds 42,7,99 --horizon 480 --out-dir out
+
+.venv/bin/python -m playsim.cli room-sim \
+  --arrival-mode continuous --arrival-rate-per-hour 8 \
+  --formation-mode forming \
+  --seeds 42,7,99 --horizon 480 --out-dir out
+```
+
+This now supports the implementation side of the 2x2:
+
+| | no explicit forming | forming enabled |
+|---|---|---|
+| fixture-once arrivals | supported | supported |
+| continuous arrivals | supported | supported |
+
+### New summary metrics
+
+New fields in `room_sim_*.json`:
+
+- `no_good_existing_seat_count` — routing attempts where no currently active open
+  table existed (`>=2` seated with an open seat).
+- `empty_table_available_count` — attempts where an empty table was available.
+- `sub_quorum_table_available_count` — attempts where a one-player, non-dealing
+  table was available.
+- `break_to_reseat_success` — break-displaced players who successfully re-seated.
+- `break_to_wait_balk` — table-break waiters who timed out.
+- `table_reactivation_count` — broken tables that later returned to dealable state.
+- `forming_seat_count` — runtime seats that left a table in `forming` state.
+- `formation_activation_count` — times a forming table reached active/dealing quorum.
+
+### Design caveats
+
+- **A forming seat is not paid seat-time.** Seat-time accrues only while hands are
+  dealt at tables with at least two players.
+- **Health scoring still penalizes short-handed active tables.** Under current
+  health scoring, clean 2/6 and 3/6 tables top out around 80 and 85 because
+  `P_frag` penalizes low occupancy. To model intentional short-handed poker well,
+  the next scoring question is whether fragility should consider `target_seats` /
+  table mode, not only `seated_count / max_seats`.
+- **Continuation propensity may buy us realism later.** It is useful once forming
+  tables exist because repeated waits/breaks should reduce a player's willingness
+  to keep trying. It is not required to test whether formation changes the table
+  liveness result, but it is likely needed before claiming behavioral fidelity.
+
+The next analysis should compare:
+
+```text
+fixture-once + formation none
+fixture-once + formation forming
+continuous + formation none
+continuous + formation forming
+```
+
+and report both paid seat-hours and formation mechanics (`forming_seat_count`,
+`formation_activation_count`, breaks, wait-balks).
+
+---
+
 ## Suggested experiment to quantify the impact
 
 Minimal version: add a rule that a player may *open* a new table (or grow a

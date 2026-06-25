@@ -182,6 +182,9 @@ def _room_sim(args) -> int:
         tables=args.tables.split(",") if args.tables else None,
         protect=args.protect, protect_threshold=args.protect_threshold,
         behavior_name=args.behavior,
+        arrival_mode=args.arrival_mode,
+        arrival_rate_per_hour=args.arrival_rate_per_hour,
+        formation_mode=args.formation_mode,
         debug_trace=args.debug_trace,
         data_root_str=str(args.data_root or ""),
     )
@@ -297,6 +300,12 @@ def main(argv=None) -> int:
     rs.add_argument("--behavior", choices=["default", "fit-aware", "reason-aware"], default="default",
                     help=("player behavior model (fit-aware/reason-aware are experimental, "
                           "illustrative until calibrated)"))
+    rs.add_argument("--arrival-mode", choices=["fixture-once", "continuous"], default="fixture-once",
+                    help="arrival process (fixture-once preserves the MVP stream)")
+    rs.add_argument("--arrival-rate-per-hour", type=float,
+                    help="continuous-arrival rate; defaults to fixture pool size over horizon")
+    rs.add_argument("--formation-mode", choices=["none", "forming"], default="none",
+                    help="forming allows seekers to seed empty tables; paid seat-time starts at quorum")
     rs.add_argument("--out-dir", default=".", help="directory for room_sim_*/room_metrics_* outputs")
     rs.add_argument("--debug-trace", action="store_true",
                     help="attach the full ranked candidate list to each routing decision (verbose)")

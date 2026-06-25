@@ -100,6 +100,22 @@ def test_shared_arrival_stream_across_arms(adapter):
     assert std.arrival_intents == fp.arrival_intents == intents
 
 
+def test_shared_continuous_arrival_stream_across_arms(adapter):
+    """Continuous arrivals are still generated once per seed and injected into
+    both arms; policy choices must not change demand."""
+    intents = build_arrival_intents(
+        40, seed=42, mode="continuous", arrival_rate_per_hour=10.0,
+    )
+    std = run_room(StandardPolicy(), master_seed=42, horizon_min=40,
+                   equity_samples=6, tables=TABLES, arrival_intents=intents,
+                   arrival_mode="continuous", arrival_rate_per_hour=10.0)
+    fp = run_room(make_policy("fairplay_route", adapter), master_seed=42,
+                  horizon_min=40, equity_samples=6, tables=TABLES,
+                  arrival_intents=intents, arrival_mode="continuous",
+                  arrival_rate_per_hour=10.0)
+    assert std.arrival_intents == fp.arrival_intents == intents
+
+
 def test_room_requires_minimum_population():
     """An empty/unmatched table set must fail loudly, not emit a silently-empty
     'successful' comparison."""
@@ -125,6 +141,84 @@ def test_fairplay_decisions_carry_minimal_rationale(adapter):
 def test_standard_decisions_have_no_rationale():
     r = _standard_run()
     assert all("rationale" not in d for d in r.routing_decisions)  # no backend = no rationale
+
+
+def test_routing_decisions_carry_formation_gap_snapshot():
+    r = _standard_run()
+    assert r.routing_decisions
+    snap = r.routing_decisions[0]["formation_gap"]
+    assert {
+        "no_good_existing_seat",
+        "empty_table_available",
+        "sub_quorum_table_available",
+        "active_open_table_count",
+        "empty_open_table_count",
+        "sub_quorum_open_table_count",
+    } <= set(snap)
+    assert r.instrumentation["routing_attempts"] == len(r.routing_decisions)
+
+
+def test_formation_mode_allows_empty_table_seed_without_paid_seat_time():
+    from playsim.room import RoomSim
+
+    sim = RoomSim(StandardPolicy(), master_seed=42, horizon_min=1,
+                  equity_samples=6, tables=["T-22"], arrival_intents=[],
+                  formation_mode="forming")
+    tbl = sim.tables["T-22"]
+    for pid in list(tbl.seated):
+        sim._remove_from_table(pid, tbl)
+        sim._close_presence(pid, 0.0, "test_clear")
+    sim._ensure_player(104, "new")
+
+    seated = sim._route_seeker(104, "new", 0.0, origin="break_displace",
+                               require_pair=True)
+
+    assert seated is True
+    assert tbl.seated == [104]
+    assert sim.seat_minutes[104] == 0.0
+    assert sim.instrumentation["forming_seat_count"] == 1
+    assert sim.seat_events[-1]["table_state_after"] == "forming"
+
+
+def test_formation_mode_preserves_one_player_forming_table():
+    from playsim.room import RoomSim
+
+    sim = RoomSim(StandardPolicy(), master_seed=42, horizon_min=1,
+                  equity_samples=6, tables=["T-22"], arrival_intents=[],
+                  formation_mode="forming")
+    tbl = sim.tables["T-22"]
+    for pid in list(tbl.seated):
+        sim._remove_from_table(pid, tbl)
+        sim._close_presence(pid, 0.0, "test_clear")
+    sim._ensure_player(104, "new")
+    sim._seat_at(104, "T-22", 0.0, "test_forming")
+
+    sim._handle_breaks(0.75)
+
+    assert tbl.seated == [104]
+    assert tbl.state == "forming"
+    assert not any(e.get("event") == "break" for e in sim.seat_events)
+
+
+def test_no_formation_mode_rejects_empty_table_reseek():
+    from playsim.room import RoomSim
+
+    sim = RoomSim(StandardPolicy(), master_seed=42, horizon_min=1,
+                  equity_samples=6, tables=["T-22"], arrival_intents=[],
+                  formation_mode="none")
+    tbl = sim.tables["T-22"]
+    for pid in list(tbl.seated):
+        sim._remove_from_table(pid, tbl)
+        sim._close_presence(pid, 0.0, "test_clear")
+    sim._ensure_player(104, "new")
+
+    seated = sim._route_seeker(104, "new", 0.0, origin="break_displace",
+                               require_pair=True, terminal_on_fail=False)
+
+    assert seated is False
+    assert tbl.seated == []
+    assert sim.routing_decisions[-1]["reason"] == "no_dealable_seat"
+    assert sim.instrumentation["forming_seat_count"] == 0
 
 
 def test_debug_trace_adds_full_candidate_list(adapter):
