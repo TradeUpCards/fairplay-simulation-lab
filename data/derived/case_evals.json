@@ -1,0 +1,261 @@
+{
+  "meta": {
+    "produced_by": "P4 / eval rubric",
+    "grades": "the AI Investigator's case summaries (case_summaries.json)",
+    "deterministic": true,
+    "count": 7
+  },
+  "eval_summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "by_criterion": {
+      "grounded_no_hallucinated_entities": "7/7",
+      "no_overclaiming": "7/7",
+      "human_action_no_enforcement": "7/7",
+      "counter_evidence_surfaced": "7/7",
+      "lens_correct": "7/7",
+      "outcome_aligned": "7/7"
+    }
+  },
+  "evals": [
+    {
+      "case_id": "CASE-A",
+      "case_type": "table_health_risk",
+      "prd_scenario": "A",
+      "is_false_positive_trap": false,
+      "expected_action": "reroute",
+      "criteria": {
+        "grounded_no_hallucinated_entities": {
+          "pass": true,
+          "detail": "all 6 named entities present in packet"
+        },
+        "no_overclaiming": {
+          "pass": true,
+          "detail": "no verdict language"
+        },
+        "human_action_no_enforcement": {
+          "pass": true,
+          "detail": "enforcement=[] human_verb=True"
+        },
+        "counter_evidence_surfaced": {
+          "pass": true,
+          "detail": "counter_evidence length 323"
+        },
+        "lens_correct": {
+          "pass": true,
+          "detail": "expected table_health_risk, got table_health_risk"
+        },
+        "outcome_aligned": {
+          "pass": true,
+          "detail": "expected tier 'act', summary tier 'act' (false_positive_trap=False)"
+        }
+      },
+      "passed": true
+    },
+    {
+      "case_id": "CASE-B",
+      "case_type": "table_health_risk",
+      "prd_scenario": "B",
+      "is_false_positive_trap": true,
+      "expected_action": "monitor",
+      "criteria": {
+        "grounded_no_hallucinated_entities": {
+          "pass": true,
+          "detail": "all 1 named entities present in packet"
+        },
+        "no_overclaiming": {
+          "pass": true,
+          "detail": "no verdict language"
+        },
+        "human_action_no_enforcement": {
+          "pass": true,
+          "detail": "enforcement=[] human_verb=True"
+        },
+        "counter_evidence_surfaced": {
+          "pass": true,
+          "detail": "counter_evidence length 334"
+        },
+        "lens_correct": {
+          "pass": true,
+          "detail": "expected table_health_risk, got table_health_risk"
+        },
+        "outcome_aligned": {
+          "pass": true,
+          "detail": "expected tier 'monitor', summary tier 'monitor' (false_positive_trap=True)"
+        }
+      },
+      "passed": true
+    },
+    {
+      "case_id": "CASE-C",
+      "case_type": "integrity_risk",
+      "prd_scenario": "C",
+      "is_false_positive_trap": false,
+      "expected_action": "hold_for_pitboss_review",
+      "criteria": {
+        "grounded_no_hallucinated_entities": {
+          "pass": true,
+          "detail": "all 5 named entities present in packet"
+        },
+        "no_overclaiming": {
+          "pass": true,
+          "detail": "no verdict language"
+        },
+        "human_action_no_enforcement": {
+          "pass": true,
+          "detail": "enforcement=[] human_verb=True"
+        },
+        "counter_evidence_surfaced": {
+          "pass": true,
+          "detail": "counter_evidence length 357"
+        },
+        "lens_correct": {
+          "pass": true,
+          "detail": "expected integrity_risk, got integrity_risk"
+        },
+        "outcome_aligned": {
+          "pass": true,
+          "detail": "expected tier 'act', summary tier 'act' (false_positive_trap=False)"
+        }
+      },
+      "passed": true
+    },
+    {
+      "case_id": "CASE-D",
+      "case_type": "integrity_risk",
+      "prd_scenario": "D",
+      "is_false_positive_trap": true,
+      "expected_action": "monitor",
+      "criteria": {
+        "grounded_no_hallucinated_entities": {
+          "pass": true,
+          "detail": "all 3 named entities present in packet"
+        },
+        "no_overclaiming": {
+          "pass": true,
+          "detail": "no verdict language"
+        },
+        "human_action_no_enforcement": {
+          "pass": true,
+          "detail": "enforcement=[] human_verb=True"
+        },
+        "counter_evidence_surfaced": {
+          "pass": true,
+          "detail": "counter_evidence length 366"
+        },
+        "lens_correct": {
+          "pass": true,
+          "detail": "expected integrity_risk, got integrity_risk"
+        },
+        "outcome_aligned": {
+          "pass": true,
+          "detail": "expected tier 'monitor', summary tier 'monitor' (false_positive_trap=True)"
+        }
+      },
+      "passed": true
+    },
+    {
+      "case_id": "CASE-E",
+      "case_type": "integrity_risk",
+      "prd_scenario": "E",
+      "is_false_positive_trap": true,
+      "expected_action": "monitor_only",
+      "criteria": {
+        "grounded_no_hallucinated_entities": {
+          "pass": true,
+          "detail": "all 4 named entities present in packet"
+        },
+        "no_overclaiming": {
+          "pass": true,
+          "detail": "no verdict language"
+        },
+        "human_action_no_enforcement": {
+          "pass": true,
+          "detail": "enforcement=[] human_verb=True"
+        },
+        "counter_evidence_surfaced": {
+          "pass": true,
+          "detail": "counter_evidence length 395"
+        },
+        "lens_correct": {
+          "pass": true,
+          "detail": "expected integrity_risk, got integrity_risk"
+        },
+        "outcome_aligned": {
+          "pass": true,
+          "detail": "expected tier 'monitor', summary tier 'monitor' (false_positive_trap=True)"
+        }
+      },
+      "passed": true
+    },
+    {
+      "case_id": "CASE-F",
+      "case_type": "promo_abuse",
+      "prd_scenario": "F",
+      "is_false_positive_trap": false,
+      "expected_action": "flag_promo_team",
+      "criteria": {
+        "grounded_no_hallucinated_entities": {
+          "pass": true,
+          "detail": "all 1 named entities present in packet"
+        },
+        "no_overclaiming": {
+          "pass": true,
+          "detail": "no verdict language"
+        },
+        "human_action_no_enforcement": {
+          "pass": true,
+          "detail": "enforcement=[] human_verb=True"
+        },
+        "counter_evidence_surfaced": {
+          "pass": true,
+          "detail": "counter_evidence length 340"
+        },
+        "lens_correct": {
+          "pass": true,
+          "detail": "expected promo_abuse, got promo_abuse"
+        },
+        "outcome_aligned": {
+          "pass": true,
+          "detail": "expected tier 'act', summary tier 'act' (false_positive_trap=False)"
+        }
+      },
+      "passed": true
+    },
+    {
+      "case_id": "CASE-G",
+      "case_type": "bot_account",
+      "prd_scenario": "G",
+      "is_false_positive_trap": false,
+      "expected_action": "route_to_bot_review_queue",
+      "criteria": {
+        "grounded_no_hallucinated_entities": {
+          "pass": true,
+          "detail": "all 1 named entities present in packet"
+        },
+        "no_overclaiming": {
+          "pass": true,
+          "detail": "no verdict language"
+        },
+        "human_action_no_enforcement": {
+          "pass": true,
+          "detail": "enforcement=[] human_verb=True"
+        },
+        "counter_evidence_surfaced": {
+          "pass": true,
+          "detail": "counter_evidence length 297"
+        },
+        "lens_correct": {
+          "pass": true,
+          "detail": "expected bot_account, got bot_account"
+        },
+        "outcome_aligned": {
+          "pass": true,
+          "detail": "expected tier 'act', summary tier 'act' (false_positive_trap=False)"
+        }
+      },
+      "passed": true
+    }
+  ]
+}
