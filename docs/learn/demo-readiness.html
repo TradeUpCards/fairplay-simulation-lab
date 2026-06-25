@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FairPlay — Where We Are &amp; The Path to Demo</title>
+<style>
+  :root{
+    --fg:#1b1e21; --muted:#586068; --line:#d7dbdf; --bg:#fbfcfd;
+    --good-bg:#eaf6ee; --good-bd:#9cd3ad; --good-fg:#1d6b38;
+    --warn-bg:#fdf4e3; --warn-bd:#e6c478; --warn-fg:#8a5a00;
+    --bad-bg:#fbeae8; --bad-bd:#e3a99e; --bad-fg:#a3341f;
+    --part-bg:#eef2fb; --part-bd:#b6c6ec; --part-fg:#2b4b86;
+    --accent:#2f6fb3;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55; font-size:15.5px;}
+  .wrap{max-width:940px; margin:0 auto; padding:0 22px 80px;}
+  header.top{padding:30px 0 14px; border-bottom:2px solid var(--line); margin-bottom:8px;}
+  h1{font-size:1.72rem; margin:0 0 6px;}
+  .purpose{color:var(--muted); margin:0 0 12px; font-size:1.02rem;}
+  .badges{display:flex; gap:8px; flex-wrap:wrap;}
+  .badge{display:inline-block; font-size:.74rem; font-weight:600; padding:3px 9px; border-radius:20px;
+    border:1px solid var(--line); background:#fff; color:var(--muted);}
+  .badge.date{background:#eef2fb; border-color:var(--part-bd); color:var(--part-fg);}
+  .badge.focus{background:var(--warn-bg); border-color:var(--warn-bd); color:var(--warn-fg);}
+  h2{font-size:1.3rem; margin:34px 0 10px; padding-top:10px; border-top:1px solid var(--line);}
+  h2 .num{color:var(--accent); font-weight:800; margin-right:8px;}
+  h3{font-size:1.06rem; margin:20px 0 6px;}
+  p{margin:9px 0;}
+  code{font-family:"SF Mono",Consolas,Menlo,monospace; font-size:.86em; background:#eef1f4; padding:1px 5px; border-radius:4px;}
+  code.path{white-space:nowrap; background:#f3f5f7; color:#33414d;}
+  ul,ol{margin:9px 0; padding-left:22px;} li{margin:5px 0;}
+  small,.small{font-size:.85rem; color:var(--muted);}
+  table{border-collapse:collapse; width:100%; margin:16px 0; font-size:.875rem;}
+  th,td{border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top;}
+  th{background:#eef2fb; font-weight:600;}
+  tbody tr:nth-child(even){background:#fafbfc;}
+  .s-ok{color:var(--good-fg); font-weight:700;}
+  .s-part{color:var(--warn-fg); font-weight:700;}
+  .s-miss{color:var(--bad-fg); font-weight:700;}
+  .rank{font-weight:800; text-align:center; width:30px; color:var(--accent);}
+  .call{border-radius:9px; padding:13px 16px; margin:16px 0; border:1px solid;}
+  .call .h{font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; margin-bottom:5px;}
+  .call.good{background:var(--good-bg); border-color:var(--good-bd);} .call.good .h{color:var(--good-fg);}
+  .call.warn{background:var(--warn-bg); border-color:var(--warn-bd);} .call.warn .h{color:var(--warn-fg);}
+  .call.bad{background:var(--bad-bg); border-color:var(--bad-bd);} .call.bad .h{color:var(--bad-fg);}
+  .call.focus{background:#fff6e8; border-color:var(--warn-bd);} .call.focus .h{color:var(--warn-fg);}
+  nav.toc{background:#fff; border:1px solid var(--line); border-radius:9px; padding:12px 18px; margin:16px 0;}
+  nav.toc ol{margin:4px 0;}
+  nav.toc a{color:var(--accent); text-decoration:none;}
+  .spine{font-family:Consolas,monospace; background:#10212e; color:#dbe7f0; padding:12px 14px; border-radius:8px;
+    font-size:.84rem; overflow:auto; margin:14px 0;}
+  .spine b{color:#7fd1a6;}
+  .lane{display:inline-block; font-size:.72rem; font-weight:700; padding:1px 7px; border-radius:4px; margin-left:6px;}
+  .lane.you{background:#e7eefb; color:#2b4b86;} .lane.team{background:#efe9f7; color:#5a3a86;}
+  footer{margin-top:40px; padding-top:14px; border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>FairPlay — Where We Are &amp; The Path to Demo</h1>
+  <p class="purpose">A refocusing map: what is actually built, what the live demo still needs, and how the demo tells its story — measured against the PRD demo spine, not the depth of any one subsystem.</p>
+  <div class="badges">
+    <span class="badge focus">Refocus on the demo objective</span>
+    <span class="badge date">2026-06-24</span>
+    <span class="badge">Draft for review</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <ol>
+    <li><a href="#s0">0 · The objective &amp; the honest refocus</a></li>
+    <li><a href="#s1">1 · Where we are now (spine + contracts)</a></li>
+    <li><a href="#s2">2 · What's still needed to demo</a></li>
+    <li><a href="#s3">3 · How the demo works &amp; the questions it answers</a></li>
+    <li><a href="#s4">4 · Recommendation: what to build, what to stop polishing</a></li>
+  </ol>
+</nav>
+
+<!-- ===================== 0 ===================== -->
+<h2 id="s0"><span class="num">0.</span>The objective &amp; the honest refocus</h2>
+
+<p>The PRD's scope rule is blunt: <em>"if it doesn't support a live demo moment, it's not in scope."</em> The demo is one spine, and every link must survive:</p>
+
+<div class="spine">lobby recommendation &nbsp;→&nbsp; pit-boss review / override &nbsp;→&nbsp; <b>Standard-vs-FairPlay 8-hour simulation</b> &nbsp;→&nbsp; eval evidence</div>
+
+<p>What the demo must <strong>prove</strong> (PRD §1): an AI-assisted system can tell <em>unhealthy table states</em> apart from <em>normal poker behavior</em> by combining weak signals — and it <strong>recommends and explains; it never accuses or auto-enforces</strong>. Three pillars: Table-Health model, Integrity-Pattern lab, and the <strong>AI Investigator</strong> ("the LLM builds the case; the human judges it").</p>
+
+<div class="call focus">
+  <div class="h">The refocus, stated plainly</div>
+  <p style="margin:4px 0">Two things are true at once:</p>
+  <ul style="margin:6px 0">
+    <li><strong>The left two-thirds of the spine is genuinely built and computed.</strong> Lobby and pit-boss render from real deterministic scores; the three mandatory cases (A/C/E) work end-to-end.</li>
+    <li><strong>The right end of the spine — the AI Investigator (P4) — does not exist yet.</strong> There is <em>zero</em> LLM code in the repo, no evidence packet, no eval harness. That is the project's headline thesis ("AI builds the case"), and it is the single biggest gap to a complete demo.</li>
+  </ul>
+  <p style="margin:6px 0"><strong>Where we drifted:</strong> the recent deep work — the <code>playsim</code> room simulator and the FICO model-builder — is real and good, but <strong>neither is on the demo's critical path.</strong> playsim isn't even consumed by the demo today (the simulator reads hand-authored fixtures; playsim is a research track wired for a <em>future</em> one-line swap). The model-builder is an offline scoring-research tool. They are side quests relative to the demo. The critical path is <strong>evidence packet → AI Investigator → eval</strong>.</p>
+</div>
+
+<!-- ===================== 1 ===================== -->
+<h2 id="s1"><span class="num">1.</span>Where we are now</h2>
+
+<h3>The demo spine, link by link</h3>
+<table>
+  <thead><tr><th>Spine link</th><th>State</th><th>What's real</th><th>Evidence</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Lobby</strong> recommendation <small>(player-facing)</small></td>
+      <td><span class="s-ok">BUILT &amp; WIRED</span><br><small>computed</small></td>
+      <td>Neutral fields only (stakes, seats, pace, 1 of 3 badges). The player/operator wall holds at the type level — no scores/risk/archetype leak to the lobby.</td>
+      <td><code class="path">frontend/src/views/PlayerLobby.tsx</code>, <code class="path">components/TableTile.tsx</code> ← <code class="path">data/derived/router_lobby.json</code></td>
+    </tr>
+    <tr>
+      <td><strong>Pit-boss</strong> review / override <small>(operator-facing)</small></td>
+      <td><span class="s-ok">BUILT &amp; WIRED</span><br><small>computed</small></td>
+      <td>Case list + table detail + integrity case with counter-evidence + 5 operator actions (accept / override / monitor / suppress / escalate — never "ban"). <em>Caveat: the "AI summary" shown is the structured scorecard rendered with guardrail framing, not LLM prose.</em></td>
+      <td><code class="path">views/PitBossConsole.tsx</code>, <code class="path">PitBossTable.tsx</code>, <code class="path">components/IntegrityCase.tsx</code> ← <code class="path">data/derived/*.json</code></td>
+    </tr>
+    <tr>
+      <td><strong>Standard-vs-FairPlay</strong> 8-hour simulation</td>
+      <td><span class="s-part">BUILT, STATIC FIXTURE</span></td>
+      <td>The 8-hour divergence renders and animates — but from <strong>hand-authored</strong> paths, not computed output. Marked <code>"generated":"static-fixture-day2"</code>, <code>seed_ref:"TBD"</code>.</td>
+      <td><code class="path">views/Simulator.tsx</code> ← <code class="path">data/room_metrics_standard.json</code> / <code>_fairplay.json</code></td>
+    </tr>
+    <tr>
+      <td><strong>Eval evidence / AI Investigator</strong></td>
+      <td><span class="s-miss">UI PARTIAL · ENGINE MISSING</span></td>
+      <td>EvalPanel renders expected-vs-computed for cases A/C/E with pass/fail — but from <strong>structured scores</strong>. There is <strong>no evidence packet, no LLM call, no eval harness.</strong> Repo-wide grep for <code>evidence_packet</code>/<code>anthropic</code>/<code>investigator</code> = <strong>0 matches</strong>.</td>
+      <td><code class="path">views/EvalPanel.tsx</code> (UI only). Engine: <strong>nothing built.</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>The four contracts</h3>
+<table>
+  <thead><tr><th>Contract</th><th>State</th><th>Evidence</th></tr></thead>
+  <tbody>
+    <tr><td><strong>C1 — P2 sim data</strong> (players, roster, sessions, seat-events, relationships, room-state, seeded case labels)</td><td><span class="s-ok">BUILT</span></td><td><code class="path">data/*.json</code> present &amp; coherent; case labels cover A–G</td></tr>
+    <tr><td>C1 — room metrics (the simulator's two paths)</td><td><span class="s-part">BUILT, static fixture</span></td><td><code class="path">data/room_metrics_*.json</code> marked <code>static-fixture-day2</code></td></tr>
+    <tr><td><strong>C2 — P3 scoring</strong> (classify / health / integrity / seating / router + reason codes)</td><td><span class="s-ok">BUILT, computed, deterministic</span></td><td><code class="path">backend/scoring/*.py</code> → frozen <code class="path">data/derived/*.json</code>; validators pin acceptance values</td></tr>
+    <tr><td>C2 — live API (FastAPI: pit / lobby / sit-stand / SSE rescore)</td><td><span class="s-ok">BUILT (optional)</span></td><td><code class="path">backend/app/main.py</code>; frontend falls back to static JSON if down</td></tr>
+    <tr><td><strong>C3 — evidence packet</strong> (the P3→P4 seam)</td><td><span class="s-miss">MISSING</span></td><td>0 repo matches for <code>top_evidence</code>/<code>allowed_actions</code>. Decision D3 still open. <em>P3 already produces the inputs</em> — this is assembly, not new analytics.</td></tr>
+    <tr><td><strong>C4 — P1 UI</strong> (lobby, pit-boss, case detail, simulator, eval)</td><td><span class="s-ok">BUILT</span></td><td>all views in <code class="path">frontend/src/views/</code>; dual-mode (API or static fallback)</td></tr>
+    <tr><td><strong>P4 — AI Investigator + evals</strong> (LLM summaries, guardrail prompt, eval rubric/harness)</td><td><span class="s-miss">MISSING</span></td><td>no Anthropic/LLM code anywhere; no eval harness. The UI <em>frames</em> guardrails; nothing generates or grades a summary.</td></tr>
+    <tr><td><code>playsim</code> room simulator &amp; <code>ml/</code> model-builder</td><td><span class="s-part">RESEARCH TRACKS (off demo path)</span></td><td><code class="path">playsim/</code>, <code class="path">ml/</code>, <code class="path">tools/model-builder/</code> — not consumed by the demo today</td></tr>
+  </tbody>
+</table>
+
+<div class="call good">
+  <div class="h">The good news</div>
+  P1 (UI) and P3 (scoring) are real and largely computed — not vaporware. The spine is <strong>clickable end-to-end today</strong> on a mix of computed scores and static fixtures, and the three mandatory cases (A new-player reroute, C cluster integrity, E shared-device false-positive) work with <em>computed</em> scores and correct guardrail framing.
+</div>
+
+<!-- ===================== 2 ===================== -->
+<h2 id="s2"><span class="num">2.</span>What's still needed to get to a demo</h2>
+
+<p>Ranked by how much each blocks the <em>complete</em> story (not by effort):</p>
+
+<table>
+  <thead><tr><th class="rank">#</th><th>Gap</th><th>Why it matters</th><th>Shape of the work</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="rank">1</td>
+      <td><strong>AI Investigator (P4) — entirely missing</strong></td>
+      <td>It's the project's third pillar and the literal thesis ("AI builds the case, human judges"). Without it the demo's right end is a structured-score UI wearing a guardrail costume — it cannot show the AI <em>explaining its reasoning</em>.</td>
+      <td>New: a Claude call that takes an <em>evidence packet</em> and emits a safe summary (uncertainty language, counter-evidence surfaced, recommends a human action, never accuses). Needs the guardrail prompt + the hard-rule checks.</td>
+    </tr>
+    <tr>
+      <td class="rank">2</td>
+      <td><strong>Evidence packet (Contract 3) — missing</strong> (blocks #1)</td>
+      <td>It's the seam P4 consumes: <code>case_id, case_type, scores, top_evidence, counter_evidence, uncertainties, recommended_action, allowed_actions</code>. No packet → nothing to hand the LLM.</td>
+      <td>Mostly <strong>assembly</strong>, not analytics: P3 already produces the scores, reason codes, and counter-evidence (<code class="path">integrity.py</code>). Define the schema (D3) and serialize per case.</td>
+    </tr>
+    <tr>
+      <td class="rank">3</td>
+      <td><strong>Eval harness — missing</strong> (the "evals" half of P4)</td>
+      <td>The PRD wants the AI's summaries <em>graded</em>: grounding, no-overclaiming, counter-evidence present, always a human action. The EvalPanel UI exists but is fed by structured scores, not LLM output.</td>
+      <td>A small rubric + runner over the 7 seeded cases; render results in the existing EvalPanel.</td>
+    </tr>
+    <tr>
+      <td class="rank">4</td>
+      <td>Simulator paths are hand-authored, not computed</td>
+      <td>Demo-safe today (the story holds), but the 8-hour divergence is presenter-authored, not "computed from the simulator." A reviewer may ask "is this real?"</td>
+      <td>Promote <code>playsim</code> output into <code class="path">data/room_metrics_*.json</code> — the schema already matches (a test pins it). This is the one place the playsim work pays off for the demo.</td>
+    </tr>
+    <tr>
+      <td class="rank">5</td>
+      <td>Eval panel covers only A/C/E with real pass/fail</td>
+      <td>B/D/F/G render as "expected-only." Full 7-case coverage strengthens the "no over-escalation" story.</td>
+      <td>Falls out of #2 + #3 once the packet + harness exist.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="call warn">
+  <div class="h">The critical path is short and specific</div>
+  <strong>Evidence packet (#2) → AI Investigator (#1) → eval harness (#3).</strong> All three are P4-shaped and currently unstarted. Everything else on the spine already renders. If the goal is "a demo that proves the thesis," this is the work — not more simulator depth.
+</div>
+
+<!-- ===================== 3 ===================== -->
+<h2 id="s3"><span class="num">3.</span>How the demo works &amp; the questions it answers</h2>
+
+<h3>The walk-through (what the presenter clicks)</h3>
+<ol>
+  <li><strong>Lobby.</strong> A player sees neutral "recommended for you" tables — no scores, no labels. <em>Shows: the product is safe to put in front of players.</em></li>
+  <li><strong>Pit-boss console.</strong> The operator sees the same room with the curtain pulled back: health scores, seating risk, integrity cases with counter-evidence, and a recommended action they can override. <em>Shows: structured scoring finds risk; the human decides.</em></li>
+  <li><strong>Standard-vs-FairPlay simulation.</strong> Run the room 8 hours two ways — naive seating vs FairPlay routing — and watch the health/retention curves diverge. <em>Shows: the recommendations would change outcomes.</em></li>
+  <li><strong>Eval evidence.</strong> Across the seeded cases, show the system flags true risks and <em>doesn't</em> over-escalate the look-alikes — and (once P4 exists) that the AI's written summaries are grounded, hedged, and always defer to a human. <em>Shows: it's trustworthy, not a black box.</em></li>
+</ol>
+
+<h3>The questions the demo answers — and which work today</h3>
+<table>
+  <thead><tr><th>PRD eval question</th><th>Today?</th></tr></thead>
+  <tbody>
+    <tr><td><strong>A</strong> — New player in a bad mix → rerouted to a friendlier table</td><td><span class="s-ok">Yes</span> (computed: P-104 off T-22, seating-risk High)</td></tr>
+    <tr><td><strong>B</strong> — Strong grinder → a <em>health</em> concern, not an integrity accusation</td><td><span class="s-ok">Yes</span> (lens separation computed)</td></tr>
+    <tr><td><strong>C</strong> — True coordinated cluster → integrity review (hold, don't ban)</td><td><span class="s-ok">Yes</span> (CL-001 → high, hold-for-review)</td></tr>
+    <tr><td><strong>D/E</strong> — Regular overlap / shared device → <em>not</em> over-escalated</td><td><span class="s-ok">Yes</span> (the false-positive beat, computed)</td></tr>
+    <tr><td><strong>F</strong> — Promo abuse → labeled distinct from cheating</td><td><span class="s-part">Partial</span> (classified; eval row is expected-only)</td></tr>
+    <tr><td><strong>G</strong> — Bot-like → its own review queue</td><td><span class="s-part">Partial</span> (queue computed; eval row expected-only)</td></tr>
+    <tr><td><strong>The AI rubric</strong> — grounded · no over-claiming · counter-evidence shown · always a human action</td><td><span class="s-miss">Not yet</span> — guardrails are enforced <em>structurally in the UI</em>, but no LLM produces summaries and no eval grades them</td></tr>
+  </tbody>
+</table>
+
+<p>The one-sentence question the whole demo answers: <em>"Can a system combine weak signals to flag genuinely unhealthy tables — and explain itself safely enough that a human operator, not the machine, stays in charge?"</em> Today we can show the <strong>flagging</strong> convincingly; we cannot yet show the <strong>explaining</strong> (the AI half).</p>
+
+<!-- ===================== 4 ===================== -->
+<h2 id="s4"><span class="num">4.</span>Recommendation</h2>
+
+<h3>Build next (in order)</h3>
+<ol>
+  <li><strong>Define + emit the evidence packet</strong> for the mandatory cases (A/C/E first). Assembly over P3's existing outputs. <span class="lane team">P3→P4 seam</span></li>
+  <li><strong>Stand up the AI Investigator</strong>: one Claude call, evidence-packet-in / safe-summary-out, with the guardrail prompt and the hard-rule checks. <span class="lane team">P4</span></li>
+  <li><strong>Add the eval rubric + runner</strong> over the 7 cases; surface in the existing EvalPanel. <span class="lane team">P4</span></li>
+  <li><strong>Promote <code>playsim</code> into the simulator paths</strong> (the one place the simulator work reaches the demo) — only after 1–3, and only if time allows. <span class="lane you">P2/this checkout</span></li>
+</ol>
+
+<h3>Stop polishing (for now)</h3>
+<ul>
+  <li><strong>playsim depth</strong> — the room loop, behavior models, and routing comparison are already more than the demo needs. The remaining demo value is the single fixture-promotion step (#4), not more behavioral fidelity.</li>
+  <li><strong>The FICO model-builder</strong> — a genuinely nice scoring-research tool, but off the demo path. The champion rules already ship the demo.</li>
+</ul>
+
+<div class="call bad">
+  <div class="h">What not to claim yet</div>
+  Until P4 exists, do not present the demo as showing "the AI Investigator." The current pit-boss "AI summary" is a structured scorecard with safe framing — true and useful, but it is not an LLM explaining its reasoning, and a sharp reviewer will catch the difference. Frame today's build as <em>"structured scoring with guardrail-safe presentation; the AI-investigator layer is the next milestone."</em>
+</div>
+
+<footer>
+  <p class="small">Draft for review — 2026-06-24. Status is evidence-based (file paths cited inline) and reflects <code>main</code> at the time of writing. The companion <code class="path">docs/learn/playsim-review.html</code> goes deep on the simulator link specifically; this document is the whole-spine view.</p>
+</footer>
+
+</div>
+</body>
+</html>

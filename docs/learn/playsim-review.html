@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>playsim — Review Report</title>
+<style>
+  :root{
+    --bg:#fbfbfa; --fg:#1d2125; --muted:#5a6470; --line:#e3e6ea;
+    --code:#f4f5f7; --codefg:#374151;
+    --good-bg:#eef7ef; --good-bd:#bcdcc1; --good-fg:#1f5b2a;
+    --warn-bg:#fef6e9; --warn-bd:#f0d9a8; --warn-fg:#7a531a;
+    --bad-bg:#fcedec; --bad-bd:#f1c3bf; --bad-fg:#8a2b22;
+    --part-bg:#eef2fb; --part-bd:#c3d0ef; --part-fg:#284a9c;
+    --accent:#2b5fb0;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--fg); background:var(--bg); line-height:1.55; margin:0;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px; margin:0 auto; padding:0 22px 120px;}
+  header.top{
+    border-bottom:1px solid var(--line); padding:30px 0 18px; margin-bottom:8px;
+  }
+  header.top h1{margin:0 0 4px; font-size:1.7rem; letter-spacing:-.01em;}
+  header.top .purpose{color:var(--muted); margin:0 0 12px; font-size:1.02rem;}
+  .badges{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .badge{
+    display:inline-block; font-size:.74rem; font-weight:600; letter-spacing:.02em;
+    padding:3px 9px; border-radius:999px; border:1px solid var(--warn-bd);
+    background:var(--warn-bg); color:var(--warn-fg);
+  }
+  .badge.date{background:#eef2fb; border-color:var(--part-bd); color:var(--part-fg);}
+  .badge.repro{background:var(--bad-bg); border-color:var(--bad-bd); color:var(--bad-fg);}
+  nav.toc{
+    position:sticky; top:0; z-index:5; background:rgba(251,251,250,.96);
+    backdrop-filter:saturate(150%) blur(4px);
+    border-bottom:1px solid var(--line); padding:10px 0; margin-bottom:26px;
+    font-size:.86rem;
+  }
+  nav.toc ol{margin:0; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:4px 14px;}
+  nav.toc a{color:var(--accent); text-decoration:none;}
+  nav.toc a:hover{text-decoration:underline;}
+  h2{font-size:1.32rem; margin:42px 0 12px; padding-top:8px; letter-spacing:-.01em;
+     border-top:2px solid var(--line);}
+  h2 .num{color:var(--muted); font-weight:500; margin-right:.4em;}
+  h3{font-size:1.05rem; margin:26px 0 8px;}
+  p{margin:10px 0;}
+  code,kbd{font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    background:var(--code); color:var(--codefg); padding:1px 5px; border-radius:4px; font-size:.86em;
+    word-break:break-word;}
+  .path{white-space:nowrap;}
+  ul,ol{margin:10px 0; padding-left:22px;}
+  li{margin:5px 0;}
+  table{border-collapse:collapse; width:100%; margin:16px 0; font-size:.88rem;}
+  th,td{border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top;}
+  th{background:#f1f3f6; font-weight:600;}
+  tbody tr:nth-child(even){background:#fafbfc;}
+  .claims th{background:#eef2fb;}
+  .v-sup{color:var(--good-fg); font-weight:700;}
+  .v-part{color:var(--part-fg); font-weight:700;}
+  .v-uns{color:var(--bad-fg); font-weight:700;}
+  .rank{font-weight:700; text-align:center; width:34px;}
+  .call{border-radius:8px; padding:12px 15px; margin:16px 0; border:1px solid;}
+  .call .h{font-weight:700; font-size:.82rem; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px;}
+  .call.good{background:var(--good-bg); border-color:var(--good-bd);}
+  .call.good .h{color:var(--good-fg);}
+  .call.warn{background:var(--warn-bg); border-color:var(--warn-bd);}
+  .call.warn .h{color:var(--warn-fg);}
+  .call.bad{background:var(--bad-bg); border-color:var(--bad-bd);}
+  .call.bad .h{color:var(--bad-fg);}
+  .call.part{background:var(--part-bg); border-color:var(--part-bd);}
+  .call.part .h{color:var(--part-fg);}
+  blockquote{margin:12px 0; padding:8px 14px; border-left:3px solid var(--accent);
+    background:#f6f8fb; color:#33414f; font-style:italic;}
+  pre.flow{background:#1d2530; color:#d9e2ec; padding:16px; border-radius:8px;
+    overflow-x:auto; font-size:.78rem; line-height:1.45;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;}
+  .qa{margin:14px 0;}
+  .qa .q{font-weight:650;}
+  .qa .a{color:#33414f; margin-top:2px;}
+  hr{border:none; border-top:1px solid var(--line); margin:30px 0;}
+  .small{font-size:.82rem; color:var(--muted);}
+  .agree{color:var(--good-fg); font-weight:700;}
+  .disagree{color:var(--bad-fg); font-weight:700;}
+  .caveat{color:var(--warn-fg); font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>playsim — Review &amp; Explanation Report</h1>
+  <p class="purpose">A teammate-facing explanation plus an adversarial review of the deterministic poker-room simulator and its closed-loop room-routing A/B test.</p>
+  <div class="badges">
+    <span class="badge">Status: draft for review</span>
+    <span class="badge date">2026-06-24</span>
+    <span class="badge date" style="background:var(--good-bg);border-color:var(--good-bd);color:var(--good-fg)">Reproduction: tests + comparison ✓ · sweep running</span>
+  </div>
+  <p class="small" style="margin-top:10px">All claims below are cross-checked against code with <code>file:line</code> citations. The reproduction run has now completed for the test suite and the policy comparison (results boxed below); only the fit-sensitivity sweep is still computing.</p>
+</header>
+
+<section class="call good" style="margin:18px 0">
+  <div class="h">Reproduction results — ran 2026-06-24 on this checkout (Python 3.12.1)</div>
+  <p style="margin:6px 0"><strong>Test suite:</strong> <code>python -m pytest -q</code> → <strong>88 passed</strong> in 14m49s (exit 0) on current <code>main</code> (post-PR&nbsp;#47). Green on this machine. <span class="small">(Was 84 pre-#47; reason-aware reseating added 4 tests.)</span></p>
+  <p style="margin:10px 0 4px"><strong>Policy comparison</strong> (<code class="path">analysis/room_policy_comparison.py --seeds 42,7,99</code>), vulnerable-cohort paid seat-hours — <strong>my reproduction reproduces the findings doc to the decimal</strong>:</p>
+  <table style="margin:8px 0">
+    <thead><tr><th>horizon · means</th><th>random</th><th>most-full (Standard)</th><th>fairplay-route</th><th>fairplay-bal</th><th>doc match?</th></tr></thead>
+    <tbody>
+      <tr><td><strong>4h</strong> (240m)</td><td>9.66</td><td><strong>9.99</strong></td><td>9.84</td><td>8.62</td><td><span class="v-sup">exact</span> (9.66/9.99/9.84/8.62)</td></tr>
+      <tr><td><strong>8h</strong> (480m)</td><td>9.94</td><td><strong>10.06</strong></td><td>9.16</td><td>8.62</td><td><span class="v-sup">exact</span> (all four: 9.94/10.06/9.16/8.62)</td></tr>
+    </tbody>
+  </table>
+  <p style="margin:6px 0"><strong>Headline verdict:</strong> at <strong>8h, Standard &gt; FairPlay-route on every seed</strong> (42: 10.63 vs 9.25 · 7: 9.97 vs 9.41 · 99: 9.58 vs 8.82) — seed-stable, ~9% gap, confirmed. <strong>Random ≈ Standard</strong> (they trade places; random wins seed 99). <strong>fairplay-bal worst</strong>, and visibly via churn (breaks ≈47–52, <code>arr_surv</code>≈0–2m — it shatters tables), confirming the table-liveness mechanism.</p>
+  <p style="margin:6px 0"><strong>Important nuance the doc's single tables hide:</strong> at <strong>4h the gap is within seed noise and flips</strong> — FairPlay <em>wins</em> seed 42 (10.24 vs 9.10) but loses seed 7 (9.47 vs 11.15). Standard leads only on the <em>mean</em> at 4h (0.15), consolidating to a seed-stable lead by 8h (0.90). So the result is real but <strong>horizon- and seed-sensitive early</strong>; "Standard beats FairPlay" is a mean-at-8h statement, not a per-seed-at-any-horizon one.</p>
+  <p style="margin:12px 0 4px"><strong>Update — re-run against PR&nbsp;#47 ("reason-aware reseating"):</strong></p>
+  <ul style="margin:4px 0">
+    <li><strong>Default behavior is byte-compatible</strong> — the 8h comparison under <code>--behavior default</code> reproduces the pre-#47 numbers exactly (seed 42: 10.11 / 10.63 / 9.25), confirming #47 didn't disturb the baseline.</li>
+    <li><strong>Under <code>--behavior reason-aware</code> (the more realistic model), Standard still leads at 8h and the gap is comparable to default — it does <em>not</em> meaningfully narrow.</strong> Means over seeds 42/7/99: most-full <strong>8.73</strong> &gt; random 8.29 &gt; fairplay <strong>8.05</strong> &gt; fp-bal 7.34 — a 0.68-hr (<strong>~8.4%</strong>) Standard-over-FairPlay gap, vs default's 0.90 (~9%). All seat-hours drop ~13% because the wait-queue surfaces realistic re-seat churn (<code>wait_balks</code>). <span class="small">(An earlier "~5.5%" note was a seed-42-only read; the 3-seed mean is ~8.4%.)</span></li>
+    <li><strong>Realistic reseating sharpens, not overturns, the conclusion:</strong> (a) FairPlay shows the <em>most</em> wait-balks (34.7 vs most-full 21.3) and breaks (41.3 vs 28.0) — the churn concern becomes <em>more</em> attributable to health-routing; (b) most-full becomes the <em>clear</em> single best — random (8.29) no longer ties it, unlike under default where random ≈ most-full.</li>
+  </ul>
+  <p style="margin:10px 0 4px"><strong>Two more reproduction findings:</strong></p>
+  <ul style="margin:4px 0">
+    <li><strong>Anti-circularity (fit sweep, pre-#47, 3 of 4 weights):</strong> FairPlay's delta erodes as the fit-weight rises — <code>+0.08 (w=0) → −0.03 (w=0.15) → 0.00 (w=0.30)</code> — never re-opening a FairPlay edge, while <code>fp_brk</code> climbs (29→36). Directionally consistent with the doc's anti-circularity claim; the heaviest run (w=0.50) was killed by the runtime cap three times, so strict monotonicity through w=0.50 is corroborated but not independently reproduced.</li>
+    <li><strong>Portability bug found:</strong> <code>python -m playsim.cli --help</code> <em>crashes</em> on a default Windows console (cp1252) — an un-encodable <code>≈</code> in the <code>calibrate</code> subcommand help string raises <code>UnicodeEncodeError</code>. Workaround: <code>PYTHONIOENCODING=utf-8</code>. Real bug, cheap fix (ASCII the help text).</li>
+  </ul>
+</section>
+
+<nav class="toc" aria-label="Table of contents">
+  <ol>
+    <li><a href="#s1">1 · Plain-English</a></li>
+    <li><a href="#s2">2 · Architecture Map</a></li>
+    <li><a href="#s3">3 · Strengths</a></li>
+    <li><a href="#s4">4 · Concerns / Risks</a></li>
+    <li><a href="#s5">5 · Findings Review</a></li>
+    <li><a href="#s6">6 · Likely Questions</a></li>
+    <li><a href="#s7">7 · Verdict</a></li>
+    <li><a href="#claims">Claims table</a></li>
+  </ol>
+</nav>
+
+<!-- ============================ 1 ============================ -->
+<h2 id="s1"><span class="num">1.</span>Plain-English Explanation</h2>
+
+<p><strong>What playsim is.</strong> A deterministic, seeded poker simulator. Archetype-driven agents play real
+No-Limit Hold'em hands on the PokerKit engine, and the behavioral + integrity signals
+(VPIP, PFR, aggression factor, timing, soft-play, <code>net_bb</code>) <em>emerge from play</em> rather than being
+hand-set (<code class="path">playsim/README.md:1-28</code>). Critically, <strong>playsim is not the detector</strong> —
+risk scoring lives in <code class="path">backend/scoring/</code> (<code class="path">README:10-14</code>), and
+<strong>no LLM is in the loop</strong>.</p>
+
+<p><strong>What it runs today.</strong> Eight CLI subcommands are wired (<code class="path">playsim/playsim/cli.py:225-307</code>):
+<code>run</code> (integrity-loop hand generation), <code>routing</code> (fixed-roster Standard-vs-FairPlay backtest),
+<code>population</code> (fixture-population replay), <code>room-sim</code> (the new closed-loop room A/B), plus
+<code>replay</code> (determinism check), <code>calibrate</code>, <code>health</code>, and <code>tables</code>.</p>
+
+<p><strong>What the closed-loop room simulator adds.</strong> The earlier <code>routing</code> mode compared two
+<em>static, human-written</em> rosters — which the findings doc itself calls "nearly tautological." The new
+<code>RoomSim</code> (<code class="path">playsim/playsim/room.py:498-518</code>) steps a global clock and makes the
+<em>seating policy earn the seat-time</em>: it seats due arrivals, deals a hand per quorum-met table,
+checks tilt departures, and handles table breaks each step. It is "closed-loop" because state feeds the next
+decision — departures reopen seats, arrivals are seated against the <em>live</em> table composition, and tables
+that fall below two players break and displace their occupants. Both A/B arms share the <strong>same seeded
+arrival stream</strong>; only the seating policy differs (<code class="path">test_arrivals.py:26-30</code>).</p>
+
+<p><strong>What the room-routing findings say.</strong> The headline: the <em>Standard</em> "most-full open table"
+policy wins or ties; <em>FairPlay-route</em> (health-aware) falls roughly 9% behind by hour 8; <em>Random</em> tracks
+Standard; and <em>FairPlay-balanced</em> is the worst. Doc figures (<code class="path">findings.md:99-104</code>):
+at 8h, random 9.94 / most-full 10.06 / fairplay 9.16 / balanced 8.62 cohort seat-hours.</p>
+
+<div class="call part">
+  <div class="h">Illustrative, not validated</div>
+  The behavioral model runs on hand-authored parameters, so <em>every retention number the room simulator
+  produces today is illustrative</em> (<code class="path">docs/learn/playsim-calibration-data.md:12-19</code>).
+  The metric magnitudes are mechanically produced by real code but not pinned by any committed snapshot. The
+  <strong>decision direction</strong> is testable; the <strong>numbers</strong> are not yet claimable.
+</div>
+
+<div class="call good">
+  <div class="h">Implemented / verified</div>
+  The simulator engine, all five policies, the backend routing seam, the closed-loop room loop, the
+  predicted-vs-realized health separation, and the fit-aware behavior model (default-off) are all <em>built and
+  tested for well-formedness and determinism</em>. The machine is buildable-and-built; it is the
+  <em>calibration</em> that is missing.
+</div>
+
+<h3>(A) Is the thesis testable with this simulator?</h3>
+<p><strong>Yes — structurally.</strong> The thesis ("health-aware routing protects table health / recreational
+players better than naive liquidity-seeking") is testable here precisely because the simulator separates the
+variable that <em>chooses</em> seats from the variable that <em>grades</em> them. Predicted health (composition-only,
+<code>sessions=None</code>, <code>P_bleed</code> zeroed at <code class="path">backend/scoring/health.py:206-207</code>) drives
+routing; <em>realized</em> chip-flow health (<code class="path">playsim/playsim/health.py:24-44</code>) grades outcomes
+and <strong>never feeds routing</strong> — enforced structurally by a no-import test
+(<code class="path">test_room.py:133-139</code>) and a <code>P_bleed==0</code> assertion
+(<code class="path">test_room_adapter.py:50-54</code>). That independence is what makes Standard-vs-FairPlay a real
+test rather than a tautology. <strong>But</strong> the thesis is only <em>quantitatively</em> testable once the behavioral
+parameters are calibrated to data; today it is testable in <em>direction</em>, not magnitude. The fit-aware behavior
+work (Phase 2, done but default-off) is the piece that even <em>lets</em> the thesis's central variable (Fit) buy
+retention — without it the old leave model responded only to chip loss, so "the simulator cannot reward the exact
+variable the thesis is built on" (<code class="path">brainstorm 2026-06-24:28-32</code>).</p>
+
+<!-- ============================ 2 ============================ -->
+<h2 id="s2"><span class="num">2.</span>Architecture Map</h2>
+
+<h3>Module table</h3>
+<table>
+<thead><tr><th>Module</th><th>Owns</th></tr></thead>
+<tbody>
+<tr><td><code class="path">playsim/playsim/runner.py</code></td><td>Free-form core engine. <code>run_session</code> (<code>runner.py:176</code>) takes any Player list, one agent per player, seeded RNG, rotating button, persist-stacks/retention/skill-edge knobs. Both population and room-sim are built on it.</td></tr>
+<tr><td><code class="path">playsim/playsim/room.py</code></td><td>Closed-loop orchestrator. <code>RoomSim.run</code> (<code>498-518</code>) steps the clock; per step: <code>_seat_arrivals</code>, <code>_deal_one_hand</code> (<code>378</code>), <code>_check_departures</code> (<code>400</code>), <code>_handle_breaks</code> (<code>417</code>). Break at <code>&lt;2 seated</code> (<code>420</code>); re-seek-once-then-balk (<code>428-436</code>). <strong>Forbidden</strong> from importing realized-health (asserted).</td></tr>
+<tr><td><code class="path">playsim/playsim/policies.py</code></td><td>The swappable seating seam, 5 policies behind one interface. <code>StandardPolicy</code> (<code>71-83</code>, most-full, no backend), <code>RandomPolicy</code> (<code>49-68</code>), <code>FairPlayRoutePolicy</code> (<code>85-101</code>, best predicted health), <code>FairPlayProtectPolicy</code> (<code>104</code>, experimental defer), <code>FairPlayBalancedPolicy</code> (<code>141-193</code>). <code>make_policy</code> at <code>196</code>.</td></tr>
+<tr><td><code class="path">playsim/playsim/router_adapter.py</code></td><td><strong>The only module importing</strong> <code>scoring.*</code>. <code>recommend</code> (<code>128-161</code>) calls the real backend <code>route()</code>; <code>predicted_health</code> (<code>120-126</code>) scores composition-only. Converts int↔"P-N" ids at exactly 2 spots (<code>81</code>, <code>139</code>).</td></tr>
+<tr><td><code class="path">playsim/playsim/health.py</code></td><td>Realized chip-flow health (<code>realized_health_score</code>, <code>24-44</code>) from rec-loss-velocity / winnings-concentration / bust-rate. <strong>Eval-only.</strong></td></tr>
+<tr><td><code class="path">playsim/playsim/behavior.py</code></td><td>Behavior-policy seam. <code>DefaultBehaviorPolicy</code> (<code>63-99</code>, reproduces prior rules). <code>FitAwareBehaviorPolicy</code> (<code>150-204</code>, parametric, <strong>default-off</strong>): leave budget shrinks by loss-tilt + <code>w_pressure</code>·table_pressure + <code>w_fit</code>·style_mismatch (<code>185-187</code>). Reduces exactly to default at zero weights (<code>159-161</code>).</td></tr>
+<tr><td><code class="path">playsim/playsim/population.py</code></td><td>Fixture population path + the int↔"P-N" id seam (<code>format_player_id</code> <code>22-23</code>, <code>parse_player_id</code> <code>13-19</code>).</td></tr>
+<tr><td><code class="path">playsim/playsim/room_export.py</code></td><td>Canonical trace builder. <code>build_canonical</code> (<code>84-120</code>) emits the full <code>room_sim_*</code> artifact; <code>derive_room_metrics</code> (<code>123-168</code>) is a lossy projection to v1 <code>room_metrics_*</code>.</td></tr>
+<tr><td><code class="path">playsim/playsim/calibrate.py</code></td><td>Real, but calibrates <em>play</em> (nudges postflop aggression toward fixture-median AF, writes <code>calibration.json</code>). Does <strong>not</strong> calibrate retention/fit.</td></tr>
+<tr><td><code class="path">backend/scoring/router.py</code></td><td>Backend <code>route()</code> (<code>95-148</code>): <code>rank = 0.30·Fit + 0.40·Health + 0.30·ΔHealth</code> (<code>65-67</code>). Integrity gate sinks gated tables to badge <code>hidden_gated</code> (<code>82-84</code>).</td></tr>
+<tr><td><code class="path">backend/scoring/health.py</code> · <code>seating.py</code></td><td><code>Health(T)=clamp(100 − P_pred − P_frag − P_clus − P_bleed)</code> (<code>health.py:251</code>). Fit-matrix lookup, unknown→50 (<code>seating.py:161-171</code>); ΔHealth composition-only (<code>seating.py:174-196</code>); rank weights (<code>seating.py:46-48</code>).</td></tr>
+<tr><td><code class="path">frontend/src/data/types.ts</code></td><td>v1 <code>room_metrics_*</code> schema (<code>36-59</code>): <code>{meta, hours[8]}</code>. Consumed by <code>Simulator.tsx</code>, <code>DivergenceChart.tsx</code>, <code>KpiComparison.tsx</code>.</td></tr>
+</tbody>
+</table>
+
+<p><strong>Where backend routing enters:</strong> exactly one seam — <code class="path">router_adapter.py</code>
+imports <code>scoring.router.route</code> (<code>137</code>) and <code>scoring.*</code> health. Nothing else in playsim
+touches the backend. <strong>Where the frontend schema enters:</strong> two surfaces — the live v1
+<code class="path">data/room_metrics_*.json</code> (currently hand-authored Day-2 fixtures) typed by
+<code class="path">frontend/src/data/types.ts</code>, and the canonical <code>room_sim_*</code> trace from
+<code class="path">room_export.py</code> which the frontend does not yet read.</p>
+
+<h3>Data flow</h3>
+<pre class="flow">
+  data/players.json · table_roster.json · derived/classifications.json
+        │
+        ▼
+  ┌─────────────────────┐     seeded arrival stream (IDENTICAL both arms)
+  │  RoomSim.run         │◄──────────────────────────────────────────────┐
+  │  (room.py:498)       │                                                │
+  │   step clock:        │     ┌───────────── policy seam ────────────┐   │
+  │    _seat_arrivals ───┼────►│ Standard / Random  → no backend       │   │
+  │    _deal_one_hand    │     │ FairPlayRoute/Protect/Balanced        │   │
+  │    _check_departures │     │        │                              │   │
+  │    _handle_breaks    │     │        ▼  router_adapter.recommend    │   │
+  │   (break &lt;2 → break  │     │  backend route()  (router.py:95)      │   │
+  │    → displace →      │     │  rank=.30 Fit + .40 Health + .30 ΔH    │   │
+  │    re-seek-once-balk)│     │  PREDICTED health (P_bleed=0)         │   │
+  └─────────┬───────────┘     │  integrity gate → hidden_gated        │   │
+            │ state feeds next decision ─────────────────────────────────┘
+            ▼
+  ┌──────────────────────────────────────────────┐
+  │  realized_health (health.py:24) — EVAL ONLY   │   ✗ never feeds routing
+  └──────────────────────────────────────────────┘
+            │
+            ▼
+  build_canonical → room_sim_*.json   (full trace: arrival_intents,
+            │                          routing_decisions, seat_events,
+            │                          sessions, hourly, table_timelines, summary)
+            ▼
+  derive_room_metrics (LOSSY) → room_metrics_*.json (v1, 8 rows)
+            │                          drops arrivals/decisions/events/sessions/summary
+            ▼
+  frontend: Simulator.tsx · DivergenceChart.tsx · KpiComparison.tsx
+  (live frontend still reads HAND-AUTHORED room_metrics_*, not the derived file)
+</pre>
+
+<!-- ============================ 3 ============================ -->
+<h2 id="s3"><span class="num">3.</span>Strengths</h2>
+
+<ul>
+<li><strong>Emergent signals, not hand-set outputs.</strong> Behavioral and integrity stats fall out of actual
+PokerKit hands (<code class="path">README:1-28</code>) — the simulator is harder to accuse of begging the question
+than a stat-generator would be.</li>
+<li><strong>The anti-circularity guard is structural, not aspirational.</strong> Predicted health routes; realized
+health grades; the two cannot touch — and a test introspects <code class="path">room.py</code>'s source to forbid the
+import (<code class="path">test_room.py:133-139</code>), with <code>P_bleed==0</code> asserted
+(<code class="path">test_room_adapter.py:50-54</code>). This is the single most valuable design property here.</li>
+<li><strong>Fair A/B construction.</strong> Both arms consume the identical seeded arrival stream with no
+health-modulation (<code class="path">test_arrivals.py:26-30,63-67</code>). The policy is the only moving part.</li>
+<li><strong>One backend seam, single source of scoring truth.</strong> Only <code class="path">router_adapter.py</code>
+imports <code>scoring.*</code>; playsim never re-implements routing. Backend stays the one place scoring is defined.</li>
+<li><strong>Honest baseline + honest labeling.</strong> "Most-full open table" is a realistic operator null, and the
+findings doc volunteers its own weaknesses (throughput-shaped metric, no manufactured FairPlay win — quoted in §5).</li>
+<li><strong>Phased, parametric behavior model that genuinely degrades to the old one.</strong>
+<code>FitAwareBehaviorPolicy</code> is real, not stubbed: at <code>w_pressure=w_fit=0</code> with decline off it reduces
+<em>exactly</em> to the default (<code class="path">behavior.py:159-161</code>) — a clean, testable extension point.</li>
+<li><strong>Determinism discipline.</strong> Room, canonical, and comparison runs reproduce exactly on re-run; single
+tables are byte-identical including boards/payoffs (<code class="path">test_determinism.py:7-13</code>).</li>
+<li><strong>Provenance-before-feature for deferred work.</strong> RLCard is correctly scaffolded-and-deferred
+(<code class="path">baselines.py:86</code> raises <code>NotImplementedError</code>; <code>agent.py:55-56</code> carries
+<code>agent_model</code>/version metadata now).</li>
+</ul>
+
+<h3>(B) Key design decisions — agree / disagree</h3>
+<table>
+<thead><tr><th>Decision</th><th>Verdict</th><th>Reasoning</th></tr></thead>
+<tbody>
+<tr><td>Deterministic seeded sim, no LLM in the loop</td><td class="agree">Agree</td><td>Determinism is a product rule; an LLM player is just another ungrounded prior. "Intelligence ≠ fidelity" (<code class="path">brainstorm 2026-06-24:65-69</code>).</td></tr>
+<tr><td>playsim owns simulation / backend owns routing</td><td class="agree">Agree</td><td>Avoids reimplementation; single source of scoring truth.</td></tr>
+<tr><td>One backend adapter</td><td class="caveat">Agree, with caveat</td><td>Right shape — but harden the seam: keyword args + a contract test (see Risk 5).</td></tr>
+<tr><td>Standard baseline = most-full open table</td><td class="caveat">Agree, with caveat</td><td>Realistic operator null — but it <em>structurally maximizes</em> the throughput metric, which is the headline metric (Risk 2).</td></tr>
+<tr><td>FairPlay-route first, protect later</td><td class="agree">Agree</td><td>Protect is experimental / default-off; routing is the honest MVP arm.</td></tr>
+<tr><td>Same seeded arrivals across both arms</td><td class="agree">Agree</td><td>Essential for a fair A/B; verified.</td></tr>
+<tr><td>Predicted health routes / realized health evaluates</td><td class="agree">Strongly agree</td><td>The core anti-tautology guard; structurally enforced.</td></tr>
+<tr><td>Canonical <code>room_sim_*</code> with v1 <code>room_metrics_*</code> as adapter</td><td class="caveat">Agree, with caveat</td><td>Good layering — but <strong>regenerate the checked-in fixtures from the sim</strong> and stop shipping hand-authored ones as if computed (Risk 6).</td></tr>
+<tr><td>RLCard deferred, provenance now</td><td class="agree">Agree</td><td>Correctly framed scaffold.</td></tr>
+<tr><td>Fit-aware behavior before strong retention claims</td><td class="agree">Agree</td><td>It is the gate: without it the sim cannot reward the thesis's central variable.</td></tr>
+</tbody>
+</table>
+
+<!-- ============================ 4 ============================ -->
+<h2 id="s4"><span class="num">4.</span>Concerns / Risks <span class="small">(ranked, with cheapest test)</span></h2>
+
+<p>This ordering folds in <strong>(D) ranking of simulation-design risks</strong>: the highest-ranked items are the
+ones that most threaten any quantitative conclusion (authored mechanism → headline; metric shape; seed stability),
+followed by seam-fragility and artifact-integrity risks.</p>
+
+<table>
+<thead><tr><th class="rank">#</th><th>Risk</th><th>Evidence</th><th>Consequence</th><th>Cheapest test</th></tr></thead>
+<tbody>
+<tr>
+  <td class="rank">1</td>
+  <td><strong>The headline ("Standard beats FairPlay") is downstream of hand-authored parameters.</strong></td>
+  <td>Break-at-&lt;2 quorum (<code class="path">room.py:420</code>), re-seek-once-then-balk (<code class="path">room.py:428-436</code>), tilt-leave curve (<code class="path">runner.py:36-38</code>) — all authored. Conceded in <code class="path">calibration-data.md</code>.</td>
+  <td>The ranking may be an artifact of the chosen churn/tilt curves, not a property of routing. Any numeric claim is uncalibrated.</td>
+  <td>One-factor sensitivity sweep on the three authored constants; if the ranking flips within a plausible range, the result is parameter-bound. (Harness exists: <code class="path">fit_sensitivity_sweep.py</code>.)</td>
+</tr>
+<tr>
+  <td class="rank">2</td>
+  <td><strong>The headline metric is throughput-shaped — it structurally rewards the most-full policy.</strong></td>
+  <td>Cohort paid seat-time is a sum; "most-full" maximizes liquidity by construction. Doc concedes it (<code class="path">findings.md:164-166</code>).</td>
+  <td>The comparison may measure throughput, not player protection. A per-player-survival or harm-avoided metric could re-rank the policies.</td>
+  <td>Re-score the <em>existing</em> canonical runs under a per-player-survival / harm-avoided metric (already present in <code>summary</code>: <code>vulnerable_paid_seat_hours</code>, <code>recreational_loss_velocity</code>) — no new sim run needed.</td>
+</tr>
+<tr>
+  <td class="rank">3</td>
+  <td><strong>Seed stability of the ~9% gap is unverified; no test pins room-loop ranking.</strong></td>
+  <td>Comparison runs seeds 42,7,99 (<code class="path">room_policy_comparison.py:38-93</code>) but <code class="path">test_room_compare.py:46-49</code> asserts only well-formedness/means/determinism — <strong>not</strong> ranking. Ranking is asserted only in the <em>legacy</em> session-roster path (<code class="path">test_smoke.py:46-55</code>), not the new loop.</td>
+  <td>The ~9% gap may be within seed variance. The new canonical loop has no multi-seed stability guard at all.</td>
+  <td>Add a many-seed (≥20) run computing mean ± std of the gap; assert the sign holds. Cheap to add to the existing harness. <em>(Reproduction, 3 seeds: 8h gap holds on all three and reproduces the doc exactly; 4h flips per-seed — so the 8h sign looks robust but is not yet pinned at ≥20 seeds.)</em></td>
+</tr>
+<tr>
+  <td class="rank">4</td>
+  <td><strong>Fit-aware behavior is default-off, so the thesis's central lever isn't exercised in the headline.</strong></td>
+  <td><code class="path">behavior.py:150-204</code> done but disabled; old leave model responds only to chip loss. "the simulator therefore cannot reward the exact variable the thesis is built on" (<code class="path">brainstorm 2026-06-24:28-32</code>).</td>
+  <td>FairPlay's Fit dimension (0.30 of rank) buys <em>no</em> retention in the headline run — so FairPlay is being judged with its main benefit switched off.</td>
+  <td>Re-run the A/B with <code>FitAwareBehaviorPolicy</code> on at documented default weights; report whether the gap narrows/flips. (Self-warn: a FairPlay edge that appears <em>only</em> at high fit-weight is an artifact — <code class="path">fit_sensitivity_sweep.py</code> header.)</td>
+</tr>
+<tr>
+  <td class="rank">5</td>
+  <td><strong>Backend seam is positionally bound and partially hand-copied — silent drift risk.</strong></td>
+  <td><code>route()</code> called positionally with 6 args (<code class="path">router_adapter.py:141-144</code>); <code>cbi</code> and <code>players_by_id</code> are both Mappings. <code>operator_view</code> keys read by name. <code>VULNERABLE_ARCHETYPES</code> hand-copied at <code class="path">policies.py:28</code>, not imported.</td>
+  <td>Backend param reorder or key rename binds wrong values / silently breaks the integrity-gate skip; cohort drift goes unnoticed. No exception — wrong answers.</td>
+  <td>Switch the call to keyword args; import <code>VULNERABLE_ARCHETYPES</code> from backend; add one contract test pinning arg names + <code>operator_view</code> keys.</td>
+</tr>
+<tr>
+  <td class="rank">6</td>
+  <td><strong>Live frontend reads hand-authored fixtures presented as computed.</strong></td>
+  <td>v1 <code class="path">data/room_metrics_*.json</code> are static Day-2 fixtures (<code>schema_version 0.1.0</code>, <code>seed_ref "TBD"</code>); derive path emits <code>0.2.0-derived</code> but the checked-in files are <strong>not regenerated</strong> from the sim. Adapter fabricates <code>projected_eod_*</code>, <code>hour_note</code>, hardcodes <code>reward_fee_ratio = 0.0</code>.</td>
+  <td>A viewer sees "computed" charts that are actually authored — violates the determinism/"swap to computed without changing the story" rule in spirit.</td>
+  <td>Run <code>derive_room_metrics</code> against a real canonical run, commit the output, and delete the hand-authored fixtures (or clearly label them demo-only).</td>
+</tr>
+<tr>
+  <td class="rank">7</td>
+  <td><strong>ID seam does zero validation — wrong-but-valid int silently routes a different player.</strong></td>
+  <td><code>format_player_id</code> (<code class="path">population.py:22-23</code>) has no validation; malformed input → <code>"P-3.0"</code>/<code>"P-P-104"</code> → silent lookup miss → archetype <code>unknown</code> → <code>FIT_DEFAULT=50</code> + <code>unresolved_player</code> reason code, not an exception. No malformed/negative-id test (<code class="path">test_room_adapter.py:35-38</code> covers only valid roundtrips).</td>
+  <td>Off-by-one or type drift routes the wrong real profile silently; degrades to a 50-fit default rather than failing loudly.</td>
+  <td>Add a malformed/negative/float-id test asserting it raises (or at least emits the reason code) — a few lines next to the existing roundtrip test.</td>
+</tr>
+<tr>
+  <td class="rank">8</td>
+  <td><strong>Spec-vs-code drift: <code>run_config</code> behavior capture — <span style="color:var(--warn-fg)">MOSTLY FIXED by PR&nbsp;#47</span>.</strong></td>
+  <td>The earlier finding ("<code>run_config</code> records only policy/seed/horizon/skill_edge/equity") is now <strong>stale</strong>: <code class="path">room_export.py:125-126</code> serializes <code>behavior</code> (name) + <code>behavior_params</code> (scalar attrs incl. <code>w_pressure</code>, <code>w_fit</code>, <code>decline_enabled</code>, wait tolerances), built at <code class="path">room.py:663-666</code>.</td>
+  <td>Largely resolved. <em>Residual:</em> the behavior RNG seed is only captured indirectly (the <code>_rng</code> object is filtered out as non-scalar), and there is still no round-trip test reconstructing the trace from <code>run_config</code> alone.</td>
+  <td>Add the round-trip reproduce-from-artifact test; store the behavior seed as a scalar attribute so it's captured.</td>
+</tr>
+<tr>
+  <td class="rank">9</td>
+  <td><strong>"Byte-identical replay" is value-level, not disk-level.</strong></td>
+  <td>Determinism tests reproduce within the same process (<code class="path">test_room.py:33-57</code>, <code class="path">test_room_export.py:66-69</code>); none serializes to JSON, reloads, and byte-compares a file, nor re-runs across a fresh process.</td>
+  <td>Float-formatting / key-ordering drift on disk could break a presenter's "same bytes" claim without any test catching it.</td>
+  <td>One test: write canonical JSON twice (fresh subprocess), byte-compare the files.</td>
+</tr>
+</tbody>
+</table>
+
+<!-- ============================ 5 ============================ -->
+<h2 id="s5"><span class="num">5.</span>Findings Review</h2>
+
+<p><strong>What the findings prove.</strong> That <em>in this synthetic model, at this scale, under these authored
+parameters</em>, the most-full policy accumulates the most cohort paid seat-time, FairPlay-route trails, and
+FairPlay-balanced is worst. The producing logic is real and inspectable: <code class="path">room_policy_comparison.py:38-93</code>
+provably computes the reported metrics over seeds 42,7,99 with equity 6 across all 12 tables. The
+<strong>mechanism</strong> is also present in code, not just prose: tables breaking at the &lt;2 quorum
+(<code class="path">room.py:420</code>) and re-seek-once-then-balk (<code class="path">room.py:428-436</code>) mean
+most-full keeps tables above quorum while health-scattering creates more near-quorum tables → more breaks → more
+balks. "Most-full keeps tables alive, health-routing scatters them into breaks" is a genuine code property.</p>
+
+<p><strong>What they do NOT prove.</strong> (1) The exact magnitudes — no committed snapshot or test pins
+9.16 vs 10.06; the label is <em>illustrative-but-mechanically-produced</em>. (2) That the gap exceeds seed variance
+(Risk 3). (3) Anything about real poker rooms. (4) The router-probe numbers
+(predator-nest health 31.7 vs balanced 90.0; rank 57.0 vs 35.2, <code class="path">findings.md:121-123</code>) have
+<strong>no producing script or test</strong> — as stated numbers they are <strong>UNSUPPORTED</strong>; only the
+decision <em>direction</em> is testable (<code class="path">test_room_adapter.py:71-95</code>).</p>
+
+<h3>Are the conclusions honestly labeled? (quoting the labels)</h3>
+<blockquote>"this is a result about THIS synthetic model at this scale, not a verdict on real poker rooms" — <code class="path">findings.md:28-29</code></blockquote>
+<blockquote>"The metric is throughput-shaped. Cohort paid seat-time is a sum, so it structurally rewards liquidity. A per-player-survival or harm-avoided metric might rank the policies differently" — <code class="path">findings.md:164-166</code></blockquote>
+<blockquote>"We deliberately did NOT tune the model to manufacture a FairPlay win" — <code class="path">findings.md:170-171</code></blockquote>
+<blockquote>"Every retention number the room simulator produces today is illustrative, not validated, because the player behavioral model runs on hand-authored parameters" — <code class="path">calibration-data.md:12-19</code></blockquote>
+<blockquote>"This is not a blocker to BUILDING (the model and harness are done); it is the blocker to CLAIMING" — <code class="path">calibration-data.md:100-102</code></blockquote>
+<p>The labeling is unusually honest — the doc indicts its own metric and refuses to claim the numbers. This is a
+credibility asset, not a weakness.</p>
+
+<h3>(C) Stress-test — what could flip or weaken the findings</h3>
+<ul>
+<li><strong>Flip the metric → likely re-rank.</strong> The headline is a throughput sum; the doc itself says a
+per-player-survival metric "might rank the policies differently." Because most-full <em>maximizes</em> the chosen
+metric by construction, switching to harm-avoided is the single most likely thing to overturn the headline. This
+is the highest-leverage stress test (Risk 2).</li>
+<li><strong>Turn on fit-aware behavior → gap should narrow.</strong> FairPlay is currently judged with its Fit
+benefit disabled (Risk 4). With <code>FitAwareBehaviorPolicy</code> on, well-fit seats earn retention — the
+mechanism FairPlay routes for. If the gap narrows or flips, the headline was an artifact of the disabled lever;
+if it doesn't, that's stronger evidence <em>against</em> health-routing helping (and the sweep self-warns that an
+edge appearing only at high fit-weight is itself an artifact).</li>
+<li><strong>Perturb the authored constants → possible flip.</strong> Quorum=2, re-seek-once, the tilt curve — these
+three constants drive the break/balk mechanism that produces the gap. A sensitivity sweep is the cheapest way to
+learn whether the ranking is robust or parameter-bound (Risk 1).</li>
+<li><strong>Seed variance → partly resolved by reproduction.</strong> <em>Reproduced (3 seeds 42/7/99):</em> at <strong>8h the gap is seed-stable</strong> — Standard &gt; FairPlay on all three seeds and the means reproduce the doc exactly. But at <strong>4h it flips per-seed</strong> (FairPlay wins seed 42, loses seed 7), so the early-horizon gap <em>is</em> within noise. Still no ranking assertion committed to the new loop, and a ≥20-seed mean±std would pin the 8h result rigorously (Risk 3).</li>
+<li><strong>The anti-circularity conclusion itself rests on unreproduced sweep numbers.</strong> The guard is
+structurally real, but "anti-circularity passed" depends on sweep outputs that aren't pinned by a committed
+snapshot. Good discipline; not yet evidence.</li>
+</ul>
+
+<div class="call warn">
+  <div class="h">Net read on the findings (updated post-reproduction)</div>
+  Honestly framed and mechanically genuine. <strong>Reproduction did not shrink the numbers</strong> — the doc's 4h and 8h
+  means reproduce to the decimal, and the 8h Standard&gt;FairPlay gap holds on all three seeds — so the result is real and
+  faithfully reported, not a single-seed artifact (4h, however, is noisy and flips per-seed). What remains open is
+  <strong>interpretive, not numeric</strong>: the gap is measured under a <em>throughput-shaped</em> metric that most-full
+  maximizes by construction, with FairPlay's <em>fit lever switched off</em>, in an <em>uncalibrated</em> model. So treat
+  "Standard beats FairPlay" as <em>"under a throughput metric with the fit lever off, in this uncalibrated model"</em> — a
+  true and reproducible statement about this configuration, not a verdict on routing.</div>
+
+<!-- ============================ 6 ============================ -->
+<h2 id="s6"><span class="num">6.</span>Questions Teammates Are Likely To Ask</h2>
+
+<div class="qa"><div class="q">Why not just use LLM agents?</div>
+<div class="a">Because determinism is a product rule and an LLM player is just another ungrounded prior — "intelligence ≠ fidelity" (<code class="path">brainstorm 2026-06-24:65-69</code>). A seeded archetype agent is reproducible and inspectable; an LLM would make the A/B non-deterministic and unfalsifiable without buying any real-world fidelity.</div></div>
+
+<div class="qa"><div class="q">Why call the backend at all — why not score in playsim?</div>
+<div class="a">To keep a single source of scoring truth. <code class="path">router_adapter.py</code> is the only module importing <code>scoring.*</code>; the real <code>route()</code> (<code class="path">backend/scoring/router.py:95-148</code>) is exactly what production would use. Re-implementing scoring in the sim would let the two drift and would make the test grade a different scorer than the one shipping.</div></div>
+
+<div class="qa"><div class="q">Predicted vs realized health — what's the difference and why two?</div>
+<div class="a"><strong>Predicted</strong> (backend, composition-only, <code>sessions=None</code>, <code>P_bleed=0</code> at <code class="path">health.py:206-207</code>) <em>chooses</em> seats. <strong>Realized</strong> (chip-flow, <code class="path">playsim/playsim/health.py:24-44</code>) <em>grades</em> outcomes and never feeds routing (enforced by no-import test <code class="path">test_room.py:133-139</code>). Two of them is the whole point: if the same signal chose and graded, the A/B would be a tautology.</div></div>
+
+<div class="qa"><div class="q">Why is the v1 <code>room_metrics_*</code> schema not enough?</div>
+<div class="a">It's a flat 8-row presentation projection — great for charts, useless as a causal trace. It drops every routing decision, arrival intent, seat/break event, session, and the eval summary; collapses predicted-vs-realized; and fabricates fields (<code>projected_eod_*</code>, <code>hour_note</code>, <code>reward_fee_ratio=0.0</code>). The FairPlay value prop ("routed P-104 to T-8 not T-22 because rank/health/delta/gated…") lives only in canonical <code>room_sim_*</code> (<code class="path">room_export.py:84-120</code>).</div></div>
+
+<div class="qa"><div class="q">Can we simulate players who aren't in <code>players.json</code>?</div>
+<div class="a">Yes — that's what <code>run_session</code> (<code class="path">runner.py:176</code>) is: it takes <em>any</em> Player list. Population mode is the fixture-bound replay (hour-0 roster only, no routing); room-sim and population are both built on the free-form engine, so synthetic non-fixture players are supported at the engine level.</div></div>
+
+<div class="qa"><div class="q">What makes it deterministic?</div>
+<div class="a">Seeded RNG threaded through the engine, identical seeded arrival streams across both A/B arms (<code class="path">test_arrivals.py:26-30</code>), and value-level reproduction tests (room/canonical/comparison reproduce on re-run; single tables are byte-identical including boards/payoffs, <code class="path">test_determinism.py:7-13</code>). Caveat: reproduction is verified <em>in-process</em>, not yet disk-byte-level across a fresh process (Risk 9).</div></div>
+
+<div class="qa"><div class="q">Why does Standard beat FairPlay so far?</div>
+<div class="a">A real code mechanism: tables break below 2 players (<code class="path">room.py:420</code>) and displaced players re-seek once then balk (<code class="path">room.py:428-436</code>). Most-full keeps tables above quorum; health-routing scatters players across tables → more near-quorum tables → more breaks → more balks → less seat-time. Plus the metric is a throughput sum that most-full maximizes by construction.</div></div>
+
+<div class="qa"><div class="q">Does that mean FairPlay is wrong?</div>
+<div class="a">No. It means (1) the metric is throughput-shaped, not protection-shaped (the doc says so, <code class="path">findings.md:164-166</code>); (2) FairPlay's main lever — Fit-driven retention — is currently switched off (<code class="path">behavior.py:150-204</code> default-off); and (3) nothing is calibrated. Under a harm-avoided metric with fit-aware behavior on, the ranking may well diverge. "FairPlay loses" is not yet a claim the simulator supports.</div></div>
+
+<div class="qa"><div class="q">What data would make this validated rather than illustrative?</div>
+<div class="a">Real behavioral ground truth to calibrate <code>w_fit</code>, <code>w_pressure</code>, and the tilt curve (Phase 3 — the documented gate). The harness exists (<code class="path">fit_sensitivity_sweep.py</code>) but the actual fit-to-data calibration is unimplemented. Until then: "the model and harness are done; it is the blocker to CLAIMING" (<code class="path">calibration-data.md:100-102</code>).</div></div>
+
+<!-- ============================ 7 ============================ -->
+<h2 id="s7"><span class="num">7.</span>Verdict</h2>
+
+<p><strong>Is the approach sound? Yes.</strong> The architecture is the right one for this thesis: emergent signals,
+a single backend scoring seam, a fair seeded A/B, and — most importantly — a <em>structurally enforced</em> separation
+between the health that routes and the health that grades. That separation is what elevates this above a
+self-fulfilling demo. The honesty discipline in the findings doc (indicting its own metric, refusing to claim
+numbers, deliberately not manufacturing a FairPlay win) is exactly what you want from a research artifact.</p>
+
+<p><strong>What to build next (in priority order):</strong></p>
+<ol>
+<li><strong>Re-score existing canonical runs under a per-player-survival / harm-avoided metric</strong> (Risk 2) — the
+single highest-leverage, cheapest test; the fields already exist in <code>summary</code>.</li>
+<li><strong>Run the A/B with fit-aware behavior on</strong> at documented weights (Risk 4) — exercise the lever
+FairPlay actually routes for.</li>
+<li><strong>Add a many-seed stability assertion to the new room loop</strong> (Risk 3) — <em>reproduction confirms the 8h gap holds on 3 seeds and reproduces the doc exactly; the 4h gap flips per-seed.</em> A committed ≥20-seed mean±std assertion would lock this in.</li>
+<li><strong>Harden the backend seam</strong>: keyword args, import (not copy) <code>VULNERABLE_ARCHETYPES</code>, one
+contract test (Risk 5).</li>
+<li><strong>Regenerate the checked-in <code>room_metrics_*</code> from the simulator</strong> and stop shipping
+hand-authored fixtures as computed (Risk 6).</li>
+<li><strong><s>Serialize the behavior block into <code>run_config</code></s> — done in PR&nbsp;#47</strong> (<code class="path">room_export.py:125-126</code>); what remains is a disk-byte / reproduce-from-artifact round-trip test and capturing the behavior seed as a scalar (Risks 8, 9).</li>
+</ol>
+
+<p><strong>What should NOT be claimed yet:</strong></p>
+<ul>
+<li>Any <em>numeric</em> retention/seat-time magnitude (9.16 vs 10.06, the ~9% gap) — illustrative until calibrated.</li>
+<li>"Standard beats FairPlay" as a general statement — it is "under a throughput metric, fit lever off, uncalibrated, this synthetic model, this scale."</li>
+<li>The router-probe numbers (31.7 / 90.0 / 57.0 / 35.2) — no producing script; UNSUPPORTED as stated.</li>
+<li>"FairPlay is wrong / health-routing doesn't help" — the test that would fairly judge it (fit-aware on, harm-avoided metric) hasn't been run.</li>
+<li>"Byte-identical replay" at disk level — only value-level/in-process reproduction is tested today.</li>
+</ul>
+
+<!-- ============================ CLAIMS ============================ -->
+<h2 id="claims"><span class="num">★</span>Claims Verification Table</h2>
+<table class="claims">
+<thead><tr><th>Claim</th><th>Source</th><th>Code evidence (file:line)</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>Behavioral/integrity signals emerge from real PokerKit play, not hand-set</td><td>README</td><td><code class="path">playsim/README.md:1-28</code></td><td class="v-sup">SUPPORTED</td></tr>
+<tr><td>playsim is not the detector; risk scoring lives in backend</td><td>README</td><td><code class="path">README:10-14</code>; only <code class="path">router_adapter.py</code> imports <code>scoring.*</code></td><td class="v-sup">SUPPORTED</td></tr>
+<tr><td>8 CLI subcommands wired</td><td>CLI</td><td><code class="path">cli.py:225-307</code></td><td class="v-sup">SUPPORTED</td></tr>
+<tr><td>Closed loop: state feeds next decision (break/displace/re-seek)</td><td>room loop</td><td><code class="path">room.py:498-518,378,400,417,420,428-436</code></td><td class="v-sup">SUPPORTED</td></tr>
+<tr><td>Both A/B arms share identical seeded arrival stream, no health modulation</td><td>arrivals</td><td><code class="path">test_arrivals.py:26-30,63-67</code></td><td class="v-sup">SUPPORTED</td></tr>
+<tr><td>Predicted health is composition-only (P_bleed zeroed)</td><td>health</td><td><code class="path">health.py:206-207</code>; <code class="path">test_room_adapter.py:50-54</code></td><td class="v-sup">SUPPORTED</td></tr>
+<tr><td>Realized health is eval-only; room.py forbidden from importing it</td><td>separation</td><td><code class="path">health.py:24-44</code>; <code class="path">test_room.py:133-139</code></td><td class="v-sup">SUPPORTED</td></tr>
+<tr><td>rank = 0.30·Fit + 0.40·Health + 0.30·ΔHealth</td><td>router</td><td><code class="path">router.py:65-67</code>; <code class="path">seating.py:46-48</code></td><td class="v-sup">SUPPORTED</td></tr>
+<tr><td>Integrity gate sinks gated tables; adapter skips them</td><td>gate</td><td><code class="path">router.py:82-84</code>; <code class="path">router_adapter.py:149-150</code></td><td class="v-sup">SUPPORTED</td></tr>
+<tr><td>FitAwareBehaviorPolicy is parametric and reduces exactly to default at zero weights</td><td>behavior</td><td><code class="path">behavior.py:150-204,159-161,185-187</code></td><td class="v-sup">SUPPORTED</td></tr>
+<tr><td>Comparison metrics computed over seeds 42,7,99, all 12 tables</td><td>comparison</td><td><code class="path">room_policy_comparison.py:38-93</code></td><td class="v-sup">SUPPORTED</td></tr>
+<tr><td>Exact magnitudes (9.16/10.06/etc.) pinned by a committed snapshot/test</td><td>findings</td><td>no committed snapshot; <code class="path">findings.md:99-104</code> only</td><td class="v-part">PARTIAL</td></tr>
+<tr><td>New room-loop ranking (routing_helped) asserted over many seeds</td><td>tests</td><td><code class="path">test_room_compare.py:46-49</code> asserts only well-formedness; legacy only <code class="path">test_smoke.py:46-55</code></td><td class="v-uns">UNSUPPORTED</td></tr>
+<tr><td>Router-probe numbers (31.7 / 90.0 / 57.0 / 35.2) as stated</td><td>findings prose</td><td>no producing script/test; <code class="path">findings.md:121-123</code></td><td class="v-uns">UNSUPPORTED</td></tr>
+<tr><td>Fit-aware behavior exercised in the headline run</td><td>behavior</td><td><code class="path">behavior.py:150-204</code> default-off</td><td class="v-uns">UNSUPPORTED (off by default)</td></tr>
+<tr><td>run_config self-describes a fit-aware run (reproduce-from-artifact)</td><td>export</td><td>PR&nbsp;#47 now serializes <code>behavior</code>+<code>behavior_params</code> (<code class="path">room_export.py:125-126</code>); RNG seed only indirect, no round-trip test yet</td><td class="v-part">PARTIAL</td></tr>
+<tr><td>ID seam validates input</td><td>population</td><td><code class="path">population.py:22-23</code> no validation; no malformed-id test</td><td class="v-uns">UNSUPPORTED</td></tr>
+<tr><td>Byte-identical replay across a fresh process / on disk</td><td>determinism</td><td>in-process only (<code class="path">test_room.py:33-57</code>); no file byte-compare</td><td class="v-part">PARTIAL</td></tr>
+<tr><td>Live frontend reads computed (not hand-authored) room_metrics</td><td>frontend data</td><td>checked-in <code class="path">data/room_metrics_*.json</code> are static fixtures; derive path tested in isolation</td><td class="v-part">PARTIAL</td></tr>
+<tr><td>Backend seam is drift-resistant (kwargs / imported cohort / contract test)</td><td>adapter</td><td>positional call <code class="path">router_adapter.py:141-144</code>; copied cohort <code class="path">policies.py:28</code></td><td class="v-uns">UNSUPPORTED</td></tr>
+<tr><td>Calibration of retention/fit to real data is implemented</td><td>calibrate</td><td><code class="path">calibrate.py</code> calibrates play (AF), not retention; <code class="path">calibration-data.md:100-102</code></td><td class="v-uns">UNSUPPORTED (documented gate)</td></tr>
+<tr><td>"Results are about this synthetic model, not real rooms" — honestly labeled</td><td>findings</td><td><code class="path">findings.md:28-29,164-166,170-171</code></td><td class="v-sup">SUPPORTED</td></tr>
+</tbody>
+</table>
+
+<hr>
+<p class="small">Draft for review — 2026-06-24, <strong>refreshed against PR&nbsp;#47 ("reason-aware reseating")</strong>. <strong>Reproduction:</strong> 88 tests pass; the 4h/8h policy means reproduce the doc exactly under default behavior; under reason-aware the Standard&gt;FairPlay gap barely moves at the 3-seed mean (~9%→~8.4% at 8h) and the churn concern becomes more attributable (FairPlay leads on <code>wait_balks</code> and breaks). PR&nbsp;#47 also mostly closed the <code>run_config</code> behavior-capture gap. Every <code>file:line</code> citation is the load-bearing value of this report; verify against the tree before quoting externally. <em>For the whole-project / demo view, see <code class="path">docs/learn/demo-readiness.html</code>.</em></p>
+
+</div>
+</body>
+</html>
