@@ -1,0 +1,156 @@
+{
+  "meta": {
+    "produced_by": "P4 / AI Investigator",
+    "model": "claude-opus-4-8",
+    "consumes": "Contract 3 \u2014 evidence_packets.json",
+    "count": 7,
+    "note": "Frozen LLM case summaries. The model saw only the evidence packet; every summary was guardrail-checked before freezing.",
+    "any_guardrail_violation": false
+  },
+  "summaries": [
+    {
+      "case_id": "CASE-A",
+      "case_type": "table_health_risk",
+      "model": "claude-opus-4-8",
+      "stop_reason": "end_turn",
+      "summary": {
+        "headline": "Elevated for review \u2014 possible beginner-unfriendly table mix for a new player",
+        "assessment": "This is a table-HEALTH signal, not an integrity or collusion concern. The packet projects that seating new player P-104 at table T-22 may place a recently registered, vulnerable player into a fragile, short-handed table carrying notable skill-weighted aggressor pressure. These are composition-based projections of table state, not evidence of any harm or wrongdoing by any player.",
+        "key_signals": [
+          "Table T-22 health scored 38 (beginner_unfriendly band); new-player seating risk rated 'high'",
+          "Predation pressure 40/45 \u2014 skill-weighted aggressor load of 2.0 (P-176, P-177) against 0 recreational/new seats",
+          "Fragility 22/25 \u2014 only 3/6 seats filled with a flat paid-seat-time trend, concentrating exposure",
+          "P-104 registered just 4 days ago, treated as a new/vulnerable player",
+          "Reroute targets (e.g. T-8/T-14) show low seating risk and stronger fit for a new player"
+        ],
+        "counter_evidence": "The packet reports no material exculpatory signal. It does note no flagged cluster is actively seated and no observed recreational truncation yet \u2014 so this is a composition-led projection rather than realized harm. Absence of counter-evidence is not corroboration; weigh the primary signals against the uncertainties below.",
+        "uncertainty": "Every signal here is a simulated field on synthetic data \u2014 not real device telemetry, KYC, location, or live gameplay. Health and seating numbers are projections of table state, not realized outcomes, so an unhealthy mix is a risk, not proof of harm. This is elevated for review, not a determination.",
+        "recommended_action": "Consider rerouting P-104 toward a lower-risk table (e.g. T-8 or T-14), or monitor, as you judge fit \u2014 this is advice for your decision, which you may accept or override.",
+        "reviewer_note": "I cannot and do not conclude wrongdoing \u2014 a human decides."
+      },
+      "guardrail_violations": []
+    },
+    {
+      "case_id": "CASE-B",
+      "case_type": "table_health_risk",
+      "model": "claude-opus-4-8",
+      "stop_reason": "end_turn",
+      "summary": {
+        "headline": "Elevated for review \u2014 table-health consideration for a high-volume grinder (not an integrity flag)",
+        "assessment": "The packet flags player P-164 as a high-volume grinder (around 285,000 lifetime hands, AF 2.80, 26 sessions in the last 30 days), which it frames explicitly as a table-health consideration rather than any coordination or integrity concern. The signals are consistent with intense, skilled professional play and may warrant a look at table composition and player well-being. This is a health lens only \u2014 nothing in the packet suggests wrongdoing.",
+        "key_signals": [
+          "High lifetime volume (~285,000 hands)",
+          "Strong postflop aggression (AF 2.80)",
+          "26 sessions in the last 30 days"
+        ],
+        "counter_evidence": "The packet carries explicit counter-evidence and is marked a false-positive trap: there are no integrity signals \u2014 no device link, no soft-play, no correlated win/loss. The pattern is attributed to skill and legitimate play, which substantially lowers any concern and keeps this firmly a health consideration, not an integrity matter.",
+        "uncertainty": "This is an elevated-for-review signal, not a determination of wrongdoing. All fields are simulated on synthetic data \u2014 not real device telemetry, KYC, location, or real-time gameplay/RTA \u2014 and health/seating scores are composition-based projections of table state, not proof of harm.",
+        "recommended_action": "Monitor for table-health purposes; a human may also consider suppressing the table for this player if well-being warrants. No integrity escalation indicated. The pit-boss may accept, override, or escalate as they see fit.",
+        "reviewer_note": "I cannot and do not conclude wrongdoing \u2014 a human decides."
+      },
+      "guardrail_violations": []
+    },
+    {
+      "case_id": "CASE-C",
+      "case_type": "integrity_risk",
+      "model": "claude-opus-4-8",
+      "stop_reason": "end_turn",
+      "summary": {
+        "headline": "Elevated for review \u2014 possible coordinated cluster (CL-001)",
+        "assessment": "Four convergent signals across cluster CL-001 (accounts P-198, P-199, P-200) are consistent with possible coordinated play and warrant human review. The combination of a shared device link, high session-timing correlation, repeated co-seating, and within-cluster soft-play may indicate coordination, but none is individually conclusive. This is an elevated risk signal, not a determination that anyone cheated or colluded.",
+        "key_signals": [
+          "Shared device link (DG-001) ties cluster accounts to the same device group",
+          "Pairwise session-timing correlation up to 0.88 (threshold \u22650.8)",
+          "Repeated co-seating: 14 of 18 shared tables (rate 0.78, threshold \u22650.6)",
+          "Within-cluster soft-play delta down to -0.82 \u2014 value appears given away in member-vs-member hands",
+          "Supporting context: outsider-pressure signal and elevated casual-player exit impact at affected tables"
+        ],
+        "counter_evidence": "The packet reports no material exculpatory signal was found. Importantly, absence of counter-evidence is not corroboration \u2014 it does not raise the concern, and the primary signals must still be weighed against the uncertainties. The packet itself stresses that no single signal proves coordination; all must converge, and each can have a benign explanation.",
+        "uncertainty": "Convergent signals are consistent with coordination but can also reflect benign shared context such as a household, friends, or similar play schedules. All signals are simulated fields on synthetic data \u2014 not real device telemetry, KYC, location, or real-time gameplay/RTA \u2014 so they cannot be treated as established fact.",
+        "recommended_action": "Hold for pit-boss review: a human should examine the cluster and decide whether to accept, override, monitor, suppress the table for the player, or escalate. No automatic action should be taken.",
+        "reviewer_note": "I cannot and do not conclude wrongdoing \u2014 a human decides."
+      },
+      "guardrail_violations": []
+    },
+    {
+      "case_id": "CASE-D",
+      "case_type": "integrity_risk",
+      "model": "claude-opus-4-8",
+      "stop_reason": "end_turn",
+      "summary": {
+        "headline": "Low integrity band \u2014 regular co-seating with benign explanation",
+        "assessment": "Two players (P-142 and P-143) share a table fairly often (co-seating rate 0.50), recorded under overlap OVL-001. However, the packet shows zero convergent integrity signals and the integrity band is low. The pattern appears consistent with shared stake and session-time preferences rather than coordination.",
+        "key_signals": [
+          "Co-seating rate of 0.50 between P-142 and P-143",
+          "Group classified as 'regular_overlap', integrity band 'low'",
+          "Convergence count of 0 \u2014 no stacking signals present"
+        ],
+        "counter_evidence": "The packet's counter-evidence is decisive here: high co-seating exists, but there is no device link, no soft-play, and no correlated win/loss. This is explicitly flagged as a false-positive trap \u2014 high overlap without collusion signals is the expected pattern for players who share a preferred session window. The benign explanation substantially lowers the concern.",
+        "uncertainty": "All signals are simulated fields on synthetic data \u2014 not real device telemetry, KYC, location, or live gameplay/RTA. Co-seating alone is never conclusive and can reflect household, friends, or similar schedules. This is an elevated-for-review signal only, not a determination of wrongdoing.",
+        "recommended_action": "Suggest light-touch monitoring only; no further action appears warranted given the benign counter-evidence. A human reviewer may accept, monitor, or override as they see fit.",
+        "reviewer_note": "I cannot and do not conclude wrongdoing \u2014 a human decides."
+      },
+      "guardrail_violations": []
+    },
+    {
+      "case_id": "CASE-E",
+      "case_type": "integrity_risk",
+      "model": "claude-opus-4-8",
+      "stop_reason": "end_turn",
+      "summary": {
+        "headline": "Low concern \u2014 shared-device link with strong benign household explanation",
+        "assessment": "The only converging signal is a shared device (DG-002) within household H-01, which is expected for people living together and is not incriminating on its own. The packet's counter-evidence shows divergent play patterns and very low co-seating, which is more consistent with a household sharing hardware than with coordinated play. On balance, the evidence does not support an integrity concern and is best treated as a benign shared-device situation.",
+        "key_signals": [
+          "Shared device DG-002 linking P-192 and P-193 within household H-01",
+          "Integrity band scored 'neutral' with only a single converging signal"
+        ],
+        "counter_evidence": "The counter-evidence substantially lowers concern: co-seating is very low (0.09, roughly 2 of 22 sessions), preferred times diverge (P-192 evenings, P-193 mornings/afternoons), session lengths differ by ~35 minutes, and VPIP differs by 0.08, with no soft-play and no correlated profitability. Taken together, the shared-device overlap is plausibly explained by a household rather than collusion.",
+        "uncertainty": "This is an elevated-for-review signal, not a determination of wrongdoing, and all fields are simulated on synthetic data \u2014 not real device telemetry, KYC, location, or live gameplay. No single signal is conclusive, and shared context like a household can produce overlap that resembles coordination without being so.",
+        "recommended_action": "Monitor only \u2014 a human reviewer may note the benign household explanation and keep light passive observation; no escalation or restriction appears warranted on this packet.",
+        "reviewer_note": "I cannot and do not conclude wrongdoing \u2014 a human decides."
+      },
+      "guardrail_violations": []
+    },
+    {
+      "case_id": "CASE-F",
+      "case_type": "promo_abuse",
+      "model": "claude-opus-4-8",
+      "stop_reason": "end_turn",
+      "summary": {
+        "headline": "Elevated for review \u2014 possible promo-optimization pattern (P-184)",
+        "assessment": "The packet flags player P-184 with a pattern consistent with promo/bonus optimization: 21 promo redemptions over 30 days paired with short (~32-minute) sessions. This is framed as a policy/economics-health matter, not collusion or cheating. The pattern may indicate bonus-hunting behavior and warrants a human look, but it is not evidence of integrity wrongdoing.",
+        "key_signals": [
+          "21 promo redemptions in 30 days",
+          "Short average sessions of ~32 minutes",
+          "Archetype scored as 'promo_hunter' \u2014 a health/economics lens, not collusion"
+        ],
+        "counter_evidence": "The packet reports no material exculpatory signal was found. However, absence of counter-evidence is not corroboration \u2014 it should not raise confidence on its own. The primary signal must be weighed against the uncertainties below, and there is no second player or coordination evidence to suggest anything beyond individual promo behavior.",
+        "uncertainty": "This is an elevated-for-review signal, not a determination of wrongdoing. All fields are simulated values on synthetic data \u2014 not real device telemetry, KYC, location, or live gameplay/RTA. A high redemption count can have benign explanations (e.g., legitimately available promos), and this remains a policy/health question distinct from collusion or cheating.",
+        "recommended_action": "Suggest routing to the promo/bonus policy team for a human review of P-184's redemption pattern; monitor is a reasonable alternative. No enforcement is advised \u2014 a human decides.",
+        "reviewer_note": "I cannot and do not conclude wrongdoing \u2014 a human makes the call."
+      },
+      "guardrail_violations": []
+    },
+    {
+      "case_id": "CASE-G",
+      "case_type": "bot_account",
+      "model": "claude-opus-4-8",
+      "stop_reason": "end_turn",
+      "summary": {
+        "headline": "Elevated for review \u2014 possible bot-like account pattern (P-221)",
+        "assessment": "The packet shows an account-level bot-similarity signal for P-221 that warrants human review on the dedicated bot-review queue. A bot-similarity score of 0.87 and timing regularity of 0.88 may indicate automated or scripted play, but this is a heuristic signal consistent with \u2014 not proof of \u2014 automation. This is an integrity/automation lens only, kept separate from collusion review.",
+        "key_signals": [
+          "Account-level bot-similarity score of 0.87 (threshold \u2265 0.8)",
+          "Timing regularity of 0.88, consistent with regular/automated action patterns",
+          "Routed to a dedicated bot-review queue, distinct from collusion review",
+          "Integrity band: manual_review; convergence_count is 0 (single signal, not a corroborated cluster)"
+        ],
+        "counter_evidence": "The packet reports no material exculpatory signal was found. Importantly, absence of counter-evidence is not corroboration \u2014 it does not strengthen the case. With a convergence count of 0, this rests on a single heuristic signal, which should be weighed cautiously against the uncertainties below.",
+        "uncertainty": "All signals are simulated fields on synthetic data \u2014 not real device telemetry, KYC, location, or real-time gameplay/RTA. Bot-similarity is a heuristic that warrants review, not a determination of automation. It remains uncertain whether the timing regularity reflects scripting or simply a disciplined human playing style.",
+        "recommended_action": "Route to the bot-review queue for a human reviewer to examine; you may also monitor or escalate. No enforcement is implied \u2014 a person decides the next step.",
+        "reviewer_note": "I cannot and do not conclude wrongdoing \u2014 a human decides."
+      },
+      "guardrail_violations": []
+    }
+  ]
+}
