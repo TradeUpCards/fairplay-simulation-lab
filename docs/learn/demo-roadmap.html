@@ -159,7 +159,7 @@
 <!-- =============== 3 =============== -->
 <h2 id="s3"><span class="num">3.</span>Optional Track B — Training-simulator POC <span class="pill opt">additive · AI-product demo</span></h2>
 
-<p><strong>Your vision:</strong> a human plays heads-up/short-handed against configurable bots, as a <em>POC</em> (not hardened production), to: <strong>(1)</strong> learn to play better against specific player types, <strong>(2)</strong> identify player types when they're not known up front, and <strong>(3)</strong> get AI-assisted post-hand analysis on what they could have done differently and <em>why</em> it's better against that type.</p>
+<p><strong>Your vision:</strong> a human plays a realistic <strong>6-max table</strong> against configurable bots, as a <em>POC</em> (not hardened production), to: <strong>(1)</strong> learn to play better against specific player types, <strong>(2)</strong> identify player types when they're not known up front, and <strong>(3)</strong> get AI-assisted post-hand analysis on what they could have done differently and <em>why</em> it's better against that type.</p>
 
 <div class="call good">
   <div class="h">Why this is cheaper than it looks — and tied to the core work</div>
@@ -195,11 +195,18 @@
 
 <h3>POC scope (bounded, not production)</h3>
 <ul>
-  <li>Heads-up or 3-handed; one human vs 1–2 bots; <strong>3 bot styles</strong> to start; fixed blinds/stacks.</li>
+  <li><strong>6-max table by default</strong> (the most common online cash format), one human vs 5 mixed-type bots; 9-handed a config option; heads-up an <em>optional</em> mode. <strong>Not HU/3-handed-only</strong> — see the note below on why.</li>
+  <li>Start with <strong>3–4 distinct bot styles</strong> seated in a realistic mix; fixed blinds/stacks.</li>
   <li>Hand-history review + the post-hand coach; the blind "guess the type" round.</li>
   <li>No real-money language, no multiplayer, no accounts, no RL required (the policy seam can take an RL bot <em>later</em> — <code class="path">playsim/playsim/baselines.py</code> already scaffolds an <code>act()</code> adapter).</li>
-  <li><strong>Milestone question:</strong> "can a user play 20 hands against distinct styles and come away understanding what each bot does differently — with coaching that actually explains why?"</li>
+  <li><strong>Milestone question:</strong> "can a user play 20 hands at a 6-max table of distinct styles and come away understanding what each opponent does differently — with coaching that actually explains why?"</li>
 </ul>
+
+<div class="call warn">
+  <div class="h">Why 6-max, not heads-up — and where the real scope cost is</div>
+  <p style="margin:4px 0">Heads-up and short-handed are a <strong>different game</strong> — much wider ranges, blind-vs-blind dynamics, relentless aggression, position meaning something different. Skills built HU don't transfer to the full table most players actually sit at, and both training goals get <em>richer</em> at a full table: you read a <em>roomful</em> of distinct types (goal&nbsp;2), and "this table mix rewards patience, not bluffing" (goal&nbsp;1) is inherently a table-composition idea that barely exists HU.</p>
+  <p style="margin:4px 0">Crucially, <strong>seat count is nearly free on the engine</strong> — <code class="path">table.py</code> already deals N-handed NLHE on PokerKit, the room sim already seats up to <code>max_seats</code>, and the bots already exist; seating 5 mixed bots is no more engine work than 1. <strong>The one real cost of more seats is multiway coaching</strong> (equity/EV across several opponents' ranges is harder than HU). So bound the POC <em>in the coach, not the seat count</em>: v1 coaching focuses on the <em>decisive</em> opponent/spot in a hand ("you were really playing a pot against the station in seat&nbsp;5"); full multiway-pot analysis is a later coaching-depth phase.</p>
+</div>
 
 <div class="call bad">
   <div class="h">The honest tradeoff (so you choose with eyes open)</div>
