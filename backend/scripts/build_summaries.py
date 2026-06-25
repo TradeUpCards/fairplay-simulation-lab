@@ -29,7 +29,25 @@ PACKETS = DERIVED / "evidence_packets.json"
 OUT = DERIVED / "case_summaries.json"
 
 
+def _load_dotenv() -> None:
+    """Load KEY=VALUE lines from a repo-root .env into the environment (no deps).
+
+    Does not override variables already set. `.env` is gitignored — the key is
+    read at runtime and never committed.
+    """
+    env = ROOT / ".env"
+    if not env.exists():
+        return
+    for raw in env.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        os.environ.setdefault(key.strip(), val.strip().strip('"').strip("'"))
+
+
 def main() -> int:
+    _load_dotenv()
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print("ANTHROPIC_API_KEY is not set — the AI Investigator needs it to run.")
         print("Set it and re-run, e.g.:")

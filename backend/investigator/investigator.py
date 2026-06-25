@@ -16,12 +16,28 @@ reasoning). Requires ``ANTHROPIC_API_KEY`` in the environment.
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from .guardrails import check_summary
 from .prompt import SUMMARY_SCHEMA, SYSTEM_PROMPT
 
 MODEL = "claude-opus-4-8"
+
+# The model occasionally emits a literal "\uXXXX" escape *as text* in a string
+# value (e.g. "—" instead of an em-dash), which would render broken in the UI.
+# Decode any such literal escape back to the real character.
+_LITERAL_ESCAPE = re.compile(r"\\u([0-9a-fA-F]{4})")
+
+
+def _unescape(obj: Any) -> Any:
+    if isinstance(obj, str):
+        return _LITERAL_ESCAPE.sub(lambda m: chr(int(m.group(1), 16)), obj)
+    if isinstance(obj, list):
+        return [_unescape(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _unescape(v) for k, v in obj.items()}
+    return obj
 
 
 def _render_packet(packet: dict[str, Any]) -> str:
@@ -78,7 +94,7 @@ def investigate(packet: dict[str, Any], *, client: Any = None,
         result["guardrail_violations"] = ["model refused (safety classifier)"]
         return result
 
-    summary = _extract_json(resp)
+    summary = _unescape(_extract_json(resp))
     result["summary"] = summary
     result["guardrail_violations"] = check_summary(summary)
     return result
