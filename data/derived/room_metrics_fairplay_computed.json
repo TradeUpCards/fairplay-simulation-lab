@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "schema_version": "0.2.0-derived",
+    "path": "fairplay",
+    "generated": "playsim-room-sim",
+    "derived_from": "room_sim canonical output",
+    "horizon_hours": 8,
+    "master_seed": 42,
+    "policy": "fairplay_route",
+    "agent_model": "archetype-knobs",
+    "fixture_note": "Synthetic sandbox data \u2014 not real play.",
+    "note": "Derived compatibility view for the v1 frontend; the room_sim canonical output is the source of truth. reward_fee_ratio is not modeled in the MVP."
+  },
+  "hours": [
+    {
+      "hour": 1,
+      "cumulative_paid_seat_time_minutes": 2761,
+      "active_players": 43,
+      "active_healthy_tables": 8,
+      "new_player_retention_pct": 3,
+      "avg_casual_session_length_minutes": 13,
+      "early_table_breaks": 0,
+      "projected_eod_paid_seat_time_minutes": 22088,
+      "reward_fee_ratio": 0.0,
+      "high_risk_seating_formations": 2,
+      "hour_note": "Hour 1: 43 active players, 8 healthy tables, 3% cohort retention."
+    },
+    {
+      "hour": 2,
+      "cumulative_paid_seat_time_minutes": 5230,
+      "active_players": 46,
+      "active_healthy_tables": 9,
+      "new_player_retention_pct": 6,
+      "avg_casual_session_length_minutes": 13,
+      "early_table_breaks": 0,
+      "projected_eod_paid_seat_time_minutes": 20920,
+      "reward_fee_ratio": 0.0,
+      "high_risk_seating_formations": 2,
+      "hour_note": "Hour 2: 46 active players, 9 healthy tables, 6% cohort retention."
+    },
+    {
+      "hour": 3,
+      "cumulative_paid_seat_time_minutes": 8090,
+      "active_players": 52,
+      "active_healthy_tables": 8,
+      "new_player_retention_pct": 3,
+      "avg_casual_session_length_minutes": 14,
+      "early_table_breaks": 0,
+      "projected_eod_paid_seat_time_minutes": 21573,
+      "reward_fee_ratio": 0.0,
+      "high_risk_seating_formations": 2,
+      "hour_note": "Hour 3: 52 active players, 8 healthy tables, 3% cohort retention."
+    },
+    {
+      "hour": 4,
+      "cumulative_paid_seat_time_minutes": 11283,
+      "active_players": 58,
+      "active_healthy_tables": 10,
+      "new_player_retention_pct": 0,
+      "avg_casual_session_length_minutes": 19,
+      "early_table_breaks": 0,
+      "projected_eod_paid_seat_time_minutes": 22566,
+      "reward_fee_ratio": 0.0,
+      "high_risk_seating_formations": 2,
+      "hour_note": "Hour 4: 58 active players, 10 healthy tables, 0% cohort retention."
+    },
+    {
+      "hour": 5,
+      "cumulative_paid_seat_time_minutes": 14848,
+      "active_players": 63,
+      "active_healthy_tables": 11,
+      "new_player_retention_pct": 0,
+      "avg_casual_session_length_minutes": 19,
+      "early_table_breaks": 0,
+      "projected_eod_paid_seat_time_minutes": 23757,
+      "reward_fee_ratio": 0.0,
+      "high_risk_seating_formations": 2,
+      "hour_note": "Hour 5: 63 active players, 11 healthy tables, 0% cohort retention."
+    },
+    {
+      "hour": 6,
+      "cumulative_paid_seat_time_minutes": 18713,
+      "active_players": 67,
+      "active_healthy_tables": 11,
+      "new_player_retention_pct": 0,
+      "avg_casual_session_length_minutes": 19,
+      "early_table_breaks": 0,
+      "projected_eod_paid_seat_time_minutes": 24951,
+      "reward_fee_ratio": 0.0,
+      "high_risk_seating_formations": 2,
+      "hour_note": "Hour 6: 67 active players, 11 healthy tables, 0% cohort retention."
+    },
+    {
+      "hour": 7,
+      "cumulative_paid_seat_time_minutes": 22775,
+      "active_players": 69,
+      "active_healthy_tables": 11,
+      "new_player_retention_pct": 0,
+      "avg_casual_session_length_minutes": 19,
+      "early_table_breaks": 0,
+      "projected_eod_paid_seat_time_minutes": 26029,
+      "reward_fee_ratio": 0.0,
+      "high_risk_seating_formations": 2,
+      "hour_note": "Hour 7: 69 active players, 11 healthy tables, 0% cohort retention."
+    },
+    {
+      "hour": 8,
+      "cumulative_paid_seat_time_minutes": 27146,
+      "active_players": 76,
+      "active_healthy_tables": 11,
+      "new_player_retention_pct": 0,
+      "avg_casual_session_length_minutes": 18,
+      "early_table_breaks": 0,
+      "projected_eod_paid_seat_time_minutes": 27146,
+      "reward_fee_ratio": 0.0,
+      "high_risk_seating_formations": 2,
+      "hour_note": "Hour 8: 76 active players, 11 healthy tables, 0% cohort retention."
+    }
+  ]
+}
