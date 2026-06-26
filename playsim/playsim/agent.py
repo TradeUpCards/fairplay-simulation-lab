@@ -57,10 +57,16 @@ class ArchetypeAgent:
     agent_model = "archetype-knobs"
     agent_version = "v1"
 
-    def __init__(self, player_id: int, knobs: Knobs, equity_samples: int = 30):
+    def __init__(self, player_id: int, knobs: Knobs, equity_samples: int = 30,
+                 pot_discipline: bool = False):
         self.player_id = player_id
         self.k = knobs
         self.equity_samples = equity_samples
+        # When True, postflop raises require genuine equity and the bar climbs with
+        # each re-raise, so marginal hands call instead of starting a war. Opt-in for
+        # the single-human training table (sane, readable pots); OFF by default so the
+        # calibrated 8-hour population sim — tuned to its own AF targets — is unchanged.
+        self.pot_discipline = pot_discipline
 
     # -- helpers -----------------------------------------------------------
     def _jitter(self, rng: random.Random, base_ms: int = 1600) -> int:
@@ -165,6 +171,7 @@ class ArchetypeAgent:
             aggr = min(1.0, aggr + 0.12)
             bluff *= 0.30
 
+        can_raise = obs.max_raise_to > obs.min_raise_to
         if obs.to_call > 0:
             pot_odds = obs.to_call / (obs.pot + obs.to_call)
             # Commitment discipline keeps variance low so the skill edge shows:
@@ -173,14 +180,27 @@ class ArchetypeAgent:
             # stack-offs). High skill folds correctly throughout.
             big_bet = obs.to_call > obs.my_stack * 0.28
             margin = 0.05 if big_bet else -(1.0 - self.k.skill) * 0.14
+            # level = bets/raises already in this street; >=2 means the pot is
+            # already re-raised, so only a monster should put in another raise.
+            level = obs.raises_this_street
             if eq >= pot_odds + margin:
-                # value: aggressive archetypes mostly raise rather than flat-call
-                # (calls are the AF denominator, so heavy callers read as passive)
-                if self._roll(rng) < min(1.0, aggr * 1.7 * (0.5 + eq)) and obs.max_raise_to > obs.min_raise_to:
+                if self.pot_discipline:
+                    # Raise only with a real edge, and the bar climbs each re-raise so
+                    # marginal hands flat-call instead of escalating into all-ins.
+                    raise_bar = 0.52 + max(0, level - 1) * 0.12
+                    raise_p = max(0.0, aggr * (eq - 0.30))
+                    want_raise = eq >= raise_bar and self._roll(rng) < raise_p
+                else:
+                    # value: aggressive archetypes mostly raise rather than flat-call
+                    # (calls are the AF denominator, so heavy callers read as passive)
+                    want_raise = self._roll(rng) < min(1.0, aggr * 1.7 * (0.5 + eq))
+                if want_raise and can_raise:
                     return Decision("raise", amount=self._size_raise(obs, rng), is_raise=True)
                 return Decision("check_call", is_call=True)
-            # behind: occasional bluff-raise, else fold
-            if self._roll(rng) < bluff * aggr and obs.max_raise_to > obs.min_raise_to:
+            # behind: occasional bluff-raise (never into an already-raised pot under
+            # discipline), else fold
+            bluff_ok = not self.pot_discipline or level <= 1
+            if bluff_ok and self._roll(rng) < bluff * aggr and can_raise:
                 return Decision("raise", amount=self._size_raise(obs, rng), is_raise=True)
             return Decision("fold")
 

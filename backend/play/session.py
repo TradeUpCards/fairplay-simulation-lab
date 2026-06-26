@@ -166,7 +166,7 @@ class PlaySession:
                 self.seat_archetype[seat] = "human"
             else:
                 arch = next(bot_it)
-                agents.append(ArchetypeAgent(pid, knobs_for(arch)))
+                agents.append(ArchetypeAgent(pid, knobs_for(arch), pot_discipline=True))
                 self.seat_archetype[seat] = arch
         self._pid_archetype = {
             pid: self.seat_archetype[seat]
