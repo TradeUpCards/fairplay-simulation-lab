@@ -2,8 +2,11 @@ import { useMemo, useState, type ReactNode } from 'react'
 import pokerTable from '../assets/poker-table.png'
 import {
   BOT_CHOICES,
+  coachStream,
+  parsePartialJson,
   playApi,
   type ActionKind,
+  type Coaching,
   type CoachResult,
   type HandReview,
   type LegalActions,
@@ -168,10 +171,15 @@ function VerdictChip({ v }: { v: 'good' | 'thin' | 'mistake' }) {
   )
 }
 
-function CoachCard({ result }: { result: CoachResult }) {
+function CoachCard({ result, streaming }: { result: CoachResult; streaming?: boolean }) {
   const c = result.coaching
   if (!c) {
-    return (
+    return streaming ? (
+      <div className="rounded-xl border border-brass-soft bg-surface p-4 text-sm text-muted">
+        <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-brass" />
+        The coach is writing…
+      </div>
+    ) : (
       <div className="rounded-xl border border-line bg-surface p-4 text-sm text-muted">
         No coaching {result.guardrail_violations?.length ? '(guardrail)' : 'for this hand'}.
       </div>
@@ -179,31 +187,37 @@ function CoachCard({ result }: { result: CoachResult }) {
   }
   return (
     <div className="rounded-xl border border-brass-soft bg-surface p-4">
-      <div className="mb-1 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-brass">AI Coach</div>
-      <h3 className="m-0 mb-3 text-[1rem] font-semibold leading-snug text-text">{c.headline}</h3>
-      <div className="mb-3 rounded-lg border border-line bg-surface-2 p-2.5 text-[0.82rem] text-muted">
-        <span className="font-semibold text-text">Read — {c.opponent_read.style_label}:</span> {c.opponent_read.tell}
+      <div className="mb-1 flex items-center gap-2 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-brass">
+        AI Coach {streaming && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brass" />}
       </div>
+      {c.headline && <h3 className="m-0 mb-3 text-[1rem] font-semibold leading-snug text-text">{c.headline}</h3>}
+      {c.opponent_read?.tell && (
+        <div className="mb-3 rounded-lg border border-line bg-surface-2 p-2.5 text-[0.82rem] text-muted">
+          <span className="font-semibold text-text">Read — {c.opponent_read.style_label}:</span> {c.opponent_read.tell}
+        </div>
+      )}
       <div className="flex flex-col gap-2.5">
-        {c.decisions.map((d, i) => (
+        {(c.decisions ?? []).map((d, i) => (
           <div key={i} className="rounded-lg border border-line bg-surface-2 p-2.5">
             <div className="mb-1 flex flex-wrap items-center gap-2 text-[0.76rem]">
-              <Chip>{d.street}</Chip>
-              <VerdictChip v={d.verdict} />
-              <span className="text-muted">you {d.your_action}</span>
-              <span className="font-mono text-faint">equity {d.equity_pct}%</span>
+              {d.street && <Chip>{d.street}</Chip>}
+              {d.verdict && <VerdictChip v={d.verdict} />}
+              {d.your_action && <span className="text-muted">you {d.your_action}</span>}
+              {d.equity_pct != null && <span className="font-mono text-faint">equity {d.equity_pct}%</span>}
             </div>
-            <div className="text-[0.82rem] text-text">{d.assessment}</div>
-            <div className="mt-1 text-[0.82rem]">
-              <span className="font-semibold text-felt">{d.verdict === 'good' ? 'Right play:' : 'Better:'}</span>{' '}
-              <span className="text-text">{d.better_line}</span>
-            </div>
-            <div className="mt-0.5 text-[0.8rem] text-muted">{d.why_vs_this_type}</div>
+            {d.assessment && <div className="text-[0.82rem] text-text">{d.assessment}</div>}
+            {d.better_line && (
+              <div className="mt-1 text-[0.82rem]">
+                <span className="font-semibold text-felt">{d.verdict === 'good' ? 'Right play:' : 'Better:'}</span>{' '}
+                <span className="text-text">{d.better_line}</span>
+              </div>
+            )}
+            {d.why_vs_this_type && <div className="mt-0.5 text-[0.8rem] text-muted">{d.why_vs_this_type}</div>}
           </div>
         ))}
       </div>
-      <p className="mt-3 mb-1 text-[0.84rem] text-text">{c.summary}</p>
-      <p className="m-0 text-[0.8rem] italic text-muted">{c.coach_note}</p>
+      {c.summary && <p className="mt-3 mb-1 text-[0.84rem] text-text">{c.summary}</p>}
+      {c.coach_note && <p className="m-0 text-[0.8rem] italic text-muted">{c.coach_note}</p>}
     </div>
   )
 }
@@ -316,7 +330,15 @@ function ActionBar({
 
 // Instant, LLM-free feedback shown the moment the hand ends — the opponent's named
 // leak and each decision's equity — while the AI coach loads its detail in the background.
-function ReviewCard({ review, busy }: { review: HandReview; busy: boolean }) {
+function ReviewCard({
+  review,
+  busy,
+  onCoach,
+}: {
+  review: HandReview
+  busy: boolean
+  onCoach?: () => void
+}) {
   return (
     <div className="rounded-xl border border-line bg-surface p-4">
       <div className="mb-1 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-brass">Hand review</div>
@@ -332,9 +354,26 @@ function ReviewCard({ review, busy }: { review: HandReview; busy: boolean }) {
           </div>
         ))}
       </div>
-      <div className="mt-3 flex items-center gap-2 text-[0.78rem] text-muted">
-        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brass" />
-        {busy ? 'AI coach is adding detail…' : 'Loading coach…'}
+      <div className="mt-3">
+        {busy ? (
+          <div className="flex items-center gap-2 text-[0.78rem] text-muted">
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brass" />
+            AI coach is writing…
+          </div>
+        ) : onCoach ? (
+          <button
+            type="button"
+            onClick={onCoach}
+            className="rounded-md border border-brass bg-brass px-3 py-1.5 text-[0.78rem] font-semibold text-[#1a1407]"
+          >
+            Coach this hand
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 text-[0.78rem] text-muted">
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brass" />
+            Loading coach…
+          </div>
+        )}
       </div>
     </div>
   )
@@ -353,6 +392,8 @@ export function TrainingTable() {
   const [error, setError] = useState<string | null>(null)
   const [coach, setCoach] = useState<CoachResult | null>(null)
   const [coachBusy, setCoachBusy] = useState(false)
+  const [autoCoach, setAutoCoach] = useState(true)
+  const [partial, setPartial] = useState<Coaching | null>(null)
   const [debug, setDebug] = useState<{
     clientMs: number
     llmMs: number
@@ -377,6 +418,7 @@ export function TrainingTable() {
     setBusy(true)
     setError(null)
     setCoach(null)
+    setPartial(null)
     try {
       const nSeats = slots.filter(Boolean).length + 1
       const next = await playApi.newHand({
@@ -404,7 +446,7 @@ export function TrainingTable() {
     try {
       const next = await playApi.act(sid, kind, amount)
       setEnv(next)
-      if (next.state.complete) void fetchCoach(sid)
+      if (next.state.complete && autoCoach) startCoach(sid)
     } catch (e) {
       setError(String((e as Error).message))
     } finally {
@@ -412,24 +454,40 @@ export function TrainingTable() {
     }
   }
 
-  async function fetchCoach(s: string) {
+  function startCoach(s: string) {
     setCoachBusy(true)
+    setCoach(null)
+    setPartial(null)
+    let acc = ''
     const t0 = performance.now()
-    try {
-      const r = await playApi.coach(s)
-      setCoach(r.coaching)
-      setDebug({
-        clientMs: Math.round(performance.now() - t0),
-        llmMs: r.coaching.elapsed_ms ?? 0,
-        equityMs: r.coaching.summary_ms ?? 0,
-        model: r.coaching.model ?? '',
-        version: r.version ?? '?',
-      })
-    } catch (e) {
-      setError(String((e as Error).message))
-    } finally {
-      setCoachBusy(false)
-    }
+    coachStream(s, {
+      onDelta: (chunk) => {
+        acc += chunk
+        setPartial(parsePartialJson(acc))
+      },
+      onDone: (d) => {
+        setCoach({
+          coaching: d.coaching,
+          model: d.model,
+          guardrail_violations: d.guardrail_violations,
+          elapsed_ms: d.elapsed_ms,
+          summary_ms: d.summary_ms,
+        })
+        setPartial(null)
+        setCoachBusy(false)
+        setDebug({
+          clientMs: Math.round(performance.now() - t0),
+          llmMs: d.elapsed_ms ?? 0,
+          equityMs: d.summary_ms ?? 0,
+          model: d.model ?? '',
+          version: d.version ?? '?',
+        })
+      },
+      onError: () => {
+        setCoachBusy(false)
+        setError('coaching stream failed')
+      },
+    })
   }
 
   const legal: LegalActions | null = st?.legal ?? null
@@ -468,6 +526,10 @@ export function TrainingTable() {
           <label className="flex items-center gap-1.5 text-[0.76rem] text-muted">
             <input type="checkbox" checked={mystery} onChange={(e) => setMystery(e.target.checked)} className="accent-brass" />
             Mystery
+          </label>
+          <label className="flex items-center gap-1.5 text-[0.76rem] text-muted" title="Coach every hand automatically, or pull coaching on demand">
+            <input type="checkbox" checked={autoCoach} onChange={(e) => setAutoCoach(e.target.checked)} className="accent-brass" />
+            Auto coach
           </label>
           <button
             type="button"
@@ -519,7 +581,14 @@ export function TrainingTable() {
           {!st && <div className="text-[0.84rem] text-muted">Seat 1–5 opponents (Empty = fewer players), then deal.</div>}
           {st?.complete && (
             <div className="text-[0.84rem] text-muted">
-              Hand complete{coachBusy ? ' — coaching…' : coach ? '' : ' — fetching coaching…'}
+              Hand complete
+              {coachBusy
+                ? ' — coaching…'
+                : coach
+                  ? ''
+                  : autoCoach
+                    ? ' — fetching coaching…'
+                    : ' — “Coach this hand” for AI review, or deal the next hand.'}
             </div>
           )}
           {heroTurn && legal && st && (
@@ -542,8 +611,14 @@ export function TrainingTable() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           {coach ? (
             <CoachCard result={coach} />
+          ) : partial || coachBusy ? (
+            <CoachCard result={{ coaching: partial }} streaming />
           ) : st?.complete && st.review ? (
-            <ReviewCard review={st.review} busy={coachBusy} />
+            <ReviewCard
+              review={st.review}
+              busy={coachBusy}
+              onCoach={!autoCoach && sid ? () => startCoach(sid) : undefined}
+            />
           ) : (
             <div className="rounded-xl border border-dashed border-line bg-surface-2 p-4 text-[0.84rem] text-muted">
               Play a hand to the end and the AI coach reviews your decisions against the opponents’ specific leaks.

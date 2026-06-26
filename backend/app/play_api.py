@@ -13,7 +13,9 @@ can play the hand snappily and then fetch the (slower, live) coaching afterwards
 from __future__ import annotations
 
 import functools
+import json
 import subprocess
+import time
 import uuid
 from dataclasses import asdict
 from pathlib import Path
@@ -21,8 +23,9 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from sse_starlette.sse import EventSourceResponse
 
-from play.session import PlaySession
+from play.session import LIVE_COACH_MODEL, PlaySession
 
 router = APIRouter(prefix="/api/play", tags=["play"])
 
@@ -108,3 +111,40 @@ def get_coaching(sid: str) -> dict:
     if not session.hand.complete:
         raise HTTPException(status_code=409, detail="hand is not complete yet")
     return {"session_id": sid, "coaching": session.coaching(), "version": _version()}
+
+
+@router.get("/{sid}/coach/stream")
+async def coach_stream(sid: str) -> EventSourceResponse:
+    """Stream the coaching as it generates (SSE). Each `delta` event is a JSON-encoded
+    text chunk the client concatenates + partial-parses; the final `done` event carries
+    the parsed coaching, timings, and version. (Single-process POC: the sync model
+    stream blocks the loop between chunks, which is fine for one player.)"""
+    session = _get(sid)
+    if not session.hand.complete:
+        raise HTTPException(status_code=409, detail="hand is not complete yet")
+    summary = session.summary
+    sm_ms = getattr(session, "_summary_ms", 0)
+    ver = _version()
+
+    async def gen():
+        if summary is None:
+            yield {"event": "done", "data": json.dumps(
+                {"coaching": None, "note": "no decision to coach",
+                 "elapsed_ms": 0, "summary_ms": sm_ms, "version": ver})}
+            return
+        from coach.coach import stream_coach
+        t0 = time.perf_counter()
+        for kind, payload in stream_coach(summary, model=LIVE_COACH_MODEL, fast=True):
+            if kind == "delta":
+                yield {"event": "delta", "data": json.dumps(payload)}
+            else:
+                elapsed = round((time.perf_counter() - t0) * 1000)
+                session._coaching = {
+                    "coaching": payload.get("coaching"), "model": payload.get("model"),
+                    "guardrail_violations": payload.get("guardrail_violations", []),
+                    "elapsed_ms": elapsed, "summary_ms": sm_ms,
+                }
+                yield {"event": "done", "data": json.dumps(
+                    {**payload, "elapsed_ms": elapsed, "summary_ms": sm_ms, "version": ver})}
+
+    return EventSourceResponse(gen())

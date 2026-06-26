@@ -121,6 +121,75 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
   return (await res.json()) as T
 }
 
+export interface StreamDone {
+  coaching: Coaching | null
+  guardrail_violations?: string[]
+  model?: string
+  elapsed_ms?: number
+  summary_ms?: number
+  version?: string
+}
+
+/** Stream the coaching over SSE. Calls onDelta(chunk) for each text fragment and
+ * onDone(result) at the end. Returns a cancel fn. */
+export function coachStream(
+  sid: string,
+  h: { onDelta: (chunk: string) => void; onDone: (d: StreamDone) => void; onError?: () => void },
+): () => void {
+  const es = new EventSource(`${API_BASE}/api/play/${sid}/coach/stream`)
+  es.addEventListener('delta', (e) => h.onDelta(JSON.parse((e as MessageEvent).data)))
+  es.addEventListener('done', (e) => {
+    es.close()
+    h.onDone(JSON.parse((e as MessageEvent).data))
+  })
+  es.onerror = () => {
+    es.close()
+    h.onError?.()
+  }
+  return () => es.close()
+}
+
+/** Best-effort parse of a partial (still-streaming) JSON string: closes any open
+ * string/brackets and drops a dangling key, so completed fields render as they arrive. */
+export function parsePartialJson(s: string): Coaching | null {
+  const t = s.trimStart()
+  if (!t) return null
+  let inStr = false
+  let esc = false
+  const stack: string[] = []
+  for (const ch of t) {
+    if (esc) {
+      esc = false
+      continue
+    }
+    if (ch === '\\') {
+      esc = true
+      continue
+    }
+    if (ch === '"') {
+      inStr = !inStr
+      continue
+    }
+    if (inStr) continue
+    if (ch === '{') stack.push('}')
+    else if (ch === '[') stack.push(']')
+    else if (ch === '}' || ch === ']') stack.pop()
+  }
+  let fixed = t
+  if (esc) fixed = fixed.slice(0, -1)
+  if (inStr) fixed += '"'
+  fixed = fixed
+    .replace(/,\s*$/, '')
+    .replace(/"[^"]*"\s*:\s*$/, '')
+    .replace(/,\s*$/, '')
+  for (let i = stack.length - 1; i >= 0; i--) fixed += stack[i]
+  try {
+    return JSON.parse(fixed) as Coaching
+  } catch {
+    return null
+  }
+}
+
 export const playApi = {
   newHand: (opts: NewHandOptions = {}): Promise<PlayEnvelope> =>
     post<PlayEnvelope>('/api/play/new', opts),

@@ -143,7 +143,7 @@ def judge_coaching(summary: dict[str, Any], fixture: dict[str, Any],
 
 # --------------------------------------------------------------------- runner ---
 def run_eval(*, model: str = COACH_MODEL, judge_model: str = JUDGE_MODEL,
-             client: Any = None) -> dict[str, Any]:
+             fast: bool = False, client: Any = None) -> dict[str, Any]:
     """Run the coach over the golden set and grade each hand. Returns a report dict;
     ``report['passed']`` is True only if every fixture passes."""
     if client is None:
@@ -154,7 +154,7 @@ def run_eval(*, model: str = COACH_MODEL, judge_model: str = JUDGE_MODEL,
     results: list[dict[str, Any]] = []
     for fixture in hands:
         summary = build_summary(fixture)
-        out = coach_hand(summary, client=client, model=model)
+        out = coach_hand(summary, client=client, model=model, fast=fast)
         mech = list(out["guardrail_violations"]) + grade_mechanical(out["coaching"], fixture)
         verdict = {"passes": False, "reason": "skipped (no coaching)", "failed_requirements": []}
         if out["coaching"] and not out["guardrail_violations"]:
@@ -201,8 +201,9 @@ def main() -> int:
     ap.add_argument("--model", default=COACH_MODEL,
                     help="coach model under test (e.g. claude-sonnet-4-6, claude-haiku-4-5)")
     ap.add_argument("--judge-model", default=JUDGE_MODEL, help="examiner model")
+    ap.add_argument("--fast", action="store_true", help="skip adaptive thinking (streamed-coach config)")
     args = ap.parse_args()
-    report = run_eval(model=args.model, judge_model=args.judge_model)
+    report = run_eval(model=args.model, judge_model=args.judge_model, fast=args.fast)
     _print_report(report)
     return 0 if report["passed"] else 1
 
