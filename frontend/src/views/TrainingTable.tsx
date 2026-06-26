@@ -70,7 +70,9 @@ function Chip({ children, tone }: { children: ReactNode; tone?: 'role' | 'bet' }
 function seatPositions(n: number): { top: string; left: string }[] {
   return Array.from({ length: n }, (_, i) => {
     const theta = Math.PI / 2 + (i / n) * Math.PI * 2
-    return { left: `${50 + 44 * Math.cos(theta)}%`, top: `${50 + 40 * Math.sin(theta)}%` }
+    // narrower vertical radius keeps the top/bottom seats (and their cards) inside
+    // the felt instead of clipping off the edges.
+    return { left: `${50 + 43 * Math.cos(theta)}%`, top: `${50 + 33 * Math.sin(theta)}%` }
   })
 }
 
@@ -462,7 +464,7 @@ export function TrainingTable() {
         </div>
 
         {/* felt */}
-        <div className="relative mx-auto aspect-4/3 w-full max-w-[680px]">
+        <div className="relative mx-auto aspect-4/3 w-full max-w-[600px]">
           <img
             className="absolute inset-0 h-full w-full object-contain opacity-[0.92]"
             src={pokerTable}
@@ -515,11 +517,17 @@ export function TrainingTable() {
             />
           )}
         </div>
+
+        {/* hand action log — below the action buttons */}
+        {st && st.log.length > 0 && (
+          <div className="mt-4">
+            <ActionLog log={st.log} seats={st.seats} />
+          </div>
+        )}
       </div>
 
-      {/* right column: action log + coaching */}
-      <aside className="flex flex-col gap-4">
-        {st && <ActionLog log={st.log} seats={st.seats} />}
+      {/* right column: coaching */}
+      <aside>
         {coach ? (
           <CoachCard result={coach} />
         ) : st?.complete && st.review ? (
