@@ -397,7 +397,9 @@ def main(argv=None) -> int:
                      help="comma-separated continuous arrival rates per hour")
     lrs.add_argument("--horizon", type=float, default=480.0,
                      help="horizon in minutes (default 480 = 8h)")
-    lrs.add_argument("--samples", type=int, default=6, help="Monte-Carlo equity samples")
+    lrs.add_argument("--samples", type=int, default=1,
+                     help=("Monte-Carlo equity samples. Default is low because "
+                           "50-table hand-level sweeps are expensive; raise for sensitivity checks."))
     lrs.add_argument("--policies", default="standard,fairplay,fairplay_liveness",
                      help="comma-separated policy arms")
     lrs.add_argument("--behavior", choices=["default", "fit-aware", "reason-aware", "formation-aware"],
