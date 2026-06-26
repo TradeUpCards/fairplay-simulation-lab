@@ -34,7 +34,11 @@ from playsim.equity import equity_mc  # noqa: E402
 from playsim.interactive import InteractiveHand  # noqa: E402
 from playsim.knobs import ARCHETYPES, knobs_for  # noqa: E402
 
-from coach.coach import MODEL as COACH_MODEL, coach_hand  # noqa: E402
+from coach.coach import coach_hand  # noqa: E402
+
+# The LLM coaching is non-blocking (the instant grounded review shows first), so the
+# live game keeps the higher-quality Sonnet reference model rather than trading down.
+LIVE_COACH_MODEL = "claude-sonnet-4-6"
 from coach.leaks import read_for  # noqa: E402
 from coach.summary import build_summary  # noqa: E402
 
@@ -106,6 +110,7 @@ class PlayState:
     legal: Optional[LegalActions]
     seats: list[SeatView]
     log: list[LogEntry]
+    review: Optional[dict[str, Any]] = None    # instant, LLM-free grounded feedback
     coaching: Optional[dict[str, Any]] = None
 
 
@@ -288,6 +293,18 @@ class PlaySession:
     def state(self) -> PlayState:
         if self.hand.complete:
             rec = self.hand.record
+            # Instant, LLM-free review: the opponent's named leak + each decision's
+            # equity. Shown immediately so the player never waits on the model.
+            review = None
+            if self.summary:
+                s = self.summary
+                review = {
+                    "opponent": {"label": s["decisive_opponent"]["style_label"],
+                                 "leak": s["decisive_opponent"]["leak"]},
+                    "decisions": [{"street": d["street"], "action": d["hero_action"],
+                                   "equity_pct": d["hero_equity_pct"]}
+                                  for d in s["decisions"]],
+                }
             return PlayState(
                 hand_id=self.hand_id, complete=True, hero_seat=self.hero_seat,
                 max_seats=self.max_seats, mystery=not self.reveal,
@@ -295,7 +312,7 @@ class PlaySession:
                 street="river", pot=int(rec.pot_bb * self.bb) if rec else 0,
                 big_blind=self.bb, to_call=0, legal=None,
                 seats=self._seats_complete(), log=self._log_complete(),
-                coaching=self._coaching,
+                review=review, coaching=self._coaching,
             )
         obs = self._obs
         assert obs is not None
@@ -386,7 +403,7 @@ class PlaySession:
     def summary(self) -> Optional[dict[str, Any]]:
         return getattr(self, "_summary", None)
 
-    def coaching(self, *, client: Any = None, model: str = COACH_MODEL) -> Optional[dict[str, Any]]:
+    def coaching(self, *, client: Any = None, model: str = LIVE_COACH_MODEL) -> Optional[dict[str, Any]]:
         if not self.hand.complete:
             raise RuntimeError("hand is not complete yet")
         if self._coaching is not None:

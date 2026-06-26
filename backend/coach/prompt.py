@@ -59,7 +59,9 @@ ABSOLUTE RULES -- never violate:
 
 Write for a student reviewing their hand: concrete, math-anchored, tied to the \
 opponent's leak, and genuinely useful -- the kind of note that would actually help \
-them play the next one better.
+them play the next one better. Focus on the one or two decisions that actually \
+mattered rather than every routine check, but never sacrifice a correct, specific \
+recommendation for the sake of brevity.
 """
 
 # Structured-output schema -- the renderable shape of every coaching response.

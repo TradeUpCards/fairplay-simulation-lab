@@ -41,6 +41,11 @@ export interface LogEntry {
   amount_bb: number
 }
 
+export interface HandReview {
+  opponent: { label: string; leak: string }
+  decisions: { street: string; action: string; equity_pct: number }[]
+}
+
 export interface PlayState {
   hand_id: number
   complete: boolean
@@ -56,6 +61,7 @@ export interface PlayState {
   legal: LegalActions | null
   seats: SeatView[]
   log: LogEntry[]
+  review: HandReview | null // instant, LLM-free grounded feedback
   coaching: CoachResult | null
 }
 

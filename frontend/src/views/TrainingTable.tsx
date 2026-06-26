@@ -5,6 +5,7 @@ import {
   playApi,
   type ActionKind,
   type CoachResult,
+  type HandReview,
   type LegalActions,
   type LogEntry,
   type PlayEnvelope,
@@ -311,6 +312,32 @@ function ActionBar({
   )
 }
 
+// Instant, LLM-free feedback shown the moment the hand ends — the opponent's named
+// leak and each decision's equity — while the AI coach loads its detail in the background.
+function ReviewCard({ review, busy }: { review: HandReview; busy: boolean }) {
+  return (
+    <div className="rounded-xl border border-line bg-surface p-4">
+      <div className="mb-1 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-brass">Hand review</div>
+      <div className="mb-3 rounded-lg border border-line bg-surface-2 p-2.5 text-[0.82rem] text-muted">
+        <span className="font-semibold text-text">vs {review.opponent.label}:</span> {review.opponent.leak}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        {review.decisions.map((d, i) => (
+          <div key={i} className="flex flex-wrap items-center gap-2 text-[0.82rem]">
+            <Chip>{d.street}</Chip>
+            <span className="text-muted">you {d.action}</span>
+            <span className="font-mono text-faint">equity {d.equity_pct}%</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 flex items-center gap-2 text-[0.78rem] text-muted">
+        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brass" />
+        {busy ? 'AI coach is adding detail…' : 'Loading coach…'}
+      </div>
+    </div>
+  )
+}
+
 const DEFAULT_SLOTS = ['recreational', 'aggressive_predatory', 'promo_hunter', 'grinder', 'regular']
 const ARCHS = BOT_CHOICES.map((c) => c.archetype)
 
@@ -495,11 +522,11 @@ export function TrainingTable() {
         {st && <ActionLog log={st.log} seats={st.seats} />}
         {coach ? (
           <CoachCard result={coach} />
+        ) : st?.complete && st.review ? (
+          <ReviewCard review={st.review} busy={coachBusy} />
         ) : (
           <div className="rounded-xl border border-dashed border-line bg-surface-2 p-4 text-[0.84rem] text-muted">
-            {coachBusy
-              ? 'The coach is reviewing your hand…'
-              : 'Play a hand to the end and the AI coach reviews your decisions against the opponents’ specific leaks.'}
+            Play a hand to the end and the AI coach reviews your decisions against the opponents’ specific leaks.
           </div>
         )}
       </aside>
