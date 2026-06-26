@@ -1,0 +1,18 @@
+# Render Blueprint — deploys the FairPlay API (training table + scoring) as a Docker
+# web service on the free plan. In Render: New → Blueprint → connect this repo; Render
+# reads this file. Set the two secret env vars (ANTHROPIC_API_KEY, CORS_ORIGINS) in the
+# dashboard when prompted. See docs/DEPLOY.md.
+services:
+  - type: web
+    name: fairplay-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /docs
+    autoDeploy: true
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false # set in the dashboard (secret) — powers the live coach
+      - key: CORS_ORIGINS
+        sync: false # set to your Vercel URL, e.g. https://fairplay.vercel.app
