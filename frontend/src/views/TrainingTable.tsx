@@ -7,6 +7,7 @@ import {
   playApi,
   type ActionKind,
   type Coaching,
+  type CoachDecision,
   type CoachResult,
   type HandReview,
   type LegalActions,
@@ -171,51 +172,125 @@ function VerdictChip({ v }: { v: 'good' | 'thin' | 'mistake' }) {
   )
 }
 
-function CoachCard({ result, streaming }: { result: CoachResult; streaming?: boolean }) {
-  const c = result.coaching
-  if (!c) {
-    return streaming ? (
-      <div className="rounded-xl border border-brass-soft bg-surface p-4 text-sm text-muted">
-        <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-brass" />
-        The coach is writing…
-      </div>
-    ) : (
-      <div className="rounded-xl border border-line bg-surface p-4 text-sm text-muted">
-        No coaching {result.guardrail_violations?.length ? '(guardrail)' : 'for this hand'}.
-      </div>
-    )
+// One card for the post-hand right column. The grounded, LLM-free review (opponent
+// leak + each decision's equity) paints instantly and is ALWAYS the skeleton; the AI
+// coach's verdict / reasoning / summary stream in and ANNOTATE those same rows rather
+// than replacing the card — so nothing the user is already reading gets overwritten.
+function ReviewCoachCard({
+  review,
+  coaching,
+  streaming,
+  busy,
+  guardrail,
+  onCoach,
+}: {
+  review: HandReview | null
+  coaching: Coaching | null
+  streaming?: boolean
+  busy?: boolean
+  guardrail?: boolean
+  onCoach?: () => void
+}) {
+  const coached = !!coaching
+  // Match each coach decision to a grounded row by street + nearest equity (one-to-one,
+  // within tolerance) so a rounded or reordered coach decision can't mislabel a row.
+  const coachList = (coaching?.decisions ?? []).filter(Boolean)
+  const used = new Set<number>()
+  const matchCoach = (street: string, eq: number): CoachDecision | null => {
+    let best = -1
+    let bestDiff = Infinity
+    coachList.forEach((d, idx) => {
+      if (used.has(idx) || d.street !== street) return
+      const diff = Math.abs((d.equity_pct ?? 999) - eq)
+      if (diff < bestDiff) {
+        bestDiff = diff
+        best = idx
+      }
+    })
+    if (best >= 0 && bestDiff <= 6) {
+      used.add(best)
+      return coachList[best]
+    }
+    return null
   }
+
+  // Prefer the grounded review as the stable skeleton; fall back to the coach's own
+  // decision list only if the review is somehow absent.
+  const rows = review?.decisions.length
+    ? review.decisions.map((d) => ({
+        street: d.street,
+        action: d.action,
+        equity_pct: d.equity_pct,
+        coach: matchCoach(d.street, d.equity_pct),
+      }))
+    : coachList.map((d) => ({
+        street: d.street,
+        action: d.your_action,
+        equity_pct: d.equity_pct,
+        coach: d,
+      }))
+
+  const oppLabel = coaching?.opponent_read?.style_label ?? review?.opponent.label ?? ''
+  const oppTell = coaching?.opponent_read?.tell ?? review?.opponent.leak ?? ''
+
   return (
-    <div className="rounded-xl border border-brass-soft bg-surface p-4">
+    <div className={`rounded-xl border ${coached || busy ? 'border-brass-soft' : 'border-line'} bg-surface p-4`}>
       <div className="mb-1 flex items-center gap-2 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-brass">
-        AI Coach {streaming && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brass" />}
+        {coached ? 'AI Coach' : 'Hand review'}
+        {streaming && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brass" />}
       </div>
-      {c.headline && <h3 className="m-0 mb-3 text-[1rem] font-semibold leading-snug text-text">{c.headline}</h3>}
-      {c.opponent_read?.tell && (
+      {coaching?.headline && (
+        <h3 className="m-0 mb-3 text-[1rem] font-semibold leading-snug text-text">{coaching.headline}</h3>
+      )}
+      {oppTell && (
         <div className="mb-3 rounded-lg border border-line bg-surface-2 p-2.5 text-[0.82rem] text-muted">
-          <span className="font-semibold text-text">Read — {c.opponent_read.style_label}:</span> {c.opponent_read.tell}
+          <span className="font-semibold text-text">
+            {coached ? 'Read — ' : 'vs '}
+            {oppLabel}:
+          </span>{' '}
+          {oppTell}
         </div>
       )}
       <div className="flex flex-col gap-2.5">
-        {(c.decisions ?? []).map((d, i) => (
+        {rows.map((d, i) => (
           <div key={i} className="rounded-lg border border-line bg-surface-2 p-2.5">
-            <div className="mb-1 flex flex-wrap items-center gap-2 text-[0.76rem]">
-              {d.street && <Chip>{d.street}</Chip>}
-              {d.verdict && <VerdictChip v={d.verdict} />}
-              {d.your_action && <span className="text-muted">you {d.your_action}</span>}
-              {d.equity_pct != null && <span className="font-mono text-faint">equity {d.equity_pct}%</span>}
+            <div className="flex flex-wrap items-center gap-2 text-[0.76rem]">
+              <Chip>{d.street}</Chip>
+              {d.coach?.verdict && <VerdictChip v={d.coach.verdict} />}
+              <span className="text-muted">you {d.action}</span>
+              <span className="font-mono text-faint">equity {d.equity_pct}%</span>
             </div>
-            {d.why_this_play && <div className="text-[0.82rem] text-text">{d.why_this_play}</div>}
-            {d.better_line && (
+            {d.coach?.why_this_play && <div className="mt-1 text-[0.82rem] text-text">{d.coach.why_this_play}</div>}
+            {d.coach?.better_line && (
               <div className="mt-1 text-[0.82rem]">
-                <span className="font-semibold text-felt">{d.verdict === 'good' ? 'Right play:' : 'Better:'}</span>{' '}
-                <span className="text-text">{d.better_line}</span>
+                <span className="font-semibold text-felt">{d.coach.verdict === 'good' ? 'Right play:' : 'Better:'}</span>{' '}
+                <span className="text-text">{d.coach.better_line}</span>
               </div>
             )}
           </div>
         ))}
       </div>
-      {c.summary && <p className="mt-3 mb-0 text-[0.84rem] text-text">{c.summary}</p>}
+      {coaching?.summary && <p className="mt-3 mb-0 text-[0.84rem] text-text">{coaching.summary}</p>}
+      {!coached && (
+        <div className="mt-3">
+          {busy ? (
+            <div className="flex items-center gap-2 text-[0.78rem] text-muted">
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brass" />
+              AI coach is writing…
+            </div>
+          ) : guardrail ? (
+            <div className="text-[0.78rem] text-muted">No AI coaching for this hand (guardrail).</div>
+          ) : onCoach ? (
+            <button
+              type="button"
+              onClick={onCoach}
+              className="rounded-md border border-brass bg-brass px-3 py-1.5 text-[0.78rem] font-semibold text-[#1a1407]"
+            >
+              Coach this hand
+            </button>
+          ) : null}
+        </div>
+      )}
     </div>
   )
 }
@@ -322,57 +397,6 @@ function ActionBar({
           min {bbStr(legal.min_raise_to)} · max {bbStr(legal.max_raise_to)} (all-in)
         </div>
       )}
-    </div>
-  )
-}
-
-// Instant, LLM-free feedback shown the moment the hand ends — the opponent's named
-// leak and each decision's equity — while the AI coach loads its detail in the background.
-function ReviewCard({
-  review,
-  busy,
-  onCoach,
-}: {
-  review: HandReview
-  busy: boolean
-  onCoach?: () => void
-}) {
-  return (
-    <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="mb-1 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-brass">Hand review</div>
-      <div className="mb-3 rounded-lg border border-line bg-surface-2 p-2.5 text-[0.82rem] text-muted">
-        <span className="font-semibold text-text">vs {review.opponent.label}:</span> {review.opponent.leak}
-      </div>
-      <div className="flex flex-col gap-1.5">
-        {review.decisions.map((d, i) => (
-          <div key={i} className="flex flex-wrap items-center gap-2 text-[0.82rem]">
-            <Chip>{d.street}</Chip>
-            <span className="text-muted">you {d.action}</span>
-            <span className="font-mono text-faint">equity {d.equity_pct}%</span>
-          </div>
-        ))}
-      </div>
-      <div className="mt-3">
-        {busy ? (
-          <div className="flex items-center gap-2 text-[0.78rem] text-muted">
-            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brass" />
-            AI coach is writing…
-          </div>
-        ) : onCoach ? (
-          <button
-            type="button"
-            onClick={onCoach}
-            className="rounded-md border border-brass bg-brass px-3 py-1.5 text-[0.78rem] font-semibold text-[#1a1407]"
-          >
-            Coach this hand
-          </button>
-        ) : (
-          <div className="flex items-center gap-2 text-[0.78rem] text-muted">
-            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brass" />
-            Loading coach…
-          </div>
-        )}
-      </div>
     </div>
   )
 }
@@ -614,19 +638,16 @@ export function TrainingTable() {
       {/* right column: AI coach and hand action, each with its OWN scroll */}
       <aside className="flex min-h-0 flex-col gap-4">
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {coach ? (
-            <CoachCard result={coach} />
-          ) : partial ? (
-            // First token has arrived — stream the richer coaching card.
-            <CoachCard result={{ coaching: partial }} streaming />
-          ) : st?.complete && st.review ? (
-            // Instant first paint: the grounded (LLM-free) review shows the moment the
-            // hand ends; its `busy` state reads "AI coach is writing…" while we await the
-            // first token, so there is never a blank "writing" placeholder.
-            <ReviewCard
+          {st?.complete && (st.review || coach || partial) ? (
+            // One card: the grounded review paints instantly and stays put; the AI coach
+            // streams its verdicts/reasoning INTO those same rows (no overwrite/swap).
+            <ReviewCoachCard
               review={st.review}
-              busy={coachBusy}
-              onCoach={!autoCoach && sid ? () => startCoach(sid) : undefined}
+              coaching={partial ?? coach?.coaching ?? null}
+              streaming={!!partial && coachBusy}
+              busy={coachBusy && !partial}
+              guardrail={!!coach && !coach.coaching}
+              onCoach={!autoCoach && !coach && !coachBusy && sid ? () => startCoach(sid) : undefined}
             />
           ) : (
             <div className="rounded-xl border border-dashed border-line bg-surface-2 p-4 text-[0.84rem] text-muted">
