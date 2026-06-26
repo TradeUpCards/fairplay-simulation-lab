@@ -723,44 +723,44 @@ export function TrainingTable() {
               })}
             </div>
           </div>
-
-          {/* action cluster — compact, bottom-right; only shown when it has something
-              to say (hero to act, pre-deal hint, hand-complete, or an error) */}
-          {(!!error || !st || st.complete || heroTurn) && (
-            <div className="absolute bottom-0 right-0 w-[min(96%,440px)]">
-              <div className="rounded-xl border border-line bg-[rgba(20,25,34,0.97)] p-3 shadow-[0_6px_24px_rgba(0,0,0,0.5)]">
-                {error && <div className="mb-2 text-[0.8rem] text-[#e0607a]">{error}</div>}
-                {!st && <div className="text-[0.84rem] text-muted">Seat 1–5 opponents, then deal.</div>}
-                {st?.complete && (
-                  <div className="text-[0.84rem] text-muted">
-                    Hand complete
-                    {coachBusy
-                      ? ' — coaching…'
-                      : coach
-                        ? ''
-                        : autoCoach
-                          ? ' — fetching coaching…'
-                          : ' — “Coach this hand”, or deal again.'}
-                  </div>
-                )}
-                {heroTurn && legal && st && (
-                  <>
-                    <ActionClock left={clockLeft} total={CLOCK_SECONDS} />
-                    <ActionBar
-                      key={`${st.hand_id}-${st.street}-${st.pot}-${st.to_call}`}
-                      legal={legal}
-                      pot={st.pot}
-                      toCall={st.to_call}
-                      bb={bb}
-                      busy={busy}
-                      onAct={act}
-                    />
-                  </>
-                )}
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* action cluster — compact, right-aligned strip below the felt (no seat
+            overlap); only shown when it has something to say */}
+        {(!!error || !st || st.complete || heroTurn) && (
+          <div className="mt-2 flex shrink-0 justify-end">
+            <div className="w-full max-w-[440px] rounded-xl border border-line bg-[rgba(20,25,34,0.97)] p-3 shadow-[0_6px_24px_rgba(0,0,0,0.5)]">
+              {error && <div className="mb-2 text-[0.8rem] text-[#e0607a]">{error}</div>}
+              {!st && <div className="text-[0.84rem] text-muted">Seat 1–5 opponents, then deal.</div>}
+              {st?.complete && (
+                <div className="text-[0.84rem] text-muted">
+                  Hand complete
+                  {coachBusy
+                    ? ' — coaching…'
+                    : coach
+                      ? ''
+                      : autoCoach
+                        ? ' — fetching coaching…'
+                        : ' — “Coach this hand”, or deal again.'}
+                </div>
+              )}
+              {heroTurn && legal && st && (
+                <>
+                  <ActionClock left={clockLeft} total={CLOCK_SECONDS} />
+                  <ActionBar
+                    key={`${st.hand_id}-${st.street}-${st.pot}-${st.to_call}`}
+                    legal={legal}
+                    pot={st.pot}
+                    toCall={st.to_call}
+                    bb={bb}
+                    busy={busy}
+                    onAct={act}
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
 
