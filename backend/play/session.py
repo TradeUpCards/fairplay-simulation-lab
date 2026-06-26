@@ -1,28 +1,30 @@
-"""A single-human 6-max play session.
+"""A single-human play session (2-6 handed).
 
 Ties the three reused pieces together into one object a web surface can drive:
 the pausable engine hook (``playsim.interactive``), per-decision equity
 (``playsim.equity``), and the AI coach (``backend.coach``). Bots are seeded and
 deterministic; the human is the only nondeterministic input.
 
-Flow: construct -> ``state()`` describes whose turn it is and the legal actions ->
-``act(...)`` submits the human's move and advances the bots -> when the hand
-completes, the session computes the human's equity at each of their decisions,
-picks the decisive opponent, and assembles the coach summary (the SAME shape as the
-golden fixtures, so the exact coach proven in Phase 1 runs unchanged). ``coaching()``
-makes the one live coach call.
+Table size is ``len(bots) + 1`` -- pass 1-5 bots for heads-up through 6-max, so
+empty seats just mean fewer players. ``reveal=False`` is "mystery" mode: the
+opponents' styles are hidden from the client (the human reads them blind), though
+the coach still names them in the post-hand review.
+
+Flow: construct -> ``state()`` describes the table + whose turn + legal actions ->
+``act(...)`` submits the human's move and advances the bots -> on completion the
+session computes the human's equity at each decision, picks the decisive opponent,
+and assembles the coach summary. ``coaching()`` makes the one live coach call.
 """
 
 from __future__ import annotations
 
 import random
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-# playsim is its own top-level package on disk; put it on the path so the engine,
-# equity, and the interactive hook import cleanly alongside the backend packages.
+# playsim is its own top-level package on disk; put it on the path.
 _PLAYSIM = Path(__file__).resolve().parents[2] / "playsim"
 if str(_PLAYSIM) not in sys.path:
     sys.path.insert(0, str(_PLAYSIM))
@@ -30,14 +32,13 @@ if str(_PLAYSIM) not in sys.path:
 from playsim.agent import ArchetypeAgent, Decision, Observation  # noqa: E402
 from playsim.equity import equity_mc  # noqa: E402
 from playsim.interactive import InteractiveHand  # noqa: E402
-from playsim.knobs import knobs_for  # noqa: E402
+from playsim.knobs import ARCHETYPES, knobs_for  # noqa: E402
 
 from coach.coach import MODEL as COACH_MODEL, coach_hand  # noqa: E402
+from coach.leaks import read_for  # noqa: E402
 from coach.summary import build_summary  # noqa: E402
 
 _STREETS = ("preflop", "flop", "turn", "river")
-# Static seat ring (fixed button) -- positions are cosmetic for v1.
-_POSITIONS = ("BTN", "SB", "BB", "UTG", "MP", "CO")
 _DEFAULT_BOTS = ["recreational", "aggressive_predatory", "promo_hunter",
                  "grinder", "regular"]
 _EQUITY_SAMPLES = 2000
@@ -55,10 +56,33 @@ class LegalActions:
 
 
 @dataclass
+class SeatView:
+    seat: int
+    label: str                 # "You", the style label, or "Unknown" (mystery)
+    archetype: Optional[str]   # None for the hero or in mystery mode
+    role: str                  # "BTN" | "SB" | "BB" | ""
+    stack_bb: float
+    bet_bb: float
+    folded: bool
+    is_hero: bool
+    to_act: bool
+
+
+@dataclass
+class LogEntry:
+    seat: int
+    street: str
+    action: str
+    amount_bb: float
+
+
+@dataclass
 class PlayState:
     hand_id: int
     complete: bool
     hero_seat: int
+    max_seats: int
+    mystery: bool
     hero_hole: Optional[tuple[str, str]]
     board: list[str]
     street: str
@@ -66,7 +90,8 @@ class PlayState:
     big_blind: int
     to_call: int
     legal: Optional[LegalActions]
-    opponents: list[dict[str, Any]]   # [{seat, archetype, style_label}]
+    seats: list[SeatView]
+    log: list[LogEntry]
     coaching: Optional[dict[str, Any]] = None
 
 
@@ -82,19 +107,29 @@ class PlaySession:
         *,
         hero_seat: int = 2,
         bots: Optional[list[str]] = None,
+        reveal: bool = True,
         stack_bb: int = 100,
         sb: int = 1,
         bb: int = 2,
         seed: int = 0,
         hand_id: int = 1,
     ):
-        bots = list(bots or _DEFAULT_BOTS)
-        if len(bots) != 5:
-            raise ValueError("a 6-max session needs exactly 5 bot archetypes")
-        self.hero_seat = hero_seat
+        # None => default mix; an explicit list has its empty/None seats dropped
+        # (so all-empty is an error, not a silent fall-back to the default).
+        bots = list(_DEFAULT_BOTS) if bots is None else [b for b in bots if b]
+        if not (1 <= len(bots) <= 5):
+            raise ValueError("need 1-5 bot archetypes (2-6 players including the human)")
+        unknown = [b for b in bots if b not in ARCHETYPES]
+        if unknown:
+            raise ValueError(f"unknown archetype(s): {unknown}")
+
+        n = len(bots) + 1
+        self.max_seats = n
+        self.hero_seat = max(0, min(hero_seat, n - 1))
+        self.reveal = reveal
         self.bb = bb
         self.hand_id = hand_id
-        self.seat_player_ids = list(range(1, 7))
+        self.seat_player_ids = list(range(1, n + 1))
         self.rng = random.Random(seed)
         self._equity_rng = random.Random((seed ^ 0x5151) & 0xFFFFFFFF)
 
@@ -102,7 +137,7 @@ class PlaySession:
         self.seat_archetype: dict[int, str] = {}
         bot_it = iter(bots)
         for seat, pid in enumerate(self.seat_player_ids):
-            if seat == hero_seat:
+            if seat == self.hero_seat:
                 agents.append(None)
                 self.seat_archetype[seat] = "human"
             else:
@@ -114,9 +149,9 @@ class PlaySession:
             for seat, pid in enumerate(self.seat_player_ids)
         }
 
-        stacks = [stack_bb * bb] * 6
+        stacks = [stack_bb * bb] * n
         self.hand = InteractiveHand(
-            human_seat=hero_seat, seat_agents=agents,
+            human_seat=self.hero_seat, seat_agents=agents,
             seat_player_ids=self.seat_player_ids, seat_stacks=stacks,
             sb=sb, bb=bb, rng=self.rng, hand_id=hand_id,
             members_by_player={}, weak_player_ids=frozenset(),
@@ -128,6 +163,38 @@ class PlaySession:
         self._obs: Optional[Observation] = self.hand.start()
         if self._obs is not None:
             self._hero_hole = self._obs.hole
+        # blind/button seats are fixed for the hand; capture them once.
+        v = self.hand.view or {}
+        self._roles = {
+            "button_seat": v.get("button_seat", n - 1),
+            "sb_seat": v.get("sb_seat", 0),
+            "bb_seat": v.get("bb_seat", 1 % n),
+        }
+
+    # ------------------------------------------------------------ labels ---
+    def _label(self, seat: int) -> str:
+        if seat == self.hero_seat:
+            return "You"
+        if not self.reveal:
+            return "Unknown"
+        try:
+            return read_for(self.seat_archetype[seat]).style_label
+        except KeyError:
+            return self.seat_archetype.get(seat, f"Seat {seat + 1}")
+
+    def _client_archetype(self, seat: int) -> Optional[str]:
+        if seat == self.hero_seat or not self.reveal:
+            return None
+        return self.seat_archetype.get(seat)
+
+    def _role(self, seat: int) -> str:
+        if seat == self._roles["button_seat"]:
+            return "BTN"
+        if seat == self._roles["sb_seat"]:
+            return "SB"
+        if seat == self._roles["bb_seat"]:
+            return "BB"
+        return ""
 
     # ------------------------------------------------------------- state ---
     def _legal(self, obs: Observation) -> LegalActions:
@@ -141,38 +208,74 @@ class PlaySession:
             max_raise_to=obs.max_raise_to,
         )
 
-    def _opponents(self) -> list[dict[str, Any]]:
-        from coach.leaks import read_for
+    def _seats_live(self, view: dict, to_act_seat: Optional[int]) -> list[SeatView]:
         out = []
-        for seat, arch in self.seat_archetype.items():
-            if seat == self.hero_seat:
-                continue
-            try:
-                label = read_for(arch).style_label
-            except KeyError:
-                label = arch
-            out.append({"seat": seat + 1, "archetype": arch, "style_label": label})
+        for sv in view["seats"]:
+            s = sv["seat"]
+            out.append(SeatView(
+                seat=s, label=self._label(s), archetype=self._client_archetype(s),
+                role=self._role(s), stack_bb=sv["stack_bb"], bet_bb=sv["bet_bb"],
+                folded=sv["folded"], is_hero=(s == self.hero_seat),
+                to_act=(s == to_act_seat),
+            ))
         return out
+
+    def _seats_complete(self) -> list[SeatView]:
+        rec = self.hand.record
+        out = []
+        folded_seats = {
+            self.seat_player_ids.index(a.player_id)
+            for a in (rec.actions if rec else []) if a.action == "fold"
+        }
+        for s, pid in enumerate(self.seat_player_ids):
+            final = (rec.starting_stacks.get(pid, 0) + rec.payoffs.get(pid, 0)) if rec else 0
+            out.append(SeatView(
+                seat=s, label=self._label(s), archetype=self._client_archetype(s),
+                role=self._role(s), stack_bb=round(final / self.bb, 1), bet_bb=0.0,
+                folded=s in folded_seats, is_hero=(s == self.hero_seat), to_act=False,
+            ))
+        return out
+
+    def _log_live(self, view: dict) -> list[LogEntry]:
+        return [
+            LogEntry(seat=e["seat"], street=_STREETS[min(3, e["street"])],
+                     action=e["action"], amount_bb=e["amount_bb"])
+            for e in view["log"]
+        ]
+
+    def _log_complete(self) -> list[LogEntry]:
+        rec = self.hand.record
+        if not rec:
+            return []
+        pid_seat = {pid: i for i, pid in enumerate(self.seat_player_ids)}
+        return [
+            LogEntry(seat=pid_seat[a.player_id], street=_STREETS[min(3, a.street)],
+                     action=a.action, amount_bb=round(a.amount / self.bb, 1))
+            for a in rec.actions
+        ]
 
     def state(self) -> PlayState:
         if self.hand.complete:
             rec = self.hand.record
             return PlayState(
                 hand_id=self.hand_id, complete=True, hero_seat=self.hero_seat,
+                max_seats=self.max_seats, mystery=not self.reveal,
                 hero_hole=self._hero_hole, board=list(rec.board) if rec else [],
-                street=_STREETS[min(3, (len(rec.board) - 2) if rec and rec.board else 0)]
-                if rec and rec.board else "preflop",
-                pot=int(rec.pot_bb * self.bb) if rec else 0, big_blind=self.bb,
-                to_call=0, legal=None, opponents=self._opponents(),
+                street="river", pot=int(rec.pot_bb * self.bb) if rec else 0,
+                big_blind=self.bb, to_call=0, legal=None,
+                seats=self._seats_complete(), log=self._log_complete(),
                 coaching=self._coaching,
             )
         obs = self._obs
         assert obs is not None
+        view = self.hand.view or {"seats": [], "log": []}
         return PlayState(
             hand_id=self.hand_id, complete=False, hero_seat=self.hero_seat,
+            max_seats=self.max_seats, mystery=not self.reveal,
             hero_hole=obs.hole, board=list(obs.board), street=_STREETS[obs.street],
             pot=obs.pot, big_blind=self.bb, to_call=obs.to_call,
-            legal=self._legal(obs), opponents=self._opponents(),
+            legal=self._legal(obs), seats=self._seats_live(view, self.hero_seat),
+            log=self._log_live(view),
         )
 
     # -------------------------------------------------------------- act ---
@@ -186,7 +289,6 @@ class PlaySession:
         return "check"
 
     def act(self, kind: str, amount: int = 0) -> PlayState:
-        """Submit the human's move (kind: fold|check|call|raise; amount = raise-to chips)."""
         if self.hand.complete:
             raise RuntimeError("hand is already complete")
         obs = self._obs
@@ -198,7 +300,7 @@ class PlaySession:
         elif kind == "raise":
             decision = Decision("raise", amount=amount, is_raise=True,
                                 voluntary=(obs.street == 0))
-        else:  # check / call
+        else:
             decision = Decision("check_call", is_call=obs.to_call > 0,
                                 voluntary=(obs.street == 0 and obs.to_call > 0))
 
@@ -209,18 +311,13 @@ class PlaySession:
 
     # --------------------------------------------------- coach assembly ---
     def _decisive_opponent(self) -> tuple[int, str]:
-        """The opponent the human's biggest decision was against: the live opponent at
-        the most expensive call, broken toward the most aggressive archetype."""
         paid = [d for d in self._decisions if d.obs.to_call > 0] or self._decisions
         target = max(paid, key=lambda d: d.obs.to_call)
         live = list(target.obs.live_opponent_ids) or [
-            pid for pid in self.seat_player_ids
-            if self._pid_archetype[pid] != "human"
+            pid for pid in self.seat_player_ids if self._pid_archetype[pid] != "human"
         ]
-        # most aggressive live opponent = likeliest bettor / the decisive read
         dec_pid = max(live, key=lambda pid: knobs_for(self._pid_archetype[pid]).postflop_aggression)
-        seat = self.seat_player_ids.index(dec_pid)
-        return seat, self._pid_archetype[dec_pid]
+        return self.seat_player_ids.index(dec_pid), self._pid_archetype[dec_pid]
 
     def _build_summary(self) -> None:
         if not self._decisions:
@@ -244,8 +341,8 @@ class PlaySession:
         rec = self.hand.record
         fixture = {
             "hand_id": f"live-{self.hand_id}",
-            "table": {"max_seats": 6, "big_blind_chips": self.bb},
-            "hero": {"hole": list(self._hero_hole), "position": _POSITIONS[self.hero_seat]},
+            "table": {"max_seats": self.max_seats, "big_blind_chips": self.bb},
+            "hero": {"hole": list(self._hero_hole), "position": self._role(self.hero_seat) or "—"},
             "decisive_opponent": {"seat": dec_seat + 1, "archetype": dec_arch},
             "board": list(rec.board) if rec else [],
             "pot_bb": rec.pot_bb if rec else 0.0,
@@ -256,11 +353,9 @@ class PlaySession:
 
     @property
     def summary(self) -> Optional[dict[str, Any]]:
-        """The assembled coach input for the completed hand (None if no human decision)."""
         return getattr(self, "_summary", None)
 
     def coaching(self, *, client: Any = None, model: str = COACH_MODEL) -> Optional[dict[str, Any]]:
-        """Run the coach on the completed hand (one live call). Cached."""
         if not self.hand.complete:
             raise RuntimeError("hand is not complete yet")
         if self._coaching is not None:

@@ -20,16 +20,31 @@ export interface LegalActions {
   max_raise_to: number
 }
 
-export interface Opponent {
+export interface SeatView {
   seat: number
-  archetype: string
-  style_label: string
+  label: string
+  archetype: string | null
+  role: string // "BTN" | "SB" | "BB" | ""
+  stack_bb: number
+  bet_bb: number
+  folded: boolean
+  is_hero: boolean
+  to_act: boolean
+}
+
+export interface LogEntry {
+  seat: number
+  street: string
+  action: string
+  amount_bb: number
 }
 
 export interface PlayState {
   hand_id: number
   complete: boolean
   hero_seat: number
+  max_seats: number
+  mystery: boolean
   hero_hole: [string, string] | null
   board: string[]
   street: string
@@ -37,7 +52,8 @@ export interface PlayState {
   big_blind: number
   to_call: number
   legal: LegalActions | null
-  opponents: Opponent[]
+  seats: SeatView[]
+  log: LogEntry[]
   coaching: CoachResult | null
 }
 
@@ -75,6 +91,7 @@ export type ActionKind = 'fold' | 'check' | 'call' | 'raise'
 export interface NewHandOptions {
   bots?: string[]
   hero_seat?: number
+  reveal?: boolean
   seed?: number
   stack_bb?: number
 }

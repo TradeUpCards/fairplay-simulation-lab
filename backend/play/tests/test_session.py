@@ -58,6 +58,26 @@ def test_bots_are_deterministic_for_a_seed():
     assert a.summary["decisions"][0]["hero_equity_pct"] == b.summary["decisions"][0]["hero_equity_pct"]
 
 
+def test_state_surfaces_seats_blinds_stacks_and_log():
+    s = PlaySession(seed=7, hand_id=1)
+    st = s.state()
+    assert len(st.seats) == 6
+    assert {'BTN', 'SB', 'BB'} <= {sv.role for sv in st.seats}   # blinds/button
+    assert all(sv.stack_bb > 0 for sv in st.seats)               # stacks visible
+    assert any(sv.is_hero for sv in st.seats)
+    _play_passive(s)
+    assert s.state().log                                         # action log populated
+
+
+def test_variable_player_count_and_mystery():
+    heads_up = PlaySession(bots=['recreational'], seed=1)
+    assert heads_up.max_seats == 2 and len(heads_up.state().seats) == 2
+
+    mystery = PlaySession(bots=['grinder', 'recreational'], reveal=False, seed=2)
+    bots = [sv for sv in mystery.state().seats if not sv.is_hero]
+    assert all(sv.label == 'Unknown' and sv.archetype is None for sv in bots)
+
+
 def test_state_exposes_legal_actions_before_completion():
     session = PlaySession(seed=3, hand_id=1)
     st = session.state()

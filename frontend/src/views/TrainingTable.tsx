@@ -1,21 +1,23 @@
 import { useMemo, useState, type ReactNode } from 'react'
+import pokerTable from '../assets/poker-table.png'
 import {
   BOT_CHOICES,
   playApi,
   type ActionKind,
   type CoachResult,
-  type Opponent,
+  type LegalActions,
+  type LogEntry,
   type PlayEnvelope,
   type PlayState,
+  type SeatView,
 } from '../state/playApi'
 
 /**
- * The training table — a single human at a 6-max No-Limit Hold'em table of
- * configurable bot styles, with AI post-hand coaching. Orthogonal to the
- * FairPlay operator product: this is the *coach*, the same AI architecture
- * pointed at teaching instead of risk. The server (`/api/play`) owns the hand;
- * this view renders state and submits the human's moves, then fetches coaching
- * once the hand completes.
+ * The training table — a single human at a 2-6 handed No-Limit Hold'em table of
+ * configurable bot styles, with AI post-hand coaching. The server (`/api/play`)
+ * owns the hand and reports the table view (per-seat stacks/bets/blinds and the
+ * action log); this view renders it on the same felt the pit-boss uses and submits
+ * the human's moves, then fetches coaching once the hand completes.
  */
 
 const SUITS: Record<string, { glyph: string; red: boolean }> = {
@@ -27,78 +29,126 @@ const SUITS: Record<string, { glyph: string; red: boolean }> = {
 const rankLabel = (r: string) => (r === 'T' ? '10' : r)
 
 function PlayingCard({ card, small }: { card?: string; small?: boolean }) {
-  const dim = small ? 'h-11 w-8 text-[0.95rem]' : 'h-16 w-12 text-[1.3rem]'
+  const dim = small ? 'h-9 w-[1.6rem] text-[0.8rem]' : 'h-16 w-12 text-[1.3rem]'
   if (!card) {
     return (
       <div
-        className={`${dim} rounded-[6px] border border-brass-soft bg-[repeating-linear-gradient(135deg,#2a2114,#2a2114_5px,#1c160c_5px,#1c160c_10px)]`}
+        className={`${dim} rounded-[5px] border border-brass-soft bg-[repeating-linear-gradient(135deg,#2a2114,#2a2114_4px,#1c160c_4px,#1c160c_8px)]`}
         aria-label="hidden card"
       />
     )
   }
-  const r = card[0]
   const s = SUITS[card[1]] ?? { glyph: card[1], red: false }
   return (
     <div
-      className={`${dim} flex flex-col items-center justify-center rounded-[6px] border border-line bg-[#f6f4ee] font-semibold leading-none shadow-[0_2px_6px_rgba(0,0,0,0.35)] ${
+      className={`${dim} flex flex-col items-center justify-center rounded-[5px] border border-line bg-[#f6f4ee] font-semibold leading-none shadow-[0_2px_5px_rgba(0,0,0,0.35)] ${
         s.red ? 'text-[#c8324a]' : 'text-[#15110b]'
       }`}
     >
-      <span>{rankLabel(r)}</span>
+      <span>{rankLabel(card[0])}</span>
       <span className="text-[0.85em]">{s.glyph}</span>
     </div>
   )
 }
 
-// six anchor points around the oval; slot 0 is the hero, bottom-center
-const SLOTS = [
-  { top: '90%', left: '50%' },
-  { top: '72%', left: '12%' },
-  { top: '28%', left: '9%' },
-  { top: '7%', left: '50%' },
-  { top: '28%', left: '91%' },
-  { top: '72%', left: '88%' },
-]
+function Chip({ children, tone }: { children: ReactNode; tone?: 'role' | 'bet' }) {
+  const cls =
+    tone === 'bet'
+      ? 'border-brass-soft bg-[rgba(199,154,75,0.16)] text-brass'
+      : tone === 'role'
+        ? 'border-line bg-[rgba(0,0,0,0.4)] text-[#cfd5e0]'
+        : 'border-brass-soft bg-[rgba(199,154,75,0.1)] text-brass'
+  return (
+    <span className={`rounded-full border px-1.5 py-0.5 font-mono text-[0.58rem] tracking-wider ${cls}`}>
+      {children}
+    </span>
+  )
+}
 
-function Seat({
-  label,
-  sub,
-  cards,
-  active,
-  hero,
-}: {
-  label: string
-  sub?: string
-  cards?: (string | undefined)[]
-  active?: boolean
-  hero?: boolean
-}) {
+// seats evenly around an ellipse, hero at the bottom (slot 0)
+function seatPositions(n: number): { top: string; left: string }[] {
+  return Array.from({ length: n }, (_, i) => {
+    const theta = Math.PI / 2 + (i / n) * Math.PI * 2
+    return { left: `${50 + 44 * Math.cos(theta)}%`, top: `${50 + 40 * Math.sin(theta)}%` }
+  })
+}
+
+function Seat({ sv, heroHole }: { sv: SeatView; heroHole: [string, string] | null }) {
+  const cards: (string | undefined)[] = sv.is_hero
+    ? heroHole ?? [undefined, undefined]
+    : [undefined, undefined]
   return (
     <div
-      className={`flex w-[140px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 rounded-xl border px-2.5 py-2 text-center ${
-        active
-          ? 'border-brass bg-[rgba(199,154,75,0.14)] shadow-[0_0_0_3px_rgba(199,154,75,0.18)]'
-          : 'border-line bg-surface-2/80'
+      className={`flex w-[112px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 ${
+        sv.folded ? 'opacity-40' : ''
       }`}
     >
-      <div className="flex gap-1">
-        {(cards ?? [undefined, undefined]).map((c, i) => (
-          <PlayingCard key={i} card={c} small />
-        ))}
+      {!sv.folded && (
+        <div className="flex gap-0.5">
+          {cards.map((c, i) => (
+            <PlayingCard key={i} card={c} small />
+          ))}
+        </div>
+      )}
+      <div
+        className={`w-full rounded-lg border px-2 py-1 text-center ${
+          sv.to_act
+            ? 'border-brass bg-[rgba(199,154,75,0.16)] shadow-[0_0_0_3px_rgba(199,154,75,0.2)]'
+            : 'border-[#2c3543] bg-[rgba(14,17,22,0.88)]'
+        }`}
+      >
+        <div className="flex items-center justify-center gap-1">
+          <span className={`text-[0.74rem] font-semibold ${sv.is_hero ? 'text-brass' : 'text-text'}`}>
+            {sv.label}
+          </span>
+          {sv.role && <Chip tone="role">{sv.role}</Chip>}
+        </div>
+        <div className="font-mono text-[0.62rem] text-muted">{sv.stack_bb}bb</div>
       </div>
-      <div className="leading-tight">
-        <div className={`text-[0.78rem] font-semibold ${hero ? 'text-brass' : 'text-text'}`}>{label}</div>
-        {sub && <div className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted">{sub}</div>}
-      </div>
+      {sv.bet_bb > 0 && <Chip tone="bet">{sv.bet_bb}bb</Chip>}
     </div>
   )
 }
 
-function Chip({ children }: { children: ReactNode }) {
+function logName(e: LogEntry, seats: SeatView[]): string {
+  const sv = seats.find((s) => s.seat === e.seat)
+  if (sv?.is_hero) return 'You'
+  if (sv && sv.label !== 'Unknown') return sv.label
+  return sv?.role || `Seat ${e.seat + 1}`
+}
+function logVerb(e: LogEntry): string {
+  switch (e.action) {
+    case 'fold':
+      return 'folds'
+    case 'check':
+      return 'checks'
+    case 'call':
+      return `calls ${e.amount_bb}bb`
+    case 'bet':
+      return `bets ${e.amount_bb}bb`
+    case 'raise':
+      return `raises to ${e.amount_bb}bb`
+    default:
+      return e.action
+  }
+}
+
+function ActionLog({ log, seats }: { log: LogEntry[]; seats: SeatView[] }) {
+  if (!log.length) return null
   return (
-    <span className="rounded-full border border-brass-soft bg-[rgba(199,154,75,0.1)] px-2.5 py-0.5 font-mono text-[0.7rem] tracking-wider text-brass">
-      {children}
-    </span>
+    <div className="rounded-xl border border-line bg-surface p-3">
+      <div className="mb-2 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-muted">Hand action</div>
+      <ol className="m-0 flex max-h-[220px] list-none flex-col gap-1 overflow-auto p-0">
+        {log.map((e, i) => (
+          <li key={i} className="flex items-baseline gap-2 text-[0.8rem]">
+            <span className="w-12 font-mono text-[0.58rem] uppercase tracking-wider text-faint">{e.street}</span>
+            <span className="text-text">
+              <span className="font-semibold">{logName(e, seats)}</span> {logVerb(e)}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
   )
 }
 
@@ -107,70 +157,82 @@ function CoachCard({ result }: { result: CoachResult }) {
   if (!c) {
     return (
       <div className="rounded-xl border border-line bg-surface p-4 text-sm text-muted">
-        No coaching available {result.guardrail_violations?.length ? '(guardrail)' : ''}.
+        No coaching {result.guardrail_violations?.length ? '(guardrail)' : 'for this hand'}.
       </div>
     )
   }
   return (
     <div className="rounded-xl border border-brass-soft bg-surface p-4">
-      <div className="mb-1 font-mono text-[0.64rem] uppercase tracking-[0.18em] text-brass">AI Coach</div>
-      <h3 className="m-0 mb-3 text-[1.02rem] font-semibold leading-snug text-text">{c.headline}</h3>
-      <div className="mb-3 rounded-lg border border-line bg-surface-2 p-2.5 text-[0.84rem] text-muted">
+      <div className="mb-1 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-brass">AI Coach</div>
+      <h3 className="m-0 mb-3 text-[1rem] font-semibold leading-snug text-text">{c.headline}</h3>
+      <div className="mb-3 rounded-lg border border-line bg-surface-2 p-2.5 text-[0.82rem] text-muted">
         <span className="font-semibold text-text">Read — {c.opponent_read.style_label}:</span> {c.opponent_read.tell}
       </div>
       <div className="flex flex-col gap-2.5">
         {c.decisions.map((d, i) => (
           <div key={i} className="rounded-lg border border-line bg-surface-2 p-2.5">
-            <div className="mb-1 flex flex-wrap items-center gap-2 text-[0.78rem]">
+            <div className="mb-1 flex flex-wrap items-center gap-2 text-[0.76rem]">
               <Chip>{d.street}</Chip>
               <span className="text-muted">you {d.your_action}</span>
               <span className="font-mono text-faint">equity {d.equity_pct}%</span>
             </div>
-            <div className="text-[0.84rem] text-text">{d.assessment}</div>
-            <div className="mt-1 text-[0.84rem]">
+            <div className="text-[0.82rem] text-text">{d.assessment}</div>
+            <div className="mt-1 text-[0.82rem]">
               <span className="font-semibold text-felt">Better:</span> <span className="text-text">{d.better_line}</span>
             </div>
             <div className="mt-0.5 text-[0.8rem] text-muted">{d.why_vs_this_type}</div>
           </div>
         ))}
       </div>
-      <p className="mt-3 mb-1 text-[0.86rem] text-text">{c.summary}</p>
+      <p className="mt-3 mb-1 text-[0.84rem] text-text">{c.summary}</p>
       <p className="m-0 text-[0.8rem] italic text-muted">{c.coach_note}</p>
-      {result.model && (
-        <div className="mt-2 font-mono text-[0.6rem] uppercase tracking-[0.14em] text-faint">{result.model}</div>
-      )}
     </div>
   )
 }
 
-const DEFAULT_BOTS = ['recreational', 'aggressive_predatory', 'promo_hunter', 'grinder', 'regular']
+const DEFAULT_SLOTS = ['recreational', 'aggressive_predatory', 'promo_hunter', 'grinder', 'regular']
+const ARCHS = BOT_CHOICES.map((c) => c.archetype)
 
 export function TrainingTable() {
-  const [bots, setBots] = useState<string[]>(DEFAULT_BOTS)
-  const [seed, setSeed] = useState<number>(() => 1)
+  const [slots, setSlots] = useState<string[]>(DEFAULT_SLOTS) // '' = empty seat
+  const [mystery, setMystery] = useState(false)
+  const [seed, setSeed] = useState(1)
   const [env, setEnv] = useState<PlayEnvelope | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [coach, setCoach] = useState<CoachResult | null>(null)
   const [coachBusy, setCoachBusy] = useState(false)
-  const [raiseTo, setRaiseTo] = useState<number>(0)
+  const [raiseTo, setRaiseTo] = useState(0)
 
   const st: PlayState | null = env?.state ?? null
   const sid = env?.session_id ?? null
   const bb = st?.big_blind ?? 2
+  const nBots = slots.filter(Boolean).length
 
-  const labelBySeat = useMemo(() => {
-    const m = new Map<number, Opponent>()
-    st?.opponents.forEach((o) => m.set(o.seat - 1, o))
-    return m
-  }, [st])
+  const positions = useMemo(() => (st ? seatPositions(st.max_seats) : []), [st])
+  const slotForSeat = (seat: number) => {
+    if (!st) return 0
+    if (seat === st.hero_seat) return 0
+    const others = Array.from({ length: st.max_seats }, (_, i) => i).filter((s) => s !== st.hero_seat)
+    return 1 + others.indexOf(seat)
+  }
+
+  function primeRaise(state: PlayState) {
+    if (state.legal?.can_raise) {
+      const target = Math.min(
+        state.legal.max_raise_to,
+        Math.max(state.legal.min_raise_to, state.to_call + Math.round(state.pot * 0.66)),
+      )
+      setRaiseTo(target)
+    }
+  }
 
   async function deal() {
     setBusy(true)
     setError(null)
     setCoach(null)
     try {
-      const next = await playApi.newHand({ bots, seed })
+      const next = await playApi.newHand({ bots: slots, reveal: !mystery, seed })
       setEnv(next)
       setSeed((s) => s + 1)
       primeRaise(next.state)
@@ -178,17 +240,6 @@ export function TrainingTable() {
       setError(String((e as Error).message))
     } finally {
       setBusy(false)
-    }
-  }
-
-  function primeRaise(state: PlayState) {
-    if (state.legal?.can_raise) {
-      const pot = state.pot
-      const target = Math.min(
-        state.legal.max_raise_to,
-        Math.max(state.legal.min_raise_to, state.to_call + Math.round(pot * 0.66)),
-      )
-      setRaiseTo(target)
     }
   }
 
@@ -211,8 +262,7 @@ export function TrainingTable() {
   async function fetchCoach(s: string) {
     setCoachBusy(true)
     try {
-      const r = await playApi.coach(s)
-      setCoach(r.coaching)
+      setCoach((await playApi.coach(s)).coaching)
     } catch (e) {
       setError(String((e as Error).message))
     } finally {
@@ -220,7 +270,7 @@ export function TrainingTable() {
     }
   }
 
-  const legal = st?.legal
+  const legal: LegalActions | null = st?.legal ?? null
   const heroTurn = !!st && !st.complete && !!legal
   const bbStr = (chips: number) => `${(chips / bb).toFixed(1)}bb`
 
@@ -229,14 +279,15 @@ export function TrainingTable() {
       <div>
         {/* setup bar */}
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <span className="font-mono text-[0.64rem] uppercase tracking-[0.18em] text-muted">Seat the table</span>
-          {bots.map((b, i) => (
+          <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-muted">Seat</span>
+          {slots.map((b, i) => (
             <select
               key={i}
               value={b}
-              onChange={(e) => setBots((prev) => prev.map((p, j) => (j === i ? e.target.value : p)))}
-              className="rounded-md border border-line bg-surface-2 px-2 py-1 text-[0.78rem] text-text"
+              onChange={(e) => setSlots((prev) => prev.map((p, j) => (j === i ? e.target.value : p)))}
+              className="rounded-md border border-line bg-surface-2 px-2 py-1 text-[0.76rem] text-text"
             >
+              <option value="">— Empty —</option>
               {BOT_CHOICES.map((c) => (
                 <option key={c.archetype} value={c.archetype}>
                   {c.label}
@@ -246,59 +297,64 @@ export function TrainingTable() {
           ))}
           <button
             type="button"
+            onClick={() => setSlots((prev) => prev.map(() => ARCHS[Math.floor(Math.random() * ARCHS.length)]))}
+            className="rounded-md border border-line bg-surface-2 px-2.5 py-1 text-[0.76rem] text-text hover:border-brass-soft"
+          >
+            🎲 Random
+          </button>
+          <label className="flex items-center gap-1.5 text-[0.76rem] text-muted">
+            <input type="checkbox" checked={mystery} onChange={(e) => setMystery(e.target.checked)} className="accent-brass" />
+            Mystery
+          </label>
+          <button
+            type="button"
             onClick={deal}
-            disabled={busy}
-            className="rounded-full border border-brass bg-brass px-4 py-1.5 text-[0.78rem] font-semibold text-[#1a1407] disabled:opacity-50"
+            disabled={busy || nBots === 0}
+            className="ml-auto rounded-full border border-brass bg-brass px-4 py-1.5 text-[0.78rem] font-semibold text-[#1a1407] disabled:opacity-50"
+            title={nBots === 0 ? 'Seat at least one opponent' : undefined}
           >
             {st && !st.complete ? 'New hand' : 'Deal'}
           </button>
         </div>
 
         {/* felt */}
-        <div className="relative mx-auto aspect-[16/11] w-full max-w-[720px]">
-          <div className="absolute inset-[6%] rounded-[48%] border-[6px] border-[#1f3b2c] bg-[radial-gradient(120%_120%_at_50%_30%,#3aa56b,#236c44_60%,#1c5235)] shadow-[inset_0_0_60px_rgba(0,0,0,0.45)]" />
+        <div className="relative mx-auto aspect-4/3 w-full max-w-[680px]">
+          <img
+            className="absolute inset-0 h-full w-full object-contain opacity-[0.92]"
+            src={pokerTable}
+            alt=""
+            aria-hidden="true"
+          />
           {/* board + pot */}
-          <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
+          <div className="absolute left-1/2 top-[46%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
             <div className="flex gap-1.5">
               {(st?.board ?? []).map((c, i) => (
                 <PlayingCard key={i} card={c} />
               ))}
-              {!st && <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-[#0d1f16]">deal to begin</span>}
+              {!st && <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-[#cdd6cf]">deal to begin</span>}
             </div>
             {st && (
-              <span className="rounded-full bg-[rgba(0,0,0,0.35)] px-3 py-0.5 font-mono text-[0.74rem] text-[#f0e6cf]">
+              <span className="rounded-full bg-[rgba(0,0,0,0.42)] px-3 py-0.5 font-mono text-[0.74rem] text-[#f0e6cf]">
                 pot {bbStr(st.pot)}
               </span>
             )}
           </div>
           {/* seats */}
-          {st &&
-            SLOTS.map((pos, slot) => {
-              const seat =
-                slot === 0
-                  ? st.hero_seat
-                  : [0, 1, 2, 3, 4, 5].filter((s) => s !== st.hero_seat)[slot - 1]
-              const isHero = seat === st.hero_seat
-              const opp = labelBySeat.get(seat)
-              return (
-                <div key={slot} className="absolute" style={{ top: pos.top, left: pos.left }}>
-                  <Seat
-                    hero={isHero}
-                    active={isHero && heroTurn}
-                    label={isHero ? 'You' : opp?.style_label ?? `Seat ${seat + 1}`}
-                    sub={isHero ? 'hero' : `seat ${seat + 1}`}
-                    cards={isHero ? st.hero_hole ?? [undefined, undefined] : [undefined, undefined]}
-                  />
-                </div>
-              )
-            })}
+          {st?.seats.map((sv) => {
+            const pos = positions[slotForSeat(sv.seat)]
+            return (
+              <div key={sv.seat} className="absolute" style={pos}>
+                <Seat sv={sv} heroHole={st.hero_hole} />
+              </div>
+            )
+          })}
         </div>
 
         {/* action bar */}
-        <div className="mt-4 min-h-[68px] rounded-xl border border-line bg-surface p-3">
+        <div className="mt-4 min-h-[64px] rounded-xl border border-line bg-surface p-3">
           {error && <div className="mb-2 text-[0.8rem] text-[#e0607a]">{error}</div>}
-          {!st && <div className="text-[0.84rem] text-muted">Pick five styles and deal a hand.</div>}
-          {st && st.complete && (
+          {!st && <div className="text-[0.84rem] text-muted">Seat 1–5 opponents (Empty = fewer players), then deal.</div>}
+          {st?.complete && (
             <div className="text-[0.84rem] text-muted">
               Hand complete{coachBusy ? ' — coaching…' : coach ? '' : ' — fetching coaching…'}
             </div>
@@ -306,10 +362,14 @@ export function TrainingTable() {
           {heroTurn && legal && (
             <div className="flex flex-wrap items-center gap-2">
               {legal.can_fold && (
-                <button onClick={() => act('fold')} disabled={busy} className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[0.8rem] text-text hover:border-brass-soft disabled:opacity-50">Fold</button>
+                <button onClick={() => act('fold')} disabled={busy} className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[0.8rem] text-text hover:border-brass-soft disabled:opacity-50">
+                  Fold
+                </button>
               )}
               {legal.can_check && (
-                <button onClick={() => act('check')} disabled={busy} className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[0.8rem] text-text hover:border-brass-soft disabled:opacity-50">Check</button>
+                <button onClick={() => act('check')} disabled={busy} className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[0.8rem] text-text hover:border-brass-soft disabled:opacity-50">
+                  Check
+                </button>
               )}
               {legal.can_call && (
                 <button onClick={() => act('call')} disabled={busy} className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[0.8rem] text-text hover:border-brass-soft disabled:opacity-50">
@@ -340,8 +400,9 @@ export function TrainingTable() {
         </div>
       </div>
 
-      {/* coaching column */}
-      <aside>
+      {/* right column: action log + coaching */}
+      <aside className="flex flex-col gap-4">
+        {st && <ActionLog log={st.log} seats={st.seats} />}
         {coach ? (
           <CoachCard result={coach} />
         ) : (

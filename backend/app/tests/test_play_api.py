@@ -25,7 +25,9 @@ def test_play_a_full_hand_over_http():
     body = r.json()
     sid, st = body["session_id"], body["state"]
     assert not st["complete"] and st["legal"] is not None
-    assert len(st["opponents"]) == 5
+    assert len(st["seats"]) == 6                          # hero + 5 bots
+    assert any(s["role"] == "BTN" for s in st["seats"])  # blind/button surfaced
+    assert all("stack_bb" in s for s in st["seats"])     # stacks visible
 
     guard = 0
     while not st["complete"] and guard < 200:
@@ -56,3 +58,19 @@ def test_coach_before_complete_is_409():
     c = _client()
     sid = c.post("/api/play/new", json={"seed": 1}).json()["session_id"]
     assert c.post(f"/api/play/{sid}/coach").status_code == 409
+
+
+def test_variable_player_count_and_mystery():
+    c = _client()
+    r = c.post("/api/play/new", json={"bots": ["recreational", "grinder"], "reveal": False, "seed": 3})
+    assert r.status_code == 200
+    st = r.json()["state"]
+    assert st["max_seats"] == 3 and len(st["seats"]) == 3   # hero + 2 bots
+    assert st["mystery"] is True
+    bots = [s for s in st["seats"] if not s["is_hero"]]
+    assert all(s["label"] == "Unknown" and s["archetype"] is None for s in bots)
+
+
+def test_no_bots_is_422():
+    c = _client()
+    assert c.post("/api/play/new", json={"bots": []}).status_code == 422

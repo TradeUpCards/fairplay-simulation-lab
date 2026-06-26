@@ -78,6 +78,48 @@ def _pot_now(state) -> int:
     return pots + bets
 
 
+def _table_view(
+    state,
+    seat_player_ids: list[int],
+    actions: list[ActionRecord],
+    folded: set[int],
+    *,
+    sb_seat: int,
+    bb_seat: int,
+    button_seat: int,
+    bb: int,
+) -> dict:
+    """A renderable snapshot of the table mid-hand: per-seat stacks/bets/folded,
+    the blind+button seats, and the action log so far. This is what lets a human
+    see *who did what* before it's their turn."""
+    n = len(seat_player_ids)
+    pid_to_seat = {pid: i for i, pid in enumerate(seat_player_ids)}
+    bets = state.bets if getattr(state, "bets", None) else [0] * n
+    return {
+        "button_seat": button_seat,
+        "sb_seat": sb_seat,
+        "bb_seat": bb_seat,
+        "seats": [
+            {
+                "seat": s,
+                "stack_bb": round(state.stacks[s] / bb, 1),
+                "bet_bb": round((bets[s] if s < len(bets) else 0) / bb, 1),
+                "folded": s in folded,
+            }
+            for s in range(n)
+        ],
+        "log": [
+            {
+                "seat": pid_to_seat[a.player_id],
+                "street": a.street,
+                "action": a.action,
+                "amount_bb": round(a.amount / bb, 1),
+            }
+            for a in actions
+        ],
+    }
+
+
 def play_hand_steps(
     seat_player_ids: list[int],
     seat_stacks: list[int],
@@ -105,6 +147,14 @@ def play_hand_steps(
     state = NoLimitTexasHoldem.create_state(
         _AUTOMATIONS, True, 0, (sb, bb), bb, tuple(seat_stacks), n
     )
+
+    # Blind/button seats (fixed for the hand) from the posted blinds:
+    # smaller blind = SB, larger = BB, button = the seat right before the SB.
+    blinds = getattr(state, "blinds_or_straddles", None) or ()
+    posted = [i for i, v in enumerate(blinds) if v]
+    sb_seat = posted[0] if posted else 0
+    bb_seat = posted[1] if len(posted) > 1 else sb_seat
+    button_seat = (sb_seat - 1) % n
 
     hole: list[list[str]] = [[] for _ in range(n)]
     for _ in range(2):
@@ -153,7 +203,13 @@ def play_hand_steps(
             member_ids=members_by_player.get(pid, frozenset()),
             weak_opponent=any(o in weak_player_ids for o in live_opp),
         )
-        d = yield (seat, obs)
+        d = yield (
+            seat,
+            obs,
+            _table_view(state, seat_player_ids, actions, folded,
+                        sb_seat=sb_seat, bb_seat=bb_seat,
+                        button_seat=button_seat, bb=bb),
+        )
 
         # Apply through the engine (it enforces legality).
         if d.kind == "fold" and state.can_fold():
@@ -220,9 +276,9 @@ def play_hand(
         members_by_player, weak_player_ids,
     )
     try:
-        seat, obs = next(gen)
+        seat, obs, _ = next(gen)
         while True:
             d = seat_agents[seat].act(obs, rng)
-            seat, obs = gen.send(d)
+            seat, obs, _ = gen.send(d)
     except StopIteration as stop:
         return stop.value

@@ -55,6 +55,7 @@ class InteractiveHand:
         )
         self._pending: Optional[tuple[int, Observation]] = None
         self._record: Optional[HandRecord] = None
+        self._view: Optional[dict] = None
         self._started = False
 
     @property
@@ -70,6 +71,12 @@ class InteractiveHand:
     def pending_observation(self) -> Optional[Observation]:
         """The human's current Observation (their turn to act), or None."""
         return self._pending[1] if self._pending else None
+
+    @property
+    def view(self) -> Optional[dict]:
+        """The latest renderable table snapshot (per-seat stacks/bets/folded,
+        blind+button seats, action log) — what to show the human."""
+        return self._view
 
     def start(self) -> Optional[Observation]:
         """Begin the hand and run bots until the human must act or the hand ends.
@@ -100,9 +107,10 @@ class InteractiveHand:
         return self._drive(seat_obs)
 
     def _drive(self, seat_obs) -> Optional[Observation]:
-        """Run bot seats until the human is on the button or the hand ends."""
+        """Run bot seats until the human must act or the hand ends."""
         while True:
-            seat, obs = seat_obs
+            seat, obs, view = seat_obs
+            self._view = view
             if seat == self.human_seat:
                 self._pending = (seat, obs)
                 return obs

@@ -28,8 +28,9 @@ _VALID_ACTIONS = {"fold", "check", "call", "raise"}
 
 
 class NewBody(BaseModel):
-    bots: Optional[list[str]] = None      # 5 archetype names; default mix if omitted
+    bots: Optional[list[str]] = None      # 1-5 archetypes (empty entries dropped); default mix
     hero_seat: int = 2
+    reveal: bool = True                   # False = "mystery": opponent styles hidden
     seed: int = 0
     stack_bb: int = 100
 
@@ -54,7 +55,7 @@ def _get(sid: str) -> PlaySession:
 def new_hand(body: NewBody) -> dict:
     try:
         session = PlaySession(
-            hero_seat=body.hero_seat, bots=body.bots,
+            hero_seat=body.hero_seat, bots=body.bots, reveal=body.reveal,
             seed=body.seed, stack_bb=body.stack_bb,
         )
     except ValueError as e:
