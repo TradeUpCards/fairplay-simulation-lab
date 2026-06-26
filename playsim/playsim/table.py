@@ -129,6 +129,7 @@ def play_hand_steps(
     hand_id: int,
     members_by_player: dict[int, frozenset[int]],
     weak_player_ids: frozenset[int],
+    button_seat: int | None = None,
 ):
     """The hand loop as a pausable generator.
 
@@ -144,17 +145,23 @@ def play_hand_steps(
     rng.shuffle(deck)
     it = iter(deck)
 
-    state = NoLimitTexasHoldem.create_state(
-        _AUTOMATIONS, True, 0, (sb, bb), bb, tuple(seat_stacks), n
-    )
+    # Place the blinds relative to a (rotating) button, so players keep their seats
+    # and only the button/blinds move between hands. Default button = last seat,
+    # which reproduces the original blinds-at-(0,1) behaviour exactly.
+    if button_seat is None:
+        button_seat = n - 1
+    button_seat %= n
+    if n == 2:
+        sb_seat, bb_seat = button_seat, (button_seat + 1) % n
+    else:
+        sb_seat, bb_seat = (button_seat + 1) % n, (button_seat + 2) % n
+    blind_tuple = [0] * n
+    blind_tuple[sb_seat] = sb
+    blind_tuple[bb_seat] = bb
 
-    # Blind/button seats (fixed for the hand) from the posted blinds:
-    # smaller blind = SB, larger = BB, button = the seat right before the SB.
-    blinds = getattr(state, "blinds_or_straddles", None) or ()
-    posted = [i for i, v in enumerate(blinds) if v]
-    sb_seat = posted[0] if posted else 0
-    bb_seat = posted[1] if len(posted) > 1 else sb_seat
-    button_seat = (sb_seat - 1) % n
+    state = NoLimitTexasHoldem.create_state(
+        _AUTOMATIONS, True, 0, tuple(blind_tuple), bb, tuple(seat_stacks), n
+    )
 
     hole: list[list[str]] = [[] for _ in range(n)]
     for _ in range(2):

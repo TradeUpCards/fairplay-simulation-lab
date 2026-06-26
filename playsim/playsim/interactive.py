@@ -45,13 +45,14 @@ class InteractiveHand:
         hand_id: int,
         members_by_player: dict[int, frozenset[int]],
         weak_player_ids: frozenset[int],
+        button_seat: int | None = None,
     ):
         self.human_seat = human_seat
         self.seat_agents = seat_agents
         self.rng = rng
         self._gen = play_hand_steps(
             seat_player_ids, seat_stacks, sb, bb, rng, hand_id,
-            members_by_player, weak_player_ids,
+            members_by_player, weak_player_ids, button_seat=button_seat,
         )
         self._pending: Optional[tuple[int, Observation]] = None
         self._record: Optional[HandRecord] = None

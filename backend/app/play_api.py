@@ -29,8 +29,9 @@ _VALID_ACTIONS = {"fold", "check", "call", "raise"}
 
 class NewBody(BaseModel):
     bots: Optional[list[str]] = None      # 1-5 archetypes (empty entries dropped); default mix
-    hero_seat: int = 2
+    hero_seat: int = 2                    # the human's fixed seat (players don't move)
     reveal: bool = True                   # False = "mystery": opponent styles hidden
+    button_seat: Optional[int] = None     # rotates the dealer button between hands
     seed: int = 0
     stack_bb: int = 100
 
@@ -56,7 +57,7 @@ def new_hand(body: NewBody) -> dict:
     try:
         session = PlaySession(
             hero_seat=body.hero_seat, bots=body.bots, reveal=body.reveal,
-            seed=body.seed, stack_bb=body.stack_bb,
+            button_seat=body.button_seat, seed=body.seed, stack_bb=body.stack_bb,
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))

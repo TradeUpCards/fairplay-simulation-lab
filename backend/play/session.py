@@ -122,6 +122,7 @@ class PlaySession:
         hero_seat: int = 2,
         bots: Optional[list[str]] = None,
         reveal: bool = True,
+        button_seat: Optional[int] = None,
         stack_bb: int = 100,
         sb: int = 1,
         bb: int = 2,
@@ -169,6 +170,7 @@ class PlaySession:
             seat_player_ids=self.seat_player_ids, seat_stacks=stacks,
             sb=sb, bb=bb, rng=self.rng, hand_id=hand_id,
             members_by_player={}, weak_player_ids=frozenset(),
+            button_seat=None if button_seat is None else button_seat % n,
         )
         self._decisions: list[_HeroDecision] = []
         self._hero_hole: Optional[tuple[str, str]] = None

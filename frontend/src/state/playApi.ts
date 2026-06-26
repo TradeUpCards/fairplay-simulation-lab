@@ -95,6 +95,7 @@ export interface NewHandOptions {
   bots?: string[]
   hero_seat?: number
   reveal?: boolean
+  button_seat?: number
   seed?: number
   stack_bb?: number
 }

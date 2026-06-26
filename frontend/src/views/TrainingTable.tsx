@@ -347,7 +347,9 @@ export function TrainingTable() {
         bots: slots,
         reveal: !mystery,
         seed,
-        hero_seat: (nSeats - (handNum % nSeats)) % nSeats, // rotate the button clockwise
+        // the human keeps a fixed seat (players don't move); rotate the dealer
+        // button clockwise between hands, so only positions change.
+        button_seat: handNum % nSeats,
       })
       setEnv(next)
       setSeed((s) => s + 1)
