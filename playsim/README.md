@@ -69,6 +69,7 @@ docker compose run --rm playsim population \
 | `health --table T` | play a table out (persistent stacks) and score its health |
 | `population` | simulate `data/players.json` + `data/table_roster.json` into playsim-native hand JSON |
 | `large-room-fixture` | generate a playsim-only 50-table / 1000-player data root for room-economics experiments |
+| `large-room-sweep` | generate/reuse the large-room fixture, compare policy arms, and write JSON/Markdown results |
 | `replay --table T` | re-run a seed twice and assert byte-identical (determinism) |
 | `calibrate` | tune `postflop_aggression` until realized AF ≈ targets |
 | `tables` | list demo tables and archetypes |
@@ -163,6 +164,19 @@ python -m playsim.cli room-sim \
   --behavior formation-aware \
   --liveness \
   --out-dir out/large-room-run
+```
+
+For a repeatable large-room policy comparison, prefer:
+
+```bash
+python -m playsim.cli large-room-sweep \
+  --fixture-out out/large-room-data \
+  --regenerate-fixture \
+  --seeds 42,7,99 \
+  --arrival-rates 40 \
+  --horizon 480 \
+  --out-json out/large-room-sweep.json \
+  --out-md out/large-room-sweep.md
 ```
 
 `fixture-once` remains the historical small-fixture replay mode. For large-room

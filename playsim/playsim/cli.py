@@ -196,6 +196,62 @@ def _large_room_fixture(args) -> int:
     return 0
 
 
+def _large_room_sweep(args) -> int:
+    from .large_room_sweep import run_large_room_sweep, write_sweep_outputs
+
+    data_root = Path(args.data_root or args.fixture_out)
+    seeds = [int(s) for s in args.seeds.split(",")]
+    rates = [float(r) for r in args.arrival_rates.split(",")]
+    policies = tuple(p.strip() for p in args.policies.split(",") if p.strip())
+    payload = run_large_room_sweep(
+        data_root=data_root,
+        fixture_seed=args.fixture_seed,
+        seeds=seeds,
+        arrival_rates_per_hour=rates,
+        horizon_min=args.horizon,
+        equity_samples=args.samples,
+        policies=policies,
+        behavior=args.behavior,
+        formation_mode=args.formation_mode,
+        players=args.players,
+        tables=args.tables,
+        active_tables=args.active_tables,
+        max_seats=args.max_seats,
+        start_fill_min=args.start_fill_min,
+        start_fill_max=args.start_fill_max,
+        regenerate_fixture=args.regenerate_fixture,
+    )
+    json_path = Path(args.out_json) if args.out_json else None
+    markdown_path = Path(args.out_md) if args.out_md else None
+    write_sweep_outputs(payload, json_path=json_path, markdown_path=markdown_path)
+
+    print(
+        f"\n  large-room sweep   data_root={data_root}   "
+        f"seeds={seeds}   rates={rates}   horizon={args.horizon}min\n"
+    )
+    print(
+        f"  {'arrival/hr':>10} {'policy':20} {'seat_hrs':>10} "
+        f"{'vuln_hrs':>10} {'breaks':>8} {'wait':>8} {'forming':>9} {'active':>8}"
+    )
+    print("  " + "-" * 94)
+    for row in payload["summary"]:
+        print(
+            f"  {row['arrival_rate_per_hour']:>10.1f} {row['policy']:20} "
+            f"{row['total_paid_seat_hours_mean']:>10.2f} "
+            f"{row['vulnerable_paid_seat_hours_mean']:>10.2f} "
+            f"{row['break_count_mean']:>8.1f} "
+            f"{row['wait_balk_count_mean']:>8.1f} "
+            f"{row['forming_seat_count_mean']:>9.1f} "
+            f"{row['final_active_tables_mean']:>8.1f}"
+        )
+    if json_path:
+        print(f"\n  wrote {json_path}")
+    if markdown_path:
+        print(f"  wrote {markdown_path}")
+    print()
+    return 0
+
+
 def _room_sim(args) -> int:
     from .service import simulate_room
 
@@ -325,6 +381,37 @@ def main(argv=None) -> int:
     lrf.add_argument("--start-fill-min", type=int, default=4)
     lrf.add_argument("--start-fill-max", type=int, default=6)
     lrf.set_defaults(fn=_large_room_fixture)
+
+    lrs = sub.add_parser(
+        "large-room-sweep",
+        help="generate/reuse the large-room fixture and compare room-economics policies",
+    )
+    lrs.add_argument("--data-root", help="existing/generated data root; defaults to --fixture-out")
+    lrs.add_argument("--fixture-out", default="out/large-room-data",
+                     help="generated fixture directory when --data-root is omitted")
+    lrs.add_argument("--regenerate-fixture", action="store_true",
+                     help="overwrite fixture files from the deterministic generator")
+    lrs.add_argument("--fixture-seed", type=int, default=42)
+    lrs.add_argument("--seeds", default="42,7,99", help="comma-separated simulation seeds")
+    lrs.add_argument("--arrival-rates", default="40",
+                     help="comma-separated continuous arrival rates per hour")
+    lrs.add_argument("--horizon", type=float, default=480.0,
+                     help="horizon in minutes (default 480 = 8h)")
+    lrs.add_argument("--samples", type=int, default=6, help="Monte-Carlo equity samples")
+    lrs.add_argument("--policies", default="standard,fairplay,fairplay_liveness",
+                     help="comma-separated policy arms")
+    lrs.add_argument("--behavior", choices=["default", "fit-aware", "reason-aware", "formation-aware"],
+                     default="formation-aware")
+    lrs.add_argument("--formation-mode", choices=["none", "forming"], default="forming")
+    lrs.add_argument("--players", type=int, default=1000)
+    lrs.add_argument("--tables", type=int, default=50)
+    lrs.add_argument("--active-tables", type=int, default=35)
+    lrs.add_argument("--max-seats", type=int, default=6)
+    lrs.add_argument("--start-fill-min", type=int, default=4)
+    lrs.add_argument("--start-fill-max", type=int, default=6)
+    lrs.add_argument("--out-json", default="out/large-room-sweep.json")
+    lrs.add_argument("--out-md", default="out/large-room-sweep.md")
+    lrs.set_defaults(fn=_large_room_sweep)
 
     rs = sub.add_parser(
         "room-sim",
