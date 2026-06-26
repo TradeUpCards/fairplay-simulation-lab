@@ -520,18 +520,24 @@ export function TrainingTable() {
 
       </div>
 
-      {/* right column: AI coach, then the hand action log; the whole column scrolls */}
-      <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto">
-        {coach ? (
-          <CoachCard result={coach} />
-        ) : st?.complete && st.review ? (
-          <ReviewCard review={st.review} busy={coachBusy} />
-        ) : (
-          <div className="rounded-xl border border-dashed border-line bg-surface-2 p-4 text-[0.84rem] text-muted">
-            Play a hand to the end and the AI coach reviews your decisions against the opponents’ specific leaks.
+      {/* right column: AI coach and hand action, each with its OWN scroll */}
+      <aside className="flex min-h-0 flex-col gap-4">
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {coach ? (
+            <CoachCard result={coach} />
+          ) : st?.complete && st.review ? (
+            <ReviewCard review={st.review} busy={coachBusy} />
+          ) : (
+            <div className="rounded-xl border border-dashed border-line bg-surface-2 p-4 text-[0.84rem] text-muted">
+              Play a hand to the end and the AI coach reviews your decisions against the opponents’ specific leaks.
+            </div>
+          )}
+        </div>
+        {st && st.log.length > 0 && (
+          <div className="max-h-[14rem] shrink-0 overflow-y-auto">
+            <ActionLog log={st.log} seats={st.seats} />
           </div>
         )}
-        {st && st.log.length > 0 && <ActionLog log={st.log} seats={st.seats} />}
       </aside>
     </div>
   )
