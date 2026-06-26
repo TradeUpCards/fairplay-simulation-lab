@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import pokerTable from '../assets/poker-table.png'
 import {
   BOT_CHOICES,
@@ -33,12 +33,15 @@ const SUITS: Record<string, { glyph: string; red: boolean }> = {
 }
 const rankLabel = (r: string) => (r === 'T' ? '10' : r)
 
-function PlayingCard({ card, small }: { card?: string; small?: boolean }) {
+function PlayingCard({ card, small, dealt }: { card?: string; small?: boolean; dealt?: boolean }) {
   const dim = small ? 'h-12 w-9 text-[1rem]' : 'h-20 w-14 text-[1.7rem]'
+  // `dealt` cards play the deal-in keyframe once on mount — board cards pass it, so
+  // each street visibly drops onto the felt as it is dealt.
+  const anim = dealt ? 'animate-deal-in' : ''
   if (!card) {
     return (
       <div
-        className={`${dim} rounded-[5px] border border-brass-soft bg-[repeating-linear-gradient(135deg,#2a2114,#2a2114_4px,#1c160c_4px,#1c160c_8px)]`}
+        className={`${dim} ${anim} rounded-[5px] border border-brass-soft bg-[repeating-linear-gradient(135deg,#2a2114,#2a2114_4px,#1c160c_4px,#1c160c_8px)]`}
         aria-label="hidden card"
       />
     )
@@ -46,12 +49,46 @@ function PlayingCard({ card, small }: { card?: string; small?: boolean }) {
   const s = SUITS[card[1]] ?? { glyph: card[1], red: false }
   return (
     <div
-      className={`${dim} flex flex-col items-center justify-center rounded-[5px] border border-line bg-[#f6f4ee] font-semibold leading-none shadow-[0_2px_5px_rgba(0,0,0,0.35)] ${
+      className={`${dim} ${anim} flex flex-col items-center justify-center rounded-[5px] border border-line bg-[#f6f4ee] font-semibold leading-none shadow-[0_2px_5px_rgba(0,0,0,0.35)] ${
         s.red ? 'text-[#c8324a]' : 'text-[#15110b]'
       }`}
     >
       <span>{rankLabel(card[0])}</span>
       <span className="text-[0.85em]">{s.glyph}</span>
+    </div>
+  )
+}
+
+// Deterministic per-seat avatar: an archetype glyph on a hue derived from the label,
+// so a given opponent looks the same all session. In Mystery mode the archetype is
+// hidden (null), so unknown opponents share a neutral face.
+const ARCH_AVATAR: Record<string, string> = {
+  recreational: '🐟',
+  aggressive_predatory: '🔥',
+  promo_hunter: '🪨',
+  grinder: '⚙️',
+  regular: '🎯',
+  solver_like: '🤖',
+  new: '🌱',
+}
+function hashHue(s: string): number {
+  let h = 0
+  for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) % 360
+  return h
+}
+function Avatar({ sv }: { sv: SeatView }) {
+  const emoji = sv.is_hero ? '🧑' : (ARCH_AVATAR[sv.archetype ?? ''] ?? '🎭')
+  const hue = hashHue(sv.label)
+  return (
+    <div
+      className="grid h-8 w-8 shrink-0 place-items-center rounded-full border text-[1.02rem] leading-none"
+      style={{
+        borderColor: sv.is_hero ? 'var(--color-brass)' : '#2c3543',
+        background: `radial-gradient(circle at 30% 25%, hsl(${hue} 42% 34%), hsl(${hue} 44% 17%))`,
+      }}
+      aria-hidden="true"
+    >
+      {emoji}
     </div>
   )
 }
@@ -85,14 +122,15 @@ function Seat({ sv }: { sv: SeatView }) {
   // backs while an opponent is still in the hand; nothing once folded.
   const showCards = sv.hole !== null || !sv.folded
   const cards: (string | undefined)[] = sv.hole ?? [undefined, undefined]
+  // Active player breathes a brass ring; winner gets a steady felt ring.
   const boxTone = sv.won
-    ? 'border-felt bg-[rgba(47,143,91,0.18)] shadow-[0_0_0_3px_rgba(47,143,91,0.22)]'
+    ? 'border-felt bg-[rgba(47,143,91,0.2)] shadow-[0_0_0_3px_rgba(47,143,91,0.22)]'
     : sv.to_act
-      ? 'border-brass bg-[rgba(199,154,75,0.16)] shadow-[0_0_0_3px_rgba(199,154,75,0.2)]'
-      : 'border-[#2c3543] bg-[rgba(14,17,22,0.88)]'
+      ? 'border-brass bg-[rgba(199,154,75,0.18)] animate-turn-pulse'
+      : 'border-[#2c3543] bg-[rgba(14,17,22,0.9)]'
   return (
     <div
-      className={`flex w-[112px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 ${
+      className={`flex w-[126px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 ${
         sv.folded ? 'opacity-40' : ''
       }`}
     >
@@ -103,15 +141,21 @@ function Seat({ sv }: { sv: SeatView }) {
           ))}
         </div>
       )}
-      <div className={`w-full rounded-lg border px-2 py-1 text-center ${boxTone}`}>
-        <div className="flex items-center justify-center gap-1">
-          <span className={`text-[0.74rem] font-semibold ${sv.is_hero ? 'text-brass' : 'text-text'}`}>
-            {sv.label}
-          </span>
-          {sv.role && <Chip tone="role">{sv.role}</Chip>}
-          {sv.won && <Chip tone="bet">won</Chip>}
+      <div className={`flex w-full items-center gap-1.5 rounded-lg border px-1.5 py-1 ${boxTone}`}>
+        <Avatar sv={sv} />
+        <div className="min-w-0 flex-1 text-left">
+          <div className="flex items-center gap-1">
+            <span
+              className={`truncate text-[0.72rem] font-semibold ${sv.is_hero ? 'text-brass' : 'text-text'}`}
+            >
+              {sv.label}
+            </span>
+            {sv.role && <Chip tone="role">{sv.role}</Chip>}
+          </div>
+          <div className="font-mono text-[0.62rem] text-muted">
+            {sv.stack_bb}bb{sv.won && <span className="text-felt"> · won</span>}
+          </div>
         </div>
-        <div className="font-mono text-[0.62rem] text-muted">{sv.stack_bb}bb</div>
       </div>
       {sv.bet_bb > 0 && <Chip tone="bet">{sv.bet_bb}bb</Chip>}
     </div>
@@ -296,13 +340,13 @@ function ReviewCoachCard({
 }
 
 const FOLD_BTN =
-  'rounded-md border px-4 py-1.5 text-[0.82rem] font-medium border-[#6b3a44] bg-[rgba(176,69,90,0.16)] text-[#e69aa8] hover:border-[#b3455a] disabled:opacity-50'
+  'rounded-lg border px-4 py-2.5 text-[0.9rem] font-semibold border-[#6b3a44] bg-[rgba(176,69,90,0.18)] text-[#e69aa8] hover:border-[#b3455a] hover:bg-[rgba(176,69,90,0.26)] disabled:opacity-50'
 const CALL_BTN =
-  'rounded-md border px-4 py-1.5 text-[0.82rem] font-medium border-line bg-surface-2 text-text hover:border-brass-soft disabled:opacity-50'
+  'rounded-lg border px-4 py-2.5 text-[0.9rem] font-semibold border-line bg-surface-2 text-text hover:border-brass-soft hover:bg-[rgba(199,154,75,0.08)] disabled:opacity-50'
 const RAISE_BTN =
-  'rounded-md border px-4 py-1.5 text-[0.82rem] font-semibold border-brass bg-brass text-[#1a1407] hover:brightness-110 disabled:opacity-50'
+  'rounded-lg border px-4 py-2.5 text-[0.9rem] font-semibold border-brass bg-brass text-[#1a1407] hover:brightness-110 disabled:opacity-50'
 const SIZE_BTN =
-  'rounded-md border border-line bg-surface-2 px-2.5 py-1 text-[0.72rem] text-muted hover:border-brass-soft hover:text-text'
+  'rounded-md border border-line bg-surface px-2.5 py-1 text-[0.72rem] font-medium text-muted hover:border-brass-soft hover:text-brass'
 
 /** The betting interface: distinct action buttons + quick pot-sizes + a typed
  * bet-amount field (in bb) synced to a slider. Remounted per decision (via `key`)
@@ -331,53 +375,15 @@ function ActionBar({
   const sizeTo = (frac: number) => setRaiseTo(clamp(toCall + pot * frac))
 
   return (
-    <div className="flex flex-col gap-2.5">
-      <div className="flex flex-wrap items-center gap-2">
-        {legal.can_fold && (
-          <button className={FOLD_BTN} onClick={() => onAct('fold')} disabled={busy}>
-            Fold
-          </button>
-        )}
-        {legal.can_check && (
-          <button className={CALL_BTN} onClick={() => onAct('check')} disabled={busy}>
-            Check
-          </button>
-        )}
-        {legal.can_call && (
-          <button className={CALL_BTN} onClick={() => onAct('call')} disabled={busy}>
-            Call {bbStr(legal.call_chips)}
-          </button>
-        )}
-        {legal.can_raise && (
-          <button className={`${RAISE_BTN} ml-auto`} onClick={() => onAct('raise', raiseTo)} disabled={busy}>
-            {facing ? 'Raise to' : 'Bet'} {bbStr(raiseTo)}
-          </button>
-        )}
-      </div>
+    <div className="flex flex-col gap-3">
+      {/* sizing block — prominent bet amount, full-width slider, quick sizes */}
       {legal.can_raise && (
-        <div className="flex flex-wrap items-center gap-2">
-          <button className={SIZE_BTN} onClick={() => sizeTo(0.5)}>
-            ½ pot
-          </button>
-          <button className={SIZE_BTN} onClick={() => sizeTo(0.75)}>
-            ¾ pot
-          </button>
-          <button className={SIZE_BTN} onClick={() => sizeTo(1)}>
-            Pot
-          </button>
-          <button className={SIZE_BTN} onClick={() => setRaiseTo(legal.max_raise_to)}>
-            All-in
-          </button>
-          <div className="ml-auto flex items-center gap-2">
-            <input
-              type="range"
-              min={legal.min_raise_to}
-              max={legal.max_raise_to}
-              value={raiseTo}
-              onChange={(e) => setRaiseTo(Number(e.target.value))}
-              className="w-32 accent-brass"
-            />
-            <div className="flex items-center gap-1">
+        <div className="rounded-lg border border-line bg-surface-2 p-2.5">
+          <div className="mb-2 flex items-baseline justify-between">
+            <span className="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-muted">
+              {facing ? 'Raise to' : 'Bet'}
+            </span>
+            <div className="flex items-baseline gap-1">
               <input
                 type="number"
                 step={0.5}
@@ -385,18 +391,87 @@ function ActionBar({
                 max={Number((legal.max_raise_to / bb).toFixed(1))}
                 value={Number((raiseTo / bb).toFixed(1))}
                 onChange={(e) => setRaiseTo(clamp(Number(e.target.value) * bb))}
-                className="w-[4.5rem] rounded-md border border-line bg-surface-2 px-2 py-1 text-right text-[0.8rem] text-text"
+                className="w-[4.5rem] rounded-md border border-line bg-surface px-2 py-0.5 text-right text-[1rem] font-semibold text-brass"
               />
               <span className="font-mono text-[0.7rem] text-muted">bb</span>
             </div>
           </div>
+          <input
+            type="range"
+            min={legal.min_raise_to}
+            max={legal.max_raise_to}
+            value={raiseTo}
+            onChange={(e) => setRaiseTo(Number(e.target.value))}
+            className="mb-2 w-full accent-brass"
+          />
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button className={SIZE_BTN} onClick={() => sizeTo(0.5)}>
+              ½ pot
+            </button>
+            <button className={SIZE_BTN} onClick={() => sizeTo(0.75)}>
+              ¾ pot
+            </button>
+            <button className={SIZE_BTN} onClick={() => sizeTo(1)}>
+              Pot
+            </button>
+            <button className={SIZE_BTN} onClick={() => setRaiseTo(legal.max_raise_to)}>
+              All-in
+            </button>
+            <span className="ml-auto font-mono text-[0.58rem] tracking-wider text-faint">
+              min {bbStr(legal.min_raise_to)} · max {bbStr(legal.max_raise_to)}
+            </span>
+          </div>
         </div>
       )}
-      {legal.can_raise && (
-        <div className="font-mono text-[0.6rem] tracking-wider text-faint">
-          min {bbStr(legal.min_raise_to)} · max {bbStr(legal.max_raise_to)} (all-in)
-        </div>
-      )}
+      {/* action buttons — fill the bar; the aggressive action is the brass primary */}
+      <div className="flex items-stretch gap-2">
+        {legal.can_fold && (
+          <button className={`${FOLD_BTN} flex-1`} onClick={() => onAct('fold')} disabled={busy}>
+            Fold
+          </button>
+        )}
+        {legal.can_check && (
+          <button className={`${CALL_BTN} flex-1`} onClick={() => onAct('check')} disabled={busy}>
+            Check
+          </button>
+        )}
+        {legal.can_call && (
+          <button className={`${CALL_BTN} flex-1`} onClick={() => onAct('call')} disabled={busy}>
+            Call {bbStr(legal.call_chips)}
+          </button>
+        )}
+        {legal.can_raise && (
+          <button
+            className={`${RAISE_BTN} flex-[1.4]`}
+            onClick={() => onAct('raise', raiseTo)}
+            disabled={busy}
+          >
+            {facing ? 'Raise to' : 'Bet'} {bbStr(raiseTo)}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// The hero's decision timer. When it runs out we auto-check (free) or auto-fold —
+// generous so it never rushes a thinking player, but it keeps a walked-away table moving.
+const CLOCK_SECONDS = 30
+
+function ActionClock({ left, total }: { left: number; total: number }) {
+  const pct = Math.max(0, Math.min(100, (left / total) * 100))
+  const low = left <= 10
+  return (
+    <div className="mb-2 flex items-center gap-2">
+      <span className={`font-mono text-[0.7rem] tabular-nums ${low ? 'text-[#e0607a]' : 'text-muted'}`}>
+        ⏱ {Math.ceil(left)}s
+      </span>
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2">
+        <div
+          className={`h-full rounded-full transition-[width] duration-100 ease-linear ${low ? 'bg-[#b0455a]' : 'bg-brass'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
     </div>
   )
 }
@@ -523,9 +598,33 @@ export function TrainingTable() {
   const heroTurn = !!st && !st.complete && !!legal
   const bbStr = (chips: number) => `${(chips / bb).toFixed(1)}bb`
 
+  // Action clock: count down per hero decision; on expiry auto-check (if free) or fold.
+  // Latest `act`/`legal` go through refs so the interval effect only restarts when the
+  // actual decision changes — not on every render.
+  const [clockLeft, setClockLeft] = useState(CLOCK_SECONDS)
+  const actRef = useRef(act)
+  const legalRef = useRef(legal)
+  actRef.current = act
+  legalRef.current = legal
+  const decisionKey = heroTurn && st ? `${st.hand_id}|${st.street}|${st.pot}|${st.to_call}` : null
+  useEffect(() => {
+    if (!decisionKey) return
+    setClockLeft(CLOCK_SECONDS)
+    const started = performance.now()
+    const id = window.setInterval(() => {
+      const left = Math.max(0, CLOCK_SECONDS - (performance.now() - started) / 1000)
+      setClockLeft(left)
+      if (left <= 0) {
+        window.clearInterval(id)
+        actRef.current(legalRef.current?.can_check ? 'check' : 'fold')
+      }
+    }, 100)
+    return () => window.clearInterval(id)
+  }, [decisionKey])
+
   return (
     <>
-      <div className="grid h-full grid-cols-1 gap-6 overflow-hidden lg:grid-cols-[1fr_360px]">
+      <div className="grid h-full min-h-0 grid-cols-1 gap-6 overflow-y-auto lg:grid-cols-[1fr_360px] lg:overflow-hidden">
       <div className="flex min-h-0 flex-col">
         {/* setup bar */}
         <div className="mb-4 flex shrink-0 flex-wrap items-center gap-2">
@@ -583,7 +682,7 @@ export function TrainingTable() {
           <div className="absolute left-1/2 top-[46%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
             <div className="flex gap-1.5">
               {(st?.board ?? []).map((c, i) => (
-                <PlayingCard key={i} card={c} />
+                <PlayingCard key={`${st?.hand_id}-${i}`} card={c} dealt />
               ))}
               {!st && <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-[#cdd6cf]">deal to begin</span>}
             </div>
@@ -621,15 +720,18 @@ export function TrainingTable() {
             </div>
           )}
           {heroTurn && legal && st && (
-            <ActionBar
-              key={`${st.hand_id}-${st.street}-${st.pot}-${st.to_call}`}
-              legal={legal}
-              pot={st.pot}
-              toCall={st.to_call}
-              bb={bb}
-              busy={busy}
-              onAct={act}
-            />
+            <>
+              <ActionClock left={clockLeft} total={CLOCK_SECONDS} />
+              <ActionBar
+                key={`${st.hand_id}-${st.street}-${st.pot}-${st.to_call}`}
+                legal={legal}
+                pot={st.pot}
+                toCall={st.to_call}
+                bb={bb}
+                busy={busy}
+                onAct={act}
+              />
+            </>
           )}
         </div>
 
@@ -637,7 +739,7 @@ export function TrainingTable() {
 
       {/* right column: AI coach and hand action, each with its OWN scroll */}
       <aside className="flex min-h-0 flex-col gap-4">
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 overflow-y-auto lg:flex-1">
           {st?.complete && (st.review || coach || partial) ? (
             // One card: the grounded review paints instantly and stays put; the AI coach
             // streams its verdicts/reasoning INTO those same rows (no overwrite/swap).
