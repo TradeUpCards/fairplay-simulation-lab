@@ -34,7 +34,7 @@ const SUITS: Record<string, { glyph: string; red: boolean }> = {
 const rankLabel = (r: string) => (r === 'T' ? '10' : r)
 
 function PlayingCard({ card, small, dealt }: { card?: string; small?: boolean; dealt?: boolean }) {
-  const dim = small ? 'h-12 w-9 text-[1rem]' : 'h-20 w-14 text-[1.7rem]'
+  const dim = small ? 'h-14 w-10 text-[1.15rem]' : 'h-20 w-14 text-[1.7rem]'
   // `dealt` cards play the deal-in keyframe once on mount — board cards pass it, so
   // each street visibly drops onto the felt as it is dealt.
   const anim = dealt ? 'animate-deal-in' : ''
@@ -81,7 +81,7 @@ function Avatar({ sv }: { sv: SeatView }) {
   const hue = hashHue(sv.label)
   return (
     <div
-      className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 text-[1.12rem] leading-none shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 text-[1.35rem] leading-none shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
       style={{
         borderColor: sv.is_hero ? 'var(--color-brass)' : '#3a4555',
         background: `radial-gradient(circle at 30% 25%, hsl(${hue} 42% 36%), hsl(${hue} 46% 15%))`,
@@ -130,7 +130,7 @@ function Seat({ sv }: { sv: SeatView }) {
       : 'border-[#2c3543] bg-[rgba(14,17,22,0.9)]'
   return (
     <div
-      className={`flex w-[126px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 ${
+      className={`flex w-[150px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 ${
         sv.folded ? 'opacity-40' : ''
       }`}
     >
@@ -146,13 +146,13 @@ function Seat({ sv }: { sv: SeatView }) {
         <div className="min-w-0 flex-1 text-left">
           <div className="flex items-center gap-1">
             <span
-              className={`truncate text-[0.72rem] font-semibold ${sv.is_hero ? 'text-brass' : 'text-text'}`}
+              className={`truncate text-[0.8rem] font-semibold ${sv.is_hero ? 'text-brass' : 'text-text'}`}
             >
               {sv.label}
             </span>
             {sv.role && <Chip tone="role">{sv.role}</Chip>}
           </div>
-          <div className="font-mono text-[0.66rem] font-semibold text-[#d9c08a]">
+          <div className="font-mono text-[0.72rem] font-semibold text-[#d9c08a]">
             {sv.stack_bb}bb{sv.won && <span className="text-felt"> · won</span>}
           </div>
         </div>
@@ -691,7 +691,7 @@ export function TrainingTable() {
             action controls overlay the bottom-right rail (poker-client composition) */}
         <div className="relative min-h-0 flex-1">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative aspect-4/3 h-full max-h-full w-auto max-w-full">
+            <div className="relative aspect-3/2 h-full max-h-full w-auto max-w-full">
               <img
                 className="absolute inset-0 h-full w-full object-contain opacity-[0.92]"
                 src={pokerTable}
