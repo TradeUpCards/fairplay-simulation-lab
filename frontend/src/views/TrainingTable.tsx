@@ -29,7 +29,7 @@ const SUITS: Record<string, { glyph: string; red: boolean }> = {
 const rankLabel = (r: string) => (r === 'T' ? '10' : r)
 
 function PlayingCard({ card, small }: { card?: string; small?: boolean }) {
-  const dim = small ? 'h-9 w-[1.6rem] text-[0.8rem]' : 'h-16 w-12 text-[1.3rem]'
+  const dim = small ? 'h-12 w-9 text-[1rem]' : 'h-20 w-14 text-[1.7rem]'
   if (!card) {
     return (
       <div
@@ -84,9 +84,9 @@ function Seat({ sv, heroHole }: { sv: SeatView; heroHole: [string, string] | nul
       }`}
     >
       {!sv.folded && (
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           {cards.map((c, i) => (
-            <PlayingCard key={i} card={c} small />
+            <PlayingCard key={i} card={c} small={!sv.is_hero} />
           ))}
         </div>
       )}
@@ -113,8 +113,7 @@ function Seat({ sv, heroHole }: { sv: SeatView; heroHole: [string, string] | nul
 function logName(e: LogEntry, seats: SeatView[]): string {
   const sv = seats.find((s) => s.seat === e.seat)
   if (sv?.is_hero) return 'You'
-  if (sv && sv.label !== 'Unknown') return sv.label
-  return sv?.role || `Seat ${e.seat + 1}`
+  return sv?.role || `Seat ${e.seat + 1}` // position (UTG/HJ/CO/BTN/SB/BB) anchors the action
 }
 function logVerb(e: LogEntry): string {
   switch (e.action) {
@@ -190,6 +189,112 @@ function CoachCard({ result }: { result: CoachResult }) {
   )
 }
 
+const FOLD_BTN =
+  'rounded-md border px-4 py-1.5 text-[0.82rem] font-medium border-[#6b3a44] bg-[rgba(176,69,90,0.16)] text-[#e69aa8] hover:border-[#b3455a] disabled:opacity-50'
+const CALL_BTN =
+  'rounded-md border px-4 py-1.5 text-[0.82rem] font-medium border-line bg-surface-2 text-text hover:border-brass-soft disabled:opacity-50'
+const RAISE_BTN =
+  'rounded-md border px-4 py-1.5 text-[0.82rem] font-semibold border-brass bg-brass text-[#1a1407] hover:brightness-110 disabled:opacity-50'
+const SIZE_BTN =
+  'rounded-md border border-line bg-surface-2 px-2.5 py-1 text-[0.72rem] text-muted hover:border-brass-soft hover:text-text'
+
+/** The betting interface: distinct action buttons + quick pot-sizes + a typed
+ * bet-amount field (in bb) synced to a slider. Remounted per decision (via `key`)
+ * so the default size re-primes each time. Amounts are in chips internally; the
+ * API wants a total "raise-to". */
+function ActionBar({
+  legal,
+  pot,
+  toCall,
+  bb,
+  busy,
+  onAct,
+}: {
+  legal: LegalActions
+  pot: number
+  toCall: number
+  bb: number
+  busy: boolean
+  onAct: (kind: ActionKind, amount?: number) => void
+}) {
+  const facing = toCall > 0
+  const clamp = (chips: number) =>
+    Math.max(legal.min_raise_to, Math.min(legal.max_raise_to, Math.round(chips)))
+  const [raiseTo, setRaiseTo] = useState(() => clamp(toCall + pot * 0.66))
+  const bbStr = (chips: number) => `${(chips / bb).toFixed(1)}bb`
+  const sizeTo = (frac: number) => setRaiseTo(clamp(toCall + pot * frac))
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      <div className="flex flex-wrap items-center gap-2">
+        {legal.can_fold && (
+          <button className={FOLD_BTN} onClick={() => onAct('fold')} disabled={busy}>
+            Fold
+          </button>
+        )}
+        {legal.can_check && (
+          <button className={CALL_BTN} onClick={() => onAct('check')} disabled={busy}>
+            Check
+          </button>
+        )}
+        {legal.can_call && (
+          <button className={CALL_BTN} onClick={() => onAct('call')} disabled={busy}>
+            Call {bbStr(legal.call_chips)}
+          </button>
+        )}
+        {legal.can_raise && (
+          <button className={`${RAISE_BTN} ml-auto`} onClick={() => onAct('raise', raiseTo)} disabled={busy}>
+            {facing ? 'Raise to' : 'Bet'} {bbStr(raiseTo)}
+          </button>
+        )}
+      </div>
+      {legal.can_raise && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button className={SIZE_BTN} onClick={() => sizeTo(0.5)}>
+            ½ pot
+          </button>
+          <button className={SIZE_BTN} onClick={() => sizeTo(0.75)}>
+            ¾ pot
+          </button>
+          <button className={SIZE_BTN} onClick={() => sizeTo(1)}>
+            Pot
+          </button>
+          <button className={SIZE_BTN} onClick={() => setRaiseTo(legal.max_raise_to)}>
+            All-in
+          </button>
+          <div className="ml-auto flex items-center gap-2">
+            <input
+              type="range"
+              min={legal.min_raise_to}
+              max={legal.max_raise_to}
+              value={raiseTo}
+              onChange={(e) => setRaiseTo(Number(e.target.value))}
+              className="w-32 accent-brass"
+            />
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                step={0.5}
+                min={Number((legal.min_raise_to / bb).toFixed(1))}
+                max={Number((legal.max_raise_to / bb).toFixed(1))}
+                value={Number((raiseTo / bb).toFixed(1))}
+                onChange={(e) => setRaiseTo(clamp(Number(e.target.value) * bb))}
+                className="w-[4.5rem] rounded-md border border-line bg-surface-2 px-2 py-1 text-right text-[0.8rem] text-text"
+              />
+              <span className="font-mono text-[0.7rem] text-muted">bb</span>
+            </div>
+          </div>
+        </div>
+      )}
+      {legal.can_raise && (
+        <div className="font-mono text-[0.6rem] tracking-wider text-faint">
+          min {bbStr(legal.min_raise_to)} · max {bbStr(legal.max_raise_to)} (all-in)
+        </div>
+      )}
+    </div>
+  )
+}
+
 const DEFAULT_SLOTS = ['recreational', 'aggressive_predatory', 'promo_hunter', 'grinder', 'regular']
 const ARCHS = BOT_CHOICES.map((c) => c.archetype)
 
@@ -202,7 +307,6 @@ export function TrainingTable() {
   const [error, setError] = useState<string | null>(null)
   const [coach, setCoach] = useState<CoachResult | null>(null)
   const [coachBusy, setCoachBusy] = useState(false)
-  const [raiseTo, setRaiseTo] = useState(0)
 
   const st: PlayState | null = env?.state ?? null
   const sid = env?.session_id ?? null
@@ -217,16 +321,6 @@ export function TrainingTable() {
     return 1 + others.indexOf(seat)
   }
 
-  function primeRaise(state: PlayState) {
-    if (state.legal?.can_raise) {
-      const target = Math.min(
-        state.legal.max_raise_to,
-        Math.max(state.legal.min_raise_to, state.to_call + Math.round(state.pot * 0.66)),
-      )
-      setRaiseTo(target)
-    }
-  }
-
   async function deal() {
     setBusy(true)
     setError(null)
@@ -235,7 +329,6 @@ export function TrainingTable() {
       const next = await playApi.newHand({ bots: slots, reveal: !mystery, seed })
       setEnv(next)
       setSeed((s) => s + 1)
-      primeRaise(next.state)
     } catch (e) {
       setError(String((e as Error).message))
     } finally {
@@ -250,7 +343,6 @@ export function TrainingTable() {
     try {
       const next = await playApi.act(sid, kind, amount)
       setEnv(next)
-      primeRaise(next.state)
       if (next.state.complete) void fetchCoach(sid)
     } catch (e) {
       setError(String((e as Error).message))
@@ -359,43 +451,16 @@ export function TrainingTable() {
               Hand complete{coachBusy ? ' — coaching…' : coach ? '' : ' — fetching coaching…'}
             </div>
           )}
-          {heroTurn && legal && (
-            <div className="flex flex-wrap items-center gap-2">
-              {legal.can_fold && (
-                <button onClick={() => act('fold')} disabled={busy} className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[0.8rem] text-text hover:border-brass-soft disabled:opacity-50">
-                  Fold
-                </button>
-              )}
-              {legal.can_check && (
-                <button onClick={() => act('check')} disabled={busy} className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[0.8rem] text-text hover:border-brass-soft disabled:opacity-50">
-                  Check
-                </button>
-              )}
-              {legal.can_call && (
-                <button onClick={() => act('call')} disabled={busy} className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[0.8rem] text-text hover:border-brass-soft disabled:opacity-50">
-                  Call {bbStr(legal.call_chips)}
-                </button>
-              )}
-              {legal.can_raise && (
-                <div className="ml-auto flex items-center gap-2">
-                  <input
-                    type="range"
-                    min={legal.min_raise_to}
-                    max={legal.max_raise_to}
-                    value={raiseTo}
-                    onChange={(e) => setRaiseTo(Number(e.target.value))}
-                    className="w-40 accent-brass"
-                  />
-                  <button
-                    onClick={() => act('raise', raiseTo)}
-                    disabled={busy}
-                    className="rounded-md border border-brass bg-brass px-3 py-1.5 text-[0.8rem] font-semibold text-[#1a1407] disabled:opacity-50"
-                  >
-                    Raise to {bbStr(raiseTo)}
-                  </button>
-                </div>
-              )}
-            </div>
+          {heroTurn && legal && st && (
+            <ActionBar
+              key={`${st.hand_id}-${st.street}-${st.pot}-${st.to_call}`}
+              legal={legal}
+              pot={st.pot}
+              toCall={st.to_call}
+              bb={bb}
+              busy={busy}
+              onAct={act}
+            />
           )}
         </div>
       </div>

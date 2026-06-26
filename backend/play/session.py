@@ -44,6 +44,18 @@ _DEFAULT_BOTS = ["recreational", "aggressive_predatory", "promo_hunter",
 _EQUITY_SAMPLES = 2000
 
 
+def _middle_names(k: int) -> list[str]:
+    """Position names for the non-blind, non-button seats, in preflop action order
+    (UTG acts first, CO is last before the button)."""
+    presets = {1: ["UTG"], 2: ["UTG", "CO"], 3: ["UTG", "HJ", "CO"],
+               4: ["UTG", "UTG+1", "HJ", "CO"]}
+    if k <= 0:
+        return []
+    if k in presets:
+        return presets[k]
+    return ["UTG"] + [f"UTG+{i}" for i in range(1, k - 2)] + ["HJ", "CO"]
+
+
 @dataclass
 class LegalActions:
     can_fold: bool
@@ -170,6 +182,16 @@ class PlaySession:
             "sb_seat": v.get("sb_seat", 0),
             "bb_seat": v.get("bb_seat", 1 % n),
         }
+        # a poker position for EVERY seat (BTN/SB/BB/UTG/HJ/CO/…) -- the anchor that
+        # ties the action log to the table seats in action order.
+        btn, sb_, bb_ = (self._roles["button_seat"], self._roles["sb_seat"],
+                         self._roles["bb_seat"])
+        positions = {btn: "BTN", sb_: "SB", bb_: "BB"}
+        order = [(bb_ + 1 + i) % n for i in range(n)]
+        middle = [s for s in order if s not in positions]
+        for s, name in zip(middle, _middle_names(len(middle))):
+            positions[s] = name
+        self._positions = positions
 
     # ------------------------------------------------------------ labels ---
     def _label(self, seat: int) -> str:
@@ -188,13 +210,7 @@ class PlaySession:
         return self.seat_archetype.get(seat)
 
     def _role(self, seat: int) -> str:
-        if seat == self._roles["button_seat"]:
-            return "BTN"
-        if seat == self._roles["sb_seat"]:
-            return "SB"
-        if seat == self._roles["bb_seat"]:
-            return "BB"
-        return ""
+        return self._positions.get(seat, "")
 
     # ------------------------------------------------------------- state ---
     def _legal(self, obs: Observation) -> LegalActions:
