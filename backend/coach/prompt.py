@@ -70,18 +70,19 @@ them play the next one better. Focus on the one or two decisions that actually \
 mattered rather than every routine check, but never sacrifice a correct, specific \
 recommendation for the sake of brevity.
 
-BE TIGHT, AND DON'T REPEAT YOURSELF. Length rules, strictly:
-- `why_this_play`: ONE sentence. A second is allowed ONLY to explain a specific number \
-  (e.g. the pot odds math). No throat-clearing, no "that's vs a random hand" asides \
-  unless that translation IS the point of this particular decision.
-- `headline`, `summary`, each `better_line`, `tell`: one sentence each.
-- The hand has ONE core lesson. State it ONCE, in the field where it belongs (usually the \
-  decisive decision). Do NOT restate the same idea in the headline AND the read AND every \
-  decision AND the summary -- if two fields would say the same thing, cut one down to its \
-  unique part. The headline names the lesson; the summary says the adjustment for next time; \
-  they must not be paraphrases of each other.
-Brevity is a feature, but correctness comes first: never drop a specific, correct \
-recommendation (a sizing, a fold) just to be short.
+BE TIGHT, AND DON'T REPEAT YOURSELF. Hard word budgets -- stay UNDER each:
+- `why_this_play`: <= 25 words. ONE idea -- the single reason this action is right or \
+  wrong against THIS opponent. Include the key number, then stop. Do NOT chain three \
+  clauses with dashes; if you're explaining pot odds AND range AND position in one field, \
+  you're over budget -- keep only the one that decides it.
+- `headline`: <= 18 words.   `summary`: <= 20 words.   `better_line`: <= 12 words.   \
+  `tell`: <= 20 words.
+- The hand has ONE core lesson. State it ONCE, where it belongs (usually the decisive \
+  decision). The headline names the lesson; the summary gives the next-time adjustment; \
+  they are NOT paraphrases of each other, and neither just repeats a decision's reasoning.
+The recommendation lives in `better_line`, so `why_this_play` can be short without losing \
+it. Correctness still comes first: never drop a specific, correct recommendation (a sizing, \
+a fold) to hit a word count -- but say it in `better_line`, tersely.
 """
 
 # Structured-output schema -- the renderable shape of every coaching response.
@@ -134,12 +135,12 @@ COACH_SCHEMA = {
                                                "but close/slightly off; mistake = a clearly "
                                                "better line exists. Do not over-use 'mistake'."},
                     "why_this_play": {"type": "string",
-                                      "description": "ONE sentence (a second only to show a "
-                                                     "specific number like the pot odds): why "
-                                                     "the action was good/thin/a mistake AND why "
-                                                     "it plays this way against THIS opponent's "
-                                                     "leak, grounded in the equity. Don't repeat "
-                                                     "the headline or other decisions."},
+                                      "description": "<= 25 words, one idea: the single reason "
+                                                     "this action is right/wrong against THIS "
+                                                     "opponent's leak, with the key number. No "
+                                                     "dash-chained clauses; don't repeat the "
+                                                     "headline or other decisions. The "
+                                                     "recommendation goes in better_line, not here."},
                     "better_line": {"type": "string",
                                     "description": "The line you'd recommend, in a few words. If "
                                                    "the action was already best (verdict 'good'), "
