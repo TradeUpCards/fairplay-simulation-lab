@@ -1,0 +1,11 @@
+# Vercel deploys from the repo root (so the frontend build can reach the sibling
+# data/ dir via the @data alias). Only frontend/ + data/ are needed for the build —
+# exclude the Python backend, engine, and coordination dirs to keep the upload lean.
+backend
+playsim
+docs
+.project
+.claude
+**/__pycache__
+*.pyc
+.venv
