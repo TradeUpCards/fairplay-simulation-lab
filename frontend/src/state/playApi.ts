@@ -93,6 +93,8 @@ export interface CoachResult {
   stop_reason?: string
   coaching: Coaching | null
   guardrail_violations?: string[]
+  elapsed_ms?: number // server-side LLM call time (debug)
+  summary_ms?: number // equity + summary assembly time (debug)
 }
 
 export type ActionKind = 'fold' | 'check' | 'call' | 'raise'
@@ -124,8 +126,8 @@ export const playApi = {
     post<PlayEnvelope>('/api/play/new', opts),
   act: (sid: string, kind: ActionKind, amount = 0): Promise<PlayEnvelope> =>
     post<PlayEnvelope>(`/api/play/${sid}/action`, { kind, amount }),
-  coach: (sid: string): Promise<{ session_id: string; coaching: CoachResult }> =>
-    post<{ session_id: string; coaching: CoachResult }>(`/api/play/${sid}/coach`),
+  coach: (sid: string): Promise<{ session_id: string; coaching: CoachResult; version?: string }> =>
+    post<{ session_id: string; coaching: CoachResult; version?: string }>(`/api/play/${sid}/coach`),
 }
 
 /** The bot archetypes a player can seat, with friendly labels for the picker. */

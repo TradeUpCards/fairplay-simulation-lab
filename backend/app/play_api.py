@@ -12,8 +12,11 @@ can play the hand snappily and then fetch the (slower, live) coaching afterwards
 
 from __future__ import annotations
 
+import functools
+import subprocess
 import uuid
 from dataclasses import asdict
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
@@ -22,6 +25,22 @@ from pydantic import BaseModel
 from play.session import PlaySession
 
 router = APIRouter(prefix="/api/play", tags=["play"])
+
+
+@functools.lru_cache(maxsize=1)
+def _version() -> str:
+    """Short git SHA (+ '-dirty') of the running code, for the debug overlay."""
+    root = Path(__file__).resolve().parents[2]
+    try:
+        sha = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"], cwd=root, text=True,
+            stderr=subprocess.DEVNULL).strip()
+        dirty = subprocess.call(
+            ["git", "diff", "--quiet"], cwd=root,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) != 0
+        return sha + ("-dirty" if dirty else "")
+    except Exception:  # noqa: BLE001
+        return "unknown"
 
 _SESSIONS: dict[str, PlaySession] = {}
 _VALID_ACTIONS = {"fold", "check", "call", "raise"}
@@ -88,4 +107,4 @@ def get_coaching(sid: str) -> dict:
     session = _get(sid)
     if not session.hand.complete:
         raise HTTPException(status_code=409, detail="hand is not complete yet")
-    return {"session_id": sid, "coaching": session.coaching()}
+    return {"session_id": sid, "coaching": session.coaching(), "version": _version()}

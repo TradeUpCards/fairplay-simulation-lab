@@ -353,6 +353,13 @@ export function TrainingTable() {
   const [error, setError] = useState<string | null>(null)
   const [coach, setCoach] = useState<CoachResult | null>(null)
   const [coachBusy, setCoachBusy] = useState(false)
+  const [debug, setDebug] = useState<{
+    clientMs: number
+    llmMs: number
+    equityMs: number
+    model: string
+    version: string
+  } | null>(null)
 
   const st: PlayState | null = env?.state ?? null
   const sid = env?.session_id ?? null
@@ -407,8 +414,17 @@ export function TrainingTable() {
 
   async function fetchCoach(s: string) {
     setCoachBusy(true)
+    const t0 = performance.now()
     try {
-      setCoach((await playApi.coach(s)).coaching)
+      const r = await playApi.coach(s)
+      setCoach(r.coaching)
+      setDebug({
+        clientMs: Math.round(performance.now() - t0),
+        llmMs: r.coaching.elapsed_ms ?? 0,
+        equityMs: r.coaching.summary_ms ?? 0,
+        model: r.coaching.model ?? '',
+        version: r.version ?? '?',
+      })
     } catch (e) {
       setError(String((e as Error).message))
     } finally {
@@ -421,7 +437,8 @@ export function TrainingTable() {
   const bbStr = (chips: number) => `${(chips / bb).toFixed(1)}bb`
 
   return (
-    <div className="grid h-full grid-cols-1 gap-6 overflow-hidden lg:grid-cols-[1fr_360px]">
+    <>
+      <div className="grid h-full grid-cols-1 gap-6 overflow-hidden lg:grid-cols-[1fr_360px]">
       <div className="flex min-h-0 flex-col">
         {/* setup bar */}
         <div className="mb-4 flex shrink-0 flex-wrap items-center gap-2">
@@ -539,6 +556,13 @@ export function TrainingTable() {
           </div>
         )}
       </aside>
-    </div>
+      </div>
+      {debug && (
+        <div className="pointer-events-none fixed bottom-2 right-2 z-50 rounded-md border border-line bg-[rgba(13,17,23,0.92)] px-2 py-1 font-mono text-[0.58rem] leading-tight text-faint">
+          DEBUG · v{debug.version} · client {(debug.clientMs / 1000).toFixed(1)}s · LLM{' '}
+          {(debug.llmMs / 1000).toFixed(1)}s · equity {debug.equityMs}ms · {debug.model}
+        </div>
+      )}
+    </>
   )
 }

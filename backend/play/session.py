@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import random
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
@@ -391,7 +392,9 @@ class PlaySession:
     def _build_summary(self) -> None:
         if not self._decisions:
             self._summary = None
+            self._summary_ms = 0
             return
+        t0 = time.perf_counter()
         dec_seat, dec_arch = self._decisive_opponent()
         decisions = []
         for d in self._decisions:
@@ -420,6 +423,7 @@ class PlaySession:
         }
         self._fixture = fixture
         self._summary = build_summary(fixture)
+        self._summary_ms = round((time.perf_counter() - t0) * 1000)  # equity + assembly
 
     @property
     def summary(self) -> Optional[dict[str, Any]]:
@@ -431,7 +435,12 @@ class PlaySession:
         if self._coaching is not None:
             return self._coaching
         if self.summary is None:
-            self._coaching = {"coaching": None, "note": "no decision to coach"}
+            self._coaching = {"coaching": None, "note": "no decision to coach",
+                              "elapsed_ms": 0, "summary_ms": getattr(self, "_summary_ms", 0)}
             return self._coaching
-        self._coaching = coach_hand(self.summary, client=client, model=model)
+        t0 = time.perf_counter()
+        result = coach_hand(self.summary, client=client, model=model)
+        result["elapsed_ms"] = round((time.perf_counter() - t0) * 1000)   # the LLM call
+        result["summary_ms"] = getattr(self, "_summary_ms", 0)            # equity + assembly
+        self._coaching = result
         return self._coaching
