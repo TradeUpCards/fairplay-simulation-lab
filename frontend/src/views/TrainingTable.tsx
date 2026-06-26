@@ -141,7 +141,7 @@ function ActionLog({ log, seats }: { log: LogEntry[]; seats: SeatView[] }) {
   return (
     <div className="rounded-xl border border-line bg-surface p-3">
       <div className="mb-2 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-muted">Hand action</div>
-      <ol className="m-0 flex max-h-[220px] list-none flex-col gap-1 overflow-auto p-0">
+      <ol className="m-0 flex list-none flex-col gap-1 p-0">
         {log.map((e, i) => (
           <li key={i} className="flex items-baseline gap-2 text-[0.8rem]">
             <span className="w-12 font-mono text-[0.58rem] uppercase tracking-wider text-faint">{e.street}</span>
@@ -518,16 +518,10 @@ export function TrainingTable() {
           )}
         </div>
 
-        {/* hand action log — below the action buttons; takes remaining space + scrolls */}
-        {st && st.log.length > 0 && (
-          <div className="mt-4 min-h-0 flex-1 overflow-y-auto">
-            <ActionLog log={st.log} seats={st.seats} />
-          </div>
-        )}
       </div>
 
-      {/* right column: coaching — scrolls internally if the note is long */}
-      <aside className="min-h-0 overflow-y-auto">
+      {/* right column: AI coach, then the hand action log; the whole column scrolls */}
+      <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto">
         {coach ? (
           <CoachCard result={coach} />
         ) : st?.complete && st.review ? (
@@ -537,6 +531,7 @@ export function TrainingTable() {
             Play a hand to the end and the AI coach reviews your decisions against the opponents’ specific leaks.
           </div>
         )}
+        {st && st.log.length > 0 && <ActionLog log={st.log} seats={st.seats} />}
       </aside>
     </div>
   )
