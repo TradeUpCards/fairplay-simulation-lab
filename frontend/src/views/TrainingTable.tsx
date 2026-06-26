@@ -152,6 +152,19 @@ function ActionLog({ log, seats }: { log: LogEntry[]; seats: SeatView[] }) {
   )
 }
 
+function VerdictChip({ v }: { v: 'good' | 'thin' | 'mistake' }) {
+  const tone: Record<string, string> = {
+    good: 'border-[#2f8f5b] bg-[rgba(47,143,91,0.16)] text-[#5fcf8a]',
+    thin: 'border-[#8a6d2f] bg-[rgba(199,154,75,0.14)] text-[#e3b25f]',
+    mistake: 'border-[#7a3340] bg-[rgba(176,69,90,0.18)] text-[#e69aa8]',
+  }
+  return (
+    <span className={`rounded-full border px-1.5 py-0.5 font-mono text-[0.56rem] uppercase tracking-wider ${tone[v] ?? tone.thin}`}>
+      {v}
+    </span>
+  )
+}
+
 function CoachCard({ result }: { result: CoachResult }) {
   const c = result.coaching
   if (!c) {
@@ -173,12 +186,14 @@ function CoachCard({ result }: { result: CoachResult }) {
           <div key={i} className="rounded-lg border border-line bg-surface-2 p-2.5">
             <div className="mb-1 flex flex-wrap items-center gap-2 text-[0.76rem]">
               <Chip>{d.street}</Chip>
+              <VerdictChip v={d.verdict} />
               <span className="text-muted">you {d.your_action}</span>
               <span className="font-mono text-faint">equity {d.equity_pct}%</span>
             </div>
             <div className="text-[0.82rem] text-text">{d.assessment}</div>
             <div className="mt-1 text-[0.82rem]">
-              <span className="font-semibold text-felt">Better:</span> <span className="text-text">{d.better_line}</span>
+              <span className="font-semibold text-felt">{d.verdict === 'good' ? 'Right play:' : 'Better:'}</span>{' '}
+              <span className="text-text">{d.better_line}</span>
             </div>
             <div className="mt-0.5 text-[0.8rem] text-muted">{d.why_vs_this_type}</div>
           </div>
@@ -332,7 +347,7 @@ export function TrainingTable() {
         bots: slots,
         reveal: !mystery,
         seed,
-        hero_seat: handNum % nSeats, // rotate the button each hand
+        hero_seat: (nSeats - (handNum % nSeats)) % nSeats, // rotate the button clockwise
       })
       setEnv(next)
       setSeed((s) => s + 1)

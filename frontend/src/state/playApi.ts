@@ -68,6 +68,7 @@ export interface CoachDecision {
   street: string
   your_action: string
   equity_pct: number
+  verdict: 'good' | 'thin' | 'mistake'
   assessment: string
   better_line: string
   why_vs_this_type: string

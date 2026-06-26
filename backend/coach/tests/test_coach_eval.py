@@ -22,7 +22,8 @@ from coach.summary import build_summary, load_golden
 GOLDEN = {h["hand_id"]: h for h in load_golden()}
 
 
-def _coaching(equity, *, tell="they barrel a value-heavy range and rarely back off",
+def _coaching(equity, *, verdict="mistake",
+              tell="they barrel a value-heavy range and rarely back off",
               better="fold to the sustained barrel", why="against this player's "
               "value-weighted betting range your hand is behind far more than the raw "
               "number suggests", note="solid aggression -- tighten up versus this type",
@@ -33,7 +34,7 @@ def _coaching(equity, *, tell="they barrel a value-heavy range and rarely back o
         "opponent_read": {"seat": 3, "style_label": "grinder / TAG", "tell": tell},
         "decisions": [{
             "street": "river", "your_action": "call 16bb", "equity_pct": equity,
-            "assessment": "calling is too loose given the range",
+            "verdict": verdict, "assessment": "calling is too loose given the range",
             "better_line": better, "why_vs_this_type": why,
         }],
         "summary": "Fold to sustained aggression from a disciplined player.",
@@ -44,13 +45,20 @@ def _coaching(equity, *, tell="they barrel a value-heavy range and rarely back o
 # ----------------------------------------------------------- golden set shape ---
 def test_golden_set_is_well_formed():
     hands = load_golden()
-    assert len(hands) == 5
+    assert len(hands) == 6
     ids = {h["hand_id"] for h in hands}
     assert ids == {"G1-station-value", "G2-maniac-calldown", "G3-nit-steal",
-                   "G4-solver-bluff", "G5-grinder-fold"}
+                   "G4-solver-bluff", "G5-grinder-fold", "G6-well-played-fold"}
     for h in hands:
         assert h["decisions"] and h["rubric"]["must_cite_equity_pct"] > 0
         assert h["decisive_opponent"]["archetype"]
+
+
+def test_grader_rejects_fabricated_mistake_on_well_played_hand():
+    g6 = GOLDEN["G6-well-played-fold"]
+    # calling a correct play a "mistake" must fail; affirming it ("good") is clean
+    assert grade_mechanical(_coaching(15.2, verdict="mistake"), g6)
+    assert grade_mechanical(_coaching(15.2, verdict="good"), g6) == []
 
 
 def test_build_summary_resolves_the_leak():

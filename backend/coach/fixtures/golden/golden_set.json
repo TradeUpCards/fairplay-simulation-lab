@@ -147,6 +147,36 @@
         "must_reconcile_equity_vs_range": true,
         "must_not_recommend": ["call", "raise"]
       }
+    },
+    {
+      "hand_id": "G6-well-played-fold",
+      "lesson": "AFFIRMATION FIXTURE: the student played this correctly. Folding 7-high to a nit's turn raise is the right play -- the coach must CONFIRM it (verdict good), not invent a mistake or a 'better' line. Guards against the over-critical bias.",
+      "table": {"max_seats": 6, "big_blind_chips": 1},
+      "hero": {"hole": ["7h", "6h"], "position": "BB"},
+      "decisive_opponent": {"seat": 2, "archetype": "promo_hunter"},
+      "board": ["Ah", "Kd", "9s", "4c"],
+      "pot_bb": 14,
+      "decisions": [
+        {
+          "street": "turn",
+          "board": ["Ah", "Kd", "9s", "4c"],
+          "pot_bb": 14,
+          "to_call_bb": 9,
+          "hero_action": "fold",
+          "hero_equity_pct": 15.2,
+          "context": "Hero's 7-high has no pair and no real draw on an A-K-9 board. A rock/nit raised the turn; hero folded. The equity shown is vs a random hand."
+        }
+      ],
+      "rubric": {
+        "must_cite_equity_pct": 15.2,
+        "equity_tolerance": 5.0,
+        "expected_verdict": "good",
+        "must_affirm": true,
+        "must_not_claim_mistake": true,
+        "better_line": "fold -- this is already the correct play; the coach should confirm it",
+        "leak_theme_keywords": ["tight", "fold", "value", "rarely bluff", "strong"],
+        "must_not_recommend": ["call", "raise"]
+      }
     }
   ]
 }

@@ -49,6 +49,13 @@ ABSOLUTE RULES -- never violate:
    STYLE, never as a claim that your advice is optimal.
 6. TEACHING TONE. Be specific and honest -- name mistakes plainly -- but constructive \
    and encouraging. You are coaching a person who is trying to improve.
+7. DON'T FABRICATE MISTAKES. Not every decision is wrong. Give each decision a \
+   `verdict`: "good" when the action was the best or a clearly reasonable play, "thin" \
+   when it was okay but close or slightly off, and "mistake" ONLY when a clearly better \
+   line exists. When a decision is "good", say so plainly and explain why it is right \
+   against this opponent -- do NOT invent a flaw or a different "better" line; set \
+   better_line to confirm the play taken. A hand can be well played; honest affirmation \
+   teaches as much as correction.
 
 Write for a student reviewing their hand: concrete, math-anchored, tied to the \
 opponent's leak, and genuinely useful -- the kind of note that would actually help \
@@ -89,8 +96,8 @@ COACH_SCHEMA = {
             "items": {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["street", "your_action", "equity_pct", "assessment",
-                             "better_line", "why_vs_this_type"],
+                "required": ["street", "your_action", "equity_pct", "verdict",
+                             "assessment", "better_line", "why_vs_this_type"],
                 "properties": {
                     "street": {"type": "string",
                                "description": "preflop | flop | turn | river"},
@@ -100,12 +107,18 @@ COACH_SCHEMA = {
                     "equity_pct": {"type": "number",
                                    "description": "The student's equity at this decision, "
                                                   "as a percentage 0-100, FROM the summary."},
+                    "verdict": {"type": "string", "enum": ["good", "thin", "mistake"],
+                                "description": "good = best or clearly fine play; thin = ok "
+                                               "but close/slightly off; mistake = a clearly "
+                                               "better line exists. Do not over-use 'mistake'."},
                     "assessment": {"type": "string",
-                                   "description": "Was the action good/thin/a mistake, and "
-                                                  "why -- grounded in the equity and pot odds."},
+                                   "description": "Why the action was good/thin/a mistake -- "
+                                                  "grounded in the equity and pot odds."},
                     "better_line": {"type": "string",
-                                    "description": "The line you'd recommend (may equal the "
-                                                   "action taken if it was already best)."},
+                                    "description": "The line you'd recommend. If the action "
+                                                   "was already best (verdict 'good'), restate "
+                                                   "and confirm it -- do NOT invent a different "
+                                                   "'better' line."},
                     "why_vs_this_type": {"type": "string",
                                          "description": "Why that line is better against THIS "
                                                         "opponent's specific leak."},

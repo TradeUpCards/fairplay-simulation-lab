@@ -47,6 +47,12 @@ def grade_mechanical(coaching: dict[str, Any] | None,
     if not any(abs(float(e) - target) <= tol for e in cited):
         fails.append(f"did not cite the decision equity ~{target}% (got {cited or 'none'})")
 
+    verdicts = [d.get("verdict") for d in coaching.get("decisions", [])]
+    if rubric.get("must_not_claim_mistake") and "mistake" in verdicts:
+        fails.append("called a correctly-played hand a 'mistake' (over-critical)")
+    if rubric.get("expected_verdict") and rubric["expected_verdict"] not in verdicts:
+        fails.append(f"no decision marked verdict '{rubric['expected_verdict']}' (got {verdicts})")
+
     return fails
 
 
@@ -98,6 +104,10 @@ def _requirements(fixture: dict[str, Any]) -> list[str]:
         reqs.append("References the pot odds / the price of the call.")
     if r.get("must_not_claim_gto"):
         reqs.append("Does NOT claim the advice is GTO, optimal, or solved.")
+    if r.get("must_affirm"):
+        reqs.append("AFFIRMS the student's play as correct: marks the decision 'good' (not a "
+                    "mistake), does NOT invent a different 'better' line, and the better_line "
+                    "confirms the play actually taken. Explains why the play is right here.")
     return reqs
 
 
