@@ -45,10 +45,11 @@ def _coaching(equity, *, verdict="mistake",
 # ----------------------------------------------------------- golden set shape ---
 def test_golden_set_is_well_formed():
     hands = load_golden()
-    assert len(hands) == 6
+    assert len(hands) == 7
     ids = {h["hand_id"] for h in hands}
     assert ids == {"G1-station-value", "G2-maniac-calldown", "G3-nit-steal",
-                   "G4-solver-bluff", "G5-grinder-fold", "G6-well-played-fold"}
+                   "G4-solver-bluff", "G5-grinder-fold", "G6-well-played-fold",
+                   "G7-multiway-3bet-fold"}
     for h in hands:
         assert h["decisions"] and h["rubric"]["must_cite_equity_pct"] > 0
         assert h["decisive_opponent"]["archetype"]

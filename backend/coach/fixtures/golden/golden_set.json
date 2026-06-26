@@ -177,6 +177,39 @@
         "leak_theme_keywords": ["tight", "fold", "value", "rarely bluff", "strong"],
         "must_not_recommend": ["call", "raise"]
       }
+    },
+    {
+      "hand_id": "G7-multiway-3bet-fold",
+      "lesson": "MULTIWAY + AGGRESSOR FIXTURE: facing a solid reg's 3-bet in a 4-way pot, folding JTs is correct even though the raw equity (28%, vs 4 random hands) beats the pot-odds price (~21%). The coach must (a) coach against the REG who 3-bet -- not the loosest player -- and (b) NOT give heads-up 'call lighter' advice: multiway + a strong 3-bet range means the raw number overstates real equity, so fold.",
+      "table": {"max_seats": 6, "big_blind_chips": 1},
+      "hero": {"hole": ["Jh", "Th"], "position": "BB"},
+      "decisive_opponent": {"seat": 4, "archetype": "regular"},
+      "board": [],
+      "pot_bb": 30,
+      "decisions": [
+        {
+          "street": "preflop",
+          "board": [],
+          "pot_bb": 30,
+          "to_call_bb": 8,
+          "hero_action": "fold",
+          "hero_equity_pct": 28.4,
+          "opponents_in_hand": 4,
+          "context": "Hero has JTs in the BB. A solid regular 3-bet and three players are in the pot; hero folds. Pot odds need ~21%. The 28.4% equity is vs four RANDOM hands, not vs a 3-bet range."
+        }
+      ],
+      "rubric": {
+        "must_cite_equity_pct": 28.4,
+        "equity_tolerance": 5.0,
+        "expected_verdict": "good",
+        "must_affirm": true,
+        "must_not_claim_mistake": true,
+        "better_line": "fold -- against a solid reg's 3-bet range in a multiway pot JTs is dominated, so the 28% raw-vs-random equity overstates your real equity even though it beats the pot-odds price; folding is correct",
+        "leak_theme_keywords": ["balanced", "few leak", "solid", "disciplin", "strong"],
+        "must_reconcile_equity_vs_range": true,
+        "must_account_for_multiway": true,
+        "must_not_recommend": ["call", "raise"]
+      }
     }
   ]
 }

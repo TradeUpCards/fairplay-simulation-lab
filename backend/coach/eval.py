@@ -108,6 +108,10 @@ def _requirements(fixture: dict[str, Any]) -> list[str]:
         reqs.append("AFFIRMS the student's play as correct: marks the decision 'good' (not a "
                     "mistake), does NOT invent a different 'better' line, and the better_line "
                     "confirms the play actually taken. Explains why the play is right here.")
+    if r.get("must_account_for_multiway"):
+        reqs.append("Accounts for the pot being MULTIWAY: notes more than one opponent is in "
+                    "and that the raise/3-bet represents a strong range, so it does NOT give "
+                    "heads-up 'call lighter' advice.")
     return reqs
 
 
