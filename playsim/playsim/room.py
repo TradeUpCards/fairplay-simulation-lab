@@ -57,6 +57,7 @@ class _Table:
     seated: list[int] = field(default_factory=list)
     hands_dealt: int = 0
     ever_broken: bool = False
+    ever_active: bool = False
 
     @property
     def open_seats(self) -> int:
@@ -69,6 +70,26 @@ class _Table:
         if len(self.seated) == 1:
             return "forming"
         return "broken_empty" if self.ever_broken else "empty"
+
+    @property
+    def target_seats(self) -> int:
+        # Current room fixtures do not encode intentional 2-max/3-max formats, so
+        # the target is full table size. A future table-format field can lower it.
+        return self.max_seats
+
+    def router_mode(self, formation_mode: str) -> str:
+        """Backend seam semantics for liveness-aware scoring.
+
+        forming: below dealing quorum and intentionally allowed to wait/grow.
+        active: dealable and not immediately one departure from break.
+        draining: not intentionally forming, or dealable but at break risk.
+        """
+        n = len(self.seated)
+        if n < 2:
+            return "forming" if formation_mode == "forming" else "draining"
+        if n == 2 and self.ever_active:
+            return "draining"
+        return "active"
 
 
 @dataclass
@@ -274,6 +295,8 @@ class RoomSim:
         active_before = len(tbl.seated) >= 2
         tbl.seated.append(pid)
         active_after = len(tbl.seated) >= 2
+        if active_after:
+            tbl.ever_active = True
         track_formation = origin != "initial"
         if track_formation and not active_after:
             self.instrumentation["forming_seat_count"] += 1
@@ -379,6 +402,8 @@ class RoomSim:
             make_table_dict(
                 tid, list(t.seated), t.max_seats,
                 style_volatility_label=t.style, paid_seat_time_trend=t.trend,
+                table_mode=t.router_mode(self.formation_mode),
+                target_seats=t.target_seats,
                 stakes=t.stakes, game_type=t.game_type, pace_label=t.pace_label,
             )
             for tid, t in sorted(self.tables.items())
@@ -459,12 +484,20 @@ class RoomSim:
         # (Phase 2) may decline on poor fit. Declines fold into balks for now.
         if table_id is not None:
             t = self.tables[table_id]
+            table_mode = t.router_mode(self.formation_mode)
             offer = SeatOffer(
                 archetype, table_id, rec.get("rationale"),
                 table_archetypes=tuple(self.archetype_of[p] for p in t.seated),
                 table_style=t.style, seated_count=len(t.seated), max_seats=t.max_seats,
+                table_mode=table_mode, target_seats=t.target_seats,
             )
-            if not self.behavior.accept_seat(offer):
+            accept_forming = getattr(self.behavior, "accept_forming_seat", None)
+            accept = (
+                accept_forming(offer)
+                if accept_forming is not None and (table_mode == "forming" or len(t.seated) <= 1)
+                else self.behavior.accept_seat(offer)
+            )
+            if not accept:
                 table_id = None
                 rec["table_id"] = None
                 rec["reason"] = "bad_fit_decline"

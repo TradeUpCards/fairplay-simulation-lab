@@ -158,6 +158,22 @@ def test_routing_decisions_carry_formation_gap_snapshot():
     assert r.instrumentation["routing_attempts"] == len(r.routing_decisions)
 
 
+def test_room_live_tables_populate_liveness_seam_fields():
+    from playsim.room import RoomSim
+
+    sim = RoomSim(StandardPolicy(), master_seed=42, horizon_min=1,
+                  equity_samples=6, tables=["T-22"], arrival_intents=[],
+                  formation_mode="forming")
+    tbl = sim.tables["T-22"]
+    for pid in list(tbl.seated):
+        sim._remove_from_table(pid, tbl)
+        sim._close_presence(pid, 0.0, "test_clear")
+
+    live = {t["table_id"]: t for t in sim._live_tables()}
+    assert live["T-22"]["table_mode"] == "forming"
+    assert live["T-22"]["target_seats"] == tbl.max_seats
+
+
 def test_formation_mode_allows_empty_table_seed_without_paid_seat_time():
     from playsim.room import RoomSim
 

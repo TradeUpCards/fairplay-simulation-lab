@@ -42,9 +42,26 @@ def test_make_table_dict_carries_scorer_fields():
     t = _table(None, [62, 70, 71], max_seats=6)
     assert t["style_volatility_label"] == "moderate"
     assert t["paid_seat_time_trend"] == "stable"
+    assert t["table_mode"] == "active"
+    assert t["target_seats"] == 6
     assert t["seated_player_ids"] == ["P-62", "P-70", "P-71"]
     assert t["seated_count"] == 3
     assert t["open_seats"] == 3
+
+
+def test_liveness_flag_default_off_preserves_health_scoring(adapter):
+    forming = make_table_dict(
+        "T-forming", [], 6,
+        style_volatility_label="Low Stakes / Beginner-Friendly",
+        paid_seat_time_trend="stable",
+        table_mode="forming",
+        target_seats=6,
+    )
+    frozen = adapter.predicted_health([forming])["T-forming"]
+    live = RouterAdapter(REPO, liveness_aware=True).predicted_health([forming])["T-forming"]
+    assert frozen.terms["P_frag"] > 0
+    assert live.terms["P_frag"] == 0
+    assert live.reason_codes[1].signals["formation_exempt"] is True
 
 
 def test_predicted_health_is_composition_only_pbleed_zero(adapter):

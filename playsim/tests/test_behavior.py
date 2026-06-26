@@ -10,6 +10,7 @@ from __future__ import annotations
 from playsim.behavior import (
     DefaultBehaviorPolicy,
     FitAwareBehaviorPolicy,
+    FormationAwareBehaviorPolicy,
     LeaveContext,
     ReasonAwareBehaviorPolicy,
     SeatOffer,
@@ -48,6 +49,7 @@ def test_default_policy_unit_rules():
     assert leaving and reason == "tilt"
     # forced placement + re-seek once
     assert p.accept_seat(SeatOffer("new", "T-1", None)) is True
+    assert p.accept_forming_seat(SeatOffer("new", "T-1", None, table_mode="forming")) is True
     assert p.reseek_on_break("new") is True
 
 
@@ -155,6 +157,19 @@ def test_make_behavior_factory():
     assert isinstance(make_behavior("default"), DefaultBehaviorPolicy)
     assert isinstance(make_behavior("fit-aware", seed=3), FitAwareBehaviorPolicy)
     assert isinstance(make_behavior("reason-aware", seed=3), ReasonAwareBehaviorPolicy)
+    assert isinstance(make_behavior("formation-aware", seed=3), FormationAwareBehaviorPolicy)
+
+
+def test_formationaware_accepts_forming_seat_by_archetype_propensity():
+    offer_new = SeatOffer("new", "T-empty", None, table_mode="forming", seated_count=0, max_seats=6)
+    offer_grinder = SeatOffer("grinder", "T-empty", None, table_mode="forming",
+                              seated_count=0, max_seats=6)
+    pol = FormationAwareBehaviorPolicy(
+        seed=7,
+        formation_willingness={"new": 0.0, "grinder": 1.0},
+    )
+    assert pol.accept_forming_seat(offer_new) is False
+    assert pol.accept_forming_seat(offer_grinder) is True
 
 
 # --- Phase 3: reason-aware lifecycle --------------------------------------

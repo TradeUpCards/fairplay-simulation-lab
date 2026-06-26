@@ -67,6 +67,8 @@ def make_table_dict(
     *,
     style_volatility_label: str,
     paid_seat_time_trend: str,
+    table_mode: str = "active",
+    target_seats: int | None = None,
     stakes: str = "",
     game_type: str = "",
     pace_label: str = "",
@@ -86,6 +88,8 @@ def make_table_dict(
         "seated_player_ids": seated,
         "seated_count": n,
         "open_seats": max(0, max_seats - n),
+        "table_mode": table_mode,
+        "target_seats": target_seats if target_seats is not None else max_seats,
         "style_volatility_label": style_volatility_label,
         "paid_seat_time_trend": paid_seat_time_trend,
         "stakes": stakes,
@@ -97,8 +101,9 @@ def make_table_dict(
 class RouterAdapter:
     """Stateful wrapper: loads fixtures + integrity index once, routes many times."""
 
-    def __init__(self, root: Path | None = None) -> None:
+    def __init__(self, root: Path | None = None, *, liveness_aware: bool = False) -> None:
         self.root = find_data_root(root)
+        self.liveness_aware = liveness_aware
         _ensure_backend_on_path(self.root)
         # imported lazily (after the path insert) so the module imports cleanly
         # even when backend isn't on the default path.
@@ -122,6 +127,7 @@ class RouterAdapter:
         scores = score_all_tables(
             live_tables, self.players_by_id, self.cbi,
             classifications=self.classifications, sessions=None,
+            liveness_aware=self.liveness_aware,
         )
         return {h.table_id: h for h in scores}
 
@@ -141,6 +147,7 @@ class RouterAdapter:
         result = route(
             seeker, live_tables, self.players_by_id, self.cbi,
             health_by_id, classifications=self.classifications,
+            liveness_aware=self.liveness_aware,
         )
         operator_view = result["operator_view"]
         open_by_id = {t["table_id"]: t.get("open_seats", 0) for t in live_tables}

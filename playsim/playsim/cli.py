@@ -181,6 +181,7 @@ def _room_sim(args) -> int:
         horizon_min=args.horizon, equity_samples=args.samples,
         tables=args.tables.split(",") if args.tables else None,
         protect=args.protect, protect_threshold=args.protect_threshold,
+        liveness=args.liveness,
         behavior_name=args.behavior,
         arrival_mode=args.arrival_mode,
         arrival_rate_per_hour=args.arrival_rate_per_hour,
@@ -210,6 +211,8 @@ def _room_sim(args) -> int:
     w("room_metrics_fairplay", res["room_metrics_fairplay"])
     if args.protect and res.get("fairplay_protect"):
         w("room_sim_fairplay_protect", res["fairplay_protect"])
+    if args.liveness and res.get("fairplay_liveness"):
+        w("room_sim_fairplay_liveness", res["fairplay_liveness"])
     print()
     return 0
 
@@ -297,7 +300,8 @@ def main(argv=None) -> int:
     rs.add_argument("--tables", help="comma-separated table ids (default: all in table_roster.json)")
     rs.add_argument("--protect", action="store_true", help="also run the experimental FairPlay-protect arm")
     rs.add_argument("--protect-threshold", type=float, default=50.0, help="protect safety threshold (untuned)")
-    rs.add_argument("--behavior", choices=["default", "fit-aware", "reason-aware"], default="default",
+    rs.add_argument("--liveness", action="store_true", help="also run the opt-in FairPlay-liveness arm")
+    rs.add_argument("--behavior", choices=["default", "fit-aware", "reason-aware", "formation-aware"], default="default",
                     help=("player behavior model (fit-aware/reason-aware are experimental, "
                           "illustrative until calibrated)"))
     rs.add_argument("--arrival-mode", choices=["fixture-once", "continuous"], default="fixture-once",

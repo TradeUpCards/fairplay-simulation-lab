@@ -40,6 +40,8 @@ class SeatOffer:
     table_style: str = ""
     seated_count: int = 0
     max_seats: int = 0
+    table_mode: str = "active"
+    target_seats: int | None = None
 
 
 @dataclass
@@ -68,6 +70,10 @@ class PlayerBehaviorPolicy(Protocol):
         """Return True to take the offered seat, False to decline it."""
         ...
 
+    def accept_forming_seat(self, offer: SeatOffer) -> bool:
+        """Return True to seed/join a forming or intentionally short table."""
+        ...
+
     def should_leave(self, ctx: LeaveContext) -> tuple[bool, str]:
         """Return (leaving, reason). reason is "" when not leaving."""
         ...
@@ -93,6 +99,9 @@ class DefaultBehaviorPolicy:
 
     def accept_seat(self, offer: SeatOffer) -> bool:
         return True  # forced placement: a seeker always takes the offered seat
+
+    def accept_forming_seat(self, offer: SeatOffer) -> bool:
+        return self.accept_seat(offer)
 
     def should_leave(self, ctx: LeaveContext) -> tuple[bool, str]:
         if ctx.archetype not in _COHORT:
@@ -214,6 +223,9 @@ class FitAwareBehaviorPolicy:
         decline_prob = self.decline_strength * max(0.0, 0.5 * (1.0 - f) + 0.5 * pressure)
         return self.rng.random() >= decline_prob
 
+    def accept_forming_seat(self, offer: SeatOffer) -> bool:
+        return self.accept_seat(offer)
+
     def reseek_on_break(self, archetype: str) -> bool:
         return True
 
@@ -323,6 +335,53 @@ class ReasonAwareBehaviorPolicy(FitAwareBehaviorPolicy):
         return 0.0
 
 
+FORMATION_WILLINGNESS_DEFAULTS = {
+    # Uncalibrated defaults: directional priors only. Stronger / high-volume
+    # players tolerate short-handed tables; newer casual players prefer fuller
+    # tables with more social/liquidity comfort.
+    "new": 0.20,
+    "recreational": 0.30,
+    "promo_hunter": 0.35,
+    "shared_device_household": 0.35,
+    "regular": 0.55,
+    "healthy_anchor": 0.55,
+    "grinder": 0.72,
+    "aggressive_predatory": 0.78,
+    "solver_like": 0.70,
+    "cluster_member": 0.60,
+    "bot_like": 0.65,
+}
+
+
+class FormationAwareBehaviorPolicy(ReasonAwareBehaviorPolicy):
+    """Reason-aware lifecycle plus short/forming-table acceptance propensity.
+
+    This is opt-in and illustrative until calibrated. It is intentionally separate
+    from the default/reason-aware policies so existing flags-off behavior remains
+    byte-identical.
+    """
+
+    name = "formation_aware"
+
+    def __init__(
+        self,
+        *,
+        formation_willingness: dict[str, float] | None = None,
+        **kwargs,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.formation_willingness = dict(FORMATION_WILLINGNESS_DEFAULTS)
+        if formation_willingness:
+            self.formation_willingness.update(formation_willingness)
+
+    def accept_forming_seat(self, offer: SeatOffer) -> bool:
+        short_candidate = offer.table_mode == "forming" or offer.seated_count <= 2
+        if not short_candidate:
+            return self.accept_seat(offer)
+        willingness = max(0.0, min(1.0, self.formation_willingness.get(offer.archetype, 0.5)))
+        return self.rng.random() < willingness
+
+
 def make_behavior(name: str = "default", *, seed: int = 0, **kwargs) -> PlayerBehaviorPolicy:
     """Config switch -> behavior policy instance."""
     if name == "default":
@@ -331,4 +390,6 @@ def make_behavior(name: str = "default", *, seed: int = 0, **kwargs) -> PlayerBe
         return FitAwareBehaviorPolicy(seed=seed, **kwargs)
     if name in ("reason_aware", "reason-aware"):
         return ReasonAwareBehaviorPolicy(seed=seed, **kwargs)
+    if name in ("formation_aware", "formation-aware"):
+        return FormationAwareBehaviorPolicy(seed=seed, **kwargs)
     raise ValueError(f"unknown behavior {name!r}")
