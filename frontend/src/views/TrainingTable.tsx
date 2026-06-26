@@ -421,10 +421,10 @@ export function TrainingTable() {
   const bbStr = (chips: number) => `${(chips / bb).toFixed(1)}bb`
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
-      <div>
+    <div className="grid h-full grid-cols-1 gap-6 overflow-hidden lg:grid-cols-[1fr_360px]">
+      <div className="flex min-h-0 flex-col">
         {/* setup bar */}
-        <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="mb-4 flex shrink-0 flex-wrap items-center gap-2">
           <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-muted">Seat</span>
           {slots.map((b, i) => (
             <select
@@ -464,7 +464,7 @@ export function TrainingTable() {
         </div>
 
         {/* felt */}
-        <div className="relative mx-auto aspect-4/3 w-full max-w-[600px]">
+        <div className="relative mx-auto aspect-4/3 w-full max-w-[600px] shrink-0">
           <img
             className="absolute inset-0 h-full w-full object-contain opacity-[0.92]"
             src={pokerTable}
@@ -497,7 +497,7 @@ export function TrainingTable() {
         </div>
 
         {/* action bar */}
-        <div className="mt-4 min-h-[64px] rounded-xl border border-line bg-surface p-3">
+        <div className="mt-4 min-h-[64px] shrink-0 rounded-xl border border-line bg-surface p-3">
           {error && <div className="mb-2 text-[0.8rem] text-[#e0607a]">{error}</div>}
           {!st && <div className="text-[0.84rem] text-muted">Seat 1–5 opponents (Empty = fewer players), then deal.</div>}
           {st?.complete && (
@@ -518,16 +518,16 @@ export function TrainingTable() {
           )}
         </div>
 
-        {/* hand action log — below the action buttons */}
+        {/* hand action log — below the action buttons; takes remaining space + scrolls */}
         {st && st.log.length > 0 && (
-          <div className="mt-4">
+          <div className="mt-4 min-h-0 flex-1 overflow-y-auto">
             <ActionLog log={st.log} seats={st.seats} />
           </div>
         )}
       </div>
 
-      {/* right column: coaching */}
-      <aside>
+      {/* right column: coaching — scrolls internally if the note is long */}
+      <aside className="min-h-0 overflow-y-auto">
         {coach ? (
           <CoachCard result={coach} />
         ) : st?.complete && st.review ? (

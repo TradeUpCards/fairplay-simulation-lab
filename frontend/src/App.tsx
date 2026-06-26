@@ -41,7 +41,7 @@ export function App() {
           </div>
         </main>
       ) : mode === 'training' ? (
-        <main className="mx-auto max-w-[1360px] px-6 pb-12 pt-8">
+        <main className="mx-auto h-[calc(100vh-3.4rem)] max-w-[1360px] overflow-hidden px-6 pb-4 pt-4">
           <TrainingTable />
         </main>
       ) : (
