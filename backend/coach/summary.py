@@ -43,8 +43,12 @@ def build_summary(fixture: dict[str, Any]) -> dict[str, Any]:
                 "skill_0_1": read.skill,
             },
         },
-        # each decision carries hero_equity_pct = RAW equity vs a random hand
-        "decisions": fixture["decisions"],
+        # each decision carries hero_equity_pct = RAW equity vs that many opponents;
+        # default opponents_in_hand to 1 (heads-up) when a fixture omits it.
+        "decisions": [
+            {**d, "opponents_in_hand": d.get("opponents_in_hand", 1)}
+            for d in fixture["decisions"]
+        ],
     }
 
 

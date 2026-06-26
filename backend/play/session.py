@@ -359,13 +359,31 @@ class PlaySession:
 
     # --------------------------------------------------- coach assembly ---
     def _decisive_opponent(self) -> tuple[int, str]:
+        """The opponent who actually applied the pressure on the hero's biggest
+        decision -- the last player to RAISE into it -- not merely the loosest
+        archetype at the table (a maniac who only called is not the villain)."""
         paid = [d for d in self._decisions if d.obs.to_call > 0] or self._decisions
         target = max(paid, key=lambda d: d.obs.to_call)
-        live = list(target.obs.live_opponent_ids) or [
-            pid for pid in self.seat_player_ids if self._pid_archetype[pid] != "human"
-        ]
-        dec_pid = max(live, key=lambda pid: knobs_for(self._pid_archetype[pid]).postflop_aggression)
-        return self.seat_player_ids.index(dec_pid), self._pid_archetype[dec_pid]
+        hero_pid = self.seat_player_ids[self.hero_seat]
+        rec = self.hand.record
+
+        aggressor = None
+        if rec:
+            # the last non-hero raise on the decisive street, up to the hero's spot
+            for a in rec.actions:
+                if (a.street == target.obs.street and a.player_id != hero_pid
+                        and a.is_raise and a.pot_before <= target.obs.pot + 1):
+                    aggressor = a.player_id
+            if aggressor is None:  # no raise on that street -> last raiser in the hand
+                raisers = [a.player_id for a in rec.actions
+                           if a.is_raise and a.player_id != hero_pid]
+                aggressor = raisers[-1] if raisers else None
+        if aggressor is None:  # truly unraised -> fall back to the most aggressive live opp
+            live = list(target.obs.live_opponent_ids) or [
+                pid for pid in self.seat_player_ids if self._pid_archetype[pid] != "human"
+            ]
+            aggressor = max(live, key=lambda pid: knobs_for(self._pid_archetype[pid]).postflop_aggression)
+        return self.seat_player_ids.index(aggressor), self._pid_archetype[aggressor]
 
     def _build_summary(self) -> None:
         if not self._decisions:
@@ -384,6 +402,7 @@ class PlaySession:
                 "to_call_bb": round(o.to_call / self.bb, 1),
                 "hero_action": d.action_str,
                 "hero_equity_pct": round(eq * 100, 1),
+                "opponents_in_hand": o.n_active,   # multiway context (equity is vs this many)
                 "context": "",
             })
         rec = self.hand.record

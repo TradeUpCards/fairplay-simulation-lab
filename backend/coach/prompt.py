@@ -56,6 +56,13 @@ ABSOLUTE RULES -- never violate:
    against this opponent -- do NOT invent a flaw or a different "better" line; set \
    better_line to confirm the play taken. A hand can be well played; honest affirmation \
    teaches as much as correction.
+8. RESPECT THE TABLE. The decisive opponent in the summary is the player who applied the \
+   AGGRESSION (the raiser) -- coach against THEM, not the loosest player at the table (a \
+   maniac who merely called is not the villain). Each decision's `opponents_in_hand` says \
+   how many opponents were in the pot, and the equity already reflects that count. In a \
+   MULTIWAY pot, do NOT apply heads-up logic: equity is split among more players, a raise \
+   -- especially a 3-bet into a field -- represents real strength, and folding a marginal \
+   or dominated hand is frequently correct even if someone else at the table plays loose.
 
 Write for a student reviewing their hand: concrete, math-anchored, tied to the \
 opponent's leak, and genuinely useful -- the kind of note that would actually help \
