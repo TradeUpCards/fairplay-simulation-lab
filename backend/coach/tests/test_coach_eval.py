@@ -26,7 +26,7 @@ def _coaching(equity, *, verdict="mistake",
               tell="they barrel a value-heavy range and rarely back off",
               better="fold to the sustained barrel", why="against this player's "
               "value-weighted betting range your hand is behind far more than the raw "
-              "number suggests", note="solid aggression -- tighten up versus this type",
+              "number suggests",
               headline="Fold -- your hand only beats bluffs against this opponent."):
     """A minimal, schema-valid coaching note for grader tests."""
     return {
@@ -34,11 +34,9 @@ def _coaching(equity, *, verdict="mistake",
         "opponent_read": {"seat": 3, "style_label": "grinder / TAG", "tell": tell},
         "decisions": [{
             "street": "river", "your_action": "call 16bb", "equity_pct": equity,
-            "verdict": verdict, "assessment": "calling is too loose given the range",
-            "better_line": better, "why_vs_this_type": why,
+            "verdict": verdict, "why_this_play": why, "better_line": better,
         }],
         "summary": "Fold to sustained aggression from a disciplined player.",
-        "coach_note": note,
     }
 
 
@@ -86,7 +84,7 @@ def test_grader_flags_wrong_or_missing_equity():
 # ---------------------------------------------------------------- guardrails ---
 def test_guardrails_catch_real_money_and_gto():
     assert check_coaching(_coaching(68.8)) == []
-    assert any("real-money" in v for v in check_coaching(_coaching(68.8, note="withdraw your winnings")))
+    assert any("real-money" in v for v in check_coaching(_coaching(68.8, why="withdraw your winnings to bank the equity edge")))
     assert any("GTO" in v for v in check_coaching(_coaching(68.8, headline="This is the GTO play.")))
 
 

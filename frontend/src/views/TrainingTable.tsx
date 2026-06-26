@@ -205,19 +205,17 @@ function CoachCard({ result, streaming }: { result: CoachResult; streaming?: boo
               {d.your_action && <span className="text-muted">you {d.your_action}</span>}
               {d.equity_pct != null && <span className="font-mono text-faint">equity {d.equity_pct}%</span>}
             </div>
-            {d.assessment && <div className="text-[0.82rem] text-text">{d.assessment}</div>}
+            {d.why_this_play && <div className="text-[0.82rem] text-text">{d.why_this_play}</div>}
             {d.better_line && (
               <div className="mt-1 text-[0.82rem]">
                 <span className="font-semibold text-felt">{d.verdict === 'good' ? 'Right play:' : 'Better:'}</span>{' '}
                 <span className="text-text">{d.better_line}</span>
               </div>
             )}
-            {d.why_vs_this_type && <div className="mt-0.5 text-[0.8rem] text-muted">{d.why_vs_this_type}</div>}
           </div>
         ))}
       </div>
-      {c.summary && <p className="mt-3 mb-1 text-[0.84rem] text-text">{c.summary}</p>}
-      {c.coach_note && <p className="m-0 text-[0.8rem] italic text-muted">{c.coach_note}</p>}
+      {c.summary && <p className="mt-3 mb-0 text-[0.84rem] text-text">{c.summary}</p>}
     </div>
   )
 }

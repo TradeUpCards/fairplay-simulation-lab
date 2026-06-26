@@ -69,6 +69,11 @@ opponent's leak, and genuinely useful -- the kind of note that would actually he
 them play the next one better. Focus on the one or two decisions that actually \
 mattered rather than every routine check, but never sacrifice a correct, specific \
 recommendation for the sake of brevity.
+
+BE TIGHT. Keep every field to one or two sentences -- no padding, no restating the \
+same point in different words, no throat-clearing. Say the lesson and the number and \
+stop. Brevity is a feature here, but correctness comes first: never drop a specific, \
+correct recommendation (e.g. a sizing or a fold) just to be short.
 """
 
 # Structured-output schema -- the renderable shape of every coaching response.
@@ -76,7 +81,7 @@ recommendation for the sake of brevity.
 COACH_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["headline", "opponent_read", "decisions", "summary", "coach_note"],
+    "required": ["headline", "opponent_read", "decisions", "summary"],
     "properties": {
         "headline": {
             "type": "string",
@@ -106,7 +111,7 @@ COACH_SCHEMA = {
                 "type": "object",
                 "additionalProperties": False,
                 "required": ["street", "your_action", "equity_pct", "verdict",
-                             "assessment", "better_line", "why_vs_this_type"],
+                             "why_this_play", "better_line"],
                 "properties": {
                     "street": {"type": "string",
                                "description": "preflop | flop | turn | river"},
@@ -120,29 +125,25 @@ COACH_SCHEMA = {
                                 "description": "good = best or clearly fine play; thin = ok "
                                                "but close/slightly off; mistake = a clearly "
                                                "better line exists. Do not over-use 'mistake'."},
-                    "assessment": {"type": "string",
-                                   "description": "Why the action was good/thin/a mistake -- "
-                                                  "grounded in the equity and pot odds."},
+                    "why_this_play": {"type": "string",
+                                      "description": "One or two sentences: why the action was "
+                                                     "good/thin/a mistake AND why it plays this "
+                                                     "way against THIS opponent's specific leak "
+                                                     "-- grounded in the equity and pot odds. "
+                                                     "Combine the judgment and the type-specific "
+                                                     "reasoning; don't pad."},
                     "better_line": {"type": "string",
-                                    "description": "The line you'd recommend. If the action "
-                                                   "was already best (verdict 'good'), restate "
-                                                   "and confirm it -- do NOT invent a different "
-                                                   "'better' line."},
-                    "why_vs_this_type": {"type": "string",
-                                         "description": "Why that line is better against THIS "
-                                                        "opponent's specific leak."},
+                                    "description": "The line you'd recommend, in a few words. If "
+                                                   "the action was already best (verdict 'good'), "
+                                                   "restate and confirm it -- do NOT invent a "
+                                                   "different 'better' line."},
                 },
             },
         },
         "summary": {
             "type": "string",
-            "description": "1-2 sentence wrap-up of the key adjustment to make against "
-                           "this opponent type next time.",
-        },
-        "coach_note": {
-            "type": "string",
-            "description": "One encouraging line that reaffirms this is exploitative "
-                           "coaching against a known type (not a claim of optimal play).",
+            "description": "One sentence: the key adjustment to make against this "
+                           "opponent type next time.",
         },
     },
 }

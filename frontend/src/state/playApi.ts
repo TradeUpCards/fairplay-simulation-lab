@@ -75,9 +75,8 @@ export interface CoachDecision {
   your_action: string
   equity_pct: number
   verdict: 'good' | 'thin' | 'mistake'
-  assessment: string
+  why_this_play: string
   better_line: string
-  why_vs_this_type: string
 }
 
 export interface Coaching {
@@ -85,7 +84,6 @@ export interface Coaching {
   opponent_read: { seat: number; style_label: string; tell: string }
   decisions: CoachDecision[]
   summary: string
-  coach_note: string
 }
 
 export interface CoachResult {

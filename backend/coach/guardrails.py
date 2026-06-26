@@ -28,7 +28,7 @@ GTO_CLAIM_WORDS = [
 # Accusatory / verdict language has no place in coaching either.
 VERDICT_WORDS = ["cheater", "is cheating", "is a bot", "colluding", "collusion"]
 
-REQUIRED_FIELDS = ["headline", "opponent_read", "decisions", "summary", "coach_note"]
+REQUIRED_FIELDS = ["headline", "opponent_read", "decisions", "summary"]
 
 
 def _find(text: str, phrases: list[str]) -> list[str]:
@@ -38,14 +38,14 @@ def _find(text: str, phrases: list[str]) -> list[str]:
 
 def _all_prose(summary: dict[str, Any]) -> str:
     """Every human-readable string in the response, flattened, for scanning."""
-    parts = [str(summary.get(f, "")) for f in ("headline", "summary", "coach_note")]
+    parts = [str(summary.get(f, "")) for f in ("headline", "summary")]
     read = summary.get("opponent_read") or {}
     if isinstance(read, dict):
         parts += [str(read.get("style_label", "")), str(read.get("tell", ""))]
     for d in summary.get("decisions") or []:
         if isinstance(d, dict):
             parts += [str(d.get(k, "")) for k in
-                      ("assessment", "better_line", "why_vs_this_type", "your_action")]
+                      ("why_this_play", "better_line", "your_action")]
     return " ".join(parts)
 
 
@@ -83,7 +83,7 @@ def check_coaching(summary: dict[str, Any]) -> list[str]:
         eq = d.get("equity_pct")
         if not isinstance(eq, (int, float)) or not (0.0 <= float(eq) <= 100.0):
             violations.append(f"decision[{i}] equity_pct missing or out of 0-100")
-        if len(str(d.get("why_vs_this_type", ""))) < 15:
-            violations.append(f"decision[{i}] why_vs_this_type too thin (not type-specific)")
+        if len(str(d.get("why_this_play", ""))) < 15:
+            violations.append(f"decision[{i}] why_this_play too thin (not type-specific)")
 
     return violations
