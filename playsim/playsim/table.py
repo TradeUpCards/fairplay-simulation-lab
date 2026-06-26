@@ -7,6 +7,13 @@ is reproducible — the determinism the lab's hard rules require.
 
 The caller (``runner``) rotates the player→seat mapping each hand so positions
 rotate; this module is purely "play these seats out and report what happened".
+
+The hand loop lives in :func:`play_hand_steps`, a pausable generator that yields
+``(seat, Observation)`` whenever a seat must act and receives that seat's
+:class:`Decision` back. :func:`play_hand` drives it with the seat agents (every
+seat a bot); the interactive driver (``playsim.interactive``) drives the same
+generator but pauses for a human seat. One loop, two drivers — the engine is never
+forked, and bot rng-consumption order is byte-identical either way.
 """
 
 from __future__ import annotations
@@ -71,8 +78,7 @@ def _pot_now(state) -> int:
     return pots + bets
 
 
-def play_hand(
-    seat_agents: list[ArchetypeAgent],
+def play_hand_steps(
     seat_player_ids: list[int],
     seat_stacks: list[int],
     sb: int,
@@ -81,8 +87,17 @@ def play_hand(
     hand_id: int,
     members_by_player: dict[int, frozenset[int]],
     weak_player_ids: frozenset[int],
-) -> HandRecord:
-    n = len(seat_agents)
+):
+    """The hand loop as a pausable generator.
+
+    Yields ``(seat, Observation)`` each time a seat must act and receives that
+    seat's :class:`Decision` back via ``.send()``; ``return``s the finished
+    :class:`HandRecord` (PEP 380 ``StopIteration.value``). The deck shuffle, the
+    deals, and the board run inside here; only the per-seat *decision* is delegated
+    to the driver, so swapping one seat for a human changes nothing about the engine
+    or the bots' determinism.
+    """
+    n = len(seat_player_ids)
     deck = FULL_DECK[:]
     rng.shuffle(deck)
     it = iter(deck)
@@ -115,7 +130,6 @@ def play_hand(
         if seat is None:
             break
 
-        agent = seat_agents[seat]
         pid = seat_player_ids[seat]
         to_call = state.checking_or_calling_amount or 0
         pot = _pot_now(state)
@@ -139,7 +153,7 @@ def play_hand(
             member_ids=members_by_player.get(pid, frozenset()),
             weak_opponent=any(o in weak_player_ids for o in live_opp),
         )
-        d = agent.act(obs, rng)
+        d = yield (seat, obs)
 
         # Apply through the engine (it enforces legality).
         if d.kind == "fold" and state.can_fold():
@@ -182,3 +196,33 @@ def play_hand(
         big_blind=bb,
         showdown_player_ids=showdown if len(showdown) > 1 else [],
     )
+
+
+def play_hand(
+    seat_agents: list[ArchetypeAgent],
+    seat_player_ids: list[int],
+    seat_stacks: list[int],
+    sb: int,
+    bb: int,
+    rng,
+    hand_id: int,
+    members_by_player: dict[int, frozenset[int]],
+    weak_player_ids: frozenset[int],
+) -> HandRecord:
+    """Play one full hand with every seat driven by its archetype agent.
+
+    Thin driver over :func:`play_hand_steps`: each time the loop needs a seat's
+    move, that seat's agent supplies it. rng consumption order is identical to the
+    original single-function loop, so every existing fixture and stat is unchanged.
+    """
+    gen = play_hand_steps(
+        seat_player_ids, seat_stacks, sb, bb, rng, hand_id,
+        members_by_player, weak_player_ids,
+    )
+    try:
+        seat, obs = next(gen)
+        while True:
+            d = seat_agents[seat].act(obs, rng)
+            seat, obs = gen.send(d)
+    except StopIteration as stop:
+        return stop.value

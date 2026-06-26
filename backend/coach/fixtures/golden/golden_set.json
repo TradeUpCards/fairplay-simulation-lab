@@ -1,0 +1,152 @@
+{
+  "_about": "Golden set for the AI poker coach (the dominant oracle). Five decisive-spot hands, one vs each distinct opponent type. Every hero_equity_pct is REAL, computed by playsim/playsim/equity.py (equity_mc, seed=42, samples=6000) -- not hand-authored. The decisive_opponent carries only the archetype; the style label, named leak, and tendency knobs are resolved from backend/coach/leaks.py at eval time (single source of truth, no drift). Each fixture's rubric is what a passing coaching response must satisfy.",
+  "_equity_provenance": "playsim.equity.equity_mc(hole, board, n_opponents=1, Random(42), samples=6000)",
+  "hands": [
+    {
+      "hand_id": "G1-station-value",
+      "lesson": "Value-bet bigger against a calling station; checking back a strong hand burns a clear value spot.",
+      "table": {"max_seats": 6, "big_blind_chips": 1},
+      "hero": {"hole": ["Ah", "Ad"], "position": "BTN"},
+      "decisive_opponent": {"seat": 5, "archetype": "recreational"},
+      "board": ["Ks", "7d", "2c", "9h", "3s"],
+      "pot_bb": 12,
+      "decisions": [
+        {
+          "street": "river",
+          "board": ["Ks", "7d", "2c", "9h", "3s"],
+          "pot_bb": 12,
+          "to_call_bb": 0,
+          "hero_action": "check",
+          "hero_equity_pct": 89.4,
+          "context": "Heads-up vs the station on the river with an overpair; action checked to hero, hero checked back."
+        }
+      ],
+      "rubric": {
+        "must_cite_equity_pct": 89.4,
+        "equity_tolerance": 5.0,
+        "better_line": "bet for value, sizing up because a station calls too wide",
+        "better_line_keywords": ["bet", "value"],
+        "leak_theme_keywords": ["call", "light", "wide", "station"],
+        "must_not_recommend": ["check", "bluff"]
+      }
+    },
+    {
+      "hand_id": "G2-maniac-calldown",
+      "lesson": "Call down lighter against a maniac with a genuine bluff-catcher. An underpair that beats only his bluffs is a fold versus a disciplined player but a clear call versus someone who over-bluffs.",
+      "table": {"max_seats": 6, "big_blind_chips": 1},
+      "hero": {"hole": ["9h", "9c"], "position": "BB"},
+      "decisive_opponent": {"seat": 4, "archetype": "aggressive_predatory"},
+      "board": ["Kc", "Qd", "6s", "3h", "2c"],
+      "pot_bb": 34,
+      "decisions": [
+        {
+          "street": "river",
+          "board": ["Kc", "Qd", "6s", "3h", "2c"],
+          "pot_bb": 34,
+          "to_call_bb": 14,
+          "hero_action": "fold",
+          "hero_equity_pct": 67.6,
+          "context": "Hero has pocket nines -- an underpair to the king and queen on board, so it beats only bluffs and worse holdings. The maniac barreled all three streets and bet big on the river; hero folded. Pot odds need ~29%. The equity shown is vs a random hand."
+        }
+      ],
+      "rubric": {
+        "must_cite_equity_pct": 67.6,
+        "equity_tolerance": 5.0,
+        "better_line": "call -- an underpair is a bluff-catcher here; against a maniac whose barreling range is bluff-heavy it is good well over the ~29% price, even though you would fold it to a disciplined player",
+        "better_line_keywords": ["call"],
+        "leak_theme_keywords": ["bluff", "over", "aggress", "wide"],
+        "must_frame_as_bluff_catcher": true,
+        "must_reference_pot_odds": true,
+        "must_not_recommend": ["fold"]
+      }
+    },
+    {
+      "hand_id": "G3-nit-steal",
+      "lesson": "Bet to steal against a rock/nit that over-folds; checking back air gives up free equity they would have surrendered.",
+      "table": {"max_seats": 6, "big_blind_chips": 1},
+      "hero": {"hole": ["8h", "7h"], "position": "CO"},
+      "decisive_opponent": {"seat": 2, "archetype": "promo_hunter"},
+      "board": ["Ac", "Kd", "4s"],
+      "pot_bb": 6,
+      "decisions": [
+        {
+          "street": "flop",
+          "board": ["Ac", "Kd", "4s"],
+          "pot_bb": 6,
+          "to_call_bb": 0,
+          "hero_action": "check",
+          "hero_equity_pct": 25.7,
+          "context": "Hero has a backdoor-only hand (8-high) on an ace-king flop; the nit checked, hero checked back instead of taking a cheap stab."
+        }
+      ],
+      "rubric": {
+        "must_cite_equity_pct": 25.7,
+        "equity_tolerance": 5.0,
+        "better_line": "bet as a semi-bluff/steal -- low equity is fine because a nit over-folds everything but a strong ace or king",
+        "better_line_keywords": ["bet", "steal", "fold equity", "bluff"],
+        "better_line_keywords_any": true,
+        "leak_theme_keywords": ["fold", "tight", "over", "risk-averse"],
+        "must_not_recommend": ["check back", "give up"]
+      }
+    },
+    {
+      "hand_id": "G4-solver-bluff",
+      "lesson": "Don't bluff a solver-like player without equity or a real fold-out edge; they defend credibly, so a no-equity bluff just burns chips. (Solver-like is a style label, NOT a claim your line is optimal.)",
+      "table": {"max_seats": 6, "big_blind_chips": 1},
+      "hero": {"hole": ["Jh", "Th"], "position": "BTN"},
+      "decisive_opponent": {"seat": 6, "archetype": "solver_like"},
+      "board": ["Qs", "9c", "2d", "4s", "7h"],
+      "pot_bb": 16,
+      "decisions": [
+        {
+          "street": "river",
+          "board": ["Qs", "9c", "2d", "4s", "7h"],
+          "pot_bb": 16,
+          "to_call_bb": 0,
+          "hero_action": "bet",
+          "hero_equity_pct": 18.7,
+          "context": "Hero's gutshot (JT) missed; on the river hero fired a bluff into the solver-like player instead of giving up."
+        }
+      ],
+      "rubric": {
+        "must_cite_equity_pct": 18.7,
+        "equity_tolerance": 5.0,
+        "better_line": "check / give up -- a busted hand with no fold-equity edge is -EV to bluff against a player who defends credibly",
+        "better_line_keywords": ["check", "give up", "don't bluff", "fold equity"],
+        "better_line_keywords_any": true,
+        "leak_theme_keywords": ["balanced", "credible", "strong", "doesn't over-fold", "few leaks"],
+        "must_not_recommend": ["bet", "bluff"],
+        "must_not_claim_gto": true
+      }
+    },
+    {
+      "hand_id": "G5-grinder-fold",
+      "lesson": "DISCRIMINATING FIXTURE: fold to a grinder's three-street barrel even though your raw equity looks great. 68.8% is vs a RANDOM hand -- a disciplined grinder doesn't fire three barrels with random hands, so against the value-heavy range that actually bets here you're behind.",
+      "table": {"max_seats": 6, "big_blind_chips": 1},
+      "hero": {"hole": ["Ts", "Td"], "position": "MP"},
+      "decisive_opponent": {"seat": 3, "archetype": "grinder"},
+      "board": ["Ah", "6c", "3d", "8s", "Kc"],
+      "pot_bb": 38,
+      "decisions": [
+        {
+          "street": "river",
+          "board": ["Ah", "6c", "3d", "8s", "Kc"],
+          "pot_bb": 38,
+          "to_call_bb": 16,
+          "hero_action": "call",
+          "hero_equity_pct": 68.8,
+          "context": "Hero's pocket tens face a grinder who bet flop, turn, and river on an ace-king board. Hero called the river. Pot odds need ~30%; raw equity is 68.8% vs a random hand."
+        }
+      ],
+      "rubric": {
+        "must_cite_equity_pct": 68.8,
+        "equity_tolerance": 5.0,
+        "better_line": "fold -- against a grinder's three-barrel value range on an A-K board, tens beat only bluffs, so the 68.8%-vs-random number does not apply",
+        "better_line_keywords": ["fold"],
+        "leak_theme_keywords": ["disciplin", "value", "barrel", "tight", "range"],
+        "must_reconcile_equity_vs_range": true,
+        "must_not_recommend": ["call", "raise"]
+      }
+    }
+  ]
+}
