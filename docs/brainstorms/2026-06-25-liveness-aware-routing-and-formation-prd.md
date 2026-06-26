@@ -3,9 +3,13 @@
 **Date:** 2026-06-25
 **For:** Sargon (playsim owner) + his coding agent
 **From:** P3 (scoring/evidence) — this checkout
-**Status:** ready to pick up. The P3 side (changes #1/#2 below) is owned by P3 and
-will be delivered behind an opt-in flag; **this doc specifies the two playsim-side
-changes (#3, #4) and the one shared seam.**
+**Status:** implementation in progress. The shared seam semantics are now locked
+below, and the first pass implements the backend flag + playsim policy/behavior
+hooks behind opt-in paths. Results remain illustrative until calibrated.
+
+**Implementation decision update:** this work must lock semantics, not just field
+names. `table_mode` and `target_seats` are now treated as a contract between the
+room loop, router adapter, backend health/fit scoring, and liveness-aware policy.
 
 ---
 
@@ -44,17 +48,24 @@ FairPlay *use* it. Neither helps alone.
 
 ---
 
-## 2. The seam (do this first, with P3) — `table_mode` + `target_seats`
+## 2. The seam (locked semantics) — `table_mode` + `target_seats`
 
 P3's `p_frag`/`fit` need to know a table is *intentionally* short-handed, not
 collapsing. So the table dict the adapter passes to the backend router gains two
 fields:
 
 - **`table_mode`** ∈ `{"forming", "active", "draining"}` — the room's current view of
-  the table. `forming` = below quorum and trying to grow; `active` = dealable;
-  `draining` = active but trending down / about to break.
-- **`target_seats`** : `int` — the seat count the table is aiming for (e.g. 6), so
-  fragility/occupancy can be judged against intent, not just `max_seats`.
+  the table.
+  - `forming`: below the 2-player dealing quorum and intentionally allowed to
+    wait/grow under `--formation-mode forming`. It deals no hands and accrues no
+    paid seat-time.
+  - `active`: dealable and not immediately one departure from break.
+  - `draining`: not intentionally forming, or dealable but at break risk. In the
+    current room semantics, a 2-player active table is considered draining because
+    one exit breaks it.
+- **`target_seats`** : `int` — currently defaults to `max_seats` because the fixture
+  does not encode intentional 2-max / 3-max formats. A future table-format field can
+  lower this for real short-handed products; until then, `target_seats=max_seats`.
 
 **Playsim populates these** in `make_table_dict` (`playsim/playsim/router_adapter.py`)
 from the live `_Table` state in `room.py` (you already track the lifecycle for
@@ -62,9 +73,9 @@ formation mode — surface it). **P3 consumes them** in `health.p_frag` and
 `seating.fit`, gated by the `liveness_aware` flag (default off → frozen demo scores
 unchanged → validators still pass).
 
-> Agree the exact field names/semantics with P3 before building #1/#4 — this is the
-> one piece neither side owns alone. Names above are the proposal; lock them in a
-> 5-minute sync.
+**Frozen-scoring guard:** the backend consumes these fields only when
+`liveness_aware=True`. With the flag off, frozen scoring and router behavior must
+remain unchanged.
 
 ---
 
@@ -90,6 +101,12 @@ forming/sub-quorum table, e.g.:
 forming`, the seeker's best option is to seed an empty table or join a forming one.
 Today `_route_seeker` (`room.py:344`) + the break-reseek `require_pair` guard force a
 balk; the propensity hook is what lets the *willing* archetypes take that seat.
+
+**Coupling note:** #4 without #3 is a lower-bound mechanism test. A liveness-aware
+policy can choose a forming table, but player-side willingness controls whether that
+seat is accepted. If #4 alone looks weak, do not treat that as a failure of
+liveness-aware routing until #3 is enabled or a permissive forming-acceptance default
+is used for the mechanism probe.
 
 **Defaults / safety:** conservative defaults so that with the existing flags off, the
 behavior is **byte-identical** to today. Deterministic (seeded; no RNG that breaks
@@ -117,8 +134,9 @@ change silently. Reuse the `RouterAdapter` (the only module that imports
   **seeding a new table** or **joining a forming healthy one** for a vulnerable
   seeker, using `table_mode`/`target_seats` to find the growth path.
 - **Must not collapse into Standard.** Explicitly: do *not* just prefer the fullest
-  dealable table. If the policy degenerates to "most-full," it's wrong — add a test
-  that it diverges from `StandardPolicy` on a seeded scenario.
+  dealable table. The acceptance test must assert the intended decision, not merely
+  inequality: in a constructed case where Standard tops off a fuller predatory table,
+  FairPlay-liveness should seed/grow a fresh healthy forming table.
 
 **Hard guards (keep intact):**
 - **Anti-circularity:** route on backend **predicted** health (`sessions=None` →
@@ -135,7 +153,8 @@ change silently. Reuse the `RouterAdapter` (the only module that imports
 
 1. **Opt-in, no silent change.** With the new flags off, the 2×2 and existing
    headline reproduce **byte-identically**. Frozen demo scoring (`data/derived/*.json`,
-   pinned validators) is untouched — P3's flag defaults off.
+   pinned validators) is untouched: `liveness_aware` defaults off in backend scoring
+   and routing, not just in playsim.
 2. **The experiment runs the full 2×2 × policies:** `{fixture-once, continuous}` ×
    `{none, forming}` × `{FairPlay-route, FairPlay-liveness}`, reporting vulnerable
    cohort **paid seat-hrs**, **breaks**, **wait-balks**, and the formation metrics
@@ -143,23 +162,26 @@ change silently. Reuse the `RouterAdapter` (the only module that imports
 3. **The headline question is answered:** does liveness-aware routing + formation +
    propensity **narrow or flip** the Standard-vs-FairPlay gap, and *which lever*
    moved it (formation availability vs ranking vs propensity)?
-4. **Tests:** new tests for the propensity hook, the liveness-aware policy (incl. the
-   "does-not-collapse-into-Standard" assertion), and the `table_mode`/`target_seats`
-   seam.
+4. **Tests:** new tests for the propensity hook, the liveness-aware policy (including
+   the meaningful seed/grow decision instead of only "not Standard"), and the
+   `table_mode`/`target_seats` seam. Keep the structural no-import guard passing:
+   `room.py` must not import `playsim/health.py`.
 5. **Honest labeling:** still **illustrative, not validated** — uncalibrated
    parametric model. No retention *claim* without calibration; results are
    directional. Keep the caveat in any doc you update.
+6. **Mechanism-first interpretation.** A FairPlay-liveness win should be attributed
+   through formation mechanics, not headline paid seat-hours alone. Report
+   `no_good_existing_seat_count`, `forming_seat_count`, `formation_activation_count`,
+   `table_reactivation_count`, breaks, and wait-balks so we can tell whether
+   formation/growth actually moved the result.
 
 ---
 
 ## 6. Suggested sequence
 
-1. **Seam first** (with P3): lock `table_mode` + `target_seats`; P3 lands the
-   `liveness_aware` scoring flag (#1/#2) reading them; you populate them in
-   `make_table_dict`.
-2. **#4** liveness-aware policy (the unlock) → re-run the 2×2 → measure.
+1. **Seam first:** lock `table_mode` + `target_seats`; backend scoring consumes them
+   only behind `liveness_aware`; playsim populates them in `make_table_dict`.
+2. **#4** liveness-aware policy (the unlock) → re-run the 2×2 → measure. Treat this
+   as a lower-bound test if #3 is not enabled.
 3. **#3** propensity (sharpen *who* seeds/joins) → re-run → measure the delta.
 4. Update `playsim-table-formation-gap.md` with the result table.
-
-P3 (this checkout) will hand you the `liveness_aware` flag + the field-consumption
-side; ping P3 when the seam names are locked.

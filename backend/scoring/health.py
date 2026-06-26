@@ -152,12 +152,33 @@ def p_pred(archetypes: list[str]) -> tuple[float, dict[str, Any]]:
                  "pressure": round(pressure, 3)}
 
 
-def p_frag(seated: int, max_seats: int, trend: str) -> tuple[float, dict[str, Any]]:
+def p_frag(
+    seated: int,
+    max_seats: int,
+    trend: str,
+    *,
+    table_mode: str = "active",
+    target_seats: int | None = None,
+    liveness_aware: bool = False,
+) -> tuple[float, dict[str, Any]]:
     """Fragility: short-handed + stalling paid-seat-time concentrate exposure."""
-    occ = min(1.0, (seated / max_seats)) if max_seats else 1.0  # cap: a full/over-full table is not fragile on occupancy
+    if liveness_aware and table_mode == "forming":
+        return 0.0, {
+            "occupancy": 0.0,
+            "trend": trend,
+            "trend_penalty": 0.0,
+            "table_mode": table_mode,
+            "target_seats": target_seats or max_seats,
+            "formation_exempt": True,
+        }
+    denominator = target_seats if (liveness_aware and target_seats) else max_seats
+    occ = min(1.0, (seated / denominator)) if denominator else 1.0  # cap: a full/over-full table is not fragile on occupancy
     trend_pen = FRAG_TREND_PEN.get(trend, FRAG_TREND_PEN["stable"])
     val = max(0.0, min(FRAG_MAX, FRAG_W_OCC * (1 - occ) + trend_pen))
-    return val, {"occupancy": round(occ, 3), "trend": trend, "trend_penalty": trend_pen}
+    sig = {"occupancy": round(occ, 3), "trend": trend, "trend_penalty": trend_pen}
+    if liveness_aware:
+        sig.update({"table_mode": table_mode, "target_seats": denominator})
+    return val, sig
 
 
 def p_clus(seated_ids: list[str], seated_count: int,
@@ -231,19 +252,27 @@ def score_table(table: Mapping[str, Any],
                 players_by_id: Mapping[str, Mapping],
                 cluster_band_by_member: Mapping[str, tuple[str, str]],
                 classifications: Mapping[str, str] | None = None,
-                sessions: list[Mapping[str, Any]] | None = None) -> HealthScore:
+                sessions: list[Mapping[str, Any]] | None = None,
+                *,
+                liveness_aware: bool = False) -> HealthScore:
     """Compute Health(T) and its four terms for one table_roster entry."""
     tid = table.get("table_id", "?")
     seated_ids = list(table.get("seated_player_ids", []))
     seated_count = table.get("seated_count", len(seated_ids))
     max_seats = table.get("max_seats", seated_count)
     trend = table.get("paid_seat_time_trend", "stable")
+    table_mode = table.get("table_mode", "active")
+    target_seats = table.get("target_seats", max_seats)
 
     archetypes = [a for a in (_archetype_of(p, players_by_id, classifications)
                               for p in seated_ids) if a]
 
     pred, pred_sig = p_pred(archetypes)
-    frag, frag_sig = p_frag(seated_count, max_seats, trend)
+    frag, frag_sig = p_frag(
+        seated_count, max_seats, trend,
+        table_mode=table_mode, target_seats=target_seats,
+        liveness_aware=liveness_aware,
+    )
     clus, clus_sig, integrity_candidate = p_clus(seated_ids, seated_count,
                                                   cluster_band_by_member)
     bleed, bleed_sig = p_bleed(seated_ids, tid, players_by_id, sessions, classifications)
@@ -300,6 +329,11 @@ def score_all_tables(tables: list[Mapping[str, Any]],
                      players_by_id: Mapping[str, Mapping],
                      cluster_band_by_member: Mapping[str, tuple[str, str]],
                      classifications: Mapping[str, str] | None = None,
-                     sessions: list[Mapping[str, Any]] | None = None) -> list[HealthScore]:
-    return [score_table(t, players_by_id, cluster_band_by_member, classifications, sessions)
+                     sessions: list[Mapping[str, Any]] | None = None,
+                     *,
+                     liveness_aware: bool = False) -> list[HealthScore]:
+    return [score_table(
+        t, players_by_id, cluster_band_by_member, classifications, sessions,
+        liveness_aware=liveness_aware,
+    )
             for t in tables]
