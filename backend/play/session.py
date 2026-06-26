@@ -305,9 +305,7 @@ class PlaySession:
                 review = {
                     "opponent": {"label": s["decisive_opponent"]["style_label"],
                                  "leak": s["decisive_opponent"]["leak"]},
-                    "decisions": [{"street": d["street"], "action": d["hero_action"],
-                                   "equity_pct": d["hero_equity_pct"]}
-                                  for d in s["decisions"]],
+                    "decisions": getattr(self, "_review_decisions", []),  # every decision
                 }
             return PlayState(
                 hand_id=self.hand_id, complete=True, hero_seat=self.hero_seat,
@@ -411,6 +409,18 @@ class PlaySession:
                 "opponents_in_hand": o.n_active,   # multiway context (equity is vs this many)
                 "context": "",
             })
+        # the instant review shows EVERY decision (cheap); the coach focuses on the few
+        # that mattered -- the ones the hero PAID for, biggest first -- capped so the
+        # LLM output (and latency) stays bounded on long call-down hands.
+        self._review_decisions = [
+            {"street": x["street"], "action": x["hero_action"], "equity_pct": x["hero_equity_pct"]}
+            for x in decisions
+        ]
+        paid = [i for i, x in enumerate(decisions) if x["to_call_bb"] > 0]
+        ranked = paid or list(range(len(decisions)))
+        top = sorted(ranked, key=lambda i: decisions[i]["to_call_bb"], reverse=True)[:3]
+        key_decisions = [decisions[i] for i in sorted(top)]
+
         rec = self.hand.record
         fixture = {
             "hand_id": f"live-{self.hand_id}",
@@ -419,7 +429,7 @@ class PlaySession:
             "decisive_opponent": {"seat": dec_seat + 1, "archetype": dec_arch},
             "board": list(rec.board) if rec else [],
             "pot_bb": rec.pot_bb if rec else 0.0,
-            "decisions": decisions,
+            "decisions": key_decisions,
         }
         self._fixture = fixture
         self._summary = build_summary(fixture)

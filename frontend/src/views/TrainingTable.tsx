@@ -558,10 +558,18 @@ export function TrainingTable() {
       </aside>
       </div>
       {debug && (
-        <div className="pointer-events-none fixed bottom-2 right-2 z-50 rounded-md border border-line bg-[rgba(13,17,23,0.92)] px-2 py-1 font-mono text-[0.58rem] leading-tight text-faint">
+        <button
+          type="button"
+          onClick={() => {
+            const t = `v${debug.version} · client ${(debug.clientMs / 1000).toFixed(1)}s · LLM ${(debug.llmMs / 1000).toFixed(1)}s · equity ${debug.equityMs}ms · ${debug.model}`
+            void navigator.clipboard?.writeText(t)
+          }}
+          title="click to copy"
+          className="fixed bottom-2 right-2 z-50 select-text rounded-md border border-line bg-[rgba(13,17,23,0.92)] px-2 py-1 font-mono text-[0.58rem] leading-tight text-faint"
+        >
           DEBUG · v{debug.version} · client {(debug.clientMs / 1000).toFixed(1)}s · LLM{' '}
-          {(debug.llmMs / 1000).toFixed(1)}s · equity {debug.equityMs}ms · {debug.model}
-        </div>
+          {(debug.llmMs / 1000).toFixed(1)}s · equity {debug.equityMs}ms · {debug.model} · ⧉
+        </button>
       )}
     </>
   )
