@@ -45,7 +45,10 @@ from coach.summary import build_summary  # noqa: E402
 _STREETS = ("preflop", "flop", "turn", "river")
 _DEFAULT_BOTS = ["recreational", "aggressive_predatory", "promo_hunter",
                  "grinder", "regular"]
-_EQUITY_SAMPLES = 2000
+# Monte-Carlo equity for the coach summary. 2000 samples cost ~2.7s/decision (a
+# hidden latency bottleneck found by coach/bench.py); 400 is ~5x faster with ~2-3%
+# precision -- plenty for coaching, and it makes the instant review actually instant.
+_EQUITY_SAMPLES = 400
 
 
 def _middle_names(k: int) -> list[str]:
