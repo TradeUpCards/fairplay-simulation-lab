@@ -81,10 +81,10 @@ function Avatar({ sv }: { sv: SeatView }) {
   const hue = hashHue(sv.label)
   return (
     <div
-      className="grid h-8 w-8 shrink-0 place-items-center rounded-full border text-[1.02rem] leading-none"
+      className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 text-[1.12rem] leading-none shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
       style={{
-        borderColor: sv.is_hero ? 'var(--color-brass)' : '#2c3543',
-        background: `radial-gradient(circle at 30% 25%, hsl(${hue} 42% 34%), hsl(${hue} 44% 17%))`,
+        borderColor: sv.is_hero ? 'var(--color-brass)' : '#3a4555',
+        background: `radial-gradient(circle at 30% 25%, hsl(${hue} 42% 36%), hsl(${hue} 46% 15%))`,
       }}
       aria-hidden="true"
     >
@@ -141,7 +141,7 @@ function Seat({ sv }: { sv: SeatView }) {
           ))}
         </div>
       )}
-      <div className={`flex w-full items-center gap-1.5 rounded-lg border px-1.5 py-1 ${boxTone}`}>
+      <div className={`flex w-full items-center gap-1.5 rounded-xl border px-1.5 py-1 ${boxTone}`}>
         <Avatar sv={sv} />
         <div className="min-w-0 flex-1 text-left">
           <div className="flex items-center gap-1">
@@ -152,7 +152,7 @@ function Seat({ sv }: { sv: SeatView }) {
             </span>
             {sv.role && <Chip tone="role">{sv.role}</Chip>}
           </div>
-          <div className="font-mono text-[0.62rem] text-muted">
+          <div className="font-mono text-[0.66rem] font-semibold text-[#d9c08a]">
             {sv.stack_bb}bb{sv.won && <span className="text-felt"> · won</span>}
           </div>
         </div>
@@ -339,14 +339,17 @@ function ReviewCoachCard({
   )
 }
 
+// Poker-client action buttons: large, the aggressive action a bold saturated
+// primary (green, on-theme with the felt), Check/Call neutral, Fold a filled red.
+const BTN_BASE = 'flex flex-col items-center justify-center rounded-xl px-4 py-2.5 leading-tight disabled:opacity-50'
 const FOLD_BTN =
-  'rounded-lg border px-4 py-2.5 text-[0.9rem] font-semibold border-[#6b3a44] bg-[rgba(176,69,90,0.18)] text-[#e69aa8] hover:border-[#b3455a] hover:bg-[rgba(176,69,90,0.26)] disabled:opacity-50'
+  `${BTN_BASE} bg-[#5a2730] border border-[#7a3340] text-[#f0c0cc] hover:bg-[#6b2f3a]`
 const CALL_BTN =
-  'rounded-lg border px-4 py-2.5 text-[0.9rem] font-semibold border-line bg-surface-2 text-text hover:border-brass-soft hover:bg-[rgba(199,154,75,0.08)] disabled:opacity-50'
+  `${BTN_BASE} bg-[#2a323f] border border-[#3a4757] text-text hover:bg-[#333d4d]`
 const RAISE_BTN =
-  'rounded-lg border px-4 py-2.5 text-[0.9rem] font-semibold border-brass bg-brass text-[#1a1407] hover:brightness-110 disabled:opacity-50'
+  `${BTN_BASE} bg-felt border border-[#3aa86c] text-[#0c1f14] shadow-[0_2px_8px_rgba(47,143,91,0.3)] hover:brightness-110`
 const SIZE_BTN =
-  'rounded-md border border-line bg-surface px-2.5 py-1 text-[0.72rem] font-medium text-muted hover:border-brass-soft hover:text-brass'
+  'rounded-full border border-line bg-surface px-3 py-1 text-[0.72rem] font-semibold text-muted hover:border-brass hover:text-brass'
 
 /** The betting interface: distinct action buttons + quick pot-sizes + a typed
  * bet-amount field (in bb) synced to a slider. Remounted per decision (via `key`)
@@ -373,17 +376,21 @@ function ActionBar({
   const [raiseTo, setRaiseTo] = useState(() => clamp(toCall + pot * 0.66))
   const bbStr = (chips: number) => `${(chips / bb).toFixed(1)}bb`
   const sizeTo = (frac: number) => setRaiseTo(clamp(toCall + pot * frac))
+  // fraction of the slider range that's filled, for the brass progress track
+  const span = Math.max(1, legal.max_raise_to - legal.min_raise_to)
+  const fillPct = Math.round(((raiseTo - legal.min_raise_to) / span) * 100)
+  const SIZES: [string, number][] = [['25%', 0.25], ['33%', 0.33], ['50%', 0.5], ['75%', 0.75], ['Pot', 1]]
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* sizing block — prominent bet amount, full-width slider, quick sizes */}
+    <div className="flex flex-col gap-2.5">
+      {/* sizing — percent presets, a poker-client slider, and the editable amount */}
       {legal.can_raise && (
-        <div className="rounded-lg border border-line bg-surface-2 p-2.5">
-          <div className="mb-2 flex items-baseline justify-between">
-            <span className="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-muted">
+        <div className="rounded-xl border border-line bg-surface-2 p-2.5">
+          <div className="mb-2 flex items-center gap-2">
+            <span className="font-mono text-[0.58rem] uppercase tracking-[0.18em] text-muted">
               {facing ? 'Raise to' : 'Bet'}
             </span>
-            <div className="flex items-baseline gap-1">
+            <div className="ml-auto flex items-baseline gap-1">
               <input
                 type="number"
                 step={0.5}
@@ -391,7 +398,7 @@ function ActionBar({
                 max={Number((legal.max_raise_to / bb).toFixed(1))}
                 value={Number((raiseTo / bb).toFixed(1))}
                 onChange={(e) => setRaiseTo(clamp(Number(e.target.value) * bb))}
-                className="w-[4.5rem] rounded-md border border-line bg-surface px-2 py-0.5 text-right text-[1rem] font-semibold text-brass"
+                className="w-[4.5rem] rounded-md border border-line bg-surface px-2 py-0.5 text-right text-[1.05rem] font-bold text-brass"
               />
               <span className="font-mono text-[0.7rem] text-muted">bb</span>
             </div>
@@ -402,51 +409,47 @@ function ActionBar({
             max={legal.max_raise_to}
             value={raiseTo}
             onChange={(e) => setRaiseTo(Number(e.target.value))}
-            className="mb-2 w-full accent-brass"
+            className="bet-slider mb-2.5"
+            style={{ ['--fill' as string]: `${fillPct}%` }}
           />
           <div className="flex flex-wrap items-center gap-1.5">
-            <button className={SIZE_BTN} onClick={() => sizeTo(0.5)}>
-              ½ pot
-            </button>
-            <button className={SIZE_BTN} onClick={() => sizeTo(0.75)}>
-              ¾ pot
-            </button>
-            <button className={SIZE_BTN} onClick={() => sizeTo(1)}>
-              Pot
-            </button>
+            {SIZES.map(([label, frac]) => (
+              <button key={label} className={SIZE_BTN} onClick={() => sizeTo(frac)}>
+                {label}
+              </button>
+            ))}
             <button className={SIZE_BTN} onClick={() => setRaiseTo(legal.max_raise_to)}>
-              All-in
+              Max
             </button>
-            <span className="ml-auto font-mono text-[0.58rem] tracking-wider text-faint">
-              min {bbStr(legal.min_raise_to)} · max {bbStr(legal.max_raise_to)}
-            </span>
           </div>
         </div>
       )}
-      {/* action buttons — fill the bar; the aggressive action is the brass primary */}
+      {/* action buttons — large, two-line; the aggressive action is the green primary */}
       <div className="flex items-stretch gap-2">
         {legal.can_fold && (
           <button className={`${FOLD_BTN} flex-1`} onClick={() => onAct('fold')} disabled={busy}>
-            Fold
+            <span className="text-[0.95rem] font-bold">Fold</span>
           </button>
         )}
         {legal.can_check && (
           <button className={`${CALL_BTN} flex-1`} onClick={() => onAct('check')} disabled={busy}>
-            Check
+            <span className="text-[0.95rem] font-bold">Check</span>
           </button>
         )}
         {legal.can_call && (
           <button className={`${CALL_BTN} flex-1`} onClick={() => onAct('call')} disabled={busy}>
-            Call {bbStr(legal.call_chips)}
+            <span className="text-[0.95rem] font-bold">Call</span>
+            <span className="font-mono text-[0.7rem] opacity-80">{bbStr(legal.call_chips)}</span>
           </button>
         )}
         {legal.can_raise && (
           <button
-            className={`${RAISE_BTN} flex-[1.4]`}
+            className={`${RAISE_BTN} flex-[1.5]`}
             onClick={() => onAct('raise', raiseTo)}
             disabled={busy}
           >
-            {facing ? 'Raise to' : 'Bet'} {bbStr(raiseTo)}
+            <span className="text-[0.95rem] font-bold">{facing ? 'Raise' : 'Bet'}</span>
+            <span className="font-mono text-[0.72rem] opacity-90">{bbStr(raiseTo)}</span>
           </button>
         )}
       </div>
