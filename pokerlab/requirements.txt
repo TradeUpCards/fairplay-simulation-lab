@@ -1,0 +1,13 @@
+# pokerlab — AI Poker Training Lab (game spine)
+pokerkit==0.7.4
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-dotenv>=1.0          # loads pokerlab/.env (e.g. ANTHROPIC_API_KEY for the narrator)
+
+# playsim provides the archetype bots + the Observation/Decision seam.
+# Install it editable from the sibling package (does not modify it):
+#   pip install -e ../playsim
+
+# Track A (RL / Option B) — installed separately when building the trainer:
+#   pip install pettingzoo>=1.24 torch
+#   (or reuse playsim's optional baselines: pip install "rlcard[torch]")

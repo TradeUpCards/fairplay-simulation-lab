@@ -1,0 +1,78 @@
+/* Tailwind v4 CSS-first. Design tokens reused from the FairPlay demo UI
+   (frontend/src/styles.css) so the lab looks native to the family: dark
+   "Back of House" surfaces, brass accent, felt green. */
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, "Cascadia Code", monospace;
+
+  --color-ink: #0d1117;
+  --color-surface: #161b24;
+  --color-surface-2: #11161f;
+  --color-line: #232a36;
+
+  --color-brass: #c79a4b;
+  --color-brass-soft: rgba(199, 154, 75, 0.4);
+  --color-felt: #2f8f5b;
+  --color-felt-dark: #1c5a39;
+
+  --color-text: #e6e9ef;
+  --color-muted: #8b93a7;
+  --color-faint: #6b7283;
+
+  --color-loss: #ff7f8f;
+  --color-gain: #58d99d;
+}
+
+@layer base {
+  :root { color-scheme: dark; }
+
+  body {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    background-color: #0b0e14;
+    background-image:
+      radial-gradient(circle at 50% -10%, rgba(199, 154, 75, 0.10), transparent 36rem),
+      linear-gradient(180deg, #0d1117 0%, #0b0e14 100%);
+    min-height: 100vh;
+  }
+
+  button {
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button:disabled { cursor: not-allowed; opacity: 0.45; }
+}
+
+/* The felt — a radial green table surface with a brass rail. */
+.felt {
+  background:
+    radial-gradient(ellipse at 50% 42%, var(--color-felt) 0%, var(--color-felt-dark) 72%, #14492e 100%);
+  border: 6px solid #0f1620;
+  box-shadow:
+    inset 0 0 0 3px var(--color-brass-soft),
+    inset 0 12px 60px rgba(0, 0, 0, 0.45),
+    0 24px 70px rgba(0, 0, 0, 0.5);
+}
+
+/* Playing card face. */
+.card {
+  font-family: var(--font-mono);
+  background: #f6f4ee;
+  color: #1a1a1a;
+  border-radius: 7px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.card.red { color: #c02a3a; }
+.card.back {
+  background: repeating-linear-gradient(45deg, #243b6b, #243b6b 6px, #1b2c52 6px, #1b2c52 12px);
+  color: transparent;
+  border: 1px solid #34508c;
+}

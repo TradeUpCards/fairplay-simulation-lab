@@ -1,0 +1,7 @@
+# pokerlab — Track A (RL trainer). Heavier deps, installed separately from the game.
+numpy
+gymnasium>=0.29
+pettingzoo>=1.24          # AEC multi-agent env for self-play (train_selfplay.py)
+# PyTorch — CPU build (smaller). For GPU, see https://pytorch.org/get-started/locally/
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch

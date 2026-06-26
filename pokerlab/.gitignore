@@ -1,0 +1,14 @@
+# Secrets — never commit the real env file (use .env.example as the template).
+.env
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Trained model checkpoints (user-generated, can be large)
+rl/checkpoints/*.pt
+
+# Frontend deps / build output (built fresh in the Docker image)
+web/node_modules/
+web/dist/
