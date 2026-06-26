@@ -36,6 +36,8 @@ class Observation:
     live_opponent_ids: tuple[int, ...]
     member_ids: frozenset[int]  # cluster teammates (for soft-play)
     weak_opponent: bool         # is the weakest live opponent flagged weak
+    raises_this_street: int = 0  # voluntary raises so far this street (0 = unraised;
+    #                              1 = facing an open, 2 = facing a 3-bet, ...)
 
 
 @dataclass
@@ -107,9 +109,14 @@ class ArchetypeAgent:
 
     def _preflop(self, obs: Observation, rng: random.Random, soft: bool) -> Decision:
         pct = preflop_percentile(obs.hole)
-        # looseness ≈ vpip target, pf_aggression ≈ pfr target (by construction)
-        enter = 1.0 - self.k.looseness
-        raise_thr = 1.0 - self.k.pf_aggression
+        # looseness ≈ vpip target, pf_aggression ≈ pfr target (by construction).
+        # Each prior raise demands a MUCH stronger hand to put in another raise, so a
+        # hand good enough to open is not good enough to 3-bet/4-bet -- this keeps
+        # re-raise wars rare and premium-weighted instead of every decent hand piling
+        # in. Calling also tightens once the pot is 3-bet+ (don't peel junk to a 3-bet).
+        level = obs.raises_this_street
+        enter = 1.0 - self.k.looseness + max(0, level - 1) * 0.14
+        raise_thr = 1.0 - self.k.pf_aggression + min(level, 3) * 0.16
         # small seeded wobble so the boundary isn't robotic (bots: none)
         wobble = 0.0 if self.k.deterministic else (rng.random() - 0.5) * 0.06
         pct_eff = pct + wobble

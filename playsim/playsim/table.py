@@ -173,6 +173,8 @@ def play_hand_steps(
     board: list[str] = []
     folded: set[int] = set()
     actions: list[ActionRecord] = []
+    street_raises = 0   # voluntary raises so far on the current street
+    cur_street = 0
 
     guard = 0
     while state.status and guard < 400:
@@ -187,6 +189,11 @@ def play_hand_steps(
         if seat is None:
             break
 
+        st_idx = state.street_index or 0
+        if st_idx != cur_street:        # new street -> reset the raise counter
+            cur_street = st_idx
+            street_raises = 0
+
         pid = seat_player_ids[seat]
         to_call = state.checking_or_calling_amount or 0
         pot = _pot_now(state)
@@ -196,7 +203,7 @@ def play_hand_steps(
             if s not in folded and s != seat
         ]
         obs = Observation(
-            street=state.street_index or 0,
+            street=st_idx,
             hole=(hole[seat][0], hole[seat][1]),
             board=list(board),
             to_call=to_call,
@@ -209,6 +216,7 @@ def play_hand_steps(
             live_opponent_ids=tuple(live_opp),
             member_ids=members_by_player.get(pid, frozenset()),
             weak_opponent=any(o in weak_player_ids for o in live_opp),
+            raises_this_street=street_raises,
         )
         d = yield (
             seat,
@@ -227,6 +235,7 @@ def play_hand_steps(
             state.complete_bet_or_raise_to(d.amount)
             action = "raise" if to_call > 0 else "bet"
             amt, is_raise, is_call = d.amount, True, False
+            street_raises += 1
         else:
             state.check_or_call()
             if to_call > 0:
