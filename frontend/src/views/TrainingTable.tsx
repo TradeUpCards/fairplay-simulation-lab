@@ -73,35 +73,36 @@ function seatPositions(n: number): { top: string; left: string }[] {
   })
 }
 
-function Seat({ sv, heroHole }: { sv: SeatView; heroHole: [string, string] | null }) {
-  const cards: (string | undefined)[] = sv.is_hero
-    ? heroHole ?? [undefined, undefined]
-    : [undefined, undefined]
+function Seat({ sv }: { sv: SeatView }) {
+  // face-up if we have the cards (hero, or an opponent at showdown); face-down
+  // backs while an opponent is still in the hand; nothing once folded.
+  const showCards = sv.hole !== null || !sv.folded
+  const cards: (string | undefined)[] = sv.hole ?? [undefined, undefined]
+  const boxTone = sv.won
+    ? 'border-felt bg-[rgba(47,143,91,0.18)] shadow-[0_0_0_3px_rgba(47,143,91,0.22)]'
+    : sv.to_act
+      ? 'border-brass bg-[rgba(199,154,75,0.16)] shadow-[0_0_0_3px_rgba(199,154,75,0.2)]'
+      : 'border-[#2c3543] bg-[rgba(14,17,22,0.88)]'
   return (
     <div
       className={`flex w-[112px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 ${
         sv.folded ? 'opacity-40' : ''
       }`}
     >
-      {!sv.folded && (
+      {showCards && (
         <div className="flex gap-1">
           {cards.map((c, i) => (
             <PlayingCard key={i} card={c} small={!sv.is_hero} />
           ))}
         </div>
       )}
-      <div
-        className={`w-full rounded-lg border px-2 py-1 text-center ${
-          sv.to_act
-            ? 'border-brass bg-[rgba(199,154,75,0.16)] shadow-[0_0_0_3px_rgba(199,154,75,0.2)]'
-            : 'border-[#2c3543] bg-[rgba(14,17,22,0.88)]'
-        }`}
-      >
+      <div className={`w-full rounded-lg border px-2 py-1 text-center ${boxTone}`}>
         <div className="flex items-center justify-center gap-1">
           <span className={`text-[0.74rem] font-semibold ${sv.is_hero ? 'text-brass' : 'text-text'}`}>
             {sv.label}
           </span>
           {sv.role && <Chip tone="role">{sv.role}</Chip>}
+          {sv.won && <Chip tone="bet">won</Chip>}
         </div>
         <div className="font-mono text-[0.62rem] text-muted">{sv.stack_bb}bb</div>
       </div>
@@ -443,7 +444,7 @@ export function TrainingTable() {
             const pos = positions[slotForSeat(sv.seat)]
             return (
               <div key={sv.seat} className="absolute" style={pos}>
-                <Seat sv={sv} heroHole={st.hero_hole} />
+                <Seat sv={sv} />
               </div>
             )
           })}

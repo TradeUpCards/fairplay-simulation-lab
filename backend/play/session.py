@@ -78,6 +78,8 @@ class SeatView:
     folded: bool
     is_hero: bool
     to_act: bool
+    hole: Optional[list[str]] = None   # the hero always; opponents only at showdown
+    won: bool = False                  # positive payoff at showdown
 
 
 @dataclass
@@ -233,22 +235,33 @@ class PlaySession:
                 role=self._role(s), stack_bb=sv["stack_bb"], bet_bb=sv["bet_bb"],
                 folded=sv["folded"], is_hero=(s == self.hero_seat),
                 to_act=(s == to_act_seat),
+                hole=list(self._hero_hole) if (s == self.hero_seat and self._hero_hole) else None,
             ))
         return out
 
     def _seats_complete(self) -> list[SeatView]:
         rec = self.hand.record
-        out = []
+        showdown = set(rec.showdown_player_ids) if rec else set()   # empty unless 2+ saw it
         folded_seats = {
             self.seat_player_ids.index(a.player_id)
             for a in (rec.actions if rec else []) if a.action == "fold"
         }
+        out = []
         for s, pid in enumerate(self.seat_player_ids):
             final = (rec.starting_stacks.get(pid, 0) + rec.payoffs.get(pid, 0)) if rec else 0
+            # reveal: the hero always; opponents only if they went to showdown
+            if s == self.hero_seat:
+                hole = list(self._hero_hole) if self._hero_hole else None
+            elif rec and pid in showdown:
+                shown = rec.hole.get(pid)
+                hole = list(shown) if shown else None
+            else:
+                hole = None
             out.append(SeatView(
                 seat=s, label=self._label(s), archetype=self._client_archetype(s),
                 role=self._role(s), stack_bb=round(final / self.bb, 1), bet_bb=0.0,
                 folded=s in folded_seats, is_hero=(s == self.hero_seat), to_act=False,
+                hole=hole, won=bool(rec and rec.payoffs.get(pid, 0) > 0),
             ))
         return out
 

@@ -30,6 +30,8 @@ export interface SeatView {
   folded: boolean
   is_hero: boolean
   to_act: boolean
+  hole: [string, string] | null // hero always; opponents only at showdown
+  won: boolean
 }
 
 export interface LogEntry {
