@@ -172,6 +172,30 @@ def _population(args) -> int:
     return 0
 
 
+def _large_room_fixture(args) -> int:
+    from .large_room_fixture import write_large_room_fixture
+
+    out = Path(args.out)
+    write_large_room_fixture(
+        out,
+        seed=args.seed,
+        player_count=args.players,
+        table_count=args.tables,
+        active_table_count=args.active_tables,
+        max_seats=args.max_seats,
+        start_fill_min=args.start_fill_min,
+        start_fill_max=args.start_fill_max,
+    )
+    print(
+        f"\n  wrote large-room fixture to {out}\n"
+        f"  players={args.players} tables={args.tables} "
+        f"active_tables={args.active_tables} max_seats={args.max_seats}\n"
+        f"  use with: python -m playsim.cli room-sim --data-root {out} "
+        f"--arrival-mode continuous --arrival-rate-per-hour 40 --horizon 480\n"
+    )
+    return 0
+
+
 def _room_sim(args) -> int:
     from .service import simulate_room
 
@@ -287,6 +311,20 @@ def main(argv=None) -> int:
     pop.add_argument("--features", help="optional sim_player_features sidecar JSON")
     pop.add_argument("--compact", action="store_true", help="write compact JSON; .gz paths are compressed")
     pop.set_defaults(fn=_population)
+
+    lrf = sub.add_parser(
+        "large-room-fixture",
+        help="generate a playsim-only large-room data root for room economics",
+    )
+    lrf.add_argument("--out", required=True, help="output data root directory")
+    lrf.add_argument("--seed", type=int, default=42)
+    lrf.add_argument("--players", type=int, default=1000)
+    lrf.add_argument("--tables", type=int, default=50)
+    lrf.add_argument("--active-tables", type=int, default=35)
+    lrf.add_argument("--max-seats", type=int, default=6)
+    lrf.add_argument("--start-fill-min", type=int, default=4)
+    lrf.add_argument("--start-fill-max", type=int, default=6)
+    lrf.set_defaults(fn=_large_room_fixture)
 
     rs = sub.add_parser(
         "room-sim",

@@ -39,7 +39,10 @@ from .population import (
 
 def _ensure_backend_on_path(root: Path) -> None:
     """Make ``scoring.*`` importable. Same pattern as backend/app/room.py."""
-    backend = str(root / "backend")
+    backend_path = root / "backend"
+    if not backend_path.is_dir():
+        backend_path = Path(__file__).resolve().parents[2] / "backend"
+    backend = str(backend_path)
     if backend not in sys.path:
         sys.path.insert(0, backend)
 
