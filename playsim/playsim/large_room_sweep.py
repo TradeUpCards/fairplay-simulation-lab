@@ -161,7 +161,7 @@ def run_large_room_sweep(
     seeds: list[int] | None = None,
     arrival_rates_per_hour: list[float] | None = None,
     horizon_min: float = 480.0,
-    equity_samples: int = 6,
+    equity_samples: int = 1,
     policies: tuple[str, ...] = DEFAULT_POLICIES,
     behavior: str = "formation-aware",
     arrival_mode: str = "continuous",

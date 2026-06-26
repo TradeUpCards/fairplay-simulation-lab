@@ -175,6 +175,7 @@ python -m playsim.cli large-room-sweep \
   --seeds 42,7,99 \
   --arrival-rates 40 \
   --horizon 480 \
+  --samples 1 \
   --out-json out/large-room-sweep.json \
   --out-md out/large-room-sweep.md
 ```
