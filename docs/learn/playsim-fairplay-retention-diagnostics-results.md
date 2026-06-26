@@ -41,19 +41,31 @@ liveness 1/3 once). The raw metric rewards concentration, as expected.
 3. **Liveness is regime-dependent, not the lever.** It forms more tables and helps
    slightly at low demand but *hurts* vulnerable retention at rate 40 (0/3). The demand
    regime — not the liveness policy — is what moves the result.
-4. **A partial retention mechanism already exists** — *hypothesized* to be the
-   realized-chip-flow path (FairPlay seats vulnerable players at healthier tables → they
-   lose slower → tilt-leave fires later → more seat-time). **This is the next thing to
-   confirm** (Step-2 ablation, in progress: re-run rates 10/20 with `--behavior default`
-   to remove the behavior pressure term; if FairPlay still wins vuln, the realized path
-   is sufficient).
+4. **The retention mechanism is confirmed (Step-2 ablation).** The win is driven by the
+   realized-chip-flow path: FairPlay seats vulnerable players at healthier tables → they
+   lose slower → the loss/tilt leave decision (`runner.py:cohort_should_leave`, which
+   ignores table health and keys only on realized losses) fires later → more seat-time.
+   Re-running rates 10/20 with `--behavior default` (which removes the behavior-model
+   composition-pressure term, leaving only the realized path) **preserves the FairPlay
+   vulnerable-retention win**: 3/3 seeds at rate 20, 2/3 at rate 10 (the single flip is
+   −0.15, a tie). So the realized path is the **primary driver**; the behavior pressure
+   term is a secondary amplifier (it firms rate 10 up to 3/3 in the formation-aware run).
 
 ## Decision-rule outcome
 
-We are in the "FairPlay already wins seed-stably" case, so per our own rule the next step
-is **confirm the mechanism (ablation), not rush to build one.** The reframed thesis —
-*"FairPlay protects vulnerable retention at realistic demand; raw throughput favors
-concentration"* — is **demonstrated, not asserted.**
+We were in the "FairPlay already wins seed-stably" case, so per our own rule the next step
+was **confirm the mechanism, not rush to build one** — and the Step-2 ablation has now done
+that (the win survives removing the behavior term; the realized-chip-flow path is the
+driver). The reframed thesis — *"FairPlay protects vulnerable retention at realistic
+demand; raw throughput favors concentration"* — is **demonstrated and mechanistically
+attributed, not asserted.**
+
+### Step-2 ablation (behavior=default) — per-seed
+
+| rate | std vuln | fairplay vuln | FairPlay wins |
+|---|---|---|---|
+| 10 | 26.63 | 27.45 | 2/3 (seed 42 −0.15 tie) |
+| 20 | 32.60 | 34.91 | 3/3 |
 
 ## Caveats (committed up front)
 
