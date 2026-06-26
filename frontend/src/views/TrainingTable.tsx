@@ -687,68 +687,78 @@ export function TrainingTable() {
           </button>
         </div>
 
-        {/* felt */}
-        <div className="relative mx-auto aspect-4/3 w-full max-w-[600px] shrink-0">
-          <img
-            className="absolute inset-0 h-full w-full object-contain opacity-[0.92]"
-            src={pokerTable}
-            alt=""
-            aria-hidden="true"
-          />
-          {/* board + pot */}
-          <div className="absolute left-1/2 top-[46%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
-            <div className="flex gap-1.5">
-              {(st?.board ?? []).map((c, i) => (
-                <PlayingCard key={`${st?.hand_id}-${i}`} card={c} dealt />
-              ))}
-              {!st && <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-[#cdd6cf]">deal to begin</span>}
-            </div>
-            {st && (
-              <span className="rounded-full bg-[rgba(0,0,0,0.42)] px-3 py-0.5 font-mono text-[0.74rem] text-[#f0e6cf]">
-                pot {bbStr(st.pot)}
-              </span>
-            )}
-          </div>
-          {/* seats */}
-          {st?.seats.map((sv) => {
-            const pos = positions[slotForSeat(sv.seat)]
-            return (
-              <div key={sv.seat} className="absolute" style={pos}>
-                <Seat sv={sv} />
-              </div>
-            )
-          })}
-        </div>
-
-        {/* action bar */}
-        <div className="mt-4 min-h-[64px] shrink-0 rounded-xl border border-line bg-surface p-3">
-          {error && <div className="mb-2 text-[0.8rem] text-[#e0607a]">{error}</div>}
-          {!st && <div className="text-[0.84rem] text-muted">Seat 1–5 opponents (Empty = fewer players), then deal.</div>}
-          {st?.complete && (
-            <div className="text-[0.84rem] text-muted">
-              Hand complete
-              {coachBusy
-                ? ' — coaching…'
-                : coach
-                  ? ''
-                  : autoCoach
-                    ? ' — fetching coaching…'
-                    : ' — “Coach this hand” for AI review, or deal the next hand.'}
-            </div>
-          )}
-          {heroTurn && legal && st && (
-            <>
-              <ActionClock left={clockLeft} total={CLOCK_SECONDS} />
-              <ActionBar
-                key={`${st.hand_id}-${st.street}-${st.pot}-${st.to_call}`}
-                legal={legal}
-                pot={st.pot}
-                toCall={st.to_call}
-                bb={bb}
-                busy={busy}
-                onAct={act}
+        {/* felt — the hero: the table scales to fill the available height, and the
+            action controls overlay the bottom-right rail (poker-client composition) */}
+        <div className="relative min-h-0 flex-1">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative aspect-4/3 h-full max-h-full w-auto max-w-full">
+              <img
+                className="absolute inset-0 h-full w-full object-contain opacity-[0.92]"
+                src={pokerTable}
+                alt=""
+                aria-hidden="true"
               />
-            </>
+              {/* board + pot */}
+              <div className="absolute left-1/2 top-[44%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
+                <div className="flex gap-1.5">
+                  {(st?.board ?? []).map((c, i) => (
+                    <PlayingCard key={`${st?.hand_id}-${i}`} card={c} dealt />
+                  ))}
+                  {!st && <span className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-[#cdd6cf]">deal to begin</span>}
+                </div>
+                {st && (
+                  <span className="rounded-full bg-[rgba(0,0,0,0.42)] px-3 py-0.5 font-mono text-[0.74rem] text-[#f0e6cf]">
+                    pot {bbStr(st.pot)}
+                  </span>
+                )}
+              </div>
+              {/* seats */}
+              {st?.seats.map((sv) => {
+                const pos = positions[slotForSeat(sv.seat)]
+                return (
+                  <div key={sv.seat} className="absolute" style={pos}>
+                    <Seat sv={sv} />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* action cluster — compact, bottom-right; only shown when it has something
+              to say (hero to act, pre-deal hint, hand-complete, or an error) */}
+          {(!!error || !st || st.complete || heroTurn) && (
+            <div className="absolute bottom-0 right-0 w-[min(96%,440px)]">
+              <div className="rounded-xl border border-line bg-[rgba(20,25,34,0.97)] p-3 shadow-[0_6px_24px_rgba(0,0,0,0.5)]">
+                {error && <div className="mb-2 text-[0.8rem] text-[#e0607a]">{error}</div>}
+                {!st && <div className="text-[0.84rem] text-muted">Seat 1–5 opponents, then deal.</div>}
+                {st?.complete && (
+                  <div className="text-[0.84rem] text-muted">
+                    Hand complete
+                    {coachBusy
+                      ? ' — coaching…'
+                      : coach
+                        ? ''
+                        : autoCoach
+                          ? ' — fetching coaching…'
+                          : ' — “Coach this hand”, or deal again.'}
+                  </div>
+                )}
+                {heroTurn && legal && st && (
+                  <>
+                    <ActionClock left={clockLeft} total={CLOCK_SECONDS} />
+                    <ActionBar
+                      key={`${st.hand_id}-${st.street}-${st.pot}-${st.to_call}`}
+                      legal={legal}
+                      pot={st.pot}
+                      toCall={st.to_call}
+                      bb={bb}
+                      busy={busy}
+                      onAct={act}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
