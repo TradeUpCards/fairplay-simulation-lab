@@ -302,6 +302,7 @@ export function TrainingTable() {
   const [slots, setSlots] = useState<string[]>(DEFAULT_SLOTS) // '' = empty seat
   const [mystery, setMystery] = useState(false)
   const [seed, setSeed] = useState(1)
+  const [handNum, setHandNum] = useState(0) // rotates the button so position varies
   const [env, setEnv] = useState<PlayEnvelope | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -314,21 +315,27 @@ export function TrainingTable() {
   const nBots = slots.filter(Boolean).length
 
   const positions = useMemo(() => (st ? seatPositions(st.max_seats) : []), [st])
-  const slotForSeat = (seat: number) => {
-    if (!st) return 0
-    if (seat === st.hero_seat) return 0
-    const others = Array.from({ length: st.max_seats }, (_, i) => i).filter((s) => s !== st.hero_seat)
-    return 1 + others.indexOf(seat)
-  }
+  // Place seats in true action order around the ring with the hero at the bottom
+  // (slot 0). The seat to the hero's left lands at slot 1, and so on — so the
+  // positions (UTG/HJ/CO/BTN/SB/BB) flow around the table the way poker action does.
+  const slotForSeat = (seat: number) =>
+    st ? (seat - st.hero_seat + st.max_seats) % st.max_seats : 0
 
   async function deal() {
     setBusy(true)
     setError(null)
     setCoach(null)
     try {
-      const next = await playApi.newHand({ bots: slots, reveal: !mystery, seed })
+      const nSeats = slots.filter(Boolean).length + 1
+      const next = await playApi.newHand({
+        bots: slots,
+        reveal: !mystery,
+        seed,
+        hero_seat: handNum % nSeats, // rotate the button each hand
+      })
       setEnv(next)
       setSeed((s) => s + 1)
+      setHandNum((h) => h + 1)
     } catch (e) {
       setError(String((e as Error).message))
     } finally {
