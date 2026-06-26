@@ -40,6 +40,26 @@ Defaults stay unchanged. New modes/experiments must remain explicit.
 
 ---
 
+## Why this sequence
+
+1. **Static sweeps avoid overbuilding.** We already know FairPlay's vulnerable-retention
+   result changes by arrival rate. Before adding diurnal demand or an operator-style
+   controller, we need to map which table-capacity regimes are tight, moderate, loose,
+   or saturated.
+2. **Diurnal arrivals should be informed by known regimes.** A daily demand curve is
+   only useful if we understand what its low/shoulder/peak rates mean in the current
+   room model. The static sweep gives us that interpretation layer.
+3. **Capacity control is only meaningful if there is something to open.** Today, under
+   `--formation-mode forming`, empty tables are already visible to routing. An "open a
+   table" controller is not a real action unless some tables start as closed/reserve
+   and invisible.
+4. **One new mechanism at a time keeps attribution clean.** If we add diurnal demand,
+   time-bucket reporting, closed tables, and a controller together, we will not know
+   which lever changed the result. This sequence preserves the same anti-p-hacking
+   discipline as the demand-curve diagnostics.
+
+---
+
 ## 2. Phase 1 — static visible-capacity sweep
 
 Before building diurnal demand or capacity control, run a static sweep that varies
