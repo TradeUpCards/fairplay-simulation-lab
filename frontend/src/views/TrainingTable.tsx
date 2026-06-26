@@ -616,9 +616,13 @@ export function TrainingTable() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           {coach ? (
             <CoachCard result={coach} />
-          ) : partial || coachBusy ? (
+          ) : partial ? (
+            // First token has arrived — stream the richer coaching card.
             <CoachCard result={{ coaching: partial }} streaming />
           ) : st?.complete && st.review ? (
+            // Instant first paint: the grounded (LLM-free) review shows the moment the
+            // hand ends; its `busy` state reads "AI coach is writing…" while we await the
+            // first token, so there is never a blank "writing" placeholder.
             <ReviewCard
               review={st.review}
               busy={coachBusy}
