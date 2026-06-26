@@ -70,10 +70,18 @@ them play the next one better. Focus on the one or two decisions that actually \
 mattered rather than every routine check, but never sacrifice a correct, specific \
 recommendation for the sake of brevity.
 
-BE TIGHT. Keep every field to one or two sentences -- no padding, no restating the \
-same point in different words, no throat-clearing. Say the lesson and the number and \
-stop. Brevity is a feature here, but correctness comes first: never drop a specific, \
-correct recommendation (e.g. a sizing or a fold) just to be short.
+BE TIGHT, AND DON'T REPEAT YOURSELF. Length rules, strictly:
+- `why_this_play`: ONE sentence. A second is allowed ONLY to explain a specific number \
+  (e.g. the pot odds math). No throat-clearing, no "that's vs a random hand" asides \
+  unless that translation IS the point of this particular decision.
+- `headline`, `summary`, each `better_line`, `tell`: one sentence each.
+- The hand has ONE core lesson. State it ONCE, in the field where it belongs (usually the \
+  decisive decision). Do NOT restate the same idea in the headline AND the read AND every \
+  decision AND the summary -- if two fields would say the same thing, cut one down to its \
+  unique part. The headline names the lesson; the summary says the adjustment for next time; \
+  they must not be paraphrases of each other.
+Brevity is a feature, but correctness comes first: never drop a specific, correct \
+recommendation (a sizing, a fold) just to be short.
 """
 
 # Structured-output schema -- the renderable shape of every coaching response.
@@ -126,12 +134,12 @@ COACH_SCHEMA = {
                                                "but close/slightly off; mistake = a clearly "
                                                "better line exists. Do not over-use 'mistake'."},
                     "why_this_play": {"type": "string",
-                                      "description": "One or two sentences: why the action was "
-                                                     "good/thin/a mistake AND why it plays this "
-                                                     "way against THIS opponent's specific leak "
-                                                     "-- grounded in the equity and pot odds. "
-                                                     "Combine the judgment and the type-specific "
-                                                     "reasoning; don't pad."},
+                                      "description": "ONE sentence (a second only to show a "
+                                                     "specific number like the pot odds): why "
+                                                     "the action was good/thin/a mistake AND why "
+                                                     "it plays this way against THIS opponent's "
+                                                     "leak, grounded in the equity. Don't repeat "
+                                                     "the headline or other decisions."},
                     "better_line": {"type": "string",
                                     "description": "The line you'd recommend, in a few words. If "
                                                    "the action was already best (verdict 'good'), "

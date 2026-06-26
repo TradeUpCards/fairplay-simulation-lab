@@ -394,6 +394,7 @@ export function TrainingTable() {
   const [partial, setPartial] = useState<Coaching | null>(null)
   const [debug, setDebug] = useState<{
     clientMs: number
+    ttfaMs: number
     llmMs: number
     equityMs: number
     model: string
@@ -457,11 +458,16 @@ export function TrainingTable() {
     setCoach(null)
     setPartial(null)
     let acc = ''
+    let ttfa = 0
     const t0 = performance.now()
     coachStream(s, {
       onDelta: (chunk) => {
+        if (!ttfa) ttfa = Math.round(performance.now() - t0) // time to first token
         acc += chunk
-        setPartial(parsePartialJson(acc))
+        // Keep the last successfully-parsed partial: a mid-key/mid-string chunk
+        // parses to null, and reverting to it would flash the "writing…" card.
+        const p = parsePartialJson(acc)
+        if (p) setPartial(p)
       },
       onDone: (d) => {
         setCoach({
@@ -475,6 +481,7 @@ export function TrainingTable() {
         setCoachBusy(false)
         setDebug({
           clientMs: Math.round(performance.now() - t0),
+          ttfaMs: ttfa,
           llmMs: d.elapsed_ms ?? 0,
           equityMs: d.summary_ms ?? 0,
           model: d.model ?? '',
@@ -634,14 +641,15 @@ export function TrainingTable() {
         <button
           type="button"
           onClick={() => {
-            const t = `v${debug.version} · client ${(debug.clientMs / 1000).toFixed(1)}s · LLM ${(debug.llmMs / 1000).toFixed(1)}s · equity ${debug.equityMs}ms · ${debug.model}`
+            const t = `v${debug.version} · client ${(debug.clientMs / 1000).toFixed(1)}s · TTFA ${(debug.ttfaMs / 1000).toFixed(1)}s · LLM ${(debug.llmMs / 1000).toFixed(1)}s · equity ${debug.equityMs}ms · ${debug.model}`
             void navigator.clipboard?.writeText(t)
           }}
           title="click to copy"
           className="fixed bottom-2 right-2 z-50 select-text rounded-md border border-line bg-[rgba(13,17,23,0.92)] px-2 py-1 font-mono text-[0.58rem] leading-tight text-faint"
         >
-          DEBUG · v{debug.version} · client {(debug.clientMs / 1000).toFixed(1)}s · LLM{' '}
-          {(debug.llmMs / 1000).toFixed(1)}s · equity {debug.equityMs}ms · {debug.model} · ⧉
+          DEBUG · v{debug.version} · client {(debug.clientMs / 1000).toFixed(1)}s · TTFA{' '}
+          {(debug.ttfaMs / 1000).toFixed(1)}s · LLM {(debug.llmMs / 1000).toFixed(1)}s · equity{' '}
+          {debug.equityMs}ms · {debug.model} · ⧉
         </button>
       )}
     </>
