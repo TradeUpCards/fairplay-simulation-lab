@@ -137,6 +137,7 @@ class PlaySession:
         bb: int = 2,
         seed: int = 0,
         hand_id: int = 1,
+        aggression: float = 1.0,
     ):
         # None => default mix; an explicit list has its empty/None seats dropped
         # (so all-empty is an error, not a silent fall-back to the default).
@@ -166,7 +167,8 @@ class PlaySession:
                 self.seat_archetype[seat] = "human"
             else:
                 arch = next(bot_it)
-                agents.append(ArchetypeAgent(pid, knobs_for(arch), pot_discipline=True))
+                agents.append(ArchetypeAgent(
+                    pid, knobs_for(arch), pot_discipline=True, aggression=aggression))
                 self.seat_archetype[seat] = arch
         self._pid_archetype = {
             pid: self.seat_archetype[seat]

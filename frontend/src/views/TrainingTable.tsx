@@ -482,6 +482,7 @@ const ARCHS = BOT_CHOICES.map((c) => c.archetype)
 export function TrainingTable() {
   const [slots, setSlots] = useState<string[]>(DEFAULT_SLOTS) // '' = empty seat
   const [mystery, setMystery] = useState(false)
+  const [aggression, setAggression] = useState(1.0) // table-style preset (0.8 / 1.0 / 1.4)
   const [seed, setSeed] = useState(1)
   const [handNum, setHandNum] = useState(0) // rotates the button so position varies
   const [env, setEnv] = useState<PlayEnvelope | null>(null)
@@ -523,6 +524,7 @@ export function TrainingTable() {
         bots: slots,
         reveal: !mystery,
         seed,
+        aggression,
         // the human keeps a fixed seat (players don't move); rotate the dealer
         // button clockwise between hands, so only positions change.
         button_seat: handNum % nSeats,
@@ -651,6 +653,18 @@ export function TrainingTable() {
           >
             🎲 Random
           </button>
+          <label className="flex items-center gap-1.5 text-[0.76rem] text-muted" title="How loose/aggressive the table plays (applies on the next deal)">
+            <span>Table</span>
+            <select
+              value={aggression}
+              onChange={(e) => setAggression(Number(e.target.value))}
+              className="rounded-md border border-line bg-surface-2 px-2 py-1 text-[0.76rem] text-text"
+            >
+              <option value={0.8}>Passive</option>
+              <option value={1.0}>Standard</option>
+              <option value={1.4}>Aggressive</option>
+            </select>
+          </label>
           <label className="flex items-center gap-1.5 text-[0.76rem] text-muted">
             <input type="checkbox" checked={mystery} onChange={(e) => setMystery(e.target.checked)} className="accent-brass" />
             Mystery

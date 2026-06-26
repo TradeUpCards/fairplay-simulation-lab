@@ -104,6 +104,7 @@ export interface NewHandOptions {
   button_seat?: number
   seed?: number
   stack_bb?: number
+  aggression?: number // table-style dial: <1 quieter, >1 splashier
 }
 
 async function post<T>(path: string, body?: unknown): Promise<T> {

@@ -56,6 +56,7 @@ class NewBody(BaseModel):
     button_seat: Optional[int] = None     # rotates the dealer button between hands
     seed: int = 0
     stack_bb: int = 100
+    aggression: float = 1.0                # table-style dial: <1 quieter, >1 splashier
 
 
 class ActionBody(BaseModel):
@@ -80,6 +81,7 @@ def new_hand(body: NewBody) -> dict:
         session = PlaySession(
             hero_seat=body.hero_seat, bots=body.bots, reveal=body.reveal,
             button_seat=body.button_seat, seed=body.seed, stack_bb=body.stack_bb,
+            aggression=max(0.4, min(1.8, body.aggression)),
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))

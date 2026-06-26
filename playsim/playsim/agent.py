@@ -58,7 +58,7 @@ class ArchetypeAgent:
     agent_version = "v1"
 
     def __init__(self, player_id: int, knobs: Knobs, equity_samples: int = 30,
-                 pot_discipline: bool = False):
+                 pot_discipline: bool = False, aggression: float = 1.0):
         self.player_id = player_id
         self.k = knobs
         self.equity_samples = equity_samples
@@ -67,6 +67,11 @@ class ArchetypeAgent:
         # the single-human training table (sane, readable pots); OFF by default so the
         # calibrated 8-hour population sim — tuned to its own AF targets — is unchanged.
         self.pot_discipline = pot_discipline
+        # Table-aggression dial for the training-table difficulty presets: 1.0 = the
+        # archetypes' own calibrated aggression; <1 a tighter/quieter table, >1 a
+        # looser/splashier "action" table. Every use is a multiply that is an exact
+        # no-op at 1.0, so the population sim (which never sets it) is byte-identical.
+        self.aggression = aggression
 
     # -- helpers -----------------------------------------------------------
     def _jitter(self, rng: random.Random, base_ms: int = 1600) -> int:
@@ -120,9 +125,14 @@ class ArchetypeAgent:
         # hand good enough to open is not good enough to 3-bet/4-bet -- this keeps
         # re-raise wars rare and premium-weighted instead of every decent hand piling
         # in. Calling also tightens once the pot is 3-bet+ (don't peel junk to a 3-bet).
+        # Table-aggression widens (or tightens) the entering / raising ranges. Clamped
+        # so a splashy table doesn't literally play every hand. At aggression=1.0 the
+        # multiply is exact, so the population path is unchanged.
+        loosen = min(0.92, self.k.looseness * self.aggression)
+        pf_agg = min(0.92, self.k.pf_aggression * self.aggression)
         level = obs.raises_this_street
-        enter = 1.0 - self.k.looseness + max(0, level - 1) * 0.14
-        raise_thr = 1.0 - self.k.pf_aggression + min(level, 3) * 0.16
+        enter = 1.0 - loosen + max(0, level - 1) * 0.14
+        raise_thr = 1.0 - pf_agg + min(level, 3) * 0.16
         # small seeded wobble so the boundary isn't robotic (bots: none)
         wobble = 0.0 if self.k.deterministic else (rng.random() - 0.5) * 0.06
         pct_eff = pct + wobble
@@ -162,9 +172,10 @@ class ArchetypeAgent:
             return Decision("check_call", is_call=True) if eq > 0.80 else Decision("fold")
 
         aggr = self.k.postflop_aggression
+        ag = self.aggression  # table-aggression dial (1.0 = no-op)
         # value-heavy: keep aggression frequency (AF) but bluff sparingly, so a
         # competent table extracts from light-calling stations instead of spewing
-        bluff = self.k.bluff * 0.5
+        bluff = self.k.bluff * 0.5 * ag
         if obs.weak_opponent and self.k.target_weak:
             # exploit the fish: value-bet it relentlessly, DON'T bluff it (a
             # calling station catches bluffs — you beat it by betting value)
@@ -186,9 +197,11 @@ class ArchetypeAgent:
             if eq >= pot_odds + margin:
                 if self.pot_discipline:
                     # Raise only with a real edge, and the bar climbs each re-raise so
-                    # marginal hands flat-call instead of escalating into all-ins.
-                    raise_bar = 0.52 + max(0, level - 1) * 0.12
-                    raise_p = max(0.0, aggr * (eq - 0.30))
+                    # marginal hands flat-call instead of escalating into all-ins. The
+                    # aggression dial lowers the bar / lifts the frequency on splashy
+                    # tables (and the reverse on quiet ones).
+                    raise_bar = 0.52 + max(0, level - 1) * 0.12 - (ag - 1.0) * 0.12
+                    raise_p = max(0.0, aggr * (eq - 0.30)) * ag
                     want_raise = eq >= raise_bar and self._roll(rng) < raise_p
                 else:
                     # value: aggressive archetypes mostly raise rather than flat-call
@@ -204,8 +217,8 @@ class ArchetypeAgent:
                 return Decision("raise", amount=self._size_raise(obs, rng), is_raise=True)
             return Decision("fold")
 
-        # no bet to us — bet or check
-        bet_p = aggr * (0.55 + 0.65 * eq) + bluff * (1.0 - eq)
+        # no bet to us — bet or check (scaled by the table-aggression dial)
+        bet_p = aggr * ag * (0.55 + 0.65 * eq) + bluff * (1.0 - eq)
         if self._roll(rng) < bet_p and obs.max_raise_to > obs.min_raise_to:
             return Decision("raise", amount=self._size_raise(obs, rng), is_raise=True)
         return Decision("check_call")
