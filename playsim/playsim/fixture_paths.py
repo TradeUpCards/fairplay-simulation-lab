@@ -35,8 +35,8 @@ def find_data_root(explicit: str | Path | None = None) -> Path:
     )
 
 
-def data_dir(root: Path | None = None) -> Path:
-    root = root or find_data_root()
+def data_dir(root: str | Path | None = None) -> Path:
+    root = find_data_root(root) if root is not None else find_data_root()
     d = root / "data"
     if d.is_dir():
         return d

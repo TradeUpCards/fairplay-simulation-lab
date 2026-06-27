@@ -159,6 +159,7 @@ def simulate_room(
     tables: list[str] | None = None,
     protect: bool = False,
     protect_threshold: float = 50.0,
+    liveness: bool = False,
     behavior_name: str = "default",
     arrival_mode: str = "fixture-once",
     arrival_rate_per_hour: float | None = None,
@@ -174,24 +175,32 @@ def simulate_room(
     variance is expected. Canonical ``room_sim_*`` outputs use the first seed.
 
     Returns ``{standard, fairplay, room_metrics_standard, room_metrics_fairplay,
-    comparison[, fairplay_protect]}``. Realized health stays evaluation-only;
+    comparison[, fairplay_protect][, fairplay_liveness]}``. Realized health stays evaluation-only;
     routing uses backend predicted health via the adapter.
     """
     from .arrivals import build_arrival_intents
     from .behavior import make_behavior
-    from .policies import FairPlayProtectPolicy, FairPlayRoutePolicy, StandardPolicy
+    from .policies import (
+        FairPlayLivenessPolicy,
+        FairPlayProtectPolicy,
+        FairPlayRoutePolicy,
+        StandardPolicy,
+    )
     from .room import run_room
     from .room_export import build_canonical, derive_room_metrics
     from .router_adapter import RouterAdapter
 
     adapter = RouterAdapter(root)
+    liveness_adapter = RouterAdapter(root, liveness_aware=True)
     seed_list = list(seeds) if seeds else [seed]
 
     std_hours: list[float] = []
     fp_hours: list[float] = []
     std_no_good: list[int] = []
     fp_no_good: list[int] = []
-    canon_std = canon_fp = canon_protect = None
+    live_hours: list[float] = []
+    live_no_good: list[int] = []
+    canon_std = canon_fp = canon_protect = canon_liveness = None
 
     for i, s in enumerate(seed_list):
         intents = build_arrival_intents(
@@ -220,6 +229,15 @@ def simulate_room(
                                           safety_threshold=protect_threshold),
                     **common, behavior=make_behavior(behavior_name, seed=s))
                 canon_protect = build_canonical(pr, data_root=data_root_str)
+        if liveness:
+            lv = run_room(
+                FairPlayLivenessPolicy(liveness_adapter),
+                **common, behavior=make_behavior(behavior_name, seed=s))
+            clv = build_canonical(lv, data_root=data_root_str)
+            live_hours.append(clv["summary"]["vulnerable_paid_seat_hours"])
+            live_no_good.append(clv["summary"]["no_good_existing_seat_count"])
+            if i == 0:
+                canon_liveness = clv
 
     n = len(seed_list)
     std_mean = sum(std_hours) / n
@@ -240,6 +258,17 @@ def simulate_room(
             }
         },
     }
+    if liveness:
+        live_mean = sum(live_hours) / n
+        comparison["fairplay_liveness_mean"] = round(live_mean, 3)
+        comparison["liveness_delta_hours"] = round(live_mean - std_mean, 3)
+        comparison["liveness_delta_pct"] = (
+            round((live_mean - std_mean) / std_mean * 100, 1) if std_mean > 0 else 0.0
+        )
+        comparison["per_seed"]["fairplay_liveness"] = live_hours
+        comparison["formation_gap"]["no_good_existing_seat_by_policy"][
+            "fairplay_liveness"
+        ] = live_no_good
 
     out = {
         "standard": canon_std,
@@ -250,4 +279,6 @@ def simulate_room(
     }
     if protect:
         out["fairplay_protect"] = canon_protect
+    if liveness:
+        out["fairplay_liveness"] = canon_liveness
     return out

@@ -96,7 +96,9 @@ def route(player_id: str, tables: list[Mapping[str, Any]],
           players_by_id: Mapping[str, Mapping],
           cluster_band_by_member: Mapping[str, tuple[str, str]],
           health_by_id: Mapping[str, HealthScore],
-          classifications: Mapping[str, str] | None = None) -> dict[str, Any]:
+          classifications: Mapping[str, str] | None = None,
+          *,
+          liveness_aware: bool = False) -> dict[str, Any]:
     """Route a seeking player across all open tables.
 
     Returns a dict with two views: ``operator_view`` (full rank/score breakdown,
@@ -108,8 +110,10 @@ def route(player_id: str, tables: list[Mapping[str, Any]],
             continue
         tid = t["table_id"]
         h = health_by_id[tid]
-        s = score_seating(player_id, t, players_by_id, cluster_band_by_member, h,
-                          classifications)
+        s = score_seating(
+            player_id, t, players_by_id, cluster_band_by_member, h,
+            classifications, liveness_aware=liveness_aware,
+        )
         r = rank(s.fit, h.health, s.delta_health)
         routed.append(RoutedTable(tid, r, _badge(r, s), s, h))
 
@@ -139,10 +143,14 @@ def route(player_id: str, tables: list[Mapping[str, Any]],
         safe["badge_label"] = rt.lobby_label
         player_lobby.append(safe)
 
+    policy = {"w_fit": W_FIT, "w_health": W_HEALTH, "w_delta": W_DELTA,
+              "rec_rank_min": REC_RANK_MIN, "goodfit_rank_min": GOODFIT_RANK_MIN}
+    if liveness_aware:
+        policy["liveness_aware"] = True
+
     return {
         "player_id": player_id,
-        "policy": {"w_fit": W_FIT, "w_health": W_HEALTH, "w_delta": W_DELTA,
-                   "rec_rank_min": REC_RANK_MIN, "goodfit_rank_min": GOODFIT_RANK_MIN},
+        "policy": policy,
         "operator_view": operator_view,
         "player_lobby": player_lobby,
     }

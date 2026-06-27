@@ -26,6 +26,7 @@ from playsim.arrivals import build_arrival_intents
 from playsim.behavior import make_behavior
 from playsim.policies import (
     FairPlayBalancedPolicy,
+    FairPlayLivenessPolicy,
     FairPlayRoutePolicy,
     RandomPolicy,
     StandardPolicy,
@@ -70,7 +71,7 @@ def main(argv=None) -> int:
     ap.add_argument("--seeds", default="42,7,99", help="comma-separated seed set")
     ap.add_argument("--equity", type=int, default=6, help="Monte-Carlo equity samples")
     ap.add_argument("--tables", default=None, help="comma table ids (default: all)")
-    ap.add_argument("--behavior", choices=["default", "fit-aware", "reason-aware"],
+    ap.add_argument("--behavior", choices=["default", "fit-aware", "reason-aware", "formation-aware"],
                     default="default")
     ap.add_argument("--arrival-mode", choices=["fixture-once", "continuous"],
                     default="fixture-once")
@@ -83,11 +84,13 @@ def main(argv=None) -> int:
     seeds = [int(s) for s in args.seeds.split(",")]
     tables = args.tables.split(",") if args.tables else None
     adapter = RouterAdapter(args.data_root)
+    liveness_adapter = RouterAdapter(args.data_root, liveness_aware=True)
 
     factories = {
         "random       ": lambda s: RandomPolicy(seed=s),
         "most-full    ": lambda s: StandardPolicy(),
         "fairplay     ": lambda s: FairPlayRoutePolicy(adapter),
+        "fairplay-live": lambda s: FairPlayLivenessPolicy(liveness_adapter),
         "fairplay-bal ": lambda s: FairPlayBalancedPolicy(adapter, health_floor=50.0),
     }
     agg = {k: {m: [] for m in METRICS} for k in factories}

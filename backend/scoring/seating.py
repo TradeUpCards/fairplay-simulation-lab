@@ -158,7 +158,27 @@ def style_key(table: Mapping[str, Any]) -> str:
     return DEFAULT_STYLE
 
 
-def fit(player_archetype: str, table: Mapping[str, Any]) -> tuple[float, dict[str, Any]]:
+SHORT_TABLE_PREF = {
+    "new": -18.0,
+    "recreational": -12.0,
+    "promo_hunter": -8.0,
+    "shared_device_household": -6.0,
+    "regular": 4.0,
+    "healthy_anchor": 4.0,
+    "grinder": 12.0,
+    "aggressive_predatory": 14.0,
+    "solver_like": 10.0,
+    "cluster_member": 6.0,
+    "bot_like": 8.0,
+}
+
+
+def fit(
+    player_archetype: str,
+    table: Mapping[str, Any],
+    *,
+    liveness_aware: bool = False,
+) -> tuple[float, dict[str, Any]]:
     """Champion Fit(P,T): archetype × table-style matrix lookup."""
     row_key = player_archetype if player_archetype in FIT_MATRIX \
         else FIT_ROW_ALIASES.get(player_archetype, None)
@@ -167,21 +187,38 @@ def fit(player_archetype: str, table: Mapping[str, Any]) -> tuple[float, dict[st
         val = FIT_MATRIX[row_key].get(sk, FIT_DEFAULT)
     else:
         val = FIT_DEFAULT
-    return float(val), {"archetype": player_archetype, "style": sk,
-                        "matrix_row": row_key or "default"}
+    signals: dict[str, Any] = {"archetype": player_archetype, "style": sk,
+                               "matrix_row": row_key or "default"}
+    if liveness_aware:
+        mode = table.get("table_mode", "active")
+        seated = int(table.get("seated_count", 0) or 0)
+        short_candidate = mode == "forming" or seated <= 2
+        size_adj = SHORT_TABLE_PREF.get(player_archetype, 0.0) if short_candidate else 0.0
+        val = max(0.0, min(100.0, float(val) + size_adj))
+        signals.update({
+            "table_mode": mode,
+            "target_seats": table.get("target_seats", table.get("max_seats")),
+            "short_table_candidate": short_candidate,
+            "size_fit_adjustment": size_adj,
+        })
+    return float(val), signals
 
 
 def delta_health(player_id: str, table: Mapping[str, Any],
                  players_by_id: Mapping[str, Mapping],
                  cluster_band_by_member: Mapping[str, tuple[str, str]],
                  base: HealthScore,
-                 classifications: Mapping[str, str] | None = None) -> float:
+                 classifications: Mapping[str, str] | None = None,
+                 *,
+                 liveness_aware: bool = False) -> float:
     """ΔHealth(P→T) = Health'(T∪{P}) − Health(T), re-scoring only the
     composition terms (P_bleed held fixed at the base value)."""
     seated_ids = list(table.get("seated_player_ids", []))
     seated_count = table.get("seated_count", len(seated_ids))
     max_seats = table.get("max_seats", seated_count)
     trend = table.get("paid_seat_time_trend", "stable")
+    table_mode = table.get("table_mode", "active")
+    target_seats = table.get("target_seats", max_seats)
 
     aug_ids = seated_ids + [player_id]
     aug_n = seated_count + 1
@@ -189,7 +226,11 @@ def delta_health(player_id: str, table: Mapping[str, Any],
                               for p in aug_ids) if a]
 
     pred, _ = p_pred(archetypes)
-    frag, _ = p_frag(aug_n, max_seats, trend)
+    frag, _ = p_frag(
+        aug_n, max_seats, trend,
+        table_mode=table_mode, target_seats=target_seats,
+        liveness_aware=liveness_aware,
+    )
     clus, _, _ = p_clus(aug_ids, aug_n, cluster_band_by_member)
     bleed = base.terms["P_bleed"]  # held fixed
     health_prime = max(0.0, min(100.0, 100.0 - pred - frag - clus - bleed))
@@ -248,7 +289,9 @@ def score_seating(player_id: str, table: Mapping[str, Any],
                   players_by_id: Mapping[str, Mapping],
                   cluster_band_by_member: Mapping[str, tuple[str, str]],
                   base_health: HealthScore,
-                  classifications: Mapping[str, str] | None = None) -> SeatingScore:
+                  classifications: Mapping[str, str] | None = None,
+                  *,
+                  liveness_aware: bool = False) -> SeatingScore:
     """Full seating score for one player×table pair."""
     arch = _archetype_of(player_id, players_by_id, classifications) or "unknown"
     unknown_rc = []
@@ -260,9 +303,9 @@ def score_seating(player_id: str, table: Mapping[str, Any],
             f"Player '{player_id}' could not be classified (missing from "
             f"players.json / classifications) — scores are placeholder defaults, "
             f"not a real recommendation.", {"player_id": player_id}))
-    fit_val, fit_sig = fit(arch, table)
+    fit_val, fit_sig = fit(arch, table, liveness_aware=liveness_aware)
     dh = delta_health(player_id, table, players_by_id, cluster_band_by_member,
-                      base_health, classifications)
+                      base_health, classifications, liveness_aware=liveness_aware)
     risk, gated, risk_rcs = seating_risk(arch, base_health, dh)
 
     rcs = [

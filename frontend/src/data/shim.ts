@@ -19,6 +19,7 @@ import type {
   RoomMetricsFile,
   SeededCaseLabelsFile,
   TableRosterFile,
+  LobbySequence,
   SimPath,
 } from './types'
 
@@ -31,6 +32,7 @@ import roomStandardRaw from '@data/room_metrics_standard.json'
 import roomFairplayRaw from '@data/room_metrics_fairplay.json'
 import seededCasesRaw from '@data/seeded_case_labels.json'
 import tableRosterRaw from '@data/table_roster.json'
+import lobbySequenceRaw from '@data/derived/lobby_sequence.json'
 
 /** Assert a frozen JSON artifact into its Contract-2 type at the trust boundary. */
 const asType = <T>(raw: unknown): T => raw as T
@@ -67,6 +69,16 @@ export async function loadSeededCases(): Promise<SeededCaseLabelsFile> {
 /** Table roster (P2 Contract-1) — composition for the pit-boss seat-ring. Operator-side. */
 export async function loadTableRoster(): Promise<TableRosterFile> {
   return asType(tableRosterRaw)
+}
+
+/**
+ * Player-safe lobby sequence (demo Part 2) — one room over churn steps, ordered
+ * two ways (Standard fullness vs FairPlay router). Built by
+ * `backend/scripts/build_lobby_sequence.py`; point that at the large-room playsim
+ * roster to scale it up. Player-facing: only neutral badges + safe table facts.
+ */
+export async function loadLobbySequence(): Promise<LobbySequence> {
+  return asType(lobbySequenceRaw)
 }
 
 // Re-export the shared load-state helper so views import the data layer in one place.

@@ -68,6 +68,8 @@ docker compose run --rm playsim population \
 | `room-sim` | **the closed-loop room A/B** — seekers arrive over a horizon, a policy seats them, writes `room_sim_*`/`room_metrics_*`. Add `--behavior fit-aware` or `--behavior reason-aware`, plus `--debug-trace`. See `docs/learn/playsim-room-simulator-guide.html` |
 | `health --table T` | play a table out (persistent stacks) and score its health |
 | `population` | simulate `data/players.json` + `data/table_roster.json` into playsim-native hand JSON |
+| `large-room-fixture` | generate a playsim-only 50-table / 1000-player data root for room-economics experiments |
+| `large-room-sweep` | generate/reuse the large-room fixture, compare policy arms, and write JSON/Markdown results |
 | `replay --table T` | re-run a seed twice and assert byte-identical (determinism) |
 | `calibrate` | tune `postflop_aggression` until realized AF ≈ targets |
 | `tables` | list demo tables and archetypes |
@@ -142,6 +144,45 @@ gzip, `--compact` still removes pretty-print whitespace.
 Current fixture limitation: `table_roster.json` seats only the hour-0 players.
 Players not seated there are not simulated yet, and a high-quota player can end
 early if their table breaks before backfill exists.
+
+For room-economics experiments, generate a larger playsim-only fixture instead of
+mutating the canonical demo data:
+
+```bash
+python -m playsim.cli large-room-fixture \
+  --out out/large-room-data \
+  --players 1000 \
+  --tables 50 \
+  --active-tables 35
+
+python -m playsim.cli room-sim \
+  --data-root out/large-room-data \
+  --horizon 480 \
+  --arrival-mode continuous \
+  --arrival-rate-per-hour 40 \
+  --formation-mode forming \
+  --behavior formation-aware \
+  --liveness \
+  --out-dir out/large-room-run
+```
+
+For a repeatable large-room policy comparison, prefer:
+
+```bash
+python -m playsim.cli large-room-sweep \
+  --fixture-out out/large-room-data \
+  --regenerate-fixture \
+  --seeds 42,7,99 \
+  --arrival-rates 40 \
+  --horizon 480 \
+  --samples 1 \
+  --out-json out/large-room-sweep.json \
+  --out-md out/large-room-sweep.md
+```
+
+`fixture-once` remains the historical small-fixture replay mode. For large-room
+economics, prefer rate-based `continuous` arrivals against the generated pool. See
+`docs/learn/playsim-large-room-simulation.md`.
 
 ### The two loops
 

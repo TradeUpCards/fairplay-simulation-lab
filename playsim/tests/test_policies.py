@@ -8,6 +8,7 @@ import pytest
 
 from playsim.policies import (
     FairPlayBalancedPolicy,
+    FairPlayLivenessPolicy,
     FairPlayProtectPolicy,
     FairPlayRoutePolicy,
     RandomPolicy,
@@ -15,7 +16,7 @@ from playsim.policies import (
     StandardPolicy,
     make_policy,
 )
-from playsim.router_adapter import RouterAdapter, make_table_dict
+from playsim.router_adapter import Placement, RouterAdapter, make_table_dict
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -28,9 +29,11 @@ def adapter() -> RouterAdapter:
         return RouterAdapter(REPO)
 
 
-def _table(tid, seated, max_seats=6, style="moderate", trend="stable"):
+def _table(tid, seated, max_seats=6, style="moderate", trend="stable",
+           table_mode="active", target_seats=None):
     return make_table_dict(tid, seated, max_seats,
-                           style_volatility_label=style, paid_seat_time_trend=trend)
+                           style_volatility_label=style, paid_seat_time_trend=trend,
+                           table_mode=table_mode, target_seats=target_seats)
 
 
 # --- Random (neutral baseline) -------------------------------------------
@@ -162,6 +165,49 @@ def test_balanced_never_routes_to_gated(adapter):
     assert d.table_id == "T-ok"
 
 
+# --- FairPlay-liveness ----------------------------------------------------
+
+def test_liveness_seeds_healthy_forming_table_instead_of_topping_off_fuller_bad_table():
+    class StubAdapter:
+        classifications = {}
+
+        def recommend(self, seeker_int_id, live_tables):
+            return Placement(
+                table_id="T-pred",
+                badge="available",
+                rank=80.0,
+                health=35.0,
+                health_band="beginner_unfriendly",
+                operator_view=[
+                    {
+                        "table_id": "T-pred", "rank": 80.0, "badge": "available",
+                        "fit": 20.0, "health": 35.0,
+                        "health_band": "beginner_unfriendly",
+                        "delta_health": 0.0, "seating_risk": "high",
+                        "integrity_gated": False,
+                    },
+                    {
+                        "table_id": "T-fresh", "rank": 70.0, "badge": "good_fit",
+                        "fit": 75.0, "health": 95.0, "health_band": "healthy",
+                        "delta_health": 0.0, "seating_risk": "low",
+                        "integrity_gated": False,
+                    },
+                ],
+            )
+
+    fuller_bad = _table("T-pred", [176, 177, 178, 179, 180], max_seats=6,
+                        style="High Volatility / Predatory-Mix")
+    fresh = _table("T-fresh", [], max_seats=6, style="Low Stakes / Beginner-Friendly",
+                   table_mode="forming")
+    tables = [fuller_bad, fresh]
+
+    assert StandardPolicy().choose(Seeker(104, "new"), tables).table_id == "T-pred"
+
+    d = FairPlayLivenessPolicy(StubAdapter()).choose(Seeker(104, "new"), tables)
+    assert d.table_id == "T-fresh"
+    assert d.reason == "liveness_forming"
+
+
 # --- config switch --------------------------------------------------------
 
 def test_make_policy_switch(adapter):
@@ -170,6 +216,7 @@ def test_make_policy_switch(adapter):
     assert isinstance(make_policy("fairplay_protect", adapter, enabled=True),
                       FairPlayProtectPolicy)
     assert isinstance(make_policy("fairplay_balanced", adapter), FairPlayBalancedPolicy)
+    assert isinstance(make_policy("fairplay_liveness", adapter), FairPlayLivenessPolicy)
     assert isinstance(make_policy("random", seed=3), RandomPolicy)
     with pytest.raises(ValueError):
         make_policy("fairplay_route")  # adapter required

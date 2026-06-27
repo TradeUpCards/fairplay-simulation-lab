@@ -193,6 +193,81 @@ class FairPlayBalancedPolicy:
                                "operator_view": p.operator_view})
 
 
+class FairPlayLivenessPolicy:
+    """FairPlay routing that can seed/grow a forming healthy table.
+
+    This is not "most-full with a health tiebreak." It first asks whether a good
+    dealable healthy seat already exists. If not, it can choose the best non-gated
+    forming candidate so FairPlay can express the table-growth mechanism that the
+    baseline model lacked.
+    """
+
+    name = "fairplay_liveness"
+
+    def __init__(
+        self,
+        adapter: RouterAdapter,
+        *,
+        dealable_health_floor: float = 80.0,
+        forming_health_floor: float = 70.0,
+    ) -> None:
+        self.adapter = adapter
+        self.dealable_health_floor = dealable_health_floor
+        self.forming_health_floor = forming_health_floor
+
+    def choose(self, seeker: Seeker, live_tables: list[dict]) -> PolicyDecision:
+        p = self.adapter.recommend(seeker.player_id, live_tables)
+        if p.table_id is None:
+            return PolicyDecision(None, "no_open_seat",
+                                  {"operator_view": p.operator_view})
+
+        by_id = {t["table_id"]: t for t in live_tables}
+        visible = [
+            e for e in p.operator_view
+            if e.get("badge") != "hidden_gated"
+            and by_id.get(e["table_id"], {}).get("open_seats", 0) > 0
+        ]
+        dealable = [
+            e for e in visible
+            if by_id[e["table_id"]].get("seated_count", 0) >= 2
+        ]
+        good_dealable = [
+            e for e in dealable
+            if e.get("health", 0.0) >= self.dealable_health_floor
+            and e.get("seating_risk") == "low"
+        ]
+        if good_dealable:
+            best = good_dealable[0]
+            return PolicyDecision(
+                best["table_id"], "liveness_dealable",
+                {"rank": best["rank"], "health": best["health"],
+                 "health_band": best["health_band"],
+                 "operator_view": p.operator_view},
+            )
+
+        forming = [
+            e for e in visible
+            if (
+                by_id[e["table_id"]].get("table_mode") == "forming"
+                or by_id[e["table_id"]].get("seated_count", 0) < 2
+            )
+            and e.get("health", 0.0) >= self.forming_health_floor
+        ]
+        if forming:
+            best = forming[0]
+            return PolicyDecision(
+                best["table_id"], "liveness_forming",
+                {"rank": best["rank"], "health": best["health"],
+                 "health_band": best["health_band"],
+                 "operator_view": p.operator_view},
+            )
+
+        return PolicyDecision(p.table_id, p.badge or "available",
+                              {"rank": p.rank, "health": p.health,
+                               "health_band": p.health_band,
+                               "operator_view": p.operator_view})
+
+
 def make_policy(name: str, adapter: RouterAdapter | None = None, **kwargs):
     """Config switch -> policy instance. The room loop calls the same ``choose``
     regardless of which policy this returns."""
@@ -212,4 +287,8 @@ def make_policy(name: str, adapter: RouterAdapter | None = None, **kwargs):
         if adapter is None:
             raise ValueError("fairplay_balanced requires a RouterAdapter")
         return FairPlayBalancedPolicy(adapter, **kwargs)
+    if name == "fairplay_liveness":
+        if adapter is None:
+            raise ValueError("fairplay_liveness requires a RouterAdapter")
+        return FairPlayLivenessPolicy(adapter, **kwargs)
     raise ValueError(f"unknown policy {name!r}")
