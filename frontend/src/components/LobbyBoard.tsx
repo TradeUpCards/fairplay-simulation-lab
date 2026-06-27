@@ -5,6 +5,7 @@ import { useResource } from '../state/useResource'
 import { lobbyStore } from '../state/lobbyStore'
 import { ResourceBoundary } from './ResourceBoundary'
 import { LobbyDataTable } from './LobbyDataTable'
+import { LobbySidecar } from './LobbySidecar'
 
 /**
  * Demo Part 2 — the same arrivals seated by each policy, side by side: Standard
@@ -100,6 +101,13 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
         table's rank in the other room; click a table to highlight it in both; expand the admin box
         for the per-step seating. Illustrative synthetic room — not a live cash game.
       </p>
+
+      {ui.selected && cur.op_detail?.[ui.selected] && (
+        <LobbySidecar
+          detail={cur.op_detail[ui.selected]}
+          onClose={() => lobbyStore.setSelected(null)}
+        />
+      )}
     </section>
   )
 }

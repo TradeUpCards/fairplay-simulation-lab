@@ -154,12 +154,37 @@ export interface SeatEvent {
   occ_after?: string
 }
 
+/**
+ * OPERATOR-side per-table detail (the "pull back the curtain" view). Shown only
+ * behind the curtain in the lobby demo — never in the player-facing rows.
+ */
+export interface OperatorTableDetail {
+  table_id: string
+  stakes: string
+  seated_count: number
+  max_seats: number
+  open_seats: number
+  full: boolean
+  composition: { archetype: string; count: number }[]
+  health?: number
+  band?: string
+  terms?: Record<string, number>
+  reasons?: { code: string; detail: string }[]
+  rank?: number
+  badge?: string
+  fit?: number
+  delta_health?: number
+  seating_risk?: string | null
+}
+
 export interface LobbyStep {
   label: string
   standard: LobbyRow[]
   fairplay: LobbyRow[]
   /** per-policy seat events that produced this step (admin diagnostic). */
   events?: { standard: SeatEvent[]; fairplay: SeatEvent[] }
+  /** operator detail per table (the curtain) — keyed by table_id. */
+  op_detail?: Record<string, OperatorTableDetail>
 }
 
 export interface LobbySequence {
