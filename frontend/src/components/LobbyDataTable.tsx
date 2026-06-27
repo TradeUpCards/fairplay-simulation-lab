@@ -75,13 +75,12 @@ export function LobbyDataTable({
       >
         <table className="w-full table-fixed border-collapse whitespace-nowrap text-[0.78rem] [&_td]:overflow-hidden">
           <colgroup>
+            <col className="w-[10%]" />
+            <col className="w-[19%]" />
+            <col className="w-[14%]" />
             <col className="w-[9%]" />
-            <col className="w-[16%]" />
             <col className="w-[13%]" />
-            <col className="w-[9%]" />
-            <col className="w-[12%]" />
-            <col className="w-[11%]" />
-            <col className="w-[18%]" />
+            <col className="w-[23%]" />
             <col className="w-[12%]" />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-[#15171c]">
@@ -91,7 +90,6 @@ export function LobbyDataTable({
               <th className="px-2 py-2 text-left font-medium">Stakes</th>
               <th className="px-1.5 py-2 text-center font-medium">Plrs</th>
               <th className="px-2 py-2 text-right font-medium">Avg pot</th>
-              <th className="px-2 py-2 text-right font-medium">Hnds / Hr</th>
               <th className="px-2 py-2 text-left font-medium">{showBadges ? 'Fit' : ''}</th>
               <th className="px-2 py-2 text-right font-medium"></th>
             </tr>
@@ -152,7 +150,6 @@ export function LobbyDataTable({
                   <td className="px-2 py-1.5 text-right text-[#d8d2c6]">
                     {r.avg_pot_usd != null ? `$${r.avg_pot_usd}` : '—'}
                   </td>
-                  <td className="px-2 py-1.5 text-right text-[#a9b0bb]">{r.hands_per_hour ?? '—'}</td>
                   <td className="px-2 py-1.5">
                     {showBadges && r.badge === 'recommended' && (
                       <span className="rounded-full border border-[#2f7d4a] bg-[#16341f] px-1.5 py-[0.05rem] text-[0.62rem] text-[#8be3a7]">

@@ -88,7 +88,7 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
           accent="fairplay"
         />
         </div>
-        <div className="w-full xl:w-[23rem] xl:shrink-0">
+        <div className="flex h-[62vh] w-full flex-col xl:h-auto xl:min-h-0 xl:w-[23rem] xl:shrink-0">
           {ui.selected && cur.op_detail?.[ui.selected] ? (
             <LobbySidecar
               key={ui.selected}
@@ -96,7 +96,7 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
               onClose={() => lobbyStore.setSelected(null)}
             />
           ) : (
-            <div className="flex h-[62vh] items-center justify-center rounded-md border border-dashed border-[#2a2e36] bg-[rgba(0,0,0,0.15)] p-6 text-center text-[0.78rem] text-[#6f7682] xl:h-full">
+            <div className="flex min-h-0 flex-1 items-center justify-center rounded-md border border-dashed border-[#2a2e36] bg-[rgba(0,0,0,0.15)] p-6 text-center text-[0.78rem] text-[#6f7682]">
               Select a table to preview its seats — then switch to Pit-boss view for why it's
               ranked where it is.
             </div>
