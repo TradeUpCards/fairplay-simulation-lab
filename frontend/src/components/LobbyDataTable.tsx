@@ -76,12 +76,12 @@ export function LobbyDataTable({
         <table className="w-full table-fixed border-collapse whitespace-nowrap text-[0.78rem] [&_td]:overflow-hidden">
           <colgroup>
             <col className="w-[9%]" />
-            <col className="w-[18%]" />
-            <col className="w-[13%]" />
+            <col className="w-[19%]" />
+            <col className="w-[12%]" />
             <col className="w-[8%]" />
-            <col className="w-[11%]" />
-            <col className="w-[9%]" />
-            <col className="w-[20%]" />
+            <col className="w-[10%]" />
+            <col className="w-[8%]" />
+            <col className="w-[22%]" />
             <col className="w-[12%]" />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-[#15171c]">
@@ -136,8 +136,8 @@ export function LobbyDataTable({
                   </td>
                   <td className="px-2 py-1.5">
                     <span className="inline-flex items-center gap-1.5">
-                      <span className="rounded-[4px] bg-[linear-gradient(180deg,#e0bd76,#b78a3c)] px-1.5 py-[0.06rem] font-mono text-[0.72rem] font-bold text-[#2c1f08]">
-                        {r.table_id}
+                      <span className="rounded-[4px] bg-[linear-gradient(180deg,#e0bd76,#b78a3c)] px-1 py-[0.06rem] font-mono text-[0.7rem] font-bold text-[#2c1f08]">
+                        {r.table_id.replace('LR-', 'T-')}
                       </span>
                       {moved > 0 && <span className="text-[0.62rem] text-[#8be3a7]">▲{moved}</span>}
                       {moved < 0 && <span className="text-[0.62rem] text-[#c98b93]">▼{-moved}</span>}
@@ -155,12 +155,12 @@ export function LobbyDataTable({
                   <td className="px-1.5 py-1.5 text-right text-[#a9b0bb]">{r.hands_per_hour ?? '—'}</td>
                   <td className="px-2 py-1.5">
                     {showBadges && r.badge === 'recommended' && (
-                      <span className="rounded-full border border-[#2f7d4a] bg-[#16341f] px-1.5 py-[0.05rem] text-[0.62rem] text-[#8be3a7]">
+                      <span className="rounded-full border border-[#2f7d4a] bg-[#16341f] px-1 py-[0.05rem] text-[0.6rem] text-[#8be3a7]">
                         Recommended
                       </span>
                     )}
                     {showBadges && r.badge === 'good_fit' && (
-                      <span className="rounded-full border border-[#2f6a8a] bg-[#1a2c3a] px-1.5 py-[0.05rem] text-[0.62rem] text-[#8fd0ef]">
+                      <span className="rounded-full border border-[#2f6a8a] bg-[#1a2c3a] px-1 py-[0.05rem] text-[0.6rem] text-[#8fd0ef]">
                         Good fit
                       </span>
                     )}
