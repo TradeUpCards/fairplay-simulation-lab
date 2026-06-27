@@ -72,16 +72,16 @@ export function LobbyDataTable({
         ref={containerRef}
         className="max-h-[62vh] overflow-y-auto rounded-md border border-[#262a32] bg-[rgba(0,0,0,0.25)]"
       >
-        <table className="w-full table-fixed border-collapse text-[0.78rem]">
+        <table className="w-full table-fixed border-collapse whitespace-nowrap text-[0.78rem] [&_td]:overflow-hidden [&_th]:overflow-hidden">
           <colgroup>
-            <col className="w-[13%]" />
+            <col className="w-[12%]" />
             <col className="w-[15%]" />
             <col className="w-[9%]" />
             <col className="w-[7%]" />
             <col className="w-[10%]" />
-            <col className="w-[11%]" />
             <col className="w-[10%]" />
-            <col className="w-[15%]" />
+            <col className="w-[10%]" />
+            <col className="w-[17%]" />
             <col className="w-[10%]" />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-[#15171c]">
@@ -147,7 +147,6 @@ export function LobbyDataTable({
                       {moved > 0 && <span className="text-[0.62rem] text-[#8be3a7]">▲{moved}</span>}
                       {moved < 0 && <span className="text-[0.62rem] text-[#c98b93]">▼{-moved}</span>}
                     </span>
-                    <span className="ml-1 text-[0.66rem] text-[#6f7682]">{r.game_type}</span>
                   </td>
                   <td className="px-2 py-1.5 text-[#d8d2c6]">{r.stakes}</td>
                   <td className="px-2 py-1.5 text-center">
