@@ -88,7 +88,7 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
           accent="fairplay"
         />
         </div>
-        <div className="flex h-[62vh] w-full flex-col xl:h-auto xl:min-h-0 xl:w-[23rem] xl:shrink-0">
+        <div className="flex h-[62vh] w-full flex-col xl:h-[calc(62vh+2.875rem)] xl:w-[23rem] xl:shrink-0">
           {ui.selected && cur.op_detail?.[ui.selected] ? (
             <LobbySidecar
               key={ui.selected}
