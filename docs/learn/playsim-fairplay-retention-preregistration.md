@@ -37,6 +37,9 @@ that failure plainly.
 
 - Total paid seat-hours (north-star).
 - Vulnerable paid seat-hours (cohort = new, recreational, promo_hunter).
+- Vulnerable-seat-hour gain per total-seat-hour lost (decision metric for the
+  FairPlay tradeoff when FairPlay helps the vulnerable cohort but loses room-wide
+  throughput).
 - Mechanism metrics: breaks, wait-balks, no-good-existing-seat, forming seats,
   formation activations.
 - Per policy arm: standard, fairplay, fairplay_liveness.

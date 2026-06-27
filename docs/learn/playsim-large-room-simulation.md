@@ -91,6 +91,12 @@ tables**. It also reports **vulnerable paid seat-hours** as the FairPlay cohort
 check, plus mechanism metrics such as breaks, wait-balks, no-good-existing-seat
 count, forming seats, and formation activations.
 
+For policy decisions, the sweep explorer also derives a tradeoff metric:
+**vulnerable-seat-hours gained per total-seat-hour lost**. This is only meaningful
+when a candidate policy improves vulnerable paid seat-hours while reducing total
+paid seat-hours; it answers how much vulnerable cohort benefit the policy bought
+for each room-wide paid seat-hour it gave up.
+
 `large-room-sweep` defaults to `--samples 1` because this is still a hand-level
 poker simulator. A 50-table, 8-hour, 3-seed, 3-policy run with higher equity
 samples is expensive; use higher sample counts as sensitivity checks, not as the
