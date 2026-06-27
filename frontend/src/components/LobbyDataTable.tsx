@@ -56,9 +56,9 @@ export function LobbyDataTable({
 
   return (
     <section className="min-w-0 flex-1" aria-label={`${policy} lobby`}>
-      <header className={`mb-2 flex items-baseline justify-between border-b pb-1.5 ${headTone}`}>
-        <h3 className="m-0 text-[0.95rem] font-semibold tracking-wide">{policy}</h3>
-        <span className="text-[0.72rem] text-[#8b8276]">
+      <header className={`mb-2 flex h-[2rem] items-center justify-between gap-2 border-b pb-1.5 ${headTone}`}>
+        <h3 className="m-0 shrink-0 text-[0.95rem] font-semibold tracking-wide">{policy}</h3>
+        <span className="min-w-0 truncate text-right text-[0.72rem] text-[#8b8276]">
           {blurb}
           {crossOn && (
             <span className="ml-1 text-[#6f7682]">
@@ -70,7 +70,7 @@ export function LobbyDataTable({
 
       <div
         ref={containerRef}
-        className="max-h-[62vh] overflow-y-auto rounded-md border border-[#262a32] bg-[rgba(0,0,0,0.25)]"
+        className="h-[62vh] overflow-y-auto rounded-md border border-[#262a32] bg-[rgba(0,0,0,0.25)]"
       >
         <table className="w-full table-fixed border-collapse whitespace-nowrap text-[0.78rem] [&_td]:overflow-hidden [&_th]:overflow-hidden">
           <colgroup>
@@ -111,7 +111,7 @@ export function LobbyDataTable({
                   data-testid="lobby-row"
                   data-tableid={r.table_id}
                   onClick={() => onSelect?.(r.table_id)}
-                  className={`cursor-pointer border-t border-[#1e2128] transition-colors duration-500 ${
+                  className={`h-[2.15rem] cursor-pointer border-t border-[#1e2128] transition-colors duration-500 ${
                     isSel
                       ? 'bg-[rgba(224,189,118,0.16)] ring-1 ring-inset ring-brass'
                       : moved > 0
