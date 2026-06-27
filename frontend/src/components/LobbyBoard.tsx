@@ -24,6 +24,8 @@ export function LobbyBoard() {
 
 function LobbyBoardView({ seq }: { seq: LobbySequence }) {
   const [step, setStep] = useState(0)
+  const [selected, setSelected] = useState<string | null>(null)
+  const toggle = (id: string) => setSelected((s) => (s === id ? null : id))
   const cur = seq.steps[step]
   const prev = step > 0 ? seq.steps[step - 1] : undefined
   const atEnd = step >= seq.steps.length - 1
@@ -61,6 +63,10 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
           blurb="fills the fullest tables first"
           showBadges={false}
           prevOrderIds={prev?.standard.map((r) => r.table_id)}
+          crossOrderIds={cur.fairplay.map((r) => r.table_id)}
+          crossLabel="FP"
+          selected={selected}
+          onSelect={toggle}
           accent="standard"
         />
         <LobbyDataTable
@@ -69,13 +75,18 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
           blurb="routes toward healthy tables"
           showBadges
           prevOrderIds={prev?.fairplay.map((r) => r.table_id)}
+          crossOrderIds={cur.standard.map((r) => r.table_id)}
+          crossLabel="Std"
+          selected={selected}
+          onSelect={toggle}
           accent="fairplay"
         />
       </div>
 
       <p className="mt-3 text-[0.72rem] text-[#6f7682]">
-        Same {cur.fairplay.length} tables, ordered two ways. Illustrative synthetic room —
-        not a live cash game.
+        Same {cur.fairplay.length} tables, ordered two ways — the <span className="text-[#8b8276]">vs</span>{' '}
+        column shows each table's rank in the other strategy. Click a table to highlight it in
+        both. Illustrative synthetic room — not a live cash game.
       </p>
     </section>
   )
