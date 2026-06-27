@@ -66,8 +66,8 @@
   }
 
   /* ---- story tiles ---- */
-  .story { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 14px; margin: 22px 0 8px; }
-  @media (max-width: 880px){ .story{ grid-template-columns: 1fr 1fr; } }
+  .story { display: grid; grid-template-columns: 1.5fr repeat(4, 1fr); gap: 14px; margin: 22px 0 8px; }
+  @media (max-width: 1060px){ .story{ grid-template-columns: 1fr 1fr; } }
   .tile {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     padding: 14px 16px; box-shadow: var(--shadow);
@@ -247,6 +247,7 @@ function polLabel(p){ return POL_LABEL[p] || p; }
 function fmt(v, unit){
   if(v===null||v===undefined) return "—";
   if(unit==="hrs") return v.toFixed(1);
+  if(unit==="ratio") return v.toFixed(2) + "x";
   const r = Math.round(v*10)/10;
   return Number.isInteger(r) ? String(r) : r.toFixed(1);
 }
@@ -278,12 +279,12 @@ const S = {
   view: "heatmap",
   lensMode: "delta",        // delta | raw
   deltaPolicy: null,
-  deltaMetric: "vulnerable_paid_seat_hours",
+  deltaMetric: "total_paid_seat_hours",
   rawPolicy: null,
-  rawMetric: "vulnerable_paid_seat_hours",
-  trendMetric: "vulnerable_paid_seat_hours",
+  rawMetric: "total_paid_seat_hours",
+  trendMetric: "total_paid_seat_hours",
   trendFacet: "tables",      // tables | rate
-  tableMetric: "vulnerable_paid_seat_hours",
+  tableMetric: "total_paid_seat_hours",
   sortKey: null, sortDir: -1,
   cellKey: null,
 };
@@ -292,6 +293,7 @@ function candidates(){ return ds().policies.filter(p=>p!=="standard"); }
 function metricDef(k){ return ds().metrics.find(m=>m.key===k) || {key:k,label:k,unit:"n",lower_is_better:false}; }
 function cellAt(t,r){ return ds().cells.find(c=>c.tables===t && c.rate===r); }
 function cellByKey(k){ return ds().cells.find(c=>(c.tables+"|"+c.rate)===k); }
+function sum(xs){ return xs.reduce((a,b)=>a+b,0); }
 
 /* delta of candidate vs standard for a metric, with per-seed win stability.
    "goodness" orients so positive = better for the candidate (handles lower-is-better). */
@@ -310,6 +312,34 @@ function deltaOf(cell, pol, metricKey){
   });
   const meanRaw = (cell.means[pol]?.[metricKey]??0)-(cell.means["standard"]?.[metricKey]??0);
   return { meanRaw, good: meanRaw*sign, wins, n, deltas, sign };
+}
+
+function tradeoffOf(cell, pol){
+  const vuln = deltaOf(cell, pol, "vulnerable_paid_seat_hours");
+  const total = deltaOf(cell, pol, "total_paid_seat_hours");
+  const vulnDelta = vuln.meanRaw;
+  const totalDelta = total.meanRaw;
+  const totalLoss = -totalDelta;
+  const eps = 0.0001;
+  let status, ratio = null;
+  if(vulnDelta > eps && totalLoss > eps){
+    status = "tradeoff";
+    ratio = vulnDelta / totalLoss;
+  } else if(vulnDelta > eps && totalLoss <= eps){
+    status = "clean_win";
+  } else if(vulnDelta <= eps && totalLoss > eps){
+    status = "no_vuln_gain";
+  } else {
+    status = "no_tradeoff";
+  }
+  return { vulnDelta, totalDelta, totalLoss, ratio, status };
+}
+
+function tradeoffLabel(t){
+  if(t.status==="tradeoff") return fmt(t.ratio, "ratio");
+  if(t.status==="clean_win") return "clean win";
+  if(t.status==="no_vuln_gain") return "no vuln gain";
+  return "no cost";
 }
 
 /* ---------------- init chrome ---------------- */
@@ -351,28 +381,35 @@ function renderStory(){
   const pol = S.deltaPolicy || (candidates()[0]);
   if(!pol){ el.innerHTML=""; return; }
   const cells=d.cells;
-  let vWin=0,vStable=0,tWin=0;
+  let vWin=0,vStable=0,tWin=0,cleanWins=0;
+  const tradeoffs=[];
   cells.forEach(c=>{
     const dv=deltaOf(c,pol,"vulnerable_paid_seat_hours");
     if(dv.good>0) vWin++;
     if(dv.n>0 && dv.wins===dv.n) vStable++;
     const dt=deltaOf(c,pol,"total_paid_seat_hours");
     if(dt.good>0) tWin++;
+    const tr=tradeoffOf(c,pol);
+    if(tr.status==="tradeoff") tradeoffs.push(tr);
+    if(tr.status==="clean_win") cleanWins++;
   });
   const N=cells.length;
-  // regime read: where does the candidate win vuln retention?
+  const totalVulnGain=sum(tradeoffs.map(t=>t.vulnDelta));
+  const totalSeatHrLoss=sum(tradeoffs.map(t=>t.totalLoss));
+  const tradeRatio=totalSeatHrLoss>0 ? totalVulnGain/totalSeatHrLoss : null;
+  // Cohort read: where does the candidate win vulnerable retention?
   const winCells=cells.filter(c=>deltaOf(c,pol,"vulnerable_paid_seat_hours").good>0);
-  let regime="";
+  let cohortRead="";
   if(winCells.length){
     const tbl=[...new Set(winCells.map(c=>c.tables))].sort((a,b)=>a-b);
     const rt=[...new Set(winCells.map(c=>c.rate))].sort((a,b)=>a-b);
-    regime=`Advantage concentrates at ${tbl.length?`${tbl[0]}–${tbl[tbl.length-1]} tables`:""}${rt.length?`, rates ${rt[0]}–${rt[rt.length-1]}/hr`:""}.`;
-  } else { regime="No vulnerable-retention advantage in any regime tested."; }
+    cohortRead=`Vulnerable-seat advantage appears at ${tbl.length?`${tbl[0]}–${tbl[tbl.length-1]} tables`:""}${rt.length?`, rates ${rt[0]}–${rt[rt.length-1]}/hr`:""}.`;
+  } else { cohortRead="No vulnerable-retention advantage in any regime tested."; }
 
   el.innerHTML = `
     <div class="tile lede">
-      <div class="k">${polLabel(pol)} vs Standard · the read</div>
-      <div class="v">${regime} Throughput still favors concentration (Standard wins total seat-hrs in ${N-tWin}/${N}).</div>
+      <div class="k">${polLabel(pol)} vs Standard · north-star read</div>
+      <div class="v">Standard wins total paid seat-hrs in ${N-tWin}/${N} regimes. ${cohortRead}</div>
     </div>
     <div class="tile">
       <div class="k">Regimes tested</div>
@@ -388,6 +425,11 @@ function renderStory(){
       <div class="k">Throughput wins</div>
       <div class="v">${tWin}<small>/${N}</small></div>
       <div class="note">total paid seat-hrs vs Standard</div>
+    </div>
+    <div class="tile">
+      <div class="k">Tradeoff ratio</div>
+      <div class="v">${tradeRatio===null?"—":fmt(tradeRatio,"ratio")}</div>
+      <div class="note">aggregate vuln hrs gained per total hr lost · ${tradeoffs.length}/${N} tradeoff regimes${cleanWins?` · ${cleanWins} clean wins`:""}</div>
     </div>`;
 }
 
@@ -578,6 +620,7 @@ function tablePanel(){
   cs.forEach(p=>{
     cols.push({k:p,l:`${polLabel(p)}`,g:c=>c.means[p]?.[S.tableMetric]});
     cols.push({k:p+"_d",l:`Δ ${polLabel(p)}`,g:c=>deltaOf(c,p,S.tableMetric).meanRaw, delta:true, pol:p});
+    cols.push({k:p+"_trade",l:`Tradeoff ${polLabel(p)}`,g:c=>tradeoffOf(c,p).ratio, tradeoff:true, pol:p});
   });
 
   let rows=[...d.cells];
@@ -595,6 +638,11 @@ function tablePanel(){
         const sgn = dd.good>0?"pos":"neg";
         return `<td><span class="delta ${sgn}">${fmtSigned(v,md.unit==="hrs"?2:1)}</span><span class="winbadge ${cls}">${dd.wins}/${dd.n}</span></td>`;
       }
+      if(col.tradeoff){
+        const tr=tradeoffOf(c,col.pol);
+        const good=tr.status==="tradeoff"||tr.status==="clean_win";
+        return `<td><span class="delta ${good?"pos":"neg"}">${tradeoffLabel(tr)}</span></td>`;
+      }
       if(col.k==="tables") return `<td class="lead">${v} tables</td>`;
       if(col.k==="rate") return `<td>${v}/hr</td>`;
       return `<td>${fmt(v,md.unit)}</td>`;
@@ -603,7 +651,7 @@ function tablePanel(){
   }).join("");
 
   return `<div class="panel"><h2>Data table · ${md.label}</h2>
-    <p class="desc">All ${d.cells.length} regimes. Click a header to sort, a row for full detail. Δ shows candidate − Standard with per-seed win stability.</p>
+    <p class="desc">All ${d.cells.length} regimes. Click a header to sort, a row for full detail. Δ shows candidate − Standard with per-seed win stability. Tradeoff = vulnerable seat-hrs gained per total seat-hr lost.</p>
     <div style="overflow:auto"><table class="grid"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;
 }
 
@@ -636,8 +684,19 @@ function openCell(key){
           <span><b style="font-variant-numeric:tabular-nums">${fmtSigned(dd.meanRaw,md.unit==="hrs"?2:1)}</b> <span class="winbadge ${cls}">${dd.wins}/${dd.n} seeds</span></span>
         </div><div class="seedchips">${chips}</div></div>`;
     };
+    const tradeoffRow=()=>{
+      const tr=tradeoffOf(c,p);
+      const klass=(tr.status==="tradeoff"||tr.status==="clean_win")?"pos":"neg";
+      return `<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:9px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <span style="font-size:12.5px;color:var(--muted)">Vuln gain per total hr lost</span>
+          <span><b class="delta ${klass}" style="font-variant-numeric:tabular-nums">${tradeoffLabel(tr)}</b></span>
+        </div>
+        <div style="font-size:11.5px;color:var(--muted)">vulnerable Δ ${fmtSigned(tr.vulnDelta,2)} hrs · total Δ ${fmtSigned(tr.totalDelta,2)} hrs</div>
+      </div>`;
+    };
     callouts+=`<div class="callout"><div class="ctitle"><span class="poldot" style="background:${polColor(p)}"></span>${polLabel(p)} vs Standard</div>
-      ${rowFor("vulnerable_paid_seat_hours")}${rowFor("total_paid_seat_hours")}</div>`;
+      ${rowFor("vulnerable_paid_seat_hours")}${rowFor("total_paid_seat_hours")}${tradeoffRow()}</div>`;
   });
 
   // per-policy means table
@@ -718,6 +777,7 @@ function showCellTip(e,c){
   const d=ds();
   let rows=d.policies.map(p=>`<div class="row"><span>${polLabel(p)} vuln</span> ${fmt(c.means[p]?.vulnerable_paid_seat_hours,"hrs")}</div>`).join("");
   rows+=d.policies.map(p=>`<div class="row"><span>${polLabel(p)} total</span> ${fmt(c.means[p]?.total_paid_seat_hours,"hrs")}</div>`).join("");
+  candidates().forEach(p=>{ const tr=tradeoffOf(c,p); rows+=`<div class="row"><span>${polLabel(p)} tradeoff</span> ${tradeoffLabel(tr)}</div>`; });
   setTip(e, `<div class="tt">${c.tables} tables · ${c.rate}/hr</div>${rows}<div class="row" style="margin-top:4px;color:#7c8aa3">click for detail</div>`);
 }
 function showTextTip(e,txt){ setTip(e,`<div class="row">${txt}</div>`); }
@@ -733,10 +793,21 @@ function hideTip(){ document.getElementById("tip").classList.remove("on"); }
 /* ---------------- csv ---------------- */
 function downloadCSV(){
   const d=ds();
-  const head=["tables","active_tables","rate","policy",...METRIC_LIST(d)];
+  const metricKeys=METRIC_LIST(d);
+  const tradeHeads=candidates().flatMap(p=>[
+    `${p}_vulnerable_delta`,
+    `${p}_total_delta`,
+    `${p}_vulnerable_gain_per_total_hour_lost`,
+    `${p}_tradeoff_status`,
+  ]);
+  const head=["tables","active_tables","rate","policy",...metricKeys,...tradeHeads];
   const lines=[head.join(",")];
   d.cells.forEach(c=> d.policies.forEach(p=>{
-    const row=[c.tables,c.active_tables,c.rate,p,...METRIC_LIST(d).map(k=>c.means[p]?.[k]??"")];
+    const tradeVals=candidates().flatMap(cp=>{
+      const tr=tradeoffOf(c,cp);
+      return [tr.vulnDelta.toFixed(4),tr.totalDelta.toFixed(4),tr.ratio===null?"":tr.ratio.toFixed(4),tr.status];
+    });
+    const row=[c.tables,c.active_tables,c.rate,p,...metricKeys.map(k=>c.means[p]?.[k]??""),...tradeVals];
     lines.push(row.join(","));
   }));
   const blob=new Blob([lines.join("\n")],{type:"text/csv"});

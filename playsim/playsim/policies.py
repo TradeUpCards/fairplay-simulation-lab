@@ -199,7 +199,9 @@ class FairPlayLivenessPolicy:
     This is not "most-full with a health tiebreak." It first asks whether a good
     dealable healthy seat already exists. If not, it can choose the best non-gated
     forming candidate so FairPlay can express the table-growth mechanism that the
-    baseline model lacked.
+    baseline model lacked. If multiple forming options exist, it prefers growing
+    an existing one-player table before seeding another empty table; otherwise the
+    policy scatters liquidity into unpaid solo tables.
     """
 
     name = "fairplay_liveness"
@@ -254,7 +256,11 @@ class FairPlayLivenessPolicy:
             and e.get("health", 0.0) >= self.forming_health_floor
         ]
         if forming:
-            best = forming[0]
+            growable = [
+                e for e in forming
+                if by_id[e["table_id"]].get("seated_count", 0) == 1
+            ]
+            best = (growable or forming)[0]
             return PolicyDecision(
                 best["table_id"], "liveness_forming",
                 {"rank": best["rank"], "health": best["health"],

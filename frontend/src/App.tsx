@@ -6,6 +6,8 @@ import { PitBossConsole } from './views/PitBossConsole'
 import { PlayerLobby } from './views/PlayerLobby'
 import { EvalPanel } from './views/EvalPanel'
 import { TrainingTable } from './views/TrainingTable'
+import { Dashboard } from './views/Dashboard'
+import { useHashRoute, navigate } from './state/route'
 import './styles.css'
 
 /**
@@ -18,6 +20,13 @@ import './styles.css'
 export function App() {
   const [mode, setMode] = useState<ViewMode>('operator')
   const [operatorView, setOperatorView] = useState<OperatorView>('console')
+  const route = useHashRoute()
+
+  // Choosing an audience always returns to the main app (out of the dashboard).
+  const onModeChange = (next: ViewMode) => {
+    setMode(next)
+    navigate('home')
+  }
 
   // mode scrim — a warm vignette over the carpet for the player floor, a cooler
   // one for the operator console; both layered on a darkening wash.
@@ -30,8 +39,17 @@ export function App() {
 
   return (
     <div className={`min-h-screen ${scrim}`}>
-      <Header mode={mode} onModeChange={setMode} />
-      {mode === 'operator' ? (
+      <Header
+        mode={mode}
+        onModeChange={onModeChange}
+        route={route}
+        onOpenDashboard={() => navigate('dashboard')}
+      />
+      {route === 'dashboard' ? (
+        <main className="mx-auto max-w-[1360px] px-6 pb-12 pt-7">
+          <Dashboard />
+        </main>
+      ) : mode === 'operator' ? (
         <main className="mx-auto max-w-[1360px] px-6 pb-12 pt-7">
           <OperatorNav view={operatorView} onViewChange={setOperatorView} />
           <div>

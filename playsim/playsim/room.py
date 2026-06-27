@@ -115,6 +115,7 @@ class RoomResult:
     seat_events: list[dict]
     sessions: list[dict]
     hourly: list[dict]
+    samples: list[dict]
     table_timelines: dict
     checkpoints: dict
     hands_total: int
@@ -152,6 +153,7 @@ class RoomSim:
         arrival_mode: str = "fixture-once",
         arrival_rate_per_hour: float | None = None,
         formation_mode: str = "none",
+        sample_interval_min: float | None = None,
         debug_trace: bool = False,
         behavior=None,
     ) -> None:
@@ -173,6 +175,9 @@ class RoomSim:
         if formation_mode not in {"none", "forming"}:
             raise ValueError(f"unknown formation mode {formation_mode!r}")
         self.formation_mode = formation_mode
+        if sample_interval_min is not None and sample_interval_min <= 0:
+            raise ValueError("sample_interval_min must be positive")
+        self.sample_interval_min = sample_interval_min
         self.checkpoints_min = checkpoints_min
 
         self.players_by_id = load_players_by_id(root)
@@ -224,6 +229,8 @@ class RoomSim:
         self._next_checkpoint = 0
         self.hourly: list[dict] = []
         self._next_hour = 1
+        self.samples: list[dict] = []
+        self._next_sample_min = self.sample_interval_min  # None disables sampling
         self.instrumentation = {
             "routing_attempts": 0,
             "no_good_existing_seat_count": 0,
@@ -714,6 +721,36 @@ class RoomSim:
                 "hands_total": self.hands_total,
             })
 
+    def _sample_snapshot(self, t_min: float) -> dict:
+        """A lean time-resolved snapshot for the animated dashboard trace. Pure
+        observation (no RNG, no state mutation) so it never affects determinism."""
+        seated_now = [pid for tbl in self.tables.values() for pid in tbl.seated]
+        active_tables = sum(1 for tbl in self.tables.values() if len(tbl.seated) >= 2)
+        forming_tables = sum(1 for tbl in self.tables.values() if len(tbl.seated) == 1)
+        breaks_so_far = sum(1 for e in self.seat_events if e.get("event") == "break")
+        return {
+            "t_min": round(t_min, 1),
+            "total_paid_seat_min": round(sum(self.seat_minutes.values()), 1),
+            "cohort_paid_seat_min": round(
+                sum(self.seat_minutes[p] for p in self.seat_minutes
+                    if self.archetype_of.get(p) in COHORT), 1),
+            "active_players": len(seated_now),
+            "active_tables": active_tables,
+            "forming_tables": forming_tables,
+            "breaks_so_far": breaks_so_far,
+            "hands_total": self.hands_total,
+        }
+
+    def _maybe_sample(self, sim_time: float) -> None:
+        """Append cumulative snapshots at the configured cadence (opt-in). Drives
+        the animated Standard-vs-FairPlay replay on the dashboard."""
+        if self._next_sample_min is None:
+            return
+        while self._next_sample_min <= sim_time + 1e-9:
+            t = self._next_sample_min
+            self._next_sample_min += self.sample_interval_min
+            self.samples.append(self._sample_snapshot(t))
+
     def _seating_formations(self) -> int:
         """Count seated cluster formations (>=2 members of one cluster co-seated).
         A composition proxy for 'high-risk seating formations' — no backend call."""
@@ -738,6 +775,7 @@ class RoomSim:
             self._seat_arrivals(sim_time, idx)
             self._maybe_checkpoint(sim_time)
             self._maybe_hourly(sim_time)
+            self._maybe_sample(sim_time)
             active = False
             for tid in sorted(self.tables):
                 tbl = self.tables[tid]
@@ -755,6 +793,18 @@ class RoomSim:
         for tid in sorted(self.tables):
             for pid in list(self.tables[tid].seated):
                 self._close_presence(pid, end, exit_reason="horizon")
+
+        # closing snapshot at the horizon so the animated trace reaches the TRUE
+        # final cumulative total. The in-loop sampler runs before each step's deal,
+        # so a sample landing exactly on the horizon misses the final step's
+        # accrual — replace it; otherwise append (horizon not on the cadence). This
+        # keeps the hero's endpoint equal to the sweep's summary total.
+        if self._next_sample_min is not None:
+            final = self._sample_snapshot(end)
+            if self.samples and self.samples[-1]["t_min"] >= round(end, 1):
+                self.samples[-1] = final
+            else:
+                self.samples.append(final)
 
         table_timelines = {
             tid: {"max_seats": t.max_seats, "style_volatility_label": t.style,
@@ -781,7 +831,8 @@ class RoomSim:
             instrumentation=dict(self.instrumentation),
             arrival_intents=self.arrival_intents,
             routing_decisions=self.routing_decisions, seat_events=self.seat_events,
-            sessions=self.sessions, hourly=self.hourly, table_timelines=table_timelines,
+            sessions=self.sessions, hourly=self.hourly, samples=self.samples,
+            table_timelines=table_timelines,
             checkpoints=self.checkpoints, hands_total=self.hands_total,
             archetype_of=dict(self.archetype_of), net_bb=dict(self.net_bb),
             seat_minutes={k: round(v, 1) for k, v in self.seat_minutes.items()},
