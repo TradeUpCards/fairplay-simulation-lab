@@ -22,6 +22,7 @@ import copy
 import json
 import random
 import sys
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -149,6 +150,42 @@ def _fairplay_lobby(ctx: dict, tables: list[dict], player_id: str, roster_by_id:
     return rows
 
 
+def _composition(ctx: dict, table: dict) -> list[dict]:
+    """Seated archetype mix (operator diagnostic — 'who is at this table')."""
+    cl = ctx["classifications"] or {}
+    counts = Counter(cl.get(pid, "unknown") for pid in table.get("seated_player_ids", []))
+    return [{"archetype": a, "count": n} for a, n in counts.most_common()]
+
+
+def _op_details(ctx: dict, tables: list[dict], player_id: str) -> dict:
+    """OPERATOR-side per-table detail (the 'pull back the curtain' data): health +
+    term breakdown, seating-risk, rank/badge, and the seated composition. Shown only
+    behind the curtain button, never in the player-facing rows."""
+    by = {p["player_id"]: p for p in ctx["players"]}
+    health = {h.table_id: h for h in score_all_tables(tables, by, ctx["cbi"], sessions=ctx["sessions"])}
+    routed = route(player_id, tables, by, ctx["cbi"], health, ctx["classifications"])
+    opv = {o["table_id"]: o for o in routed["operator_view"]}
+    out = {}
+    for t in tables:
+        tid = t["table_id"]
+        h = health.get(tid)
+        o = opv.get(tid)
+        d = {
+            "table_id": tid, "stakes": t.get("stakes", ""),
+            "seated_count": t["seated_count"], "max_seats": t["max_seats"],
+            "open_seats": t["open_seats"], "full": t["open_seats"] <= 0,
+            "composition": _composition(ctx, t),
+        }
+        if h:
+            d.update(health=round(h.health, 1), band=h.band, terms=h.terms,
+                     reasons=[{"code": rc.code, "detail": rc.detail} for rc in h.reason_codes])
+        if o:
+            d.update(rank=o["rank"], badge=o["badge"], fit=o["fit"],
+                     delta_health=o["delta_health"], seating_risk=o["seating_risk"])
+        out[tid] = d
+    return out
+
+
 def _event(ctx: dict, pid: str, action: str, table_id: str | None, tables: list[dict]) -> dict:
     occ = ""
     if table_id:
@@ -209,7 +246,8 @@ def main() -> int:
         fairplay = _fairplay_lobby(ctx, room_fp, args.player, roster_by_id)
         label = "Open" if i == 0 else f"After activity {i}"
         steps.append({"label": label, "standard": standard, "fairplay": fairplay,
-                      "events": {"standard": std_events, "fairplay": fp_events}})
+                      "events": {"standard": std_events, "fairplay": fp_events},
+                      "op_detail": _op_details(ctx, room_fp, args.player)})
 
     out = {
         "meta": {
