@@ -111,9 +111,9 @@ function Chip({ children, tone }: { children: ReactNode; tone?: 'role' | 'bet' }
 function seatPositions(n: number): { top: string; left: string }[] {
   return Array.from({ length: n }, (_, i) => {
     const theta = Math.PI / 2 + (i / n) * Math.PI * 2
-    // narrower vertical radius keeps the top/bottom seats (and their cards) inside
-    // the felt instead of clipping off the edges.
-    return { left: `${50 + 43 * Math.cos(theta)}%`, top: `${50 + 33 * Math.sin(theta)}%` }
+    // Push the pods OUT past the rail (off the felt) so they don't sit on the table;
+    // vertical radius stays a bit tighter so top/bottom pods + cards don't clip.
+    return { left: `${50 + 48 * Math.cos(theta)}%`, top: `${50 + 35 * Math.sin(theta)}%` }
   })
 }
 
@@ -122,20 +122,20 @@ function Seat({ sv }: { sv: SeatView }) {
   // backs while an opponent is still in the hand; nothing once folded.
   const showCards = sv.hole !== null || !sv.folded
   const cards: (string | undefined)[] = sv.hole ?? [undefined, undefined]
+  // SOLID (opaque) pod so the felt never bleeds through and washes out the text.
   // Active player breathes a brass ring; winner gets a steady felt ring.
   const boxTone = sv.won
-    ? 'border-felt bg-[rgba(47,143,91,0.2)] shadow-[0_0_0_3px_rgba(47,143,91,0.22)]'
+    ? 'border-felt bg-[#12251a] shadow-[0_0_0_3px_rgba(47,143,91,0.3)]'
     : sv.to_act
-      ? 'border-brass bg-[rgba(199,154,75,0.18)] animate-turn-pulse'
-      : 'border-[#2c3543] bg-[rgba(14,17,22,0.9)]'
+      ? 'border-brass bg-[#1c1a12] animate-turn-pulse'
+      : 'border-[#2c3543] bg-[#10141b]'
   return (
-    <div
-      className={`flex w-[150px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 ${
-        sv.folded ? 'opacity-40' : ''
-      }`}
-    >
+    // The BOX is the anchor — its CENTER sits on the seat point. Cards (above) and the
+    // bet chip (below) are absolutely positioned, so showing/hiding either never nudges
+    // the pod's position.
+    <div className={`relative w-[150px] -translate-x-1/2 -translate-y-1/2 ${sv.folded ? 'opacity-40' : ''}`}>
       {showCards && (
-        <div className="flex gap-1">
+        <div className="absolute bottom-full left-1/2 mb-1 flex -translate-x-1/2 gap-1">
           {cards.map((c, i) => (
             <PlayingCard key={i} card={c} small={!sv.is_hero} />
           ))}
@@ -157,7 +157,11 @@ function Seat({ sv }: { sv: SeatView }) {
           </div>
         </div>
       </div>
-      {sv.bet_bb > 0 && <Chip tone="bet">{sv.bet_bb}bb</Chip>}
+      {sv.bet_bb > 0 && (
+        <div className="absolute top-full left-1/2 mt-1 -translate-x-1/2">
+          <Chip tone="bet">{sv.bet_bb}bb</Chip>
+        </div>
+      )}
     </div>
   )
 }
@@ -510,12 +514,25 @@ export function TrainingTable() {
   const bb = st?.big_blind ?? 2
   const nBots = slots.filter(Boolean).length
 
-  const positions = useMemo(() => (st ? seatPositions(st.max_seats) : []), [st])
-  // Place seats in true action order around the ring with the hero at the bottom
-  // (slot 0). The seat to the hero's left lands at slot 1, and so on — so the
-  // positions (UTG/HJ/CO/BTN/SB/BB) flow around the table the way poker action does.
-  const slotForSeat = (seat: number) =>
-    st ? (seat - st.hero_seat + st.max_seats) % st.max_seats : 0
+  // FIXED ring: always (5 opponent slots + hero) positions, so seats never move when a
+  // player is unseated. The hero owns slot 0 (bottom); opponent dropdown index i owns
+  // slot i+1, permanently — empty dropdowns simply leave that ring spot vacant.
+  const SEAT_RING = slots.length + 1
+  const positions = useMemo(() => seatPositions(SEAT_RING), [SEAT_RING])
+  const filledSlots = useMemo(
+    () => slots.map((s, i) => (s ? i : -1)).filter((i) => i >= 0),
+    [slots],
+  )
+  // seat number -> fixed ring slot. The k-th opponent (by seat order) is the k-th
+  // filled dropdown, so its ring slot is its dropdown index + 1.
+  const seatToSlot = useMemo(() => {
+    const map: Record<number, number> = {}
+    let opp = 0
+    for (const sv of st?.seats ?? []) {
+      map[sv.seat] = sv.is_hero ? 0 : (filledSlots[opp++] ?? 0) + 1
+    }
+    return map
+  }, [st, filledSlots])
 
   async function deal() {
     setBusy(true)
@@ -722,7 +739,7 @@ export function TrainingTable() {
               </div>
               {/* seats */}
               {st?.seats.map((sv) => {
-                const pos = positions[slotForSeat(sv.seat)]
+                const pos = positions[seatToSlot[sv.seat] ?? 0]
                 return (
                   <div key={sv.seat} className="absolute" style={pos}>
                     <Seat sv={sv} />
