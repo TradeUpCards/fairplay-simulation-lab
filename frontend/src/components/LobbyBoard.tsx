@@ -104,6 +104,7 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
 
       {ui.selected && cur.op_detail?.[ui.selected] && (
         <LobbySidecar
+          key={ui.selected}
           detail={cur.op_detail[ui.selected]}
           onClose={() => lobbyStore.setSelected(null)}
         />
