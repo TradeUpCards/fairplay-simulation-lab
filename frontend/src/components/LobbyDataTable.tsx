@@ -18,6 +18,8 @@ export function LobbyDataTable({
   selected,
   onSelect,
   events,
+  diagOpen,
+  onToggleDiag,
   accent,
 }: {
   rows: LobbyRow[]
@@ -36,6 +38,9 @@ export function LobbyDataTable({
   onSelect?: (id: string) => void
   /** this step's seat events for THIS policy (admin diagnostic). */
   events?: SeatEvent[]
+  /** shared expand/collapse for the diagnostics (both sides toggle together). */
+  diagOpen?: boolean
+  onToggleDiag?: () => void
   accent: 'standard' | 'fairplay'
 }) {
   const prevIndex = new Map((prevOrderIds ?? []).map((id, i) => [id, i]))
@@ -193,13 +198,19 @@ export function LobbyDataTable({
       </div>
 
       {events && events.length > 0 && (
-        <details className="mt-2 rounded-md border border-[#262a32] bg-[rgba(0,0,0,0.2)]">
-          <summary className="cursor-pointer select-none px-2 py-1 text-[0.7rem] text-[#8b8276]">
+        <div className="mt-2 rounded-md border border-[#262a32] bg-[rgba(0,0,0,0.2)]">
+          <button
+            type="button"
+            onClick={onToggleDiag}
+            className="flex w-full cursor-pointer select-none items-center gap-1 px-2 py-1 text-left text-[0.7rem] text-[#8b8276]"
+          >
+            <span className="text-[#6f7682]">{diagOpen ? '▾' : '▸'}</span>
             Admin · {policy} seating this step ({events.filter((e) => e.action === 'sit').length} sat,{' '}
             {events.filter((e) => e.action === 'stand').length} stood)
-          </summary>
-          <div className="max-h-40 overflow-y-auto border-t border-[#1e2128] px-2 py-1 text-[0.7rem]">
-            {events.map((e, i) => (
+          </button>
+          {diagOpen && (
+            <div className="max-h-40 overflow-y-auto border-t border-[#1e2128] px-2 py-1 text-[0.7rem]">
+              {events.map((e, i) => (
               <div key={i} className="flex items-center gap-1.5 py-[0.06rem]">
                 <span className={e.action === 'sit' ? 'text-[#8be3a7]' : 'text-[#c98b93]'}>
                   {e.action === 'sit' ? '+' : '–'}
@@ -209,9 +220,10 @@ export function LobbyDataTable({
                 <span className="font-mono text-[#d8d2c6]">{e.table_id ?? '—'}</span>
                 {e.occ_after && <span className="text-[#6f7682]">({e.occ_after})</span>}
               </div>
-            ))}
+              ))}
+              </div>
+            )}
           </div>
-        </details>
       )}
     </section>
   )

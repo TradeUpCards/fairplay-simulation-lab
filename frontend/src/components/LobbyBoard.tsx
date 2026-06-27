@@ -1,17 +1,18 @@
-import { useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import type { LobbySequence } from '../data/types'
 import { loadLobbySequence } from '../data/shim'
 import { useResource } from '../state/useResource'
+import { lobbyStore } from '../state/lobbyStore'
 import { ResourceBoundary } from './ResourceBoundary'
 import { LobbyDataTable } from './LobbyDataTable'
 
 /**
- * Demo Part 2 — the same room shown two ways at once: Standard (sorts by fullest
- * table) vs FairPlay (the router, routes toward healthy tables). The "Simulate
- * room activity" button steps a seeded churn (players stand / sit), which
- * re-ranks both sides — Standard by fullness, FairPlay by the real router. Data
- * is the player-safe `lobby_sequence.json` (playsim → router pipeline). The
- * presenter narrates *why* FairPlay reorders; no scores are ever shown.
+ * Demo Part 2 — the same arrivals seated by each policy, side by side: Standard
+ * packs the fullest tables (concentration); FairPlay routes via the real router
+ * (spread). "Simulate room activity" steps a seeded round of arrivals/departures
+ * and the two rooms diverge. State lives in `lobbyStore` so it survives leaving
+ * and re-entering the player page. Data is the player-safe `lobby_sequence.json`
+ * (playsim → router pipeline); no scores shown in the lobby itself.
  */
 export function LobbyBoard() {
   const seq = useResource(loadLobbySequence, (d) => d.steps.length === 0)
@@ -23,13 +24,12 @@ export function LobbyBoard() {
 }
 
 function LobbyBoardView({ seq }: { seq: LobbySequence }) {
-  const [step, setStep] = useState(0)
-  const [selected, setSelected] = useState<string | null>(null)
-  const toggle = (id: string) => setSelected((s) => (s === id ? null : id))
+  const ui = useSyncExternalStore(lobbyStore.subscribe, lobbyStore.getState)
+  const step = Math.min(ui.step, seq.steps.length - 1)
   const cur = seq.steps[step]
   const prev = step > 0 ? seq.steps[step - 1] : undefined
   const atEnd = step >= seq.steps.length - 1
-  const advance = () => setStep((s) => (s >= seq.steps.length - 1 ? 0 : s + 1))
+  const advance = () => lobbyStore.setStep(step >= seq.steps.length - 1 ? 0 : step + 1)
 
   const ev = cur.events?.standard ?? []
   const sits = ev.filter((e) => e.action === 'sit').length
@@ -69,9 +69,11 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
           prevOrderIds={prev?.standard.map((r) => r.table_id)}
           crossOrderIds={cur.fairplay.map((r) => r.table_id)}
           crossLabel="FP"
-          selected={selected}
-          onSelect={toggle}
+          selected={ui.selected}
+          onSelect={lobbyStore.toggleSelected}
           events={cur.events?.standard}
+          diagOpen={ui.diagOpen}
+          onToggleDiag={lobbyStore.toggleDiag}
           accent="standard"
         />
         <LobbyDataTable
@@ -82,9 +84,11 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
           prevOrderIds={prev?.fairplay.map((r) => r.table_id)}
           crossOrderIds={cur.standard.map((r) => r.table_id)}
           crossLabel="Std"
-          selected={selected}
-          onSelect={toggle}
+          selected={ui.selected}
+          onSelect={lobbyStore.toggleSelected}
           events={cur.events?.fairplay}
+          diagOpen={ui.diagOpen}
+          onToggleDiag={lobbyStore.toggleDiag}
           accent="fairplay"
         />
       </div>
