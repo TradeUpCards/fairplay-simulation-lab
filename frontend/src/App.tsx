@@ -18,7 +18,7 @@ import './styles.css'
  * view at a time (Console → Simulator → Eval) instead of stacking all three.
  */
 export function App() {
-  const [mode, setMode] = useState<ViewMode>('operator')
+  const [mode, setMode] = useState<ViewMode>('player')
   const [operatorView, setOperatorView] = useState<OperatorView>('console')
   const route = useHashRoute()
 
