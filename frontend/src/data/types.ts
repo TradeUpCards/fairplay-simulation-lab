@@ -145,16 +145,21 @@ export interface LobbyRow {
   plrs_per_flop_pct?: number
 }
 
-export interface LobbyChurn {
-  stood: number
-  sat: number
+/** One seating decision in a step (admin diagnostic — shows policy behavior). */
+export interface SeatEvent {
+  player_id: string
+  archetype?: string | null
+  action: 'sit' | 'stand'
+  table_id: string | null
+  occ_after?: string
 }
 
 export interface LobbyStep {
   label: string
-  churn?: LobbyChurn
   standard: LobbyRow[]
   fairplay: LobbyRow[]
+  /** per-policy seat events that produced this step (admin diagnostic). */
+  events?: { standard: SeatEvent[]; fairplay: SeatEvent[] }
 }
 
 export interface LobbySequence {

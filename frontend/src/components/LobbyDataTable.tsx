@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { LobbyRow } from '../data/types'
+import type { LobbyRow, SeatEvent } from '../data/types'
 
 /**
  * A poker-site-style cash-game lobby table (rows = tables, columns = facts), the
@@ -17,6 +17,7 @@ export function LobbyDataTable({
   crossLabel,
   selected,
   onSelect,
+  events,
   accent,
 }: {
   rows: LobbyRow[]
@@ -33,6 +34,8 @@ export function LobbyDataTable({
   /** the table currently selected in either lobby (highlighted in both). */
   selected?: string | null
   onSelect?: (id: string) => void
+  /** this step's seat events for THIS policy (admin diagnostic). */
+  events?: SeatEvent[]
   accent: 'standard' | 'fairplay'
 }) {
   const prevIndex = new Map((prevOrderIds ?? []).map((id, i) => [id, i]))
@@ -111,7 +114,7 @@ export function LobbyDataTable({
                   data-testid="lobby-row"
                   data-tableid={r.table_id}
                   onClick={() => onSelect?.(r.table_id)}
-                  className={`h-[2.15rem] cursor-pointer border-t border-[#1e2128] transition-colors duration-500 ${
+                  className={`h-[2.15rem] cursor-pointer border-t border-[#1e2128] transition-colors duration-500 ${full ? 'opacity-50 ' : ''}${
                     isSel
                       ? 'bg-[rgba(224,189,118,0.16)] ring-1 ring-inset ring-brass'
                       : moved > 0
@@ -179,7 +182,7 @@ export function LobbyDataTable({
                       disabled={full}
                       className="rounded border border-[#2f7d4a] bg-[#16341f] px-2 py-[0.1rem] text-[0.68rem] font-semibold text-[#8be3a7] transition hover:bg-[#1c4429] disabled:cursor-not-allowed disabled:border-[#3a3f47] disabled:bg-transparent disabled:text-[#5b626c]"
                     >
-                      {full ? 'Full' : 'Join'}
+                      {full ? 'Waitlist' : 'Join'}
                     </button>
                   </td>
                 </tr>
@@ -188,6 +191,28 @@ export function LobbyDataTable({
           </tbody>
         </table>
       </div>
+
+      {events && events.length > 0 && (
+        <details className="mt-2 rounded-md border border-[#262a32] bg-[rgba(0,0,0,0.2)]">
+          <summary className="cursor-pointer select-none px-2 py-1 text-[0.7rem] text-[#8b8276]">
+            Admin · {policy} seating this step ({events.filter((e) => e.action === 'sit').length} sat,{' '}
+            {events.filter((e) => e.action === 'stand').length} stood)
+          </summary>
+          <div className="max-h-40 overflow-y-auto border-t border-[#1e2128] px-2 py-1 text-[0.7rem]">
+            {events.map((e, i) => (
+              <div key={i} className="flex items-center gap-1.5 py-[0.06rem]">
+                <span className={e.action === 'sit' ? 'text-[#8be3a7]' : 'text-[#c98b93]'}>
+                  {e.action === 'sit' ? '+' : '–'}
+                </span>
+                <span className="text-[#a9b0bb]">{e.archetype ?? e.player_id}</span>
+                <span className="text-[#6f7682]">{e.action === 'sit' ? '→' : 'left'}</span>
+                <span className="font-mono text-[#d8d2c6]">{e.table_id ?? '—'}</span>
+                {e.occ_after && <span className="text-[#6f7682]">({e.occ_after})</span>}
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
     </section>
   )
 }
