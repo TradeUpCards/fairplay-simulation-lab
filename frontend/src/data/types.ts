@@ -122,3 +122,49 @@ export interface SeededCaseLabelsFile {
   cases: SeededCase[]
   eval_summary: EvalSummary
 }
+
+// ── Lobby sequence (data/derived/lobby_sequence.json) — demo Part 2 ───────────
+// PLAYER-FACING / player-safe. One room shown across a few churn steps, ordered
+// two ways (Standard = fullness; FairPlay = the router). Produced by the
+// playsim → router pipeline; the same tables appear in both `standard` and
+// `fairplay`, only the order differs. No scores / archetypes / risk language.
+
+export interface LobbyRow {
+  table_id: string
+  stakes: string
+  game_type: string
+  max_seats: number
+  seated_count: number
+  open_seats: number
+  pace_label: string
+  badge: LobbyTable['badge']
+  badge_label: LobbyTable['badge_label']
+  /** Poker-lobby stat columns (from the room roster; player-safe). */
+  avg_pot_usd?: number
+  hands_per_hour?: number
+  plrs_per_flop_pct?: number
+}
+
+export interface LobbyChurn {
+  stood: number
+  sat: number
+}
+
+export interface LobbyStep {
+  label: string
+  churn?: LobbyChurn
+  standard: LobbyRow[]
+  fairplay: LobbyRow[]
+}
+
+export interface LobbySequence {
+  meta: {
+    source: string
+    seed?: number
+    arrival_rate_per_hour?: number
+    player_id?: string
+    note?: string
+    [k: string]: unknown
+  }
+  steps: LobbyStep[]
+}

@@ -6,6 +6,7 @@ import { useLiveRoom, playerApi, liveRoom } from '../state/liveRoom'
 import { ResourceBoundary } from '../components/ResourceBoundary'
 import { TableTile } from '../components/TableTile'
 import { PlayerPickerModal } from '../components/PlayerPickerModal'
+import { LobbyBoard } from '../components/LobbyBoard'
 
 const DEFAULT_PLAYER = 'P-104'
 
@@ -32,6 +33,33 @@ const SELECT_CLS = 'rounded-md border border-[#3a3024] bg-[rgba(0,0,0,0.3)] px-[
  * served by `/api/lobby/{id}`. Offline it falls back to the frozen P-104 lobby.
  */
 export function PlayerLobby() {
+  const [view, setView] = useState<'table' | 'cards'>('table')
+
+  return (
+    <section aria-label="player view">
+      <div
+        className="mb-4 inline-flex gap-0.5 rounded-full border border-line bg-surface-2 p-0.5"
+        role="tablist"
+        aria-label="lobby layout"
+      >
+        <FloorTab active={view === 'table'} onClick={() => setView('table')}>
+          Table
+        </FloorTab>
+        <FloorTab active={view === 'cards'} onClick={() => setView('cards')}>
+          Cards
+        </FloorTab>
+      </div>
+      {view === 'table' ? <LobbyBoard /> : <CardsLobby />}
+    </section>
+  )
+}
+
+/**
+ * The original card-grid lobby — the optional alternate view (and the more
+ * mobile-friendly layout). Live impersonator when the API is up; frozen P-104
+ * fallback otherwise.
+ */
+function CardsLobby() {
   const live = useLiveRoom()
   const staticLobby = useResource(loadRouterLobby, (d) => d.routed.length === 0)
 
