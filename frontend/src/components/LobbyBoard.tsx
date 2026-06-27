@@ -31,15 +31,19 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
   const atEnd = step >= seq.steps.length - 1
   const advance = () => setStep((s) => (s >= seq.steps.length - 1 ? 0 : s + 1))
 
+  const ev = cur.events?.standard ?? []
+  const sits = ev.filter((e) => e.action === 'sit').length
+  const stands = ev.filter((e) => e.action === 'stand').length
+
   return (
     <section aria-label="standard vs fairplay lobby">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-baseline gap-3">
           <span className="text-[0.74rem] uppercase tracking-[0.14em] text-[#8b8276]">Room state</span>
           <span className="font-mono text-[0.9rem] font-semibold text-[#f3ece0]">{cur.label}</span>
-          {cur.churn && (
+          {sits + stands > 0 && (
             <span className="text-[0.74rem] text-[#a9b0bb]">
-              {cur.churn.stood} stood · {cur.churn.sat} sat
+              {sits} arrived · {stands} left · seated by each policy
             </span>
           )}
           <span className="text-[0.7rem] text-[#6f7682]">
@@ -67,6 +71,7 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
           crossLabel="FP"
           selected={selected}
           onSelect={toggle}
+          events={cur.events?.standard}
           accent="standard"
         />
         <LobbyDataTable
@@ -79,14 +84,17 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
           crossLabel="Std"
           selected={selected}
           onSelect={toggle}
+          events={cur.events?.fairplay}
           accent="fairplay"
         />
       </div>
 
       <p className="mt-3 text-[0.72rem] text-[#6f7682]">
-        Same {cur.fairplay.length} tables, ordered two ways — the <span className="text-[#8b8276]">vs</span>{' '}
-        column shows each table's rank in the other strategy. Click a table to highlight it in
-        both. Illustrative synthetic room — not a live cash game.
+        Same arrivals, seated by each policy — Standard packs the fullest tables (they fill and
+        drop to the bottom as <span className="text-[#8b8276]">Waitlist</span>); FairPlay routes
+        toward healthy tables. The <span className="text-[#8b8276]">vs</span> column shows each
+        table's rank in the other room; click a table to highlight it in both; expand the admin box
+        for the per-step seating. Illustrative synthetic room — not a live cash game.
       </p>
     </section>
   )

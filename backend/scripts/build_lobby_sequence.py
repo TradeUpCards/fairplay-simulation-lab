@@ -1,26 +1,24 @@
-"""Freeze a *sequence* of routed lobbies across simulated room churn (demo Part 2).
+"""Freeze a policy-driven, two-room lobby sequence (demo Part 2).
 
-Produces ``data/derived/lobby_sequence.json``: one room shown over several churn
-steps, each step ordered two ways for a seeking player —
+Two rooms start identical. Each step, the SAME players stand and the SAME players
+arrive — but each policy decides WHERE arrivals sit:
 
-  - ``standard``: the naive most-full ordering (sort by seated_count desc),
-  - ``fairplay``: the real router ordering (Rank = 0.30·Fit + 0.40·Health + 0.30·ΔHealth).
+  - Standard seats each arrival at the **fullest open table** (concentration),
+  - FairPlay routes each arrival via the **real router** (spread toward healthy tables).
 
-Both arrays hold the *same* player-safe tables; only the order differs. Between
-steps a seeded churn stands some seated players and sits some unseated ones, which
-changes table composition, so re-running the **real router** re-ranks FairPlay (and
-fullness re-ranks Standard). This is the data behind the side-by-side lobby demo.
-
-Player-safe: the rows come from the router's ``player_lobby`` view (neutral badges +
-safe facts only — no scores/risk/archetype), plus stat columns from the roster.
+So the two rooms diverge: Standard fills tables to capacity (they show as Full at the
+bottom of the list), FairPlay keeps more healthy tables open. We record the per-step
+seat events for an admin diagnostic, and emit the player-safe lobby for each room
+(joinable tables first by that policy's order, full tables at the bottom).
 
 Run:  python backend/scripts/build_lobby_sequence.py [--data-root DIR] [--player P-104]
-Saturday: point ``--data-root`` at the large-room fixture for the 50-table version.
+Large-room: --data-root playsim/out/large-room-data --player P-10001
 """
 
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import random
 import sys
@@ -34,7 +32,7 @@ from scoring.router import route  # noqa: E402
 
 OUT = ROOT / "data" / "derived" / "lobby_sequence.json"
 
-# Stat columns the lobby shows; pulled from the roster entry when present.
+# Player-safe stat columns pulled from the (static) roster entry.
 STAT_KEYS = {"avg_pot_size_usd": "avg_pot_usd", "hands_per_hour": "hands_per_hour"}
 
 
@@ -48,72 +46,118 @@ def _load(data_root: Path) -> dict:
     if sess_path.exists():
         sessions = [s for s in json.loads(sess_path.read_text(encoding="utf-8")).get("sessions", [])
                     if "session_id" in s]
-    return {"rel": rel, "players": players, "roster": roster, "sessions": sessions}
+    classifications = None
+    cl_path = data_root / "derived" / "classifications.json"
+    if cl_path.exists():
+        cl = json.loads(cl_path.read_text(encoding="utf-8"))
+        rows = cl["classifications"] if isinstance(cl, dict) else cl
+        classifications = {c["player_id"]: c["archetype"] for c in rows}
+    return {"rel": rel, "players": players, "roster": roster, "sessions": sessions,
+            "classifications": classifications}
 
 
-def _route_once(ctx: dict, roster: list[dict], player_id: str) -> list[dict]:
-    """Run the real scoring pipeline on the current roster → player_lobby rows."""
+# ── room mutation ─────────────────────────────────────────────────────────────
+
+def _seated_set(tables: list[dict]) -> set[str]:
+    return {pid for t in tables for pid in t.get("seated_player_ids", [])}
+
+
+def _table_of(tables: list[dict], pid: str) -> dict | None:
+    for t in tables:
+        if pid in t.get("seated_player_ids", []):
+            return t
+    return None
+
+
+def _unseat(tables: list[dict], pid: str) -> str | None:
+    t = _table_of(tables, pid)
+    if not t:
+        return None
+    t["seated_player_ids"].remove(pid)
+    t["seated_count"] -= 1
+    t["open_seats"] = t.get("open_seats", 0) + 1
+    return t["table_id"]
+
+
+def _seat(tables: list[dict], pid: str, table_id: str) -> None:
+    t = next(x for x in tables if x["table_id"] == table_id)
+    t["seated_player_ids"].append(pid)
+    t["seated_count"] += 1
+    t["open_seats"] -= 1
+
+
+def _most_full_open(tables: list[dict]) -> str | None:
+    """Standard policy: the fullest table that still has an open seat."""
+    open_t = [t for t in tables if t.get("open_seats", 0) > 0]
+    if not open_t:
+        return None
+    return min(open_t, key=lambda t: (-t["seated_count"], t["table_id"]))["table_id"]
+
+
+def _fairplay_open(ctx: dict, tables: list[dict], player_id: str) -> list[str]:
+    """FairPlay: the router's ranked open-table order (top = best routed seat)."""
     by = {p["player_id"]: p for p in ctx["players"]}
-    integ = score_integrity(ctx["rel"], ctx["players"])
-    cbi = build_cluster_band_index(ctx["rel"], integ)
-    health = {h.table_id: h for h in score_all_tables(roster, by, cbi, sessions=ctx["sessions"])}
-    routed = route(player_id, roster, by, cbi, health)
-    return routed["player_lobby"]
+    health = {h.table_id: h for h in score_all_tables(tables, by, ctx["cbi"], sessions=ctx["sessions"])}
+    routed = route(player_id, tables, by, ctx["cbi"], health, ctx["classifications"])
+    return [t["table_id"] for t in routed["player_lobby"]]
 
 
-def _with_stats(rows: list[dict], roster_by_id: dict, rng: random.Random) -> list[dict]:
-    """Attach player-safe stat columns (from roster; plrs/flop synthesized, seeded)."""
-    out = []
-    for r in rows:
-        rentry = roster_by_id.get(r["table_id"], {})
-        row = dict(r)
-        for src, dst in STAT_KEYS.items():
-            if src in rentry:
-                row[dst] = rentry[src]
-        # plrs/flop% isn't in the roster — seed a stable value per table for the column.
-        seed = sum(ord(c) for c in r["table_id"])
-        row["plrs_per_flop_pct"] = 26 + (seed % 38)
-        out.append(row)
-    return out
+# ── lobby rows (player-safe) ──────────────────────────────────────────────────
+
+def _row(t: dict, roster_by_id: dict, badge: str, badge_label: str) -> dict:
+    rentry = roster_by_id.get(t["table_id"], {})
+    row = {
+        "table_id": t["table_id"],
+        "stakes": t.get("stakes", rentry.get("stakes", "")),
+        "game_type": t.get("game_type", rentry.get("game_type", "NLH")),
+        "max_seats": t["max_seats"],
+        "seated_count": t["seated_count"],
+        "open_seats": t["open_seats"],
+        "pace_label": t.get("pace_label", rentry.get("pace_label", "")),
+        "badge": badge,
+        "badge_label": badge_label,
+    }
+    for src, dst in STAT_KEYS.items():
+        if src in rentry:
+            row[dst] = rentry[src]
+    seed = sum(ord(c) for c in t["table_id"])
+    row["plrs_per_flop_pct"] = 26 + (seed % 38)
+    return row
 
 
-def _churn(roster: list[dict], players: list[dict], rng: random.Random, n_stand: int, n_sit: int) -> dict:
-    """Seeded: stand n_stand seated players, sit n_sit unseated ones. Mutates roster."""
-    seated_ids = {pid for t in roster for pid in t.get("seated_player_ids", [])}
-    # stand
-    standable = [(t, pid) for t in roster for pid in list(t.get("seated_player_ids", []))]
-    rng.shuffle(standable)
-    stood = 0
-    for t, pid in standable:
-        if stood >= n_stand:
-            break
-        if pid in t["seated_player_ids"] and t["seated_count"] > 0:
-            t["seated_player_ids"].remove(pid)
-            t["seated_count"] -= 1
-            t["open_seats"] = t.get("open_seats", 0) + 1
-            seated_ids.discard(pid)
-            stood += 1
-    # sit
-    pool = [p["player_id"] for p in players if p["player_id"] not in seated_ids]
-    rng.shuffle(pool)
-    open_tables = [t for t in roster if t.get("open_seats", 0) > 0]
-    sat = 0
-    for pid in pool:
-        if sat >= n_sit or not open_tables:
-            break
-        t = rng.choice([t for t in roster if t.get("open_seats", 0) > 0] or [None])
-        if t is None:
-            break
-        t["seated_player_ids"].append(pid)
-        t["seated_count"] += 1
-        t["open_seats"] -= 1
-        sat += 1
-    return {"stood": stood, "sat": sat}
+def _standard_lobby(tables: list[dict], roster_by_id: dict) -> list[dict]:
+    """Joinable tables most-full first; full tables at the bottom. Neutral badges."""
+    joinable = sorted([t for t in tables if t["open_seats"] > 0],
+                      key=lambda t: (-t["seated_count"], t["table_id"]))
+    full = sorted([t for t in tables if t["open_seats"] <= 0], key=lambda t: t["table_id"])
+    return [_row(t, roster_by_id, "available", "Available") for t in joinable + full]
 
 
-def _standard_order(fairplay_rows: list[dict]) -> list[dict]:
-    """Same tables, sorted naive most-full (the Standard policy)."""
-    return sorted(fairplay_rows, key=lambda r: (-r["seated_count"], r["table_id"]))
+def _fairplay_lobby(ctx: dict, tables: list[dict], player_id: str, roster_by_id: dict) -> list[dict]:
+    """Router-ranked joinable tables (with badges); full tables at the bottom."""
+    by = {p["player_id"]: p for p in ctx["players"]}
+    health = {h.table_id: h for h in score_all_tables(tables, by, ctx["cbi"], sessions=ctx["sessions"])}
+    routed = route(player_id, tables, by, ctx["cbi"], health, ctx["classifications"])
+    by_tid = {t["table_id"]: t for t in tables}
+    rows = []
+    for pl in routed["player_lobby"]:  # already ordered + player-safe badges
+        t = by_tid[pl["table_id"]]
+        rows.append(_row(t, roster_by_id, pl["badge"], pl["badge_label"]))
+    seen = {pl["table_id"] for pl in routed["player_lobby"]}
+    full = sorted([t for t in tables if t["table_id"] not in seen], key=lambda t: t["table_id"])
+    rows += [_row(t, roster_by_id, "available", "Available") for t in full]
+    return rows
+
+
+def _event(ctx: dict, pid: str, action: str, table_id: str | None, tables: list[dict]) -> dict:
+    occ = ""
+    if table_id:
+        t = next((x for x in tables if x["table_id"] == table_id), None)
+        if t:
+            occ = f"{t['seated_count']}/{t['max_seats']}"
+    arch = (ctx["classifications"] or {}).get(pid)
+    return {"player_id": pid, "archetype": arch, "action": action,
+            "table_id": table_id, "occ_after": occ}
 
 
 def main() -> int:
@@ -122,41 +166,66 @@ def main() -> int:
     ap.add_argument("--player", default="P-104")
     ap.add_argument("--steps", type=int, default=4)
     ap.add_argument("--stand", type=int, default=6)
-    ap.add_argument("--sit", type=int, default=4)
+    ap.add_argument("--sit", type=int, default=14)
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
 
     data_root = Path(args.data_root)
     ctx = _load(data_root)
-    rng = random.Random(args.seed)
+    ctx["integ"] = score_integrity(ctx["rel"], ctx["players"])  # seating-independent → once
+    ctx["cbi"] = build_cluster_band_index(ctx["rel"], ctx["integ"])
     roster_by_id = {t["table_id"]: t for t in ctx["roster"]}
+    rng = random.Random(args.seed)
+
+    room_std = copy.deepcopy(ctx["roster"])
+    room_fp = copy.deepcopy(ctx["roster"])
 
     steps = []
     for i in range(args.steps):
-        churn = None
+        std_events: list[dict] = []
+        fp_events: list[dict] = []
         if i > 0:
-            churn = _churn(ctx["roster"], ctx["players"], rng, args.stand, args.sit)
-            roster_by_id = {t["table_id"]: t for t in ctx["roster"]}
-        fairplay = _with_stats(_route_once(ctx, ctx["roster"], args.player), roster_by_id, rng)
-        standard = _standard_order(fairplay)
-        label = "Open" if i == 0 else f"After churn {i}"
-        steps.append({"label": label, "churn": churn, "standard": standard, "fairplay": fairplay})
+            seated = sorted(_seated_set(room_std) - {args.player})
+            leavers = rng.sample(seated, min(args.stand, len(seated)))
+            for pid in leavers:
+                t1 = _unseat(room_std, pid)
+                std_events.append(_event(ctx, pid, "stand", t1, room_std))
+                t2 = _unseat(room_fp, pid)
+                fp_events.append(_event(ctx, pid, "stand", t2, room_fp))
+            unseated = sorted({p["player_id"] for p in ctx["players"]} - _seated_set(room_std)
+                              - {args.player})
+            arrivals = rng.sample(unseated, min(args.sit, len(unseated)))
+            for pid in arrivals:
+                ts = _most_full_open(room_std)
+                if ts:
+                    _seat(room_std, pid, ts)
+                    std_events.append(_event(ctx, pid, "sit", ts, room_std))
+                ranked = _fairplay_open(ctx, room_fp, pid)
+                tf = ranked[0] if ranked else None
+                if tf:
+                    _seat(room_fp, pid, tf)
+                    fp_events.append(_event(ctx, pid, "sit", tf, room_fp))
+        standard = _standard_lobby(room_std, roster_by_id)
+        fairplay = _fairplay_lobby(ctx, room_fp, args.player, roster_by_id)
+        label = "Open" if i == 0 else f"After activity {i}"
+        steps.append({"label": label, "standard": standard, "fairplay": fairplay,
+                      "events": {"standard": std_events, "fairplay": fp_events}})
 
     out = {
         "meta": {
             "source": str(data_root.name),
             "seed": args.seed,
             "player_id": args.player,
-            "note": ("One room over churn steps, ordered two ways for the seeking player. "
-                     "standard = most-full; fairplay = real router. Same tables, different order. "
-                     "Player-safe (router player_lobby view + roster stat columns)."),
+            "note": ("Two rooms, same arrivals/departures, seated by each policy "
+                     "(Standard = most-full; FairPlay = real router). Rooms diverge over "
+                     "steps. Player-safe lobby rows; full tables at the bottom. "
+                     "events[] is an admin diagnostic of the per-step seating."),
         },
         "steps": steps,
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {len(steps)}-step lobby sequence ({len(steps[0]['fairplay'])} tables) "
-          f"for {args.player} -> {OUT.relative_to(ROOT)}")
+    print(f"Wrote {len(steps)}-step policy-driven lobby for {args.player} -> {OUT.relative_to(ROOT)}")
     return 0
 
 
