@@ -75,7 +75,10 @@ def test_variable_player_count_and_mystery():
 
     mystery = PlaySession(bots=['grinder', 'recreational'], reveal=False, seed=2)
     bots = [sv for sv in mystery.state().seats if not sv.is_hero]
-    assert all(sv.label == 'Unknown' and sv.archetype is None for sv in bots)
+    # mystery hides the archetype but gives each a stable, distinct handle (for the
+    # identify-the-type round) — never the style label.
+    assert all(sv.archetype is None and sv.label.startswith('Player ') for sv in bots)
+    assert len({sv.label for sv in bots}) == len(bots)  # distinct per opponent
 
 
 def test_state_exposes_legal_actions_before_completion():

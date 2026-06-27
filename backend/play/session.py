@@ -213,7 +213,9 @@ class PlaySession:
         if seat == self.hero_seat:
             return "You"
         if not self.reveal:
-            return "Unknown"
+            # Mystery: a stable, distinct, non-revealing handle so the player can track
+            # each opponent across hands (seats are fixed) and identify them later.
+            return f"Player {seat + 1}"
         try:
             return read_for(self.seat_archetype[seat]).style_label
         except KeyError:

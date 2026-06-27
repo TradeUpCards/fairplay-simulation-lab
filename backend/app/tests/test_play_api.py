@@ -68,7 +68,7 @@ def test_variable_player_count_and_mystery():
     assert st["max_seats"] == 3 and len(st["seats"]) == 3   # hero + 2 bots
     assert st["mystery"] is True
     bots = [s for s in st["seats"] if not s["is_hero"]]
-    assert all(s["label"] == "Unknown" and s["archetype"] is None for s in bots)
+    assert all(s["archetype"] is None and s["label"].startswith("Player ") for s in bots)
 
 
 def test_no_bots_is_422():

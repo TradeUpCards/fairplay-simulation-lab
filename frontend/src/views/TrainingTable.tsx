@@ -483,12 +483,104 @@ function ActionClock({ left, total }: { left: number; total: number }) {
   )
 }
 
+// Phase 5 — the blind "identify the type" round. After playing the mystery table, the
+// human guesses each hidden opponent's archetype; reveal + score. Mirrors the classifier.
+function IdentifyModal({
+  opponents,
+  truthFor,
+  onClose,
+}: {
+  opponents: SeatView[]
+  truthFor: (seat: number) => string | undefined
+  onClose: () => void
+}) {
+  const [guesses, setGuesses] = useState<Record<number, string>>({})
+  const [scored, setScored] = useState(false)
+  const labelFor = (a?: string) => BOT_CHOICES.find((c) => c.archetype === a)?.label ?? a ?? '—'
+  const correct = opponents.filter((o) => guesses[o.seat] === truthFor(o.seat)).length
+  const allGuessed = opponents.every((o) => guesses[o.seat])
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(0,0,0,0.62)] p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-2xl border border-brass-soft bg-surface p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-1 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-brass">Read the table</div>
+        <h3 className="m-0 mb-3 text-[1.05rem] font-semibold leading-snug text-text">
+          {scored ? 'How well did you read them?' : "Guess each opponent's type from how they played."}
+        </h3>
+        <div className="flex flex-col gap-2.5">
+          {opponents.map((o) => {
+            const truth = truthFor(o.seat)
+            const right = scored && guesses[o.seat] === truth
+            return (
+              <div key={o.seat} className="flex items-center gap-2.5">
+                <Avatar sv={o} />
+                <span className="w-[4.5rem] shrink-0 text-[0.82rem] font-semibold text-text">{o.label}</span>
+                <select
+                  value={guesses[o.seat] ?? ''}
+                  disabled={scored}
+                  onChange={(e) => setGuesses((g) => ({ ...g, [o.seat]: e.target.value }))}
+                  className="min-w-0 flex-1 rounded-md border border-line bg-surface-2 px-2 py-1 text-[0.8rem] text-text disabled:opacity-70"
+                >
+                  <option value="">— pick a type —</option>
+                  {BOT_CHOICES.map((c) => (
+                    <option key={c.archetype} value={c.archetype}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+                {scored && (
+                  <span className={`w-[5.5rem] shrink-0 text-right text-[0.74rem] ${right ? 'text-felt' : 'text-[#e0607a]'}`}>
+                    {right ? '✓ right' : `✗ ${labelFor(truth)}`}
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        {scored ? (
+          <div className="mt-4 flex items-center justify-between">
+            <span className="text-[0.95rem] font-semibold text-brass">
+              {correct}/{opponents.length} correct
+            </span>
+            <button
+              className="rounded-md border border-brass bg-brass px-3 py-1.5 text-[0.78rem] font-semibold text-[#1a1407]"
+              onClick={onClose}
+            >
+              Play on
+            </button>
+          </div>
+        ) : (
+          <div className="mt-4 flex justify-end gap-2">
+            <button
+              className="rounded-md border border-line bg-surface-2 px-3 py-1.5 text-[0.78rem] text-muted"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button
+              disabled={!allGuessed}
+              className="rounded-md border border-brass bg-brass px-3 py-1.5 text-[0.78rem] font-semibold text-[#1a1407] disabled:opacity-50"
+              onClick={() => setScored(true)}
+            >
+              Reveal &amp; score
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const DEFAULT_SLOTS = ['recreational', 'aggressive_predatory', 'promo_hunter', 'grinder', 'regular']
 const ARCHS = BOT_CHOICES.map((c) => c.archetype)
 
 export function TrainingTable() {
   const [slots, setSlots] = useState<string[]>(DEFAULT_SLOTS) // '' = empty seat
   const [mystery, setMystery] = useState(false)
+  const [challenge, setChallenge] = useState(false) // Phase 5: mystery "identify the type" round
+  const [identifyOpen, setIdentifyOpen] = useState(false)
   const [aggression, setAggression] = useState(1.0) // table-style preset (0.8 / 1.0 / 1.4)
   const [seed, setSeed] = useState(1)
   const [handNum, setHandNum] = useState(0) // rotates the button so position varies
@@ -533,6 +625,26 @@ export function TrainingTable() {
     }
     return map
   }, [st, filledSlots])
+
+  // Phase 5: a blind "identify the type" round — seat a full RANDOM table, hidden, so
+  // the player reads behavior across hands then guesses. The truth lives in `slots`.
+  function startChallenge() {
+    setSlots(DEFAULT_SLOTS.map(() => ARCHS[Math.floor(Math.random() * ARCHS.length)]))
+    setMystery(true)
+    setChallenge(true)
+    setEnv(null)
+  }
+  function exitChallenge() {
+    setChallenge(false)
+    setMystery(false)
+    setIdentifyOpen(false)
+  }
+  // each opponent seat's true archetype, via its fixed ring slot → dropdown index.
+  const truthFor = (seat: number) => {
+    const slot = seatToSlot[seat]
+    return slot ? slots[slot - 1] : undefined
+  }
+  const opponents = (st?.seats ?? []).filter((s) => !s.is_hero)
 
   async function deal() {
     setBusy(true)
@@ -658,29 +770,63 @@ export function TrainingTable() {
       <div className="flex min-h-0 flex-col">
         {/* setup bar */}
         <div className="mb-4 flex shrink-0 flex-wrap items-center gap-2">
-          <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-muted">Seat</span>
-          {slots.map((b, i) => (
-            <select
-              key={i}
-              value={b}
-              onChange={(e) => setSlots((prev) => prev.map((p, j) => (j === i ? e.target.value : p)))}
-              className="rounded-md border border-line bg-surface-2 px-2 py-1 text-[0.76rem] text-text"
-            >
-              <option value="">— Empty —</option>
-              {BOT_CHOICES.map((c) => (
-                <option key={c.archetype} value={c.archetype}>
-                  {c.label}
-                </option>
+          {challenge ? (
+            <>
+              <span className="rounded-full border border-brass-soft bg-[rgba(199,154,75,0.1)] px-2.5 py-1 text-[0.74rem] text-brass">
+                🎭 Mystery table — read them across hands
+              </span>
+              <button
+                type="button"
+                onClick={() => setIdentifyOpen(true)}
+                disabled={opponents.length === 0}
+                className="rounded-md border border-brass bg-brass px-2.5 py-1 text-[0.76rem] font-semibold text-[#1a1407] disabled:opacity-50"
+                title={opponents.length === 0 ? 'Play at least one hand first' : undefined}
+              >
+                Identify types
+              </button>
+              <button
+                type="button"
+                onClick={exitChallenge}
+                className="rounded-md border border-line bg-surface-2 px-2.5 py-1 text-[0.76rem] text-muted hover:border-brass-soft"
+              >
+                Exit
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-muted">Seat</span>
+              {slots.map((b, i) => (
+                <select
+                  key={i}
+                  value={b}
+                  onChange={(e) => setSlots((prev) => prev.map((p, j) => (j === i ? e.target.value : p)))}
+                  className="rounded-md border border-line bg-surface-2 px-2 py-1 text-[0.76rem] text-text"
+                >
+                  <option value="">— Empty —</option>
+                  {BOT_CHOICES.map((c) => (
+                    <option key={c.archetype} value={c.archetype}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
               ))}
-            </select>
-          ))}
-          <button
-            type="button"
-            onClick={() => setSlots((prev) => prev.map(() => ARCHS[Math.floor(Math.random() * ARCHS.length)]))}
-            className="rounded-md border border-line bg-surface-2 px-2.5 py-1 text-[0.76rem] text-text hover:border-brass-soft"
-          >
-            🎲 Random
-          </button>
+              <button
+                type="button"
+                onClick={() => setSlots((prev) => prev.map(() => ARCHS[Math.floor(Math.random() * ARCHS.length)]))}
+                className="rounded-md border border-line bg-surface-2 px-2.5 py-1 text-[0.76rem] text-text hover:border-brass-soft"
+              >
+                🎲 Random
+              </button>
+              <button
+                type="button"
+                onClick={startChallenge}
+                className="rounded-md border border-brass-soft bg-[rgba(199,154,75,0.1)] px-2.5 py-1 text-[0.76rem] text-brass hover:bg-[rgba(199,154,75,0.18)]"
+                title="Seat a random hidden table, then guess each opponent's type"
+              >
+                🎭 Mystery challenge
+              </button>
+            </>
+          )}
           <label className="flex items-center gap-1.5 text-[0.76rem] text-muted" title="How loose/aggressive the table plays (applies on the next deal)">
             <span>Table</span>
             <select
@@ -693,10 +839,12 @@ export function TrainingTable() {
               <option value={1.4}>Aggressive</option>
             </select>
           </label>
-          <label className="flex items-center gap-1.5 text-[0.76rem] text-muted">
-            <input type="checkbox" checked={mystery} onChange={(e) => setMystery(e.target.checked)} className="accent-brass" />
-            Mystery
-          </label>
+          {!challenge && (
+            <label className="flex items-center gap-1.5 text-[0.76rem] text-muted">
+              <input type="checkbox" checked={mystery} onChange={(e) => setMystery(e.target.checked)} className="accent-brass" />
+              Mystery
+            </label>
+          )}
           <label className="flex items-center gap-1.5 text-[0.76rem] text-muted" title="Coach every hand automatically, or pull coaching on demand">
             <input type="checkbox" checked={autoCoach} onChange={(e) => setAutoCoach(e.target.checked)} className="accent-brass" />
             Auto coach
@@ -836,6 +984,9 @@ export function TrainingTable() {
           {(debug.ttfaMs / 1000).toFixed(1)}s · LLM {(debug.llmMs / 1000).toFixed(1)}s · equity{' '}
           {debug.equityMs}ms · {debug.model} · ⧉
         </button>
+      )}
+      {identifyOpen && (
+        <IdentifyModal opponents={opponents} truthFor={truthFor} onClose={() => setIdentifyOpen(false)} />
       )}
     </>
   )
