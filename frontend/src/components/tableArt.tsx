@@ -13,6 +13,10 @@ export const ARCH_AVATAR: Record<string, string> = {
   regular: '🎯',
   solver_like: '🤖',
   new: '🌱',
+  healthy_anchor: '⚓',
+  shared_device_household: '📱',
+  cluster_member: '🔗',
+  bot_like: '👾',
 }
 
 /** Stable hue from a label, so a given seat/table looks the same across renders. */
