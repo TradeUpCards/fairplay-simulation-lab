@@ -207,22 +207,27 @@ def build_dataset(dataset_id, label, paths):
     }
 
 
-def discover(out_dir):
-    datasets = []
-
+def dataset_files(out_dir):
+    """Group discoverable sweep files into (dataset_id, label, paths). The single
+    source of which files belong to which dataset — reused by the dashboard-data
+    emitter so its time-series cells line up with the explorer's regime cells."""
+    groups = []
     static = sorted(glob.glob(os.path.join(out_dir, "static-capacity-sweep-*-rate-*.json")))
     if static:
-        ds = build_dataset("static-capacity", "Static capacity sweep", static)
-        if ds:
-            datasets.append(ds)
-
+        groups.append(("static-capacity", "Static capacity sweep", static))
     bench = sorted(glob.glob(os.path.join(out_dir, "large-room-benchmark-*.json")))
     for path in bench:
         name = os.path.splitext(os.path.basename(path))[0]
-        ds = build_dataset(name, "Benchmark · " + name.replace("large-room-benchmark-", ""), [path])
+        groups.append((name, "Benchmark · " + name.replace("large-room-benchmark-", ""), [path]))
+    return groups
+
+
+def discover(out_dir):
+    datasets = []
+    for dataset_id, label, paths in dataset_files(out_dir):
+        ds = build_dataset(dataset_id, label, paths)
         if ds:
             datasets.append(ds)
-
     return datasets
 
 

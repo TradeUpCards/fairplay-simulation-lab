@@ -17,6 +17,8 @@ import type {
   SeatingScoresFile,
   RouterLobbyFile,
   RoomMetricsFile,
+  RoomSweepFile,
+  RoomTimeseriesFile,
   SeededCaseLabelsFile,
   TableRosterFile,
   SimPath,
@@ -29,6 +31,8 @@ import seatingRaw from '@data/derived/seating_scores.json'
 import routerRaw from '@data/derived/router_lobby.json'
 import roomStandardRaw from '@data/room_metrics_standard.json'
 import roomFairplayRaw from '@data/room_metrics_fairplay.json'
+import roomSweepRaw from '@data/room_sweep.json'
+import roomTimeseriesRaw from '@data/room_timeseries.json'
 import seededCasesRaw from '@data/seeded_case_labels.json'
 import tableRosterRaw from '@data/table_roster.json'
 
@@ -57,6 +61,16 @@ export async function loadRouterLobby(): Promise<RouterLobbyFile> {
 
 export async function loadRoomMetrics(path: SimPath): Promise<RoomMetricsFile> {
   return asType(path === 'fairplay' ? roomFairplayRaw : roomStandardRaw)
+}
+
+/** Normalized regime sweep (heatmap + data table) for the /dashboard route. */
+export async function loadRoomSweep(): Promise<RoomSweepFile> {
+  return asType(roomSweepRaw)
+}
+
+/** Per-cell, seed-averaged time-series for the dashboard's animated hero chart. */
+export async function loadRoomTimeseries(): Promise<RoomTimeseriesFile> {
+  return asType(roomTimeseriesRaw)
 }
 
 /** OPERATOR-ONLY eval answer key — never load this from a player-facing screen. */

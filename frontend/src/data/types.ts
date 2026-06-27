@@ -122,3 +122,83 @@ export interface SeededCaseLabelsFile {
   cases: SeededCase[]
   eval_summary: EvalSummary
 }
+
+// ── Sweep dashboard (data/room_sweep.json — normalized regime payload) ────────
+// Emitted by playsim/analysis/build_dashboard_data.py (reusing the sweep-explorer
+// normalizer, so the heatmap / win-stability math lives once, in Python).
+
+export interface SweepMetricDef {
+  key: string
+  label: string
+  unit: string
+  lower_is_better: boolean
+}
+
+/** Per-seed win record of a candidate policy vs the baseline on one metric. */
+export interface SweepStability {
+  wins: number
+  n: number
+  deltas: Record<string, number>
+  mean_delta: number | null
+}
+
+export interface SweepCell {
+  tables: number | null
+  active_tables: number | null
+  rate: number
+  source_file: string
+  policies: string[]
+  seeds: number[]
+  /** policy → metricKey → seed-averaged mean. */
+  means: Record<string, Record<string, number | null>>
+  /** slim per-seed rows (seed, policy, + summary metric values). */
+  runs: Array<Record<string, number | string>>
+  /** candidate policy → metricKey → stability vs the baseline (baseline omitted). */
+  stability: Record<string, Record<string, SweepStability>>
+}
+
+export interface SweepDataset {
+  id: string
+  label: string
+  kind: 'grid' | 'single'
+  config: Record<string, unknown>
+  seeds: number[]
+  policies: string[]
+  table_axis: number[]
+  rate_axis: number[]
+  metrics: SweepMetricDef[]
+  cells: SweepCell[]
+}
+
+export interface RoomSweepFile {
+  generated_at: string
+  datasets: SweepDataset[]
+}
+
+// ── Animated time-series (data/room_timeseries.json) ─────────────────────────
+// Per-cell, per-policy, seed-averaged cumulative trace at the sweep's sampling
+// cadence — what the animated hero chart replays. Keyed by the same cell identity
+// (tables × rate) as the regime heatmap.
+
+export interface TimeseriesCell {
+  tables: number | null
+  rate: number
+  t_min: number[]
+  t_hr: number[]
+  seeds: number[]
+  /** policy → metricKey → value series aligned to t_hr. */
+  policies: Record<string, Record<string, number[]>>
+}
+
+export interface TimeseriesDataset {
+  label: string
+  interval_min: number | null
+  horizon_min: number | null
+  /** "<tables>|<rate>" → cell. Match by the numeric `tables`/`rate` fields. */
+  cells: Record<string, TimeseriesCell>
+}
+
+export interface RoomTimeseriesFile {
+  generated_at: string
+  datasets: Record<string, TimeseriesDataset>
+}

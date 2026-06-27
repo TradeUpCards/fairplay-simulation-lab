@@ -162,6 +162,7 @@ def run_large_room_sweep(
     arrival_rates_per_hour: list[float] | None = None,
     horizon_min: float = 480.0,
     equity_samples: int = 1,
+    sample_interval_min: float = 20.0,
     policies: tuple[str, ...] = DEFAULT_POLICIES,
     behavior: str = "formation-aware",
     arrival_mode: str = "continuous",
@@ -217,13 +218,18 @@ def run_large_room_sweep(
                     arrival_mode=arrival_mode,
                     arrival_rate_per_hour=rate,
                     formation_mode=formation_mode,
+                    sample_interval_min=sample_interval_min,
                     behavior=make_behavior(behavior, seed=seed),
                 ).run()
                 runs.append({
                     "seed": seed,
                     "arrival_rate_per_hour": float(rate),
                     "policy": policy_name,
+                    "tables": tables,
                     **_metrics(result, intents),
+                    # per-interval cumulative trace for the animated dashboard hero.
+                    # Ignored by the sweep-explorer (it slims runs to summary keys).
+                    "series": result.samples,
                 })
 
     return {
@@ -236,6 +242,7 @@ def run_large_room_sweep(
             "active_tables": active_tables,
             "horizon_min": horizon_min,
             "equity_samples": equity_samples,
+            "sample_interval_min": sample_interval_min,
             "arrival_mode": arrival_mode,
             "arrival_rates_per_hour": arrival_rates_per_hour,
             "formation_mode": formation_mode,

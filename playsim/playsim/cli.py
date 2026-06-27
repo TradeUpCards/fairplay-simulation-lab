@@ -210,6 +210,7 @@ def _large_room_sweep(args) -> int:
         arrival_rates_per_hour=rates,
         horizon_min=args.horizon,
         equity_samples=args.samples,
+        sample_interval_min=args.sample_interval_min,
         policies=policies,
         behavior=args.behavior,
         formation_mode=args.formation_mode,
@@ -400,6 +401,8 @@ def main(argv=None) -> int:
     lrs.add_argument("--samples", type=int, default=1,
                      help=("Monte-Carlo equity samples. Default is low because "
                            "50-table hand-level sweeps are expensive; raise for sensitivity checks."))
+    lrs.add_argument("--sample-interval-min", type=float, default=20.0,
+                     help="cadence (min) for the animated dashboard time-series trace")
     lrs.add_argument("--policies", default="standard,fairplay,fairplay_liveness",
                      help="comma-separated policy arms")
     lrs.add_argument("--behavior", choices=["default", "fit-aware", "reason-aware", "formation-aware"],

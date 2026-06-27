@@ -12,9 +12,13 @@ export type ViewMode = 'operator' | 'player'
 export function Header({
   mode,
   onModeChange,
+  route = 'home',
+  onOpenDashboard,
 }: {
   mode: ViewMode
   onModeChange: (mode: ViewMode) => void
+  route?: 'home' | 'dashboard'
+  onOpenDashboard?: () => void
 }) {
   return (
     <header
@@ -62,6 +66,21 @@ export function Header({
             Player
           </button>
         </div>
+
+        {onOpenDashboard && (
+          <button
+            type="button"
+            onClick={onOpenDashboard}
+            aria-current={route === 'dashboard' ? 'page' : undefined}
+            className={`rounded-full border px-[0.9rem] py-[0.32rem] text-[0.72rem] tracking-wider ${
+              route === 'dashboard'
+                ? 'border-brass bg-[rgba(199,154,75,0.12)] text-brass'
+                : 'border-line bg-surface-2 text-muted hover:text-text'
+            }`}
+          >
+            Sweep Dashboard
+          </button>
+        )}
 
         <p className="m-0 flex items-center gap-[0.45rem] font-mono text-[0.66rem] uppercase tracking-[0.16em] text-faint max-[560px]:hidden">
           <span

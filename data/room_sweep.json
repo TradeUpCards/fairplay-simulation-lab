@@ -1,0 +1,1941 @@
+{
+  "generated_at": "2026-06-27 14:41",
+  "datasets": [
+    {
+      "id": "static-capacity",
+      "label": "Static capacity sweep",
+      "kind": "grid",
+      "config": {
+        "fixture": "playsim-large-room",
+        "players": 600,
+        "fixture_seed": 42,
+        "horizon_min": 480.0,
+        "equity_samples": 1,
+        "arrival_mode": "continuous",
+        "formation_mode": "forming",
+        "behavior": "formation-aware",
+        "deterministic": true,
+        "note": "Large-room economics outputs are illustrative until calibrated against real room traffic and behavior."
+      },
+      "seeds": [
+        7,
+        42,
+        99
+      ],
+      "policies": [
+        "standard",
+        "fairplay",
+        "fairplay_liveness"
+      ],
+      "table_axis": [
+        30,
+        50
+      ],
+      "rate_axis": [
+        20.0,
+        40.0,
+        60.0
+      ],
+      "metrics": [
+        {
+          "key": "total_paid_seat_hours",
+          "label": "Total paid seat-hrs",
+          "unit": "hrs",
+          "lower_is_better": false
+        },
+        {
+          "key": "vulnerable_paid_seat_hours",
+          "label": "Vulnerable seat-hrs",
+          "unit": "hrs",
+          "lower_is_better": false
+        },
+        {
+          "key": "arrival_count",
+          "label": "Arrivals",
+          "unit": "n",
+          "lower_is_better": false
+        },
+        {
+          "key": "arrival_seated_count",
+          "label": "Arrivals seated",
+          "unit": "n",
+          "lower_is_better": false
+        },
+        {
+          "key": "arrival_balk_count",
+          "label": "Arrival balks",
+          "unit": "n",
+          "lower_is_better": true
+        },
+        {
+          "key": "wait_balk_count",
+          "label": "Wait balks",
+          "unit": "n",
+          "lower_is_better": true
+        },
+        {
+          "key": "break_count",
+          "label": "Table breaks",
+          "unit": "n",
+          "lower_is_better": true
+        },
+        {
+          "key": "break_balk_count",
+          "label": "Break balks",
+          "unit": "n",
+          "lower_is_better": true
+        },
+        {
+          "key": "no_good_existing_seat_count",
+          "label": "No-good-seat moments",
+          "unit": "n",
+          "lower_is_better": true
+        },
+        {
+          "key": "forming_seat_count",
+          "label": "Forming seats",
+          "unit": "n",
+          "lower_is_better": false
+        },
+        {
+          "key": "formation_activation_count",
+          "label": "Formation activations",
+          "unit": "n",
+          "lower_is_better": false
+        },
+        {
+          "key": "table_reactivation_count",
+          "label": "Table reactivations",
+          "unit": "n",
+          "lower_is_better": false
+        },
+        {
+          "key": "final_active_tables",
+          "label": "Final active tables",
+          "unit": "n",
+          "lower_is_better": false
+        },
+        {
+          "key": "final_forming_tables",
+          "label": "Final forming tables",
+          "unit": "n",
+          "lower_is_better": false
+        },
+        {
+          "key": "final_empty_tables",
+          "label": "Final empty tables",
+          "unit": "n",
+          "lower_is_better": false
+        },
+        {
+          "key": "hands_total",
+          "label": "Hands dealt",
+          "unit": "n",
+          "lower_is_better": false
+        }
+      ],
+      "cells": [
+        {
+          "tables": 30,
+          "active_tables": 21,
+          "rate": 20.0,
+          "source_file": "static-capacity-sweep-tables30-rate-grid.json",
+          "policies": [
+            "standard",
+            "fairplay",
+            "fairplay_liveness"
+          ],
+          "seeds": [
+            7,
+            42,
+            99
+          ],
+          "means": {
+            "standard": {
+              "total_paid_seat_hours": 918.1233,
+              "vulnerable_paid_seat_hours": 26.411,
+              "arrival_count": 161.6667,
+              "arrival_seated_count": 153.0,
+              "arrival_balk_count": 8.6667,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 39.3333,
+              "forming_seat_count": 7.3333,
+              "formation_activation_count": 12.0,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 27.3333,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 2.6667,
+              "hands_total": 13447.6667
+            },
+            "fairplay": {
+              "total_paid_seat_hours": 920.904,
+              "vulnerable_paid_seat_hours": 27.556,
+              "arrival_count": 161.6667,
+              "arrival_seated_count": 146.0,
+              "arrival_balk_count": 15.6667,
+              "wait_balk_count": 0.3333,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 0.0,
+              "forming_seat_count": 9.0,
+              "formation_activation_count": 132.3333,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 29.6667,
+              "final_forming_tables": 0.3333,
+              "final_empty_tables": 0.0,
+              "hands_total": 15908.6667
+            },
+            "fairplay_liveness": {
+              "total_paid_seat_hours": 925.8147,
+              "vulnerable_paid_seat_hours": 25.5683,
+              "arrival_count": 161.6667,
+              "arrival_seated_count": 141.3333,
+              "arrival_balk_count": 20.3333,
+              "wait_balk_count": 0.3333,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 0.0,
+              "forming_seat_count": 11.0,
+              "formation_activation_count": 77.6667,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 30.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 17773.3333
+            }
+          },
+          "runs": [
+            {
+              "seed": 7,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 875.498,
+              "vulnerable_paid_seat_hours": 28.783,
+              "arrival_count": 159,
+              "arrival_seated_count": 144,
+              "arrival_balk_count": 15,
+              "wait_balk_count": 1,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 9,
+              "formation_activation_count": 184,
+              "table_reactivation_count": 0,
+              "final_active_tables": 29,
+              "final_forming_tables": 1,
+              "final_empty_tables": 0,
+              "hands_total": 15422
+            },
+            {
+              "seed": 7,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 881.183,
+              "vulnerable_paid_seat_hours": 25.693,
+              "arrival_count": 159,
+              "arrival_seated_count": 141,
+              "arrival_balk_count": 18,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 9,
+              "formation_activation_count": 38,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 17653
+            },
+            {
+              "seed": 7,
+              "policy": "standard",
+              "total_paid_seat_hours": 875.49,
+              "vulnerable_paid_seat_hours": 27.37,
+              "arrival_count": 159,
+              "arrival_seated_count": 153,
+              "arrival_balk_count": 6,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 26,
+              "forming_seat_count": 5,
+              "formation_activation_count": 11,
+              "table_reactivation_count": 0,
+              "final_active_tables": 26,
+              "final_forming_tables": 0,
+              "final_empty_tables": 4,
+              "hands_total": 13199
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 996.912,
+              "vulnerable_paid_seat_hours": 27.09,
+              "arrival_count": 180,
+              "arrival_seated_count": 165,
+              "arrival_balk_count": 15,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 9,
+              "formation_activation_count": 123,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 16647
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 999.463,
+              "vulnerable_paid_seat_hours": 25.472,
+              "arrival_count": 180,
+              "arrival_seated_count": 163,
+              "arrival_balk_count": 17,
+              "wait_balk_count": 1,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 11,
+              "formation_activation_count": 120,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 18336
+            },
+            {
+              "seed": 42,
+              "policy": "standard",
+              "total_paid_seat_hours": 992.788,
+              "vulnerable_paid_seat_hours": 26.523,
+              "arrival_count": 180,
+              "arrival_seated_count": 167,
+              "arrival_balk_count": 13,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 62,
+              "forming_seat_count": 12,
+              "formation_activation_count": 17,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 14111
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 890.302,
+              "vulnerable_paid_seat_hours": 26.795,
+              "arrival_count": 146,
+              "arrival_seated_count": 129,
+              "arrival_balk_count": 17,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 9,
+              "formation_activation_count": 90,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 15657
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 896.798,
+              "vulnerable_paid_seat_hours": 25.54,
+              "arrival_count": 146,
+              "arrival_seated_count": 120,
+              "arrival_balk_count": 26,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 13,
+              "formation_activation_count": 75,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 17331
+            },
+            {
+              "seed": 99,
+              "policy": "standard",
+              "total_paid_seat_hours": 886.092,
+              "vulnerable_paid_seat_hours": 25.34,
+              "arrival_count": 146,
+              "arrival_seated_count": 139,
+              "arrival_balk_count": 7,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 30,
+              "forming_seat_count": 5,
+              "formation_activation_count": 8,
+              "table_reactivation_count": 0,
+              "final_active_tables": 26,
+              "final_forming_tables": 0,
+              "final_empty_tables": 4,
+              "hands_total": 13033
+            }
+          ],
+          "stability": {
+            "fairplay": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 3,
+                "n": 3,
+                "deltas": {
+                  "7": 1.413,
+                  "42": 0.567,
+                  "99": 1.455
+                },
+                "mean_delta": 1.145
+              },
+              "total_paid_seat_hours": {
+                "wins": 3,
+                "n": 3,
+                "deltas": {
+                  "7": 0.008,
+                  "42": 4.124,
+                  "99": 4.21
+                },
+                "mean_delta": 2.7807
+              }
+            },
+            "fairplay_liveness": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 1,
+                "n": 3,
+                "deltas": {
+                  "7": -1.677,
+                  "42": -1.051,
+                  "99": 0.2
+                },
+                "mean_delta": -0.8427
+              },
+              "total_paid_seat_hours": {
+                "wins": 3,
+                "n": 3,
+                "deltas": {
+                  "7": 5.693,
+                  "42": 6.675,
+                  "99": 10.706
+                },
+                "mean_delta": 7.6913
+              }
+            }
+          }
+        },
+        {
+          "tables": 30,
+          "active_tables": 21,
+          "rate": 40.0,
+          "source_file": "static-capacity-sweep-tables30-rate-grid.json",
+          "policies": [
+            "standard",
+            "fairplay",
+            "fairplay_liveness"
+          ],
+          "seeds": [
+            7,
+            42,
+            99
+          ],
+          "means": {
+            "standard": {
+              "total_paid_seat_hours": 1183.4373,
+              "vulnerable_paid_seat_hours": 30.3113,
+              "arrival_count": 318.6667,
+              "arrival_seated_count": 190.6667,
+              "arrival_balk_count": 128.0,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 160.3333,
+              "forming_seat_count": 9.0,
+              "formation_activation_count": 13.0,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 30.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 16375.3333
+            },
+            "fairplay": {
+              "total_paid_seat_hours": 1185.8147,
+              "vulnerable_paid_seat_hours": 31.8073,
+              "arrival_count": 318.6667,
+              "arrival_seated_count": 183.0,
+              "arrival_balk_count": 135.6667,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 116.6667,
+              "forming_seat_count": 9.6667,
+              "formation_activation_count": 70.3333,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 30.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 17553.0
+            },
+            "fairplay_liveness": {
+              "total_paid_seat_hours": 1185.6673,
+              "vulnerable_paid_seat_hours": 29.4077,
+              "arrival_count": 318.6667,
+              "arrival_seated_count": 183.3333,
+              "arrival_balk_count": 135.3333,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 117.3333,
+              "forming_seat_count": 12.6667,
+              "formation_activation_count": 52.0,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 30.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 18370.3333
+            }
+          },
+          "runs": [
+            {
+              "seed": 7,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1158.797,
+              "vulnerable_paid_seat_hours": 34.087,
+              "arrival_count": 319,
+              "arrival_seated_count": 186,
+              "arrival_balk_count": 133,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 112,
+              "forming_seat_count": 10,
+              "formation_activation_count": 146,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 17472
+            },
+            {
+              "seed": 7,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1157.702,
+              "vulnerable_paid_seat_hours": 30.747,
+              "arrival_count": 319,
+              "arrival_seated_count": 191,
+              "arrival_balk_count": 128,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 112,
+              "forming_seat_count": 18,
+              "formation_activation_count": 63,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 18261
+            },
+            {
+              "seed": 7,
+              "policy": "standard",
+              "total_paid_seat_hours": 1154.442,
+              "vulnerable_paid_seat_hours": 31.012,
+              "arrival_count": 319,
+              "arrival_seated_count": 197,
+              "arrival_balk_count": 122,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 146,
+              "forming_seat_count": 9,
+              "formation_activation_count": 11,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 16091
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1230.745,
+              "vulnerable_paid_seat_hours": 28.027,
+              "arrival_count": 338,
+              "arrival_seated_count": 181,
+              "arrival_balk_count": 157,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 142,
+              "forming_seat_count": 9,
+              "formation_activation_count": 10,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 17692
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1232.613,
+              "vulnerable_paid_seat_hours": 27.358,
+              "arrival_count": 338,
+              "arrival_seated_count": 181,
+              "arrival_balk_count": 157,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 143,
+              "forming_seat_count": 10,
+              "formation_activation_count": 48,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 18545
+            },
+            {
+              "seed": 42,
+              "policy": "standard",
+              "total_paid_seat_hours": 1233.27,
+              "vulnerable_paid_seat_hours": 29.022,
+              "arrival_count": 338,
+              "arrival_seated_count": 186,
+              "arrival_balk_count": 152,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 177,
+              "forming_seat_count": 9,
+              "formation_activation_count": 10,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 16956
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1167.902,
+              "vulnerable_paid_seat_hours": 33.308,
+              "arrival_count": 299,
+              "arrival_seated_count": 182,
+              "arrival_balk_count": 117,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 96,
+              "forming_seat_count": 10,
+              "formation_activation_count": 55,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 17495
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1166.687,
+              "vulnerable_paid_seat_hours": 30.118,
+              "arrival_count": 299,
+              "arrival_seated_count": 178,
+              "arrival_balk_count": 121,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 97,
+              "forming_seat_count": 10,
+              "formation_activation_count": 45,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 18305
+            },
+            {
+              "seed": 99,
+              "policy": "standard",
+              "total_paid_seat_hours": 1162.6,
+              "vulnerable_paid_seat_hours": 30.9,
+              "arrival_count": 299,
+              "arrival_seated_count": 189,
+              "arrival_balk_count": 110,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 158,
+              "forming_seat_count": 9,
+              "formation_activation_count": 18,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 16079
+            }
+          ],
+          "stability": {
+            "fairplay": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 2,
+                "n": 3,
+                "deltas": {
+                  "7": 3.075,
+                  "42": -0.995,
+                  "99": 2.408
+                },
+                "mean_delta": 1.496
+              },
+              "total_paid_seat_hours": {
+                "wins": 2,
+                "n": 3,
+                "deltas": {
+                  "7": 4.355,
+                  "42": -2.525,
+                  "99": 5.302
+                },
+                "mean_delta": 2.3773
+              }
+            },
+            "fairplay_liveness": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 0,
+                "n": 3,
+                "deltas": {
+                  "7": -0.265,
+                  "42": -1.664,
+                  "99": -0.782
+                },
+                "mean_delta": -0.9037
+              },
+              "total_paid_seat_hours": {
+                "wins": 2,
+                "n": 3,
+                "deltas": {
+                  "7": 3.26,
+                  "42": -0.657,
+                  "99": 4.087
+                },
+                "mean_delta": 2.23
+              }
+            }
+          }
+        },
+        {
+          "tables": 30,
+          "active_tables": 21,
+          "rate": 60.0,
+          "source_file": "static-capacity-sweep-tables30-rate-grid.json",
+          "policies": [
+            "standard",
+            "fairplay",
+            "fairplay_liveness"
+          ],
+          "seeds": [
+            7,
+            42,
+            99
+          ],
+          "means": {
+            "standard": {
+              "total_paid_seat_hours": 1279.355,
+              "vulnerable_paid_seat_hours": 29.819,
+              "arrival_count": 468.6667,
+              "arrival_seated_count": 185.3333,
+              "arrival_balk_count": 283.3333,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 310.0,
+              "forming_seat_count": 9.0,
+              "formation_activation_count": 10.3333,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 30.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 17430.6667
+            },
+            "fairplay": {
+              "total_paid_seat_hours": 1280.431,
+              "vulnerable_paid_seat_hours": 30.3357,
+              "arrival_count": 468.6667,
+              "arrival_seated_count": 188.3333,
+              "arrival_balk_count": 280.3333,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 269.0,
+              "forming_seat_count": 9.3333,
+              "formation_activation_count": 43.3333,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 30.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 18164.3333
+            },
+            "fairplay_liveness": {
+              "total_paid_seat_hours": 1280.3007,
+              "vulnerable_paid_seat_hours": 29.2117,
+              "arrival_count": 468.6667,
+              "arrival_seated_count": 180.6667,
+              "arrival_balk_count": 288.0,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 268.6667,
+              "forming_seat_count": 10.6667,
+              "formation_activation_count": 32.0,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 30.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 18683.3333
+            }
+          },
+          "runs": [
+            {
+              "seed": 7,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1261.62,
+              "vulnerable_paid_seat_hours": 32.175,
+              "arrival_count": 463,
+              "arrival_seated_count": 200,
+              "arrival_balk_count": 263,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 256,
+              "forming_seat_count": 9,
+              "formation_activation_count": 75,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 18001
+            },
+            {
+              "seed": 7,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1263.193,
+              "vulnerable_paid_seat_hours": 31.63,
+              "arrival_count": 463,
+              "arrival_seated_count": 185,
+              "arrival_balk_count": 278,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 256,
+              "forming_seat_count": 12,
+              "formation_activation_count": 26,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 18527
+            },
+            {
+              "seed": 7,
+              "policy": "standard",
+              "total_paid_seat_hours": 1260.467,
+              "vulnerable_paid_seat_hours": 30.797,
+              "arrival_count": 463,
+              "arrival_seated_count": 196,
+              "arrival_balk_count": 267,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 289,
+              "forming_seat_count": 9,
+              "formation_activation_count": 11,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 17203
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1310.675,
+              "vulnerable_paid_seat_hours": 27.457,
+              "arrival_count": 487,
+              "arrival_seated_count": 179,
+              "arrival_balk_count": 308,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 297,
+              "forming_seat_count": 10,
+              "formation_activation_count": 11,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 18340
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1309.902,
+              "vulnerable_paid_seat_hours": 26.337,
+              "arrival_count": 487,
+              "arrival_seated_count": 174,
+              "arrival_balk_count": 313,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 296,
+              "forming_seat_count": 10,
+              "formation_activation_count": 25,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 18863
+            },
+            {
+              "seed": 42,
+              "policy": "standard",
+              "total_paid_seat_hours": 1310.715,
+              "vulnerable_paid_seat_hours": 26.823,
+              "arrival_count": 487,
+              "arrival_seated_count": 177,
+              "arrival_balk_count": 310,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 338,
+              "forming_seat_count": 9,
+              "formation_activation_count": 9,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 17822
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1268.998,
+              "vulnerable_paid_seat_hours": 31.375,
+              "arrival_count": 456,
+              "arrival_seated_count": 186,
+              "arrival_balk_count": 270,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 254,
+              "forming_seat_count": 9,
+              "formation_activation_count": 44,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 18152
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1267.807,
+              "vulnerable_paid_seat_hours": 29.668,
+              "arrival_count": 456,
+              "arrival_seated_count": 183,
+              "arrival_balk_count": 273,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 254,
+              "forming_seat_count": 10,
+              "formation_activation_count": 45,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 18660
+            },
+            {
+              "seed": 99,
+              "policy": "standard",
+              "total_paid_seat_hours": 1266.883,
+              "vulnerable_paid_seat_hours": 31.837,
+              "arrival_count": 456,
+              "arrival_seated_count": 183,
+              "arrival_balk_count": 273,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 303,
+              "forming_seat_count": 9,
+              "formation_activation_count": 11,
+              "table_reactivation_count": 0,
+              "final_active_tables": 30,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 17267
+            }
+          ],
+          "stability": {
+            "fairplay": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 2,
+                "n": 3,
+                "deltas": {
+                  "7": 1.378,
+                  "42": 0.634,
+                  "99": -0.462
+                },
+                "mean_delta": 0.5167
+              },
+              "total_paid_seat_hours": {
+                "wins": 2,
+                "n": 3,
+                "deltas": {
+                  "7": 1.153,
+                  "42": -0.04,
+                  "99": 2.115
+                },
+                "mean_delta": 1.076
+              }
+            },
+            "fairplay_liveness": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 1,
+                "n": 3,
+                "deltas": {
+                  "7": 0.833,
+                  "42": -0.486,
+                  "99": -2.169
+                },
+                "mean_delta": -0.6073
+              },
+              "total_paid_seat_hours": {
+                "wins": 2,
+                "n": 3,
+                "deltas": {
+                  "7": 2.726,
+                  "42": -0.813,
+                  "99": 0.924
+                },
+                "mean_delta": 0.9457
+              }
+            }
+          }
+        },
+        {
+          "tables": 50,
+          "active_tables": 35,
+          "rate": 20.0,
+          "source_file": "static-capacity-sweep-tables50-rate-grid.json",
+          "policies": [
+            "standard",
+            "fairplay",
+            "fairplay_liveness"
+          ],
+          "seeds": [
+            7,
+            42,
+            99
+          ],
+          "means": {
+            "standard": {
+              "total_paid_seat_hours": 1201.8517,
+              "vulnerable_paid_seat_hours": 28.2167,
+              "arrival_count": 155.6667,
+              "arrival_seated_count": 153.6667,
+              "arrival_balk_count": 2.0,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 7.3333,
+              "forming_seat_count": 0.6667,
+              "formation_activation_count": 4.3333,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 34.0,
+              "final_forming_tables": 0.6667,
+              "final_empty_tables": 15.3333,
+              "hands_total": 19625.6667
+            },
+            "fairplay": {
+              "total_paid_seat_hours": 1186.8967,
+              "vulnerable_paid_seat_hours": 29.2777,
+              "arrival_count": 155.6667,
+              "arrival_seated_count": 147.0,
+              "arrival_balk_count": 8.6667,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 0.0,
+              "forming_seat_count": 11.6667,
+              "formation_activation_count": 12.3333,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 39.0,
+              "final_forming_tables": 7.0,
+              "final_empty_tables": 4.0,
+              "hands_total": 21417.6667
+            },
+            "fairplay_liveness": {
+              "total_paid_seat_hours": 1225.6097,
+              "vulnerable_paid_seat_hours": 32.5423,
+              "arrival_count": 155.6667,
+              "arrival_seated_count": 129.6667,
+              "arrival_balk_count": 26.0,
+              "wait_balk_count": 1.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 0.0,
+              "forming_seat_count": 52.0,
+              "formation_activation_count": 362.6667,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 50.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 26833.0
+            }
+          },
+          "runs": [
+            {
+              "seed": 7,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1152.205,
+              "vulnerable_paid_seat_hours": 28.663,
+              "arrival_count": 145,
+              "arrival_seated_count": 142,
+              "arrival_balk_count": 3,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 10,
+              "formation_activation_count": 13,
+              "table_reactivation_count": 0,
+              "final_active_tables": 38,
+              "final_forming_tables": 6,
+              "final_empty_tables": 6,
+              "hands_total": 21033
+            },
+            {
+              "seed": 7,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1200.982,
+              "vulnerable_paid_seat_hours": 32.937,
+              "arrival_count": 145,
+              "arrival_seated_count": 117,
+              "arrival_balk_count": 28,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 62,
+              "formation_activation_count": 429,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 26679
+            },
+            {
+              "seed": 7,
+              "policy": "standard",
+              "total_paid_seat_hours": 1171.972,
+              "vulnerable_paid_seat_hours": 27.688,
+              "arrival_count": 145,
+              "arrival_seated_count": 145,
+              "arrival_balk_count": 0,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 2,
+              "forming_seat_count": 0,
+              "formation_activation_count": 2,
+              "table_reactivation_count": 0,
+              "final_active_tables": 32,
+              "final_forming_tables": 2,
+              "final_empty_tables": 16,
+              "hands_total": 19364
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1243.378,
+              "vulnerable_paid_seat_hours": 29.987,
+              "arrival_count": 165,
+              "arrival_seated_count": 153,
+              "arrival_balk_count": 12,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 12,
+              "formation_activation_count": 13,
+              "table_reactivation_count": 0,
+              "final_active_tables": 40,
+              "final_forming_tables": 7,
+              "final_empty_tables": 3,
+              "hands_total": 21910
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1278.302,
+              "vulnerable_paid_seat_hours": 33.007,
+              "arrival_count": 165,
+              "arrival_seated_count": 139,
+              "arrival_balk_count": 26,
+              "wait_balk_count": 1,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 36,
+              "formation_activation_count": 342,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 27597
+            },
+            {
+              "seed": 42,
+              "policy": "standard",
+              "total_paid_seat_hours": 1257.073,
+              "vulnerable_paid_seat_hours": 29.442,
+              "arrival_count": 165,
+              "arrival_seated_count": 161,
+              "arrival_balk_count": 4,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 13,
+              "forming_seat_count": 2,
+              "formation_activation_count": 6,
+              "table_reactivation_count": 0,
+              "final_active_tables": 36,
+              "final_forming_tables": 0,
+              "final_empty_tables": 14,
+              "hands_total": 19831
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1165.107,
+              "vulnerable_paid_seat_hours": 29.183,
+              "arrival_count": 157,
+              "arrival_seated_count": 146,
+              "arrival_balk_count": 11,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 13,
+              "formation_activation_count": 11,
+              "table_reactivation_count": 0,
+              "final_active_tables": 39,
+              "final_forming_tables": 8,
+              "final_empty_tables": 3,
+              "hands_total": 21310
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1197.545,
+              "vulnerable_paid_seat_hours": 31.683,
+              "arrival_count": 157,
+              "arrival_seated_count": 133,
+              "arrival_balk_count": 24,
+              "wait_balk_count": 2,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 58,
+              "formation_activation_count": 317,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 26223
+            },
+            {
+              "seed": 99,
+              "policy": "standard",
+              "total_paid_seat_hours": 1176.51,
+              "vulnerable_paid_seat_hours": 27.52,
+              "arrival_count": 157,
+              "arrival_seated_count": 155,
+              "arrival_balk_count": 2,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 7,
+              "forming_seat_count": 0,
+              "formation_activation_count": 5,
+              "table_reactivation_count": 0,
+              "final_active_tables": 34,
+              "final_forming_tables": 0,
+              "final_empty_tables": 16,
+              "hands_total": 19682
+            }
+          ],
+          "stability": {
+            "fairplay": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 3,
+                "n": 3,
+                "deltas": {
+                  "7": 0.975,
+                  "42": 0.545,
+                  "99": 1.663
+                },
+                "mean_delta": 1.061
+              },
+              "total_paid_seat_hours": {
+                "wins": 0,
+                "n": 3,
+                "deltas": {
+                  "7": -19.767,
+                  "42": -13.695,
+                  "99": -11.403
+                },
+                "mean_delta": -14.955
+              }
+            },
+            "fairplay_liveness": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 3,
+                "n": 3,
+                "deltas": {
+                  "7": 5.249,
+                  "42": 3.565,
+                  "99": 4.163
+                },
+                "mean_delta": 4.3257
+              },
+              "total_paid_seat_hours": {
+                "wins": 3,
+                "n": 3,
+                "deltas": {
+                  "7": 29.01,
+                  "42": 21.229,
+                  "99": 21.035
+                },
+                "mean_delta": 23.758
+              }
+            }
+          }
+        },
+        {
+          "tables": 50,
+          "active_tables": 35,
+          "rate": 40.0,
+          "source_file": "static-capacity-sweep-tables50-rate-grid.json",
+          "policies": [
+            "standard",
+            "fairplay",
+            "fairplay_liveness"
+          ],
+          "seeds": [
+            7,
+            42,
+            99
+          ],
+          "means": {
+            "standard": {
+              "total_paid_seat_hours": 1599.235,
+              "vulnerable_paid_seat_hours": 42.3267,
+              "arrival_count": 306.6667,
+              "arrival_seated_count": 285.3333,
+              "arrival_balk_count": 21.3333,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 69.6667,
+              "forming_seat_count": 15.0,
+              "formation_activation_count": 19.3333,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 48.3333,
+              "final_forming_tables": 0.3333,
+              "final_empty_tables": 1.3333,
+              "hands_total": 23116.3333
+            },
+            "fairplay": {
+              "total_paid_seat_hours": 1571.3433,
+              "vulnerable_paid_seat_hours": 41.9063,
+              "arrival_count": 306.6667,
+              "arrival_seated_count": 282.6667,
+              "arrival_balk_count": 24.0,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 1.6667,
+              "forming_seat_count": 16.3333,
+              "formation_activation_count": 24.0,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 49.3333,
+              "final_forming_tables": 0.6667,
+              "final_empty_tables": 0.0,
+              "hands_total": 24960.3333
+            },
+            "fairplay_liveness": {
+              "total_paid_seat_hours": 1606.9607,
+              "vulnerable_paid_seat_hours": 41.1383,
+              "arrival_count": 306.6667,
+              "arrival_seated_count": 282.3333,
+              "arrival_balk_count": 24.3333,
+              "wait_balk_count": 0.3333,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 1.6667,
+              "forming_seat_count": 26.3333,
+              "formation_activation_count": 115.0,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 50.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 28970.3333
+            }
+          },
+          "runs": [
+            {
+              "seed": 7,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1494.157,
+              "vulnerable_paid_seat_hours": 40.432,
+              "arrival_count": 284,
+              "arrival_seated_count": 261,
+              "arrival_balk_count": 23,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 17,
+              "formation_activation_count": 22,
+              "table_reactivation_count": 0,
+              "final_active_tables": 48,
+              "final_forming_tables": 2,
+              "final_empty_tables": 0,
+              "hands_total": 24197
+            },
+            {
+              "seed": 7,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1538.087,
+              "vulnerable_paid_seat_hours": 40.412,
+              "arrival_count": 284,
+              "arrival_seated_count": 258,
+              "arrival_balk_count": 26,
+              "wait_balk_count": 1,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 43,
+              "formation_activation_count": 240,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 28665
+            },
+            {
+              "seed": 7,
+              "policy": "standard",
+              "total_paid_seat_hours": 1527.132,
+              "vulnerable_paid_seat_hours": 39.675,
+              "arrival_count": 284,
+              "arrival_seated_count": 266,
+              "arrival_balk_count": 18,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 55,
+              "forming_seat_count": 13,
+              "formation_activation_count": 17,
+              "table_reactivation_count": 0,
+              "final_active_tables": 46,
+              "final_forming_tables": 1,
+              "final_empty_tables": 3,
+              "hands_total": 22219
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1656.018,
+              "vulnerable_paid_seat_hours": 43.577,
+              "arrival_count": 326,
+              "arrival_seated_count": 298,
+              "arrival_balk_count": 28,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 5,
+              "forming_seat_count": 16,
+              "formation_activation_count": 27,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 25857
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1684.61,
+              "vulnerable_paid_seat_hours": 42.763,
+              "arrival_count": 326,
+              "arrival_seated_count": 302,
+              "arrival_balk_count": 24,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 5,
+              "forming_seat_count": 17,
+              "formation_activation_count": 36,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 29496
+            },
+            {
+              "seed": 42,
+              "policy": "standard",
+              "total_paid_seat_hours": 1679.538,
+              "vulnerable_paid_seat_hours": 46.373,
+              "arrival_count": 326,
+              "arrival_seated_count": 300,
+              "arrival_balk_count": 26,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 92,
+              "forming_seat_count": 17,
+              "formation_activation_count": 21,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 23922
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1563.855,
+              "vulnerable_paid_seat_hours": 41.71,
+              "arrival_count": 310,
+              "arrival_seated_count": 289,
+              "arrival_balk_count": 21,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 16,
+              "formation_activation_count": 23,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 24827
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1598.185,
+              "vulnerable_paid_seat_hours": 40.24,
+              "arrival_count": 310,
+              "arrival_seated_count": 287,
+              "arrival_balk_count": 23,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 0,
+              "forming_seat_count": 19,
+              "formation_activation_count": 69,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 28750
+            },
+            {
+              "seed": 99,
+              "policy": "standard",
+              "total_paid_seat_hours": 1591.035,
+              "vulnerable_paid_seat_hours": 40.932,
+              "arrival_count": 310,
+              "arrival_seated_count": 290,
+              "arrival_balk_count": 20,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 62,
+              "forming_seat_count": 15,
+              "formation_activation_count": 20,
+              "table_reactivation_count": 0,
+              "final_active_tables": 49,
+              "final_forming_tables": 0,
+              "final_empty_tables": 1,
+              "hands_total": 23208
+            }
+          ],
+          "stability": {
+            "fairplay": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 2,
+                "n": 3,
+                "deltas": {
+                  "7": 0.757,
+                  "42": -2.796,
+                  "99": 0.778
+                },
+                "mean_delta": -0.4203
+              },
+              "total_paid_seat_hours": {
+                "wins": 0,
+                "n": 3,
+                "deltas": {
+                  "7": -32.975,
+                  "42": -23.52,
+                  "99": -27.18
+                },
+                "mean_delta": -27.8917
+              }
+            },
+            "fairplay_liveness": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 1,
+                "n": 3,
+                "deltas": {
+                  "7": 0.737,
+                  "42": -3.61,
+                  "99": -0.692
+                },
+                "mean_delta": -1.1883
+              },
+              "total_paid_seat_hours": {
+                "wins": 3,
+                "n": 3,
+                "deltas": {
+                  "7": 10.955,
+                  "42": 5.072,
+                  "99": 7.15
+                },
+                "mean_delta": 7.7257
+              }
+            }
+          }
+        },
+        {
+          "tables": 50,
+          "active_tables": 35,
+          "rate": 60.0,
+          "source_file": "static-capacity-sweep-tables50-rate-grid.json",
+          "policies": [
+            "standard",
+            "fairplay",
+            "fairplay_liveness"
+          ],
+          "seeds": [
+            7,
+            42,
+            99
+          ],
+          "means": {
+            "standard": {
+              "total_paid_seat_hours": 1878.55,
+              "vulnerable_paid_seat_hours": 43.0487,
+              "arrival_count": 464.6667,
+              "arrival_seated_count": 300.6667,
+              "arrival_balk_count": 164.0,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 214.3333,
+              "forming_seat_count": 15.6667,
+              "formation_activation_count": 20.0,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 50.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 26257.3333
+            },
+            "fairplay": {
+              "total_paid_seat_hours": 1862.0493,
+              "vulnerable_paid_seat_hours": 42.383,
+              "arrival_count": 464.6667,
+              "arrival_seated_count": 299.0,
+              "arrival_balk_count": 165.6667,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 143.6667,
+              "forming_seat_count": 15.6667,
+              "formation_activation_count": 20.6667,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 50.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 27486.3333
+            },
+            "fairplay_liveness": {
+              "total_paid_seat_hours": 1883.3183,
+              "vulnerable_paid_seat_hours": 42.0097,
+              "arrival_count": 464.6667,
+              "arrival_seated_count": 297.3333,
+              "arrival_balk_count": 167.3333,
+              "wait_balk_count": 0.0,
+              "break_count": 0.0,
+              "break_balk_count": 0.0,
+              "no_good_existing_seat_count": 142.6667,
+              "forming_seat_count": 17.3333,
+              "formation_activation_count": 61.0,
+              "table_reactivation_count": 0.0,
+              "final_active_tables": 50.0,
+              "final_forming_tables": 0.0,
+              "final_empty_tables": 0.0,
+              "hands_total": 30065.3333
+            }
+          },
+          "runs": [
+            {
+              "seed": 7,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1803.067,
+              "vulnerable_paid_seat_hours": 41.667,
+              "arrival_count": 440,
+              "arrival_seated_count": 297,
+              "arrival_balk_count": 143,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 120,
+              "forming_seat_count": 16,
+              "formation_activation_count": 22,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 26706
+            },
+            {
+              "seed": 7,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1832.712,
+              "vulnerable_paid_seat_hours": 42.317,
+              "arrival_count": 440,
+              "arrival_seated_count": 294,
+              "arrival_balk_count": 146,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 120,
+              "forming_seat_count": 19,
+              "formation_activation_count": 84,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 29837
+            },
+            {
+              "seed": 7,
+              "policy": "standard",
+              "total_paid_seat_hours": 1827.455,
+              "vulnerable_paid_seat_hours": 41.703,
+              "arrival_count": 440,
+              "arrival_seated_count": 301,
+              "arrival_balk_count": 139,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 186,
+              "forming_seat_count": 16,
+              "formation_activation_count": 20,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 25668
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1919.818,
+              "vulnerable_paid_seat_hours": 43.712,
+              "arrival_count": 469,
+              "arrival_seated_count": 301,
+              "arrival_balk_count": 168,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 147,
+              "forming_seat_count": 15,
+              "formation_activation_count": 20,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 28064
+            },
+            {
+              "seed": 42,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1937.523,
+              "vulnerable_paid_seat_hours": 42.6,
+              "arrival_count": 469,
+              "arrival_seated_count": 296,
+              "arrival_balk_count": 173,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 147,
+              "forming_seat_count": 18,
+              "formation_activation_count": 50,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 30346
+            },
+            {
+              "seed": 42,
+              "policy": "standard",
+              "total_paid_seat_hours": 1929.863,
+              "vulnerable_paid_seat_hours": 44.038,
+              "arrival_count": 469,
+              "arrival_seated_count": 298,
+              "arrival_balk_count": 171,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 227,
+              "forming_seat_count": 15,
+              "formation_activation_count": 21,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 26688
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay",
+              "total_paid_seat_hours": 1863.263,
+              "vulnerable_paid_seat_hours": 41.77,
+              "arrival_count": 485,
+              "arrival_seated_count": 299,
+              "arrival_balk_count": 186,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 164,
+              "forming_seat_count": 16,
+              "formation_activation_count": 20,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 27689
+            },
+            {
+              "seed": 99,
+              "policy": "fairplay_liveness",
+              "total_paid_seat_hours": 1879.72,
+              "vulnerable_paid_seat_hours": 41.112,
+              "arrival_count": 485,
+              "arrival_seated_count": 302,
+              "arrival_balk_count": 183,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 161,
+              "forming_seat_count": 15,
+              "formation_activation_count": 49,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 30013
+            },
+            {
+              "seed": 99,
+              "policy": "standard",
+              "total_paid_seat_hours": 1878.332,
+              "vulnerable_paid_seat_hours": 43.405,
+              "arrival_count": 485,
+              "arrival_seated_count": 303,
+              "arrival_balk_count": 182,
+              "wait_balk_count": 0,
+              "break_count": 0,
+              "break_balk_count": 0,
+              "no_good_existing_seat_count": 230,
+              "forming_seat_count": 16,
+              "formation_activation_count": 19,
+              "table_reactivation_count": 0,
+              "final_active_tables": 50,
+              "final_forming_tables": 0,
+              "final_empty_tables": 0,
+              "hands_total": 26416
+            }
+          ],
+          "stability": {
+            "fairplay": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 0,
+                "n": 3,
+                "deltas": {
+                  "7": -0.036,
+                  "42": -0.326,
+                  "99": -1.635
+                },
+                "mean_delta": -0.6657
+              },
+              "total_paid_seat_hours": {
+                "wins": 0,
+                "n": 3,
+                "deltas": {
+                  "7": -24.388,
+                  "42": -10.045,
+                  "99": -15.069
+                },
+                "mean_delta": -16.5007
+              }
+            },
+            "fairplay_liveness": {
+              "vulnerable_paid_seat_hours": {
+                "wins": 1,
+                "n": 3,
+                "deltas": {
+                  "7": 0.614,
+                  "42": -1.438,
+                  "99": -2.293
+                },
+                "mean_delta": -1.039
+              },
+              "total_paid_seat_hours": {
+                "wins": 3,
+                "n": 3,
+                "deltas": {
+                  "7": 5.257,
+                  "42": 7.66,
+                  "99": 1.388
+                },
+                "mean_delta": 4.7683
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
