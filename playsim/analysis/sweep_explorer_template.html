@@ -278,12 +278,12 @@ const S = {
   view: "heatmap",
   lensMode: "delta",        // delta | raw
   deltaPolicy: null,
-  deltaMetric: "vulnerable_paid_seat_hours",
+  deltaMetric: "total_paid_seat_hours",
   rawPolicy: null,
-  rawMetric: "vulnerable_paid_seat_hours",
-  trendMetric: "vulnerable_paid_seat_hours",
+  rawMetric: "total_paid_seat_hours",
+  trendMetric: "total_paid_seat_hours",
   trendFacet: "tables",      // tables | rate
-  tableMetric: "vulnerable_paid_seat_hours",
+  tableMetric: "total_paid_seat_hours",
   sortKey: null, sortDir: -1,
   cellKey: null,
 };
@@ -360,19 +360,19 @@ function renderStory(){
     if(dt.good>0) tWin++;
   });
   const N=cells.length;
-  // regime read: where does the candidate win vuln retention?
+  // Cohort read: where does the candidate win vulnerable retention?
   const winCells=cells.filter(c=>deltaOf(c,pol,"vulnerable_paid_seat_hours").good>0);
-  let regime="";
+  let cohortRead="";
   if(winCells.length){
     const tbl=[...new Set(winCells.map(c=>c.tables))].sort((a,b)=>a-b);
     const rt=[...new Set(winCells.map(c=>c.rate))].sort((a,b)=>a-b);
-    regime=`Advantage concentrates at ${tbl.length?`${tbl[0]}–${tbl[tbl.length-1]} tables`:""}${rt.length?`, rates ${rt[0]}–${rt[rt.length-1]}/hr`:""}.`;
-  } else { regime="No vulnerable-retention advantage in any regime tested."; }
+    cohortRead=`Vulnerable-seat advantage appears at ${tbl.length?`${tbl[0]}–${tbl[tbl.length-1]} tables`:""}${rt.length?`, rates ${rt[0]}–${rt[rt.length-1]}/hr`:""}.`;
+  } else { cohortRead="No vulnerable-retention advantage in any regime tested."; }
 
   el.innerHTML = `
     <div class="tile lede">
-      <div class="k">${polLabel(pol)} vs Standard · the read</div>
-      <div class="v">${regime} Throughput still favors concentration (Standard wins total seat-hrs in ${N-tWin}/${N}).</div>
+      <div class="k">${polLabel(pol)} vs Standard · north-star read</div>
+      <div class="v">Standard wins total paid seat-hrs in ${N-tWin}/${N} regimes. ${cohortRead}</div>
     </div>
     <div class="tile">
       <div class="k">Regimes tested</div>
