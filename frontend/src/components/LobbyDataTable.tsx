@@ -75,13 +75,13 @@ export function LobbyDataTable({
       >
         <table className="w-full table-fixed border-collapse whitespace-nowrap text-[0.78rem] [&_td]:overflow-hidden">
           <colgroup>
+            <col className="w-[8%]" />
+            <col className="w-[16%]" />
+            <col className="w-[14%]" />
+            <col className="w-[8%]" />
+            <col className="w-[13%]" />
             <col className="w-[9%]" />
-            <col className="w-[19%]" />
-            <col className="w-[12%]" />
-            <col className="w-[8%]" />
-            <col className="w-[10%]" />
-            <col className="w-[8%]" />
-            <col className="w-[22%]" />
+            <col className="w-[20%]" />
             <col className="w-[12%]" />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-[#15171c]">
@@ -130,7 +130,7 @@ export function LobbyDataTable({
                         }
                         title={`Ranked ${cross > 0 ? `${cross} higher` : cross < 0 ? `${-cross} lower` : 'the same'} vs ${crossLabel}`}
                       >
-                        {cross > 0 ? '▲' : cross < 0 ? '▼' : '•'} #{otherIdx + 1}
+                        {cross > 0 ? '▲' : cross < 0 ? '▼' : '•'}{otherIdx + 1}
                       </span>
                     ) : null}
                   </td>
