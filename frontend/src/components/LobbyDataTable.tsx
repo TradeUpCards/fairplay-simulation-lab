@@ -34,10 +34,10 @@ export function LobbyDataTable({
         <span className="text-[0.72rem] text-[#8b8276]">{blurb}</span>
       </header>
 
-      <div className="overflow-hidden rounded-md border border-[#262a32] bg-[rgba(0,0,0,0.25)]">
+      <div className="max-h-[62vh] overflow-y-auto rounded-md border border-[#262a32] bg-[rgba(0,0,0,0.25)]">
         <table className="w-full border-collapse text-[0.78rem]">
-          <thead>
-            <tr className="bg-[rgba(255,255,255,0.03)] text-[0.64rem] uppercase tracking-[0.1em] text-[#7e8694]">
+          <thead className="sticky top-0 z-10 bg-[#15171c]">
+            <tr className="text-[0.64rem] uppercase tracking-[0.1em] text-[#7e8694]">
               <th className="px-2 py-1.5 text-left font-medium">Table</th>
               <th className="px-2 py-1.5 text-left font-medium">Stakes</th>
               <th className="px-2 py-1.5 text-center font-medium">Plrs</th>
