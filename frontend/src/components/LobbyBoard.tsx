@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import type { LobbySequence } from '../data/types'
+import type { LobbySequence, SeatEvent } from '../data/types'
 import { loadLobbySequence } from '../data/shim'
 import { useResource } from '../state/useResource'
 import { lobbyStore } from '../state/lobbyStore'
@@ -73,9 +73,6 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
           crossLabel="FP"
           selected={ui.selected}
           onSelect={lobbyStore.toggleSelected}
-          events={cur.events?.standard}
-          diagOpen={ui.diagOpen}
-          onToggleDiag={lobbyStore.toggleDiag}
           accent="standard"
         />
         <LobbyDataTable
@@ -88,9 +85,6 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
           crossLabel="Std"
           selected={ui.selected}
           onSelect={lobbyStore.toggleSelected}
-          events={cur.events?.fairplay}
-          diagOpen={ui.diagOpen}
-          onToggleDiag={lobbyStore.toggleDiag}
           accent="fairplay"
         />
         </div>
@@ -110,13 +104,53 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
         </div>
       </div>
 
+      <div className="mt-3 rounded-md border border-[#262a32] bg-[rgba(0,0,0,0.2)]">
+        <button
+          type="button"
+          onClick={lobbyStore.toggleDiag}
+          className="flex w-full cursor-pointer select-none items-center gap-1 px-3 py-1.5 text-left text-[0.72rem] text-[#8b8276]"
+        >
+          <span className="text-[#6f7682]">{ui.diagOpen ? '▾' : '▸'}</span>
+          Admin · seating this step
+          {sits + stands > 0 ? ` (${sits} sat, ${stands} stood per policy)` : ''}
+        </button>
+        {ui.diagOpen && (
+          <div className="grid gap-4 border-t border-[#1e2128] px-3 py-2 md:grid-cols-2">
+            <EventList title="Standard — most-full" events={cur.events?.standard ?? []} />
+            <EventList title="FairPlay — router" events={cur.events?.fairplay ?? []} />
+          </div>
+        )}
+      </div>
+
       <p className="mt-3 text-[0.72rem] text-[#6f7682]">
         Same arrivals, seated by each policy — Standard packs the fullest tables (they fill and
         drop to the bottom as <span className="text-[#8b8276]">Waitlist</span>); FairPlay routes
         toward healthy tables. The <span className="text-[#8b8276]">vs</span> column shows each
-        table's rank in the other room; click a table to highlight it in both; expand the admin box
-        for the per-step seating. Illustrative synthetic room — not a live cash game.
+        table's rank in the other room; click a table to inspect it (preview + pit-boss view).
+        Illustrative synthetic room — not a live cash game.
       </p>
     </section>
+  )
+}
+
+function EventList({ title, events }: { title: string; events: SeatEvent[] }) {
+  return (
+    <div>
+      <div className="mb-1 text-[0.66rem] uppercase tracking-wider text-[#7e8694]">{title}</div>
+      <div className="max-h-48 overflow-y-auto pr-1 text-[0.72rem]">
+        {events.length === 0 && <div className="text-[#6f7682]">no activity</div>}
+        {events.map((e, i) => (
+          <div key={i} className="flex items-center gap-1.5 py-[0.06rem]">
+            <span className={e.action === 'sit' ? 'text-[#8be3a7]' : 'text-[#c98b93]'}>
+              {e.action === 'sit' ? '+' : '–'}
+            </span>
+            <span className="text-[#a9b0bb]">{e.archetype ?? e.player_id}</span>
+            <span className="text-[#6f7682]">{e.action === 'sit' ? '→' : 'left'}</span>
+            <span className="font-mono text-[#d8d2c6]">{e.table_id ?? '—'}</span>
+            {e.occ_after && <span className="text-[#6f7682]">({e.occ_after})</span>}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

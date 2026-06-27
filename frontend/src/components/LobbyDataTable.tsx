@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react'
-import type { LobbyRow, SeatEvent } from '../data/types'
+import type { LobbyRow } from '../data/types'
 
 /**
  * A poker-site-style cash-game lobby table (rows = tables, columns = facts), the
  * default lobby view. Renders ONE ordering of a player-safe `LobbyRow[]`; the
  * board places two of these side by side (Standard vs FairPlay). Player-safe:
  * only neutral table facts + the fit badge — never a score/archetype/risk term.
+ * The `vs` column shows this table's rank in the OTHER strategy (▲/▼ + position).
  */
 export function LobbyDataTable({
   rows,
@@ -17,9 +18,6 @@ export function LobbyDataTable({
   crossLabel,
   selected,
   onSelect,
-  events,
-  diagOpen,
-  onToggleDiag,
   accent,
 }: {
   rows: LobbyRow[]
@@ -31,16 +29,11 @@ export function LobbyDataTable({
   prevOrderIds?: string[]
   /** the OTHER strategy's table_id order — to show how this policy diverges from it. */
   crossOrderIds?: string[]
-  /** short name of the other strategy, e.g. "Std" / "FP". */
+  /** short name of the other strategy, e.g. "Std" / "FP" (column header only). */
   crossLabel?: string
   /** the table currently selected in either lobby (highlighted in both). */
   selected?: string | null
   onSelect?: (id: string) => void
-  /** this step's seat events for THIS policy (admin diagnostic). */
-  events?: SeatEvent[]
-  /** shared expand/collapse for the diagnostics (both sides toggle together). */
-  diagOpen?: boolean
-  onToggleDiag?: () => void
   accent: 'standard' | 'fairplay'
 }) {
   const prevIndex = new Map((prevOrderIds ?? []).map((id, i) => [id, i]))
@@ -80,29 +73,27 @@ export function LobbyDataTable({
         ref={containerRef}
         className="h-[62vh] overflow-y-auto rounded-md border border-[#262a32] bg-[rgba(0,0,0,0.25)]"
       >
-        <table className="w-full table-fixed border-collapse whitespace-nowrap text-[0.78rem] [&_td]:overflow-hidden [&_th]:overflow-hidden">
+        <table className="w-full table-fixed border-collapse whitespace-nowrap text-[0.78rem] [&_td]:overflow-hidden">
           <colgroup>
-            <col className="w-[15%]" />
-            <col className="w-[14%]" />
-            <col className="w-[8%]" />
-            <col className="w-[7%]" />
-            <col className="w-[10%]" />
-            <col className="w-[10%]" />
-            <col className="w-[10%]" />
+            <col className="w-[9%]" />
             <col className="w-[16%]" />
-            <col className="w-[10%]" />
+            <col className="w-[13%]" />
+            <col className="w-[9%]" />
+            <col className="w-[12%]" />
+            <col className="w-[11%]" />
+            <col className="w-[18%]" />
+            <col className="w-[12%]" />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-[#15171c]">
-            <tr className="text-[0.64rem] uppercase tracking-[0.1em] text-[#7e8694]">
-              <th className="px-2 py-1.5 text-left font-medium">{crossLabel ? `vs ${crossLabel}` : ''}</th>
-              <th className="px-2 py-1.5 text-left font-medium">Table</th>
-              <th className="px-2 py-1.5 text-left font-medium">Stakes</th>
-              <th className="px-2 py-1.5 text-center font-medium">Plrs</th>
-              <th className="px-2 py-1.5 text-right font-medium">Avg pot</th>
-              <th className="px-2 py-1.5 text-right font-medium">Plrs/Flop</th>
-              <th className="px-2 py-1.5 text-right font-medium">Hnds/Hr</th>
-              <th className="px-2 py-1.5 text-left font-medium">{showBadges ? 'Fit' : ''}</th>
-              <th className="px-2 py-1.5 text-right font-medium"></th>
+            <tr className="align-bottom whitespace-normal text-[0.62rem] uppercase leading-tight tracking-[0.08em] text-[#7e8694]">
+              <th className="px-1.5 py-2 text-left font-medium">{crossLabel ? `vs ${crossLabel}` : ''}</th>
+              <th className="px-2 py-2 text-left font-medium">Table</th>
+              <th className="px-2 py-2 text-left font-medium">Stakes</th>
+              <th className="px-1.5 py-2 text-center font-medium">Plrs</th>
+              <th className="px-2 py-2 text-right font-medium">Avg pot</th>
+              <th className="px-2 py-2 text-right font-medium">Hnds / Hr</th>
+              <th className="px-2 py-2 text-left font-medium">{showBadges ? 'Fit' : ''}</th>
+              <th className="px-2 py-2 text-right font-medium"></th>
             </tr>
           </thead>
           <tbody>
@@ -127,7 +118,7 @@ export function LobbyDataTable({
                         : 'odd:bg-[rgba(255,255,255,0.012)] hover:bg-[rgba(255,255,255,0.04)]'
                   }`}
                 >
-                  <td className="px-1.5 py-1.5 text-[0.7rem]">
+                  <td className="px-1.5 py-1.5 text-[0.72rem]">
                     {crossOn && otherIdx !== undefined ? (
                       <span
                         className={
@@ -137,9 +128,9 @@ export function LobbyDataTable({
                               ? 'text-[#c98b93]'
                               : 'text-[#9098a4]'
                         }
-                        title={`Ranked ${cross > 0 ? `${cross} higher` : cross < 0 ? `${-cross} lower` : 'the same'} here vs ${crossLabel}`}
+                        title={`Ranked ${cross > 0 ? `${cross} higher` : cross < 0 ? `${-cross} lower` : 'the same'} vs ${crossLabel}`}
                       >
-                        {cross > 0 ? '▲' : cross < 0 ? '▼' : '•'} {crossLabel} #{otherIdx + 1}
+                        {cross > 0 ? '▲' : cross < 0 ? '▼' : '•'} #{otherIdx + 1}
                       </span>
                     ) : null}
                   </td>
@@ -153,16 +144,13 @@ export function LobbyDataTable({
                     </span>
                   </td>
                   <td className="px-2 py-1.5 text-[#d8d2c6]">{r.stakes}</td>
-                  <td className="px-2 py-1.5 text-center">
+                  <td className="px-1.5 py-1.5 text-center">
                     <span className={full ? 'text-[#c98b93]' : 'text-[#d8d2c6]'}>
                       {r.seated_count}/{r.max_seats}
                     </span>
                   </td>
                   <td className="px-2 py-1.5 text-right text-[#d8d2c6]">
                     {r.avg_pot_usd != null ? `$${r.avg_pot_usd}` : '—'}
-                  </td>
-                  <td className="px-2 py-1.5 text-right text-[#a9b0bb]">
-                    {r.plrs_per_flop_pct != null ? `${r.plrs_per_flop_pct}%` : '—'}
                   </td>
                   <td className="px-2 py-1.5 text-right text-[#a9b0bb]">{r.hands_per_hour ?? '—'}</td>
                   <td className="px-2 py-1.5">
@@ -192,35 +180,6 @@ export function LobbyDataTable({
           </tbody>
         </table>
       </div>
-
-      {events && events.length > 0 && (
-        <div className="mt-2 rounded-md border border-[#262a32] bg-[rgba(0,0,0,0.2)]">
-          <button
-            type="button"
-            onClick={onToggleDiag}
-            className="flex w-full cursor-pointer select-none items-center gap-1 px-2 py-1 text-left text-[0.7rem] text-[#8b8276]"
-          >
-            <span className="text-[#6f7682]">{diagOpen ? '▾' : '▸'}</span>
-            Admin · {policy} seating this step ({events.filter((e) => e.action === 'sit').length} sat,{' '}
-            {events.filter((e) => e.action === 'stand').length} stood)
-          </button>
-          {diagOpen && (
-            <div className="max-h-40 overflow-y-auto border-t border-[#1e2128] px-2 py-1 text-[0.7rem]">
-              {events.map((e, i) => (
-              <div key={i} className="flex items-center gap-1.5 py-[0.06rem]">
-                <span className={e.action === 'sit' ? 'text-[#8be3a7]' : 'text-[#c98b93]'}>
-                  {e.action === 'sit' ? '+' : '–'}
-                </span>
-                <span className="text-[#a9b0bb]">{e.archetype ?? e.player_id}</span>
-                <span className="text-[#6f7682]">{e.action === 'sit' ? '→' : 'left'}</span>
-                <span className="font-mono text-[#d8d2c6]">{e.table_id ?? '—'}</span>
-                {e.occ_after && <span className="text-[#6f7682]">({e.occ_after})</span>}
-              </div>
-              ))}
-              </div>
-            )}
-          </div>
-      )}
     </section>
   )
 }
