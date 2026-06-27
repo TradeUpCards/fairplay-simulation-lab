@@ -613,7 +613,9 @@ export function TrainingTable() {
   legalRef.current = legal
   const decisionKey = heroTurn && st ? `${st.hand_id}|${st.street}|${st.pot}|${st.to_call}` : null
   useEffect(() => {
-    if (!decisionKey) return
+    // Freeze the clock the moment an action is submitted (busy) — it shouldn't keep
+    // ticking (or auto-fire) while the server resolves the hand.
+    if (!decisionKey || busy) return
     setClockLeft(CLOCK_SECONDS)
     const started = performance.now()
     const id = window.setInterval(() => {
@@ -625,7 +627,7 @@ export function TrainingTable() {
       }
     }, 100)
     return () => window.clearInterval(id)
-  }, [decisionKey])
+  }, [decisionKey, busy])
 
   return (
     <>
@@ -725,10 +727,11 @@ export function TrainingTable() {
           </div>
         </div>
 
-        {/* action cluster — compact, right-aligned strip below the felt (no seat
-            overlap); only shown when it has something to say */}
-        {(!!error || !st || st.complete || heroTurn) && (
-          <div className="mt-2 flex shrink-0 justify-end">
+        {/* action region — FIXED height, always present, so the felt above never
+            reflows when the controls show/hide. The inner box is top-aligned and only
+            rendered when there's something to say. */}
+        <div className="mt-2 flex h-[156px] shrink-0 items-start justify-end">
+          {(!!error || !st || st.complete || heroTurn) && (
             <div className="w-full max-w-[440px] rounded-xl border border-line bg-[rgba(20,25,34,0.97)] p-3 shadow-[0_6px_24px_rgba(0,0,0,0.5)]">
               {error && <div className="mb-2 text-[0.8rem] text-[#e0607a]">{error}</div>}
               {!st && <div className="text-[0.84rem] text-muted">Seat 1–5 opponents, then deal.</div>}
@@ -759,8 +762,8 @@ export function TrainingTable() {
                 </>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
       </div>
 
