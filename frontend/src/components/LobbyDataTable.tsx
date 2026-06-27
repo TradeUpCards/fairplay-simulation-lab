@@ -15,6 +15,8 @@ export function LobbyDataTable({
   prevOrderIds,
   crossOrderIds,
   crossLabel,
+  selected,
+  onSelect,
   accent,
 }: {
   rows: LobbyRow[]
