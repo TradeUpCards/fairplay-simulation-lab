@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
+import pokerTable from '../assets/poker-table.png'
 import type { OperatorTableDetail } from '../data/types'
+import { ARCH_AVATAR, SeatAvatar, seatPositions } from './tableArt'
 
 /**
- * Two-stage table sidecar. Stage 1 is the player-safe **table preview** — a seat
- * ring + neutral facts (stakes, occupancy), what a player could see. Stage 2 is
- * the operator **curtain**, opened by an explicit Pit-boss button: it reveals the
- * seated archetypes, table health + term breakdown, seating-risk, and the reasons
- * a table is or isn't recommended. The player lobby never shows the curtain on its
- * own — it's an operator reveal.
+ * In-flow table detail panel (lives in a reserved column beside the lobby — never
+ * overlaps it). Two views via the header toggle: **Player view** is the player-safe
+ * table preview (real felt + seat ring + neutral facts); **Pit-boss view** pulls
+ * back the curtain — seats reveal their archetype, plus table health + term
+ * breakdown, seating-risk, and the reasons a table is or isn't recommended. The
+ * lobby itself never shows the curtain.
  */
 const TERM_MAX: Record<string, number> = { P_pred: 45, P_frag: 25, P_clus: 30, P_bleed: 20 }
 const TERM_LABEL: Record<string, string> = {
@@ -20,7 +22,7 @@ const RISK_TONE: Record<string, string> = {
   high: 'border-[#8a3a3a] bg-[#341a1a] text-[#e38b8b]',
 }
 
-/** Archetype chip tone — predators/sharks warm, vulnerable cool, rest neutral. */
+/** Composition chip tone — predators/sharks warm, vulnerable cool, rest neutral. */
 function archTone(a: string): string {
   if (a === 'aggressive_predatory' || a === 'grinder' || a === 'solver_like')
     return 'border-[#8a3a3a] bg-[#2a1717] text-[#e3a08b]'
@@ -29,59 +31,40 @@ function archTone(a: string): string {
   return 'border-[#3a4757] bg-[#1c2028] text-[#b8c0cf]'
 }
 
-const ARCH_EMOJI: Record<string, string> = {
-  aggressive_predatory: '🦈',
-  grinder: '⚙️',
-  solver_like: '🧮',
-  new: '🐟',
-  recreational: '🎉',
-  promo_hunter: '🎟️',
-  regular: '🪙',
-  healthy_anchor: '⚓',
-  shared_device_household: '📱',
-  cluster_member: '🔗',
-  bot_like: '🤖',
-  unknown: '❔',
-}
-
-/**
- * Seat ring built from the seated composition. `reveal=false` shows neutral
- * occupied/empty seats (player-safe); `reveal=true` shows the archetype of each seat.
- */
+/** Seat ring on the real felt; `reveal` swaps neutral seats for archetype avatars. */
 function MiniTable({ detail, reveal }: { detail: OperatorTableDetail; reveal: boolean }) {
   const seated = detail.composition.flatMap((c) => Array<string>(c.count).fill(c.archetype))
-  const n = Math.max(detail.max_seats, 1)
+  const pos = seatPositions(detail.max_seats)
   return (
-    <div className="relative mx-auto my-2 h-28 w-full max-w-[17rem]">
-      <div className="absolute left-1/2 top-1/2 h-[66%] w-[78%] -translate-x-1/2 -translate-y-1/2 rounded-[999px] border border-[#2f5d3f] bg-[radial-gradient(ellipse_at_center,#1c4a30,#0e2a1b)]" />
+    <div className="relative mx-auto my-2 aspect-3/2 w-full max-w-[17rem]">
+      <img
+        src={pokerTable}
+        className="absolute inset-0 h-full w-full rounded-[14px] object-cover"
+        alt=""
+        aria-hidden="true"
+      />
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center leading-tight">
-        <div className="font-mono text-[0.62rem] text-[#cfe6d4]">{detail.table_id}</div>
-        <div className="text-[0.6rem] text-[#8fbf9a]">
+        <div className="font-mono text-[0.62rem] text-[#f0e8d6] [text-shadow:0_1px_3px_rgba(0,0,0,0.7)]">
+          {detail.table_id}
+        </div>
+        <div className="text-[0.6rem] text-[#dccf9f] [text-shadow:0_1px_3px_rgba(0,0,0,0.7)]">
           {detail.seated_count}/{detail.max_seats}
         </div>
       </div>
-      {Array.from({ length: n }).map((_, i) => {
-        const ang = ((-90 + i * (360 / n)) * Math.PI) / 180
-        const x = 50 + 44 * Math.cos(ang)
-        const y = 50 + 42 * Math.sin(ang)
+      {pos.map((p, i) => {
         const arch = seated[i]
         return (
           <div
             key={i}
             className="absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ left: `${x}%`, top: `${y}%` }}
+            style={{ left: p.left, top: p.top }}
           >
             {!arch ? (
-              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-dashed border-[#3a4757] text-[0.7rem] text-[#5b626c]">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-dashed border-[#3a4757] bg-[rgba(0,0,0,0.45)] text-[0.7rem] text-[#7a828e]">
                 +
               </span>
             ) : reveal ? (
-              <span
-                title={arch.replace(/_/g, ' ')}
-                className={`flex h-7 w-7 items-center justify-center rounded-full border text-[0.9rem] ${archTone(arch)}`}
-              >
-                {ARCH_EMOJI[arch] ?? '•'}
-              </span>
+              <SeatAvatar archetype={arch} label={`${detail.table_id}-${i}`} size="sm" />
             ) : (
               <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#4a5260] bg-[#39414c] text-[0.8rem] text-[#aeb6c2]">
                 🧑
@@ -91,6 +74,28 @@ function MiniTable({ detail, reveal }: { detail: OperatorTableDetail; reveal: bo
         )
       })}
     </div>
+  )
+}
+
+function ViewTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full px-2.5 py-0.5 text-[0.66rem] font-semibold tracking-wide ${
+        active ? 'bg-brass text-[#1a1407]' : 'text-muted hover:text-text'
+      }`}
+    >
+      {children}
+    </button>
   )
 }
 
@@ -114,63 +119,56 @@ export function LobbySidecar({
 
   return (
     <aside
-      className="fixed right-0 top-0 z-50 flex h-screen w-[23rem] flex-col overflow-y-auto border-l border-[#2a2e36] bg-[#0e1014] shadow-[0_0_40px_rgba(0,0,0,0.6)]"
+      className="flex h-[62vh] w-full flex-col overflow-y-auto rounded-md border border-[#2a2e36] bg-[#0e1014]"
       aria-label="table detail"
     >
-      <div className="flex items-start justify-between border-b border-[#23262d] px-4 py-3">
-        <div>
-          <div className="text-[0.66rem] uppercase tracking-[0.14em] text-[#8b8276]">
-            {curtain ? 'Pit-boss view · the curtain' : 'Table preview'}
+      <div className="sticky top-0 z-10 border-b border-[#23262d] bg-[#0e1014] px-3 py-2.5">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="font-mono text-[1rem] font-semibold text-[#f3ece0]">{detail.table_id}</div>
+            <div className="text-[0.72rem] text-[#a9b0bb]">
+              {detail.stakes} · {detail.seated_count}/{detail.max_seats} · {detail.open_seats} open
+            </div>
           </div>
-          <div className="mt-0.5 font-mono text-[1.05rem] font-semibold text-[#f3ece0]">
-            {detail.table_id}
-          </div>
-          <div className="text-[0.74rem] text-[#a9b0bb]">
-            {detail.stakes} · {detail.seated_count}/{detail.max_seats} seated · {detail.open_seats}{' '}
-            open
+          <div className="flex items-center gap-2">
+            <div className="inline-flex gap-0.5 rounded-full border border-line bg-surface-2 p-0.5">
+              <ViewTab active={!curtain} onClick={() => setCurtain(false)}>
+                Player
+              </ViewTab>
+              <ViewTab active={curtain} onClick={() => setCurtain(true)}>
+                Pit-boss
+              </ViewTab>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="close"
+              className="rounded-md border border-[#3a3f47] px-1.5 py-0.5 text-[0.85rem] text-[#b8c0cf] hover:border-brass hover:text-brass"
+            >
+              ×
+            </button>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="close"
-          className="rounded-md border border-[#3a3f47] px-2 py-0.5 text-[0.9rem] text-[#b8c0cf] hover:border-brass hover:text-brass"
-        >
-          ×
-        </button>
       </div>
 
-      <div className="px-4 py-3 text-[0.8rem]">
+      <div className="px-3 py-2 text-[0.8rem]">
         <MiniTable detail={detail} reveal={curtain} />
 
         {!curtain ? (
-          <div className="mt-1 space-y-3">
+          <div className="mt-1 space-y-2">
             <p className="text-[0.74rem] text-[#a9b0bb]">
               {detail.seated_count} seated · {detail.open_seats} open seat
               {detail.open_seats === 1 ? '' : 's'}
               {detail.full ? ' · table full' : ''}
             </p>
-            <button
-              type="button"
-              onClick={() => setCurtain(true)}
-              className="w-full rounded-md border border-brass bg-[rgba(224,189,118,0.12)] px-3 py-2 text-[0.78rem] font-semibold text-brass transition hover:bg-[rgba(224,189,118,0.2)]"
-            >
-              🔍 Pit-boss view — why this seating?
-            </button>
             <p className="text-[0.68rem] leading-snug text-[#6f7682]">
-              Players see only this neutral preview. The pit-boss reveal is operator-only.
+              The neutral preview a player sees. Switch to{' '}
+              <span className="text-[#8b8276]">Pit-boss</span> to reveal who's seated and why this
+              table is ranked where it is (operator-only).
             </p>
           </div>
         ) : (
           <div className="mt-1 space-y-4">
-            <button
-              type="button"
-              onClick={() => setCurtain(false)}
-              className="text-[0.72rem] text-[#8b8276] hover:text-brass"
-            >
-              ‹ back to table preview
-            </button>
-
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[#8b8276]">Routing:</span>
               <span className="font-semibold text-[#f3ece0]">{rec}</span>
@@ -231,7 +229,7 @@ export function LobbySidecar({
                     key={c.archetype}
                     className={`rounded-full border px-1.5 py-[0.05rem] text-[0.7rem] ${archTone(c.archetype)}`}
                   >
-                    {ARCH_EMOJI[c.archetype] ?? ''} {c.count}× {c.archetype.replace(/_/g, ' ')}
+                    {ARCH_AVATAR[c.archetype] ?? ''} {c.count}× {c.archetype.replace(/_/g, ' ')}
                   </span>
                 ))}
               </div>
@@ -251,8 +249,8 @@ export function LobbySidecar({
             )}
 
             <p className="border-t border-[#23262d] pt-2 text-[0.68rem] leading-snug text-[#6f7682]">
-              Operator-only — the reasoning behind the lobby ranking. Players never see scores or
-              risk language.
+              Operator-only — the reasoning behind the ranking. Players never see scores or risk
+              language.
             </p>
           </div>
         )}

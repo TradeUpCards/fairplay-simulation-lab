@@ -61,7 +61,8 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
         </button>
       </div>
 
-      <div className="flex flex-col gap-5 lg:flex-row">
+      <div className="flex flex-col gap-4 xl:flex-row">
+        <div className="flex min-w-0 flex-1 flex-col gap-5 lg:flex-row">
         <LobbyDataTable
           rows={cur.standard}
           policy="Standard"
@@ -92,6 +93,21 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
           onToggleDiag={lobbyStore.toggleDiag}
           accent="fairplay"
         />
+        </div>
+        <div className="w-full xl:w-[23rem] xl:shrink-0">
+          {ui.selected && cur.op_detail?.[ui.selected] ? (
+            <LobbySidecar
+              key={ui.selected}
+              detail={cur.op_detail[ui.selected]}
+              onClose={() => lobbyStore.setSelected(null)}
+            />
+          ) : (
+            <div className="flex h-[62vh] items-center justify-center rounded-md border border-dashed border-[#2a2e36] bg-[rgba(0,0,0,0.15)] p-6 text-center text-[0.78rem] text-[#6f7682]">
+              Select a table to preview its seats — then switch to Pit-boss view for why it's
+              ranked where it is.
+            </div>
+          )}
+        </div>
       </div>
 
       <p className="mt-3 text-[0.72rem] text-[#6f7682]">
@@ -101,14 +117,6 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
         table's rank in the other room; click a table to highlight it in both; expand the admin box
         for the per-step seating. Illustrative synthetic room — not a live cash game.
       </p>
-
-      {ui.selected && cur.op_detail?.[ui.selected] && (
-        <LobbySidecar
-          key={ui.selected}
-          detail={cur.op_detail[ui.selected]}
-          onClose={() => lobbyStore.setSelected(null)}
-        />
-      )}
     </section>
   )
 }
