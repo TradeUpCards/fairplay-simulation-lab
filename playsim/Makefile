@@ -3,7 +3,7 @@ PY ?= python3.12
 VENV ?= .venv
 BIN := $(VENV)/bin
 
-.PHONY: venv install test run replay tables calibrate health routing docker clean
+.PHONY: venv install test run replay tables calibrate health routing explorer docker clean
 
 venv:
 	$(PY) -m venv $(VENV)
@@ -33,6 +33,10 @@ calibrate:  ## tune postflop_aggression until realized AF ≈ archetype targets
 
 tables:
 	$(BIN)/python -m playsim.cli tables
+
+explorer:   ## build the self-contained sweep-explorer web UI from out/*.json
+	$(BIN)/python analysis/build_sweep_explorer.py
+	@echo "open: out/sweep-explorer.html"
 
 docker:
 	docker compose run --rm playsim run --table case_c --hands 500 --seed 42 --db /data/sim.db
