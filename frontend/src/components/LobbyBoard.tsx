@@ -102,7 +102,7 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
               onClose={() => lobbyStore.setSelected(null)}
             />
           ) : (
-            <div className="flex h-[62vh] items-center justify-center rounded-md border border-dashed border-[#2a2e36] bg-[rgba(0,0,0,0.15)] p-6 text-center text-[0.78rem] text-[#6f7682]">
+            <div className="flex h-[62vh] items-center justify-center rounded-md border border-dashed border-[#2a2e36] bg-[rgba(0,0,0,0.15)] p-6 text-center text-[0.78rem] text-[#6f7682] xl:h-full">
               Select a table to preview its seats — then switch to Pit-boss view for why it's
               ranked where it is.
             </div>

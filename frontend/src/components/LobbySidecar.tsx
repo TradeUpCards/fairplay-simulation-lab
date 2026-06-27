@@ -119,7 +119,7 @@ export function LobbySidecar({
 
   return (
     <aside
-      className="flex h-[62vh] w-full flex-col overflow-y-auto rounded-md border border-[#2a2e36] bg-[#0e1014]"
+      className="flex h-[62vh] w-full flex-col overflow-y-auto rounded-md border border-[#2a2e36] bg-[#0e1014] xl:h-full"
       aria-label="table detail"
     >
       <div className="sticky top-0 z-10 border-b border-[#23262d] bg-[#0e1014] px-3 py-2.5">

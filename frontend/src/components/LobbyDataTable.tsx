@@ -82,14 +82,14 @@ export function LobbyDataTable({
       >
         <table className="w-full table-fixed border-collapse whitespace-nowrap text-[0.78rem] [&_td]:overflow-hidden [&_th]:overflow-hidden">
           <colgroup>
-            <col className="w-[12%]" />
             <col className="w-[15%]" />
-            <col className="w-[9%]" />
+            <col className="w-[14%]" />
+            <col className="w-[8%]" />
             <col className="w-[7%]" />
             <col className="w-[10%]" />
             <col className="w-[10%]" />
             <col className="w-[10%]" />
-            <col className="w-[17%]" />
+            <col className="w-[16%]" />
             <col className="w-[10%]" />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-[#15171c]">
@@ -127,23 +127,19 @@ export function LobbyDataTable({
                         : 'odd:bg-[rgba(255,255,255,0.012)] hover:bg-[rgba(255,255,255,0.04)]'
                   }`}
                 >
-                  <td className="px-2 py-1.5 whitespace-nowrap">
+                  <td className="px-1.5 py-1.5 text-[0.7rem]">
                     {crossOn && otherIdx !== undefined ? (
-                      <span className="inline-flex items-center gap-1">
-                        <span
-                          className={
-                            cross > 0
-                              ? 'text-[#8be3a7]'
-                              : cross < 0
-                                ? 'text-[#c98b93]'
-                                : 'text-[#6f7682]'
-                          }
-                        >
-                          {cross > 0 ? `▲${cross}` : cross < 0 ? `▼${-cross}` : '='}
-                        </span>
-                        <span className="text-[0.66rem] text-[#6f7682]">
-                          {crossLabel} #{otherIdx + 1}
-                        </span>
+                      <span
+                        className={
+                          cross > 0
+                            ? 'text-[#8be3a7]'
+                            : cross < 0
+                              ? 'text-[#c98b93]'
+                              : 'text-[#9098a4]'
+                        }
+                        title={`Ranked ${cross > 0 ? `${cross} higher` : cross < 0 ? `${-cross} lower` : 'the same'} here vs ${crossLabel}`}
+                      >
+                        {cross > 0 ? '▲' : cross < 0 ? '▼' : '•'} {crossLabel} #{otherIdx + 1}
                       </span>
                     ) : null}
                   </td>
