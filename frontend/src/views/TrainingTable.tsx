@@ -341,7 +341,7 @@ function ReviewCoachCard({
 
 // Poker-client action buttons: large, the aggressive action a bold saturated
 // primary (green, on-theme with the felt), Check/Call neutral, Fold a filled red.
-const BTN_BASE = 'flex flex-col items-center justify-center rounded-xl px-4 py-2.5 leading-tight disabled:opacity-50'
+const BTN_BASE = 'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 leading-tight disabled:opacity-50'
 const FOLD_BTN =
   `${BTN_BASE} bg-[#5a2730] border border-[#7a3340] text-[#f0c0cc] hover:bg-[#6b2f3a]`
 const CALL_BTN =
@@ -382,11 +382,11 @@ function ActionBar({
   const SIZES: [string, number][] = [['25%', 0.25], ['33%', 0.33], ['50%', 0.5], ['75%', 0.75], ['Pot', 1]]
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2">
       {/* sizing — percent presets, a poker-client slider, and the editable amount */}
       {legal.can_raise && (
-        <div className="rounded-xl border border-line bg-surface-2 p-2.5">
-          <div className="mb-2 flex items-center gap-2">
+        <div className="rounded-xl border border-line bg-surface-2 p-2">
+          <div className="mb-1.5 flex items-center gap-2">
             <span className="font-mono text-[0.58rem] uppercase tracking-[0.18em] text-muted">
               {facing ? 'Raise to' : 'Bet'}
             </span>
@@ -409,7 +409,7 @@ function ActionBar({
             max={legal.max_raise_to}
             value={raiseTo}
             onChange={(e) => setRaiseTo(Number(e.target.value))}
-            className="bet-slider mb-2.5"
+            className="bet-slider mb-2"
             style={{ ['--fill' as string]: `${fillPct}%` }}
           />
           <div className="flex flex-wrap items-center gap-1.5">
@@ -424,7 +424,7 @@ function ActionBar({
           </div>
         </div>
       )}
-      {/* action buttons — large, two-line; the aggressive action is the green primary */}
+      {/* action buttons — single-line; the aggressive action is the green primary */}
       <div className="flex items-stretch gap-2">
         {legal.can_fold && (
           <button className={`${FOLD_BTN} flex-1`} onClick={() => onAct('fold')} disabled={busy}>
@@ -465,7 +465,7 @@ function ActionClock({ left, total }: { left: number; total: number }) {
   const pct = Math.max(0, Math.min(100, (left / total) * 100))
   const low = left <= 10
   return (
-    <div className="mb-2 flex items-center gap-2">
+    <div className="mb-1.5 flex items-center gap-2">
       <span className={`font-mono text-[0.7rem] tabular-nums ${low ? 'text-[#e0607a]' : 'text-muted'}`}>
         ⏱ {Math.ceil(left)}s
       </span>
@@ -736,7 +736,7 @@ export function TrainingTable() {
         {/* action region — FIXED height, always present, so the felt above never
             reflows when the controls show/hide. The inner box is top-aligned and only
             rendered when there's something to say. */}
-        <div className="mt-2 flex h-[156px] shrink-0 items-start justify-end">
+        <div className="mt-2 flex h-[212px] shrink-0 items-start justify-end">
           {(!!error || !st || st.complete || heroTurn) && (
             <div className="w-full max-w-[440px] rounded-xl border border-line bg-[rgba(20,25,34,0.97)] p-3 shadow-[0_6px_24px_rgba(0,0,0,0.5)]">
               {error && <div className="mb-2 text-[0.8rem] text-[#e0607a]">{error}</div>}
