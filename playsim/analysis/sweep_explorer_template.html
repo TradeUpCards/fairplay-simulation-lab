@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Playsim · Sweep Explorer</title>
+<style>
+  :root {
+    --bg: #f6f8fb;
+    --surface: #ffffff;
+    --surface-2: #fbfcfe;
+    --border: #e4e8ee;
+    --border-strong: #d4dae3;
+    --text: #18212f;
+    --muted: #6a7585;
+    --faint: #97a1b0;
+    --accent: #4f46e5;
+    --pos: #1f9d83;
+    --neg: #d4495f;
+    --shadow: 0 1px 2px rgba(20,30,50,.04), 0 4px 16px rgba(20,30,50,.06);
+    --shadow-lg: 0 8px 40px rgba(20,30,50,.16);
+    --radius: 10px;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 28px 80px; }
+
+  /* ---- top bar ---- */
+  header.app {
+    background: #0f1726;
+    color: #e9edf4;
+    border-bottom: 1px solid #1d2740;
+  }
+  header.app .wrap { padding-top: 18px; padding-bottom: 18px; }
+  .brandrow { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .brand { font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
+  .brand .dot { color: #7c8db0; font-weight: 400; margin: 0 8px; }
+  .brand .sub { color: #aeb8ca; font-weight: 450; font-size: 14px; }
+  .ts { margin-left: auto; color: #8893a8; font-size: 12px; font-family: var(--mono); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11.5px; font-weight: 550; padding: 3px 9px; border-radius: 999px;
+    background: rgba(212,73,95,.16); color: #ffb3bf; border: 1px solid rgba(212,73,95,.3);
+  }
+  .pill::before { content:""; width:6px; height:6px; border-radius:50%; background:#ff7088; }
+
+  .configbar {
+    margin-top: 14px; display: flex; gap: 8px 20px; flex-wrap: wrap; align-items: center;
+  }
+  .cfg { font-size: 12px; color: #9aa5b8; font-family: var(--mono); white-space: nowrap; }
+  .cfg b { color: #dfe6f1; font-weight: 600; }
+  select.ds {
+    background: #1a2434; color: #e9edf4; border: 1px solid #2c3a4f; border-radius: 8px;
+    padding: 6px 10px; font-size: 13px; font-family: var(--sans); font-weight: 550;
+  }
+
+  /* ---- story tiles ---- */
+  .story { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 14px; margin: 22px 0 8px; }
+  @media (max-width: 880px){ .story{ grid-template-columns: 1fr 1fr; } }
+  .tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .tile.lede { background: linear-gradient(180deg,#fff, #fbfcff); }
+  .tile .k { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); font-weight: 600; }
+  .tile .v { font-size: 24px; font-weight: 700; letter-spacing: -.02em; margin-top: 4px; }
+  .tile .v small { font-size: 14px; color: var(--muted); font-weight: 500; }
+  .tile .note { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+  .tile.lede .v { font-size: 15px; font-weight: 600; line-height: 1.4; letter-spacing: 0; }
+
+  /* ---- controls ---- */
+  .toolbar {
+    position: sticky; top: 0; z-index: 30; background: var(--bg);
+    padding: 16px 0 12px; margin-bottom: 4px; border-bottom: 1px solid var(--border);
+    display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;
+  }
+  .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 3px; box-shadow: var(--shadow); }
+  .seg button {
+    border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 550;
+    padding: 6px 14px; border-radius: 7px; cursor: pointer; font-size: 13px;
+  }
+  .seg button.on { background: var(--accent); color: #fff; box-shadow: 0 1px 2px rgba(79,70,229,.4); }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); font-weight: 600; }
+  .field select {
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px;
+    padding: 7px 10px; font: inherit; font-size: 13px; color: var(--text); min-width: 150px; cursor: pointer;
+  }
+  .spacer { flex: 1; }
+  .ghostbtn {
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px;
+    padding: 7px 12px; font: inherit; font-size: 13px; font-weight: 550; color: var(--text); cursor: pointer;
+  }
+  .ghostbtn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---- panel ---- */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 22px; margin-top: 18px; }
+  .panel h2 { margin: 0 0 2px; font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+  .panel .desc { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
+  .legendrow { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .legendrow .lab { font-size: 12px; color: var(--muted); }
+  .scalebar { display: flex; align-items: center; gap: 8px; }
+  .scalebar .grad { width: 180px; height: 12px; border-radius: 4px; border: 1px solid var(--border); }
+  .scalebar .end { font-size: 11px; font-family: var(--mono); color: var(--muted); }
+
+  /* ---- heatmap ---- */
+  .hm { display: grid; gap: 6px; }
+  .hm .corner, .hm .colhdr, .hm .rowhdr { font-size: 12px; color: var(--muted); font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .hm .colhdr { padding-bottom: 2px; }
+  .hm .rowhdr { justify-content: flex-end; padding-right: 10px; }
+  .hm .axis-x { text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); font-weight: 600; margin-top: 10px; }
+  .axis-y { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); font-weight: 600; }
+  .cell {
+    border-radius: 9px; padding: 12px 10px; min-height: 78px; cursor: pointer; position: relative;
+    border: 1px solid rgba(0,0,0,.04); display: flex; flex-direction: column; justify-content: center; align-items: center;
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  .cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); z-index: 5; border-color: rgba(0,0,0,.12); }
+  .cell .big { font-size: 21px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .cell .badge { font-size: 11.5px; font-weight: 650; margin-top: 3px; opacity: .9; font-variant-numeric: tabular-nums; }
+  .cell .stab { display:inline-flex; gap:3px; margin-top:6px; }
+  .cell .stab i { width:7px; height:7px; border-radius:50%; display:inline-block; }
+
+  /* ---- trends ---- */
+  .facets { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 760px){ .facets{ grid-template-columns: 1fr; } }
+  .facet { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px 4px; background: var(--surface-2); }
+  .facet .ftitle { font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .facet svg { display: block; width: 100%; height: auto; }
+  .polkey { display: flex; gap: 16px; flex-wrap: wrap; margin: 2px 0 16px; }
+  .polkey span { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text); }
+  .polkey i { width: 11px; height: 11px; border-radius: 3px; }
+
+  /* ---- table ---- */
+  table.grid { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  table.grid th, table.grid td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table.grid th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 650; cursor: pointer; user-select: none; position: sticky; top: 64px; background: var(--surface); }
+  table.grid th:first-child, table.grid td:first-child { text-align: left; }
+  table.grid th.sorted { color: var(--accent); }
+  table.grid tbody tr:hover { background: var(--surface-2); cursor: pointer; }
+  table.grid td.lead { font-weight: 600; }
+  .delta.pos { color: var(--pos); font-weight: 600; }
+  .delta.neg { color: var(--neg); font-weight: 600; }
+  .winbadge { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 6px; margin-left: 6px; }
+  .winbadge.full { background: rgba(31,157,131,.14); color: #157a64; }
+  .winbadge.part { background: rgba(214,148,30,.16); color: #9a6a10; }
+  .winbadge.none { background: rgba(212,73,95,.14); color: #b23a50; }
+
+  /* ---- drawer ---- */
+  .scrim { position: fixed; inset: 0; background: rgba(15,23,38,.36); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity .18s ease; z-index: 50; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; height: 100%; width: min(640px, 94vw); background: var(--surface);
+    box-shadow: var(--shadow-lg); transform: translateX(100%); transition: transform .22s cubic-bezier(.2,.7,.2,1);
+    z-index: 60; display: flex; flex-direction: column;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer .dhead { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 12px; }
+  .drawer .dhead h3 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+  .drawer .dhead .meta { font-size: 12.5px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
+  .drawer .x { margin-left: auto; border: 0; background: var(--surface-2); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 18px; color: var(--muted); }
+  .drawer .x:hover { background: #eef1f5; color: var(--text); }
+  .dbody { overflow-y: auto; padding: 20px 24px 60px; }
+  .sec { margin-bottom: 26px; }
+  .sec h4 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); font-weight: 700; margin: 0 0 10px; }
+  .params { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; }
+  .params .p { font-size: 12.5px; display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed var(--border); padding-bottom: 5px; }
+  .params .p span { color: var(--muted); }
+  .params .p b { font-weight: 600; font-family: var(--mono); font-size: 12px; }
+  .callout { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface-2); }
+  .callout .ctitle { font-size: 13px; font-weight: 650; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .seedchips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seedchip { font-size: 11.5px; font-family: var(--mono); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); }
+  .seedchip.pos { background: rgba(31,157,131,.1); color: #157a64; border-color: rgba(31,157,131,.25); }
+  .seedchip.neg { background: rgba(212,73,95,.1); color: #b23a50; border-color: rgba(212,73,95,.25); }
+  table.mini { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  table.mini th, table.mini td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table.mini th:first-child, table.mini td:first-child { text-align: left; }
+  table.mini th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 650; }
+  table.mini td.best { background: rgba(79,70,229,.07); font-weight: 650; border-radius: 4px; }
+  .poldot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+
+  /* ---- tooltip ---- */
+  #tip {
+    position: fixed; z-index: 80; pointer-events: none; background: #0f1726; color: #e9edf4;
+    border-radius: 9px; padding: 10px 12px; font-size: 12px; box-shadow: var(--shadow-lg); max-width: 280px;
+    opacity: 0; transition: opacity .1s ease; line-height: 1.5;
+  }
+  #tip.on { opacity: 1; }
+  #tip .tt { font-weight: 650; margin-bottom: 4px; }
+  #tip .row { display: flex; justify-content: space-between; gap: 16px; font-family: var(--mono); font-size: 11.5px; }
+  #tip .row span { color: #9aa5b8; }
+  footer.note { color: var(--faint); font-size: 12px; margin-top: 30px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<header class="app">
+  <div class="wrap">
+    <div class="brandrow">
+      <div class="brand">Playsim <span class="dot">·</span> Sweep Explorer <span class="sub" id="dsLabel"></span></div>
+      <span class="pill">Illustrative synthetic data — not a validated retention claim</span>
+      <span class="ts" id="genTs"></span>
+    </div>
+    <div class="configbar" id="configbar"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="story" id="story"></div>
+
+  <div class="toolbar" id="toolbar"></div>
+
+  <div id="main"></div>
+
+  <footer class="note">
+    Each cell is a deterministic run of the closed-loop room simulator over a shared, seeded, policy-independent arrival stream
+    (the A/B invariant). “Win” = the candidate policy beats <b>standard</b> on the chosen metric within that seed; stability counts how many of the seeds agree.
+    Throughput (total seat-hrs) structurally rewards concentration; vulnerable seat-hrs is the FairPlay cohort check. Numbers are illustrative until calibrated to real room traffic.
+  </footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Cell detail"></aside>
+<div id="tip"></div>
+
+<script>
+const DATA = __DATA__;
+
+/* ---------------- palette + helpers ---------------- */
+const POL_COLOR = { standard:"#64748b", fairplay:"#4f46e5", fairplay_liveness:"#8b5cf6" };
+const POL_LABEL = { standard:"Standard", fairplay:"FairPlay", fairplay_liveness:"FairPlay-liveness" };
+const FALLBACK = ["#0ea5e9","#f59e0b","#10b981","#ec4899"];
+function polColor(p,i){ return POL_COLOR[p] || FALLBACK[(i||0)%FALLBACK.length]; }
+function polLabel(p){ return POL_LABEL[p] || p; }
+
+function fmt(v, unit){
+  if(v===null||v===undefined) return "—";
+  if(unit==="hrs") return v.toFixed(1);
+  const r = Math.round(v*10)/10;
+  return Number.isInteger(r) ? String(r) : r.toFixed(1);
+}
+function fmtSigned(v, dec){
+  if(v===null||v===undefined) return "—";
+  dec = dec===undefined?2:dec;
+  return (v>=0?"+":"") + v.toFixed(dec);
+}
+function lerp(a,b,t){ return a+(b-a)*t; }
+function hexToRgb(h){ return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
+function rgb(c){ return `rgb(${c[0]|0},${c[1]|0},${c[2]|0})`; }
+function mix(h1,h2,t){ const a=hexToRgb(h1),b=hexToRgb(h2); return rgb([lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)]); }
+const NEUTRAL="#eef1f5", POS_END="#1f9d83", NEG_END="#d4495f";
+function divergeColor(v, maxAbs){
+  if(maxAbs<=0||v===null) return NEUTRAL;
+  const t = Math.max(-1,Math.min(1, v/maxAbs));
+  return t>=0 ? mix(NEUTRAL,POS_END,t) : mix(NEUTRAL,NEG_END,-t);
+}
+function seqColor(v, lo, hi, accent){
+  if(hi<=lo||v===null) return "#f5f7fa";
+  const t=Math.max(0,Math.min(1,(v-lo)/(hi-lo)));
+  return mix("#f3f6fb",accent,0.15+0.85*t);
+}
+function textOn(bgIsStrong){ return bgIsStrong ? "#fff" : "var(--text)"; }
+
+/* ---------------- state ---------------- */
+const S = {
+  datasetId: DATA.datasets[0].id,
+  view: "heatmap",
+  lensMode: "delta",        // delta | raw
+  deltaPolicy: null,
+  deltaMetric: "vulnerable_paid_seat_hours",
+  rawPolicy: null,
+  rawMetric: "vulnerable_paid_seat_hours",
+  trendMetric: "vulnerable_paid_seat_hours",
+  trendFacet: "tables",      // tables | rate
+  tableMetric: "vulnerable_paid_seat_hours",
+  sortKey: null, sortDir: -1,
+  cellKey: null,
+};
+function ds(){ return DATA.datasets.find(d=>d.id===S.datasetId); }
+function candidates(){ return ds().policies.filter(p=>p!=="standard"); }
+function metricDef(k){ return ds().metrics.find(m=>m.key===k) || {key:k,label:k,unit:"n",lower_is_better:false}; }
+function cellAt(t,r){ return ds().cells.find(c=>c.tables===t && c.rate===r); }
+function cellByKey(k){ return ds().cells.find(c=>(c.tables+"|"+c.rate)===k); }
+
+/* delta of candidate vs standard for a metric, with per-seed win stability.
+   "goodness" orients so positive = better for the candidate (handles lower-is-better). */
+function deltaOf(cell, pol, metricKey){
+  const md = metricDef(metricKey);
+  const sign = md.lower_is_better ? -1 : 1;
+  const bySeed = {};
+  cell.runs.forEach(r=>{ (bySeed[r.seed] = bySeed[r.seed]||{})[r.policy]=r; });
+  let wins=0, n=0; const deltas={};
+  Object.keys(bySeed).forEach(seed=>{
+    const base=bySeed[seed]["standard"], cand=bySeed[seed][pol];
+    if(!base||!cand) return;
+    const raw=(cand[metricKey]??0)-(base[metricKey]??0);
+    deltas[seed]=raw; n++;
+    if(raw*sign>0) wins++;
+  });
+  const meanRaw = (cell.means[pol]?.[metricKey]??0)-(cell.means["standard"]?.[metricKey]??0);
+  return { meanRaw, good: meanRaw*sign, wins, n, deltas, sign };
+}
+
+/* ---------------- init chrome ---------------- */
+function initDatasetDefaults(){
+  const cs = candidates();
+  S.deltaPolicy = cs.includes("fairplay") ? "fairplay" : (cs[0]||null);
+  S.rawPolicy = ds().policies.includes("fairplay") ? "fairplay" : ds().policies[0];
+  if(!cs.length) S.lensMode = "raw";
+  const mk = ds().metrics.map(m=>m.key);
+  if(!mk.includes(S.deltaMetric)) S.deltaMetric = mk[0];
+  if(!mk.includes(S.trendMetric)) S.trendMetric = mk[0];
+  if(!mk.includes(S.tableMetric)) S.tableMetric = mk[0];
+  S.sortKey=null;
+}
+
+function renderConfig(){
+  const d=ds(), c=d.config||{};
+  document.getElementById("dsLabel").textContent = "· "+d.label;
+  document.getElementById("genTs").textContent = "built "+DATA.generated_at;
+  const items=[
+    ["fixture", c.fixture], ["players", c.players], ["horizon", (c.horizon_min||0)+" min"],
+    ["arrivals", c.arrival_mode], ["formation", c.formation_mode], ["behavior", c.behavior],
+    ["equity samples", c.equity_samples], ["seeds", (d.seeds||[]).join(" / ")],
+    ["fixture seed", c.fixture_seed],
+  ].filter(x=>x[1]!==undefined && x[1]!==null);
+  let html = items.map(([k,v])=>`<span class="cfg">${k} <b>${v}</b></span>`).join("");
+  if(DATA.datasets.length>1){
+    html = `<select class="ds" id="dsSel">`+DATA.datasets.map(x=>`<option value="${x.id}" ${x.id===S.datasetId?"selected":""}>${x.label}</option>`).join("")+`</select>` + html;
+  }
+  const bar=document.getElementById("configbar");
+  bar.innerHTML=html;
+  const sel=document.getElementById("dsSel");
+  if(sel) sel.onchange=e=>{ S.datasetId=e.target.value; initDatasetDefaults(); renderAll(); };
+}
+
+/* ---------------- story tiles ---------------- */
+function renderStory(){
+  const d=ds(), el=document.getElementById("story");
+  const pol = S.deltaPolicy || (candidates()[0]);
+  if(!pol){ el.innerHTML=""; return; }
+  const cells=d.cells;
+  let vWin=0,vStable=0,tWin=0;
+  cells.forEach(c=>{
+    const dv=deltaOf(c,pol,"vulnerable_paid_seat_hours");
+    if(dv.good>0) vWin++;
+    if(dv.n>0 && dv.wins===dv.n) vStable++;
+    const dt=deltaOf(c,pol,"total_paid_seat_hours");
+    if(dt.good>0) tWin++;
+  });
+  const N=cells.length;
+  // regime read: where does the candidate win vuln retention?
+  const winCells=cells.filter(c=>deltaOf(c,pol,"vulnerable_paid_seat_hours").good>0);
+  let regime="";
+  if(winCells.length){
+    const tbl=[...new Set(winCells.map(c=>c.tables))].sort((a,b)=>a-b);
+    const rt=[...new Set(winCells.map(c=>c.rate))].sort((a,b)=>a-b);
+    regime=`Advantage concentrates at ${tbl.length?`${tbl[0]}–${tbl[tbl.length-1]} tables`:""}${rt.length?`, rates ${rt[0]}–${rt[rt.length-1]}/hr`:""}.`;
+  } else { regime="No vulnerable-retention advantage in any regime tested."; }
+
+  el.innerHTML = `
+    <div class="tile lede">
+      <div class="k">${polLabel(pol)} vs Standard · the read</div>
+      <div class="v">${regime} Throughput still favors concentration (Standard wins total seat-hrs in ${N-tWin}/${N}).</div>
+    </div>
+    <div class="tile">
+      <div class="k">Regimes tested</div>
+      <div class="v">${N}</div>
+      <div class="note">${d.table_axis.length} inventories × ${d.rate_axis.length} rates</div>
+    </div>
+    <div class="tile">
+      <div class="k">Vulnerable-retention wins</div>
+      <div class="v">${vWin}<small>/${N}</small></div>
+      <div class="note">${vStable} seed-stable (all seeds agree)</div>
+    </div>
+    <div class="tile">
+      <div class="k">Throughput wins</div>
+      <div class="v">${tWin}<small>/${N}</small></div>
+      <div class="note">total paid seat-hrs vs Standard</div>
+    </div>`;
+}
+
+/* ---------------- toolbar ---------------- */
+function metricOptions(sel){ return ds().metrics.map(m=>`<option value="${m.key}" ${m.key===sel?"selected":""}>${m.label}</option>`).join(""); }
+function polOptions(list,selv){ return list.map(p=>`<option value="${p}" ${p===selv?"selected":""}>${polLabel(p)}</option>`).join(""); }
+
+function renderToolbar(){
+  const tb=document.getElementById("toolbar");
+  const views=[["heatmap","Regime heatmap"],["trends","Trends"],["table","Data table"]];
+  let html=`<div class="seg" id="viewSeg">`+views.map(([v,l])=>`<button data-v="${v}" class="${S.view===v?"on":""}">${l}</button>`).join("")+`</div>`;
+
+  if(S.view==="heatmap"){
+    const cs=candidates();
+    html+=`<div class="seg" id="lensSeg">
+      ${cs.length?`<button data-l="delta" class="${S.lensMode==="delta"?"on":""}">Advantage vs Standard</button>`:""}
+      <button data-l="raw" class="${S.lensMode==="raw"?"on":""}">Raw value</button></div>`;
+    if(S.lensMode==="delta" && cs.length){
+      html+=`<div class="field"><label>Policy</label><select id="dPol">${polOptions(cs,S.deltaPolicy)}</select></div>`;
+      html+=`<div class="field"><label>Metric</label><select id="dMet">${metricOptions(S.deltaMetric)}</select></div>`;
+    } else {
+      html+=`<div class="field"><label>Policy</label><select id="rPol">${polOptions(ds().policies,S.rawPolicy)}</select></div>`;
+      html+=`<div class="field"><label>Metric</label><select id="rMet">${metricOptions(S.rawMetric)}</select></div>`;
+    }
+  } else if(S.view==="trends"){
+    html+=`<div class="field"><label>Metric</label><select id="tMet">${metricOptions(S.trendMetric)}</select></div>`;
+    html+=`<div class="seg" id="facetSeg">
+      <button data-f="tables" class="${S.trendFacet==="tables"?"on":""}">Facet by inventory</button>
+      <button data-f="rate" class="${S.trendFacet==="rate"?"on":""}">Facet by rate</button></div>`;
+  } else {
+    html+=`<div class="field"><label>Compare metric</label><select id="tblMet">${metricOptions(S.tableMetric)}</select></div>`;
+  }
+  html+=`<div class="spacer"></div><button class="ghostbtn" id="csvBtn">Download CSV</button>`;
+  tb.innerHTML=html;
+
+  tb.querySelectorAll("#viewSeg button").forEach(b=>b.onclick=()=>{S.view=b.dataset.v; renderAll();});
+  const ls=tb.querySelector("#lensSeg"); if(ls) ls.querySelectorAll("button").forEach(b=>b.onclick=()=>{S.lensMode=b.dataset.l; renderToolbar(); renderMain();});
+  const fs=tb.querySelector("#facetSeg"); if(fs) fs.querySelectorAll("button").forEach(b=>b.onclick=()=>{S.trendFacet=b.dataset.f; renderMain();});
+  const bind=(id,key,after)=>{ const e=tb.querySelector(id); if(e) e.onchange=ev=>{S[key]=ev.target.value; (after||renderMain)();}; };
+  bind("#dPol","deltaPolicy",()=>{renderStory();renderMain();});
+  bind("#dMet","deltaMetric");
+  bind("#rPol","rawPolicy"); bind("#rMet","rawMetric");
+  bind("#tMet","trendMetric"); bind("#tblMet","tableMetric");
+  const csv=tb.querySelector("#csvBtn"); if(csv) csv.onclick=downloadCSV;
+}
+
+/* ---------------- view: heatmap ---------------- */
+function renderMain(){
+  const m=document.getElementById("main");
+  if(S.view==="heatmap") m.innerHTML=heatmapPanel();
+  else if(S.view==="trends") m.innerHTML=trendsPanel();
+  else m.innerHTML=tablePanel();
+  wireMain();
+}
+
+function heatmapPanel(){
+  const d=ds();
+  const delta = S.lensMode==="delta" && candidates().length;
+  const pol = delta ? S.deltaPolicy : S.rawPolicy;
+  const metricKey = delta ? S.deltaMetric : S.rawMetric;
+  const md=metricDef(metricKey);
+
+  // value extractor
+  const valOf = c => delta ? deltaOf(c,pol,metricKey).good : (c.means[pol]?.[metricKey]);
+  const rawOf = c => delta ? deltaOf(c,pol,metricKey).meanRaw : (c.means[pol]?.[metricKey]);
+  const vals = d.cells.map(valOf).filter(v=>v!==null&&v!==undefined);
+  const maxAbs = Math.max(...vals.map(v=>Math.abs(v)), 1e-9);
+  const lo=Math.min(...vals), hi=Math.max(...vals);
+
+  const cols=d.rate_axis, rows=d.table_axis;
+  const grid = `repeat(${cols.length+1}, minmax(0,1fr))`;
+
+  let body=`<div class="hm" style="grid-template-columns:${grid}">`;
+  body+=`<div class="corner"></div>`;
+  cols.forEach(r=>body+=`<div class="colhdr">${r}/hr</div>`);
+  rows.forEach(t=>{
+    body+=`<div class="rowhdr">${t} tables</div>`;
+    cols.forEach(r=>{
+      const c=cellAt(t,r);
+      if(!c){ body+=`<div class="cell" style="background:#f1f3f6;opacity:.5"></div>`; return; }
+      const v=valOf(c), raw=rawOf(c);
+      const strong = delta ? Math.abs(v)/maxAbs>0.55 : (v-lo)/(hi-lo+1e-9)>0.62;
+      const bg = delta ? divergeColor(v,maxAbs) : seqColor(v,lo,hi,polColor(pol));
+      let mid="";
+      if(delta){
+        const dd=deltaOf(c,pol,metricKey);
+        const cls = dd.n&&dd.wins===dd.n ? "full" : (dd.wins>0?"part":"none");
+        mid=`<div class="badge">${fmtSigned(raw, md.unit==="hrs"?2:1)}</div>
+             <div class="stab" title="${dd.wins}/${dd.n} seeds">${Object.values(dd.deltas).map(x=>`<i style="background:${(x*dd.sign>0)?POS_END:NEG_END}"></i>`).join("")}</div>`;
+      } else {
+        mid=`<div class="badge">${md.label}</div>`;
+      }
+      body+=`<div class="cell" data-key="${c.tables}|${c.rate}" style="background:${bg};color:${strong?'#fff':'var(--text)'}">
+        <div class="big">${delta?fmt(raw,md.unit):fmt(v,md.unit)}</div>${mid}</div>`;
+    });
+  });
+  body+=`</div>`;
+  body+=`<div class="axis-x" style="grid-column:1/-1;margin-top:12px">Arrival rate (joins / hour) →</div>`;
+
+  // legend
+  let legend;
+  if(delta){
+    legend=`<div class="legendrow">
+      <span class="lab">Color = ${polLabel(pol)} − Standard on <b>${md.label}</b> (green = better for ${polLabel(pol)})</span>
+      <div class="scalebar"><span class="end">−${maxAbs.toFixed(1)}</span>
+        <div class="grad" style="background:linear-gradient(90deg,${NEG_END},${NEUTRAL},${POS_END})"></div>
+        <span class="end">+${maxAbs.toFixed(1)}</span></div>
+      <span class="lab">dots = per-seed wins</span></div>`;
+  } else {
+    legend=`<div class="legendrow">
+      <span class="lab">Color = <b>${polLabel(pol)}</b> · ${md.label} (mean across seeds)</span>
+      <div class="scalebar"><span class="end">${fmt(lo,md.unit)}</span>
+        <div class="grad" style="background:linear-gradient(90deg,#f3f6fb,${polColor(pol)})"></div>
+        <span class="end">${fmt(hi,md.unit)}</span></div></div>`;
+  }
+
+  return `<div class="panel"><h2>Regime heatmap</h2>
+    <p class="desc">Table inventory × arrival rate. Click any cell for the full per-seed breakdown and parameters.</p>
+    ${legend}${body}</div>`;
+}
+
+/* ---------------- view: trends ---------------- */
+function trendsPanel(){
+  const d=ds(); const md=metricDef(S.trendMetric);
+  const facetVals = S.trendFacet==="tables" ? d.table_axis : d.rate_axis;
+  const xVals = S.trendFacet==="tables" ? d.rate_axis : d.table_axis;
+  const xLabel = S.trendFacet==="tables" ? "arrival rate /hr" : "table inventory";
+
+  // shared y across all facets
+  let lo=Infinity, hi=-Infinity;
+  d.cells.forEach(c=> d.policies.forEach(p=>{ const v=c.means[p]?.[S.trendMetric]; if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} }));
+  if(!isFinite(lo)){ lo=0; hi=1; }
+  const pad=(hi-lo)*0.12||1; lo-=pad; hi+=pad;
+
+  const key=`<div class="polkey">`+d.policies.map((p,i)=>`<span><i style="background:${polColor(p,i)}"></i>${polLabel(p)}</span>`).join("")+`</div>`;
+
+  const facets = facetVals.map(fv=>{
+    const series = d.policies.map((p,i)=>{
+      const pts = xVals.map(xv=>{
+        const c = S.trendFacet==="tables" ? cellAt(fv,xv) : cellAt(xv,fv);
+        return { x:xv, v: c? c.means[p]?.[S.trendMetric] : null };
+      });
+      return { p, color:polColor(p,i), pts };
+    });
+    return facetSVG(`${fv}${S.trendFacet==="tables"?" tables":"/hr"}`, series, xVals, lo, hi, xLabel, md);
+  }).join("");
+
+  return `<div class="panel"><h2>Trends · ${md.label}</h2>
+    <p class="desc">Each panel holds ${S.trendFacet==="tables"?"table inventory":"arrival rate"} fixed and sweeps ${xLabel}. Shared y-axis across panels. Hover a point for values.</p>
+    ${key}<div class="facets">${facets}</div></div>`;
+}
+
+function facetSVG(title, series, xVals, lo, hi, xLabel, md){
+  const W=420,H=210, m={l:46,r:12,t:10,b:30};
+  const iw=W-m.l-m.r, ih=H-m.t-m.b;
+  const xN=xVals.length;
+  const X=i=> m.l + (xN===1? iw/2 : (iw*i/(xN-1)));
+  const Y=v=> m.t + ih - ((v-lo)/(hi-lo))*ih;
+  // gridlines (4)
+  let g="";
+  for(let k=0;k<=3;k++){ const yv=lo+(hi-lo)*k/3; const y=Y(yv);
+    g+=`<line x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}" stroke="#eef1f5"/>`;
+    g+=`<text x="${m.l-8}" y="${y+3}" text-anchor="end" font-size="10" fill="#97a1b0" font-family="var(--mono)">${fmt(yv,md.unit)}</text>`;
+  }
+  let xl="";
+  xVals.forEach((xv,i)=> xl+=`<text x="${X(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="#97a1b0">${xv}</text>`);
+  let paths="";
+  series.forEach(s=>{
+    const pts=s.pts.map((pt,i)=> pt.v==null?null:[X(i),Y(pt.v)]).filter(Boolean);
+    if(pts.length>1) paths+=`<path d="M${pts.map(p=>p.join(",")).join(" L")}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linejoin="round"/>`;
+    s.pts.forEach((pt,i)=>{ if(pt.v==null) return;
+      paths+=`<circle class="tpt" cx="${X(i)}" cy="${Y(pt.v)}" r="3.6" fill="#fff" stroke="${s.color}" stroke-width="2"
+        data-tip="${polLabel(s.p)} · ${xLabel}=${pt.x} · ${md.label}=${fmt(pt.v,md.unit)}"></circle>`;
+    });
+  });
+  return `<div class="facet"><div class="ftitle">${title}</div>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${g}${xl}${paths}</svg></div>`;
+}
+
+/* ---------------- view: data table ---------------- */
+function tablePanel(){
+  const d=ds(); const md=metricDef(S.tableMetric); const cs=candidates();
+  const cols=[
+    {k:"tables",l:"Tables",g:c=>c.tables},
+    {k:"rate",l:"Rate/hr",g:c=>c.rate},
+    {k:"std",l:`Std · ${md.label}`,g:c=>c.means["standard"]?.[S.tableMetric]},
+  ];
+  cs.forEach(p=>{
+    cols.push({k:p,l:`${polLabel(p)}`,g:c=>c.means[p]?.[S.tableMetric]});
+    cols.push({k:p+"_d",l:`Δ ${polLabel(p)}`,g:c=>deltaOf(c,p,S.tableMetric).meanRaw, delta:true, pol:p});
+  });
+
+  let rows=[...d.cells];
+  if(S.sortKey){
+    const col=cols.find(c=>c.k===S.sortKey);
+    rows.sort((a,b)=>((col.g(a)??-1e15)-(col.g(b)??-1e15))*S.sortDir);
+  }
+  let head=cols.map(c=>`<th data-sk="${c.k}" class="${S.sortKey===c.k?"sorted":""}">${c.l}${S.sortKey===c.k?(S.sortDir>0?" ▲":" ▼"):""}</th>`).join("");
+  let body=rows.map(c=>{
+    let tds=cols.map(col=>{
+      const v=col.g(c);
+      if(col.delta){
+        const dd=deltaOf(c,col.pol,S.tableMetric);
+        const cls=dd.n&&dd.wins===dd.n?"full":(dd.wins>0?"part":"none");
+        const sgn = dd.good>0?"pos":"neg";
+        return `<td><span class="delta ${sgn}">${fmtSigned(v,md.unit==="hrs"?2:1)}</span><span class="winbadge ${cls}">${dd.wins}/${dd.n}</span></td>`;
+      }
+      if(col.k==="tables") return `<td class="lead">${v} tables</td>`;
+      if(col.k==="rate") return `<td>${v}/hr</td>`;
+      return `<td>${fmt(v,md.unit)}</td>`;
+    }).join("");
+    return `<tr data-key="${c.tables}|${c.rate}">${tds}</tr>`;
+  }).join("");
+
+  return `<div class="panel"><h2>Data table · ${md.label}</h2>
+    <p class="desc">All ${d.cells.length} regimes. Click a header to sort, a row for full detail. Δ shows candidate − Standard with per-seed win stability.</p>
+    <div style="overflow:auto"><table class="grid"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+}
+
+/* ---------------- drawer ---------------- */
+function openCell(key){
+  const c=cellByKey(key); if(!c) return;
+  S.cellKey=key;
+  const d=ds(); const cfg=d.config||{};
+  const cs=candidates();
+
+  const param=(k,v)=>`<div class="p"><span>${k}</span><b>${v}</b></div>`;
+  const paramsHtml=[
+    param("table inventory", c.tables), param("active at start", c.active_tables),
+    param("arrival rate", c.rate+" /hr"), param("horizon", (cfg.horizon_min||0)+" min"),
+    param("arrivals", cfg.arrival_mode), param("formation", cfg.formation_mode),
+    param("behavior", cfg.behavior), param("equity samples", cfg.equity_samples),
+    param("seeds", c.seeds.join(", ")), param("source", c.source_file),
+  ].join("");
+
+  // stability callouts
+  let callouts="";
+  cs.forEach(p=>{
+    const rowFor=(mk)=>{
+      const dd=deltaOf(c,p,mk); const md=metricDef(mk);
+      const cls=dd.n&&dd.wins===dd.n?"full":(dd.wins>0?"part":"none");
+      const chips=Object.keys(dd.deltas).sort().map(s=>`<span class="seedchip ${dd.deltas[s]*dd.sign>0?"pos":"neg"}">seed ${s}: ${fmtSigned(dd.deltas[s],md.unit==="hrs"?2:1)}</span>`).join("");
+      return `<div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <span style="font-size:12.5px;color:var(--muted)">${md.label}</span>
+          <span><b style="font-variant-numeric:tabular-nums">${fmtSigned(dd.meanRaw,md.unit==="hrs"?2:1)}</b> <span class="winbadge ${cls}">${dd.wins}/${dd.n} seeds</span></span>
+        </div><div class="seedchips">${chips}</div></div>`;
+    };
+    callouts+=`<div class="callout"><div class="ctitle"><span class="poldot" style="background:${polColor(p)}"></span>${polLabel(p)} vs Standard</div>
+      ${rowFor("vulnerable_paid_seat_hours")}${rowFor("total_paid_seat_hours")}</div>`;
+  });
+
+  // per-policy means table
+  const metricsShown=d.metrics;
+  let meanHead=`<th>Metric</th>`+d.policies.map(p=>`<th><span class="poldot" style="background:${polColor(p)}"></span>${polLabel(p)}</th>`).join("");
+  let meanBody=metricsShown.map(m=>{
+    const vals=d.policies.map(p=>c.means[p]?.[m.key]);
+    const valid=vals.filter(v=>v!=null);
+    const best = m.lower_is_better ? Math.min(...valid) : Math.max(...valid);
+    let tds=d.policies.map((p,i)=>{
+      const v=vals[i];
+      const isBest = v!=null && valid.length>1 && v===best;
+      return `<td class="${isBest?"best":""}">${fmt(v,m.unit)}</td>`;
+    }).join("");
+    return `<tr><td>${m.label}</td>${tds}</tr>`;
+  }).join("");
+
+  // per-seed runs
+  const coreMetrics=["total_paid_seat_hours","vulnerable_paid_seat_hours","arrival_seated_count","arrival_balk_count","formation_activation_count","final_active_tables"]
+    .filter(k=>d.metrics.some(m=>m.key===k));
+  let runHead=`<th>Seed</th><th>Policy</th>`+coreMetrics.map(k=>`<th>${metricDef(k).label}</th>`).join("");
+  let runBody="";
+  const bySeed={}; c.runs.forEach(r=>{ (bySeed[r.seed]=bySeed[r.seed]||[]).push(r); });
+  Object.keys(bySeed).sort().forEach(seed=>{
+    const base=bySeed[seed].find(r=>r.policy==="standard");
+    bySeed[seed].forEach(r=>{
+      let tds=coreMetrics.map(k=>{
+        let cell=fmt(r[k],metricDef(k).unit);
+        if((k==="vulnerable_paid_seat_hours"||k==="total_paid_seat_hours") && base && r.policy!=="standard"){
+          const dv=r[k]-base[k];
+          cell+=` <span class="delta ${dv>0?"pos":"neg"}" style="font-size:11px">${fmtSigned(dv,1)}</span>`;
+        }
+        return `<td>${cell}</td>`;
+      }).join("");
+      runBody+=`<tr><td>${seed}</td><td><span class="poldot" style="background:${polColor(r.policy)}"></span>${polLabel(r.policy)}</td>${tds}</tr>`;
+    });
+  });
+
+  document.getElementById("drawer").innerHTML=`
+    <div class="dhead">
+      <div><h3>${c.tables} tables · ${c.rate}/hr</h3>
+      <div class="meta">${c.active_tables} active at start · ${cfg.horizon_min} min · ${c.seeds.length} seeds · ${cfg.formation_mode}</div></div>
+      <button class="x" id="dClose">×</button>
+    </div>
+    <div class="dbody">
+      <div class="sec"><h4>Run parameters</h4><div class="params">${paramsHtml}</div></div>
+      <div class="sec"><h4>Win stability vs Standard</h4>${callouts}</div>
+      <div class="sec"><h4>Per-policy means (best in row highlighted)</h4>
+        <table class="mini"><thead><tr>${meanHead}</tr></thead><tbody>${meanBody}</tbody></table></div>
+      <div class="sec"><h4>Per-seed runs (Δ vs Standard within seed)</h4>
+        <table class="mini"><thead><tr>${runHead}</tr></thead><tbody>${runBody}</tbody></table></div>
+    </div>`;
+  document.getElementById("dClose").onclick=closeDrawer;
+  document.getElementById("drawer").classList.add("open");
+  document.getElementById("scrim").classList.add("open");
+}
+function closeDrawer(){ S.cellKey=null; document.getElementById("drawer").classList.remove("open"); document.getElementById("scrim").classList.remove("open"); }
+
+/* ---------------- wiring ---------------- */
+function wireMain(){
+  document.querySelectorAll(".cell[data-key]").forEach(el=>{
+    el.onclick=()=>openCell(el.dataset.key);
+    el.onmousemove=e=>{ const c=cellByKey(el.dataset.key); showCellTip(e,c); };
+    el.onmouseleave=hideTip;
+  });
+  document.querySelectorAll("table.grid tbody tr[data-key]").forEach(tr=> tr.onclick=()=>openCell(tr.dataset.key));
+  document.querySelectorAll("table.grid th[data-sk]").forEach(th=> th.onclick=()=>{
+    if(S.sortKey===th.dataset.sk) S.sortDir*=-1; else { S.sortKey=th.dataset.sk; S.sortDir=-1; }
+    renderMain();
+  });
+  document.querySelectorAll("circle.tpt").forEach(ci=>{
+    ci.onmousemove=e=>showTextTip(e, ci.dataset.tip);
+    ci.onmouseleave=hideTip;
+  });
+}
+function showCellTip(e,c){
+  if(!c) return;
+  const d=ds();
+  let rows=d.policies.map(p=>`<div class="row"><span>${polLabel(p)} vuln</span> ${fmt(c.means[p]?.vulnerable_paid_seat_hours,"hrs")}</div>`).join("");
+  rows+=d.policies.map(p=>`<div class="row"><span>${polLabel(p)} total</span> ${fmt(c.means[p]?.total_paid_seat_hours,"hrs")}</div>`).join("");
+  setTip(e, `<div class="tt">${c.tables} tables · ${c.rate}/hr</div>${rows}<div class="row" style="margin-top:4px;color:#7c8aa3">click for detail</div>`);
+}
+function showTextTip(e,txt){ setTip(e,`<div class="row">${txt}</div>`); }
+function setTip(e,html){ const t=document.getElementById("tip"); t.innerHTML=html; t.classList.add("on");
+  const pad=14; let x=e.clientX+pad, y=e.clientY+pad;
+  const r=t.getBoundingClientRect();
+  if(x+r.width>window.innerWidth-8) x=e.clientX-r.width-pad;
+  if(y+r.height>window.innerHeight-8) y=e.clientY-r.height-pad;
+  t.style.left=x+"px"; t.style.top=y+"px";
+}
+function hideTip(){ document.getElementById("tip").classList.remove("on"); }
+
+/* ---------------- csv ---------------- */
+function downloadCSV(){
+  const d=ds();
+  const head=["tables","active_tables","rate","policy",...METRIC_LIST(d)];
+  const lines=[head.join(",")];
+  d.cells.forEach(c=> d.policies.forEach(p=>{
+    const row=[c.tables,c.active_tables,c.rate,p,...METRIC_LIST(d).map(k=>c.means[p]?.[k]??"")];
+    lines.push(row.join(","));
+  }));
+  const blob=new Blob([lines.join("\n")],{type:"text/csv"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=`${d.id}-means.csv`; a.click();
+}
+function METRIC_LIST(d){ return d.metrics.map(m=>m.key); }
+
+/* ---------------- boot ---------------- */
+function renderAll(){ renderConfig(); renderStory(); renderToolbar(); renderMain(); }
+document.getElementById("scrim").onclick=closeDrawer;
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDrawer(); });
+initDatasetDefaults();
+renderAll();
+</script>
+</body>
+</html>
