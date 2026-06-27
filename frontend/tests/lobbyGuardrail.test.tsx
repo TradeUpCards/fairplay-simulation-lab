@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+// @vitest-environment happy-dom
 import { describe, it, expect, afterEach } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import { PlayerLobbyView } from '../src/views/PlayerLobby'

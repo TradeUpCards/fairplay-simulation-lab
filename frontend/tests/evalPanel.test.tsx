@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+// @vitest-environment happy-dom
 import { describe, it, expect, afterEach } from 'vitest'
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { EvalPanelView } from '../src/views/EvalPanel'
