@@ -49,3 +49,5 @@ CLAUDE_SESSION_HANDOFF.md
 .cache/
 .design-shots/
 .playwright-mcp/
+.vercel
+.env*
