@@ -196,6 +196,13 @@ export const playApi = {
     post<PlayEnvelope>(`/api/play/${sid}/action`, { kind, amount }),
   coach: (sid: string): Promise<{ session_id: string; coaching: CoachResult; version?: string }> =>
     post<{ session_id: string; coaching: CoachResult; version?: string }>(`/api/play/${sid}/coach`),
+  // The instant grounded review (per-decision equity) — fetched separately from the
+  // action response so the hand result shows immediately and this fills in a beat later.
+  review: async (sid: string): Promise<{ review: HandReview | null; summary_ms?: number }> => {
+    const res = await fetch(`${API_BASE}/api/play/${sid}/review`)
+    if (!res.ok) throw new Error(`review failed (${res.status})`)
+    return (await res.json()) as { review: HandReview | null; summary_ms?: number }
+  },
 }
 
 /** The bot archetypes a player can seat, with friendly labels for the picker. */

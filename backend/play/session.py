@@ -299,16 +299,10 @@ class PlaySession:
     def state(self) -> PlayState:
         if self.hand.complete:
             rec = self.hand.record
-            # Instant, LLM-free review: the opponent's named leak + each decision's
-            # equity. Shown immediately so the player never waits on the model.
-            review = None
-            if self.summary:
-                s = self.summary
-                review = {
-                    "opponent": {"label": s["decisive_opponent"]["style_label"],
-                                 "leak": s["decisive_opponent"]["leak"]},
-                    "decisions": getattr(self, "_review_decisions", []),  # every decision
-                }
+            # Instant, LLM-free review — but only if the equity build has ALREADY run
+            # (fetched via /review). state() must not trigger it, or the hand result
+            # would wait on the equity again.
+            review = self._grounded_review()
             return PlayState(
                 hand_id=self.hand_id, complete=True, hero_seat=self.hero_seat,
                 max_seats=self.max_seats, mystery=not self.reveal,
@@ -357,8 +351,9 @@ class PlaySession:
                                 voluntary=(obs.street == 0 and obs.to_call > 0))
 
         self._obs = self.hand.submit(decision)
-        if self.hand.complete:
-            self._build_summary()
+        # NB: do NOT build the summary here — its Monte-Carlo equity (every decision)
+        # would block the action response, so the hand RESULT would wait on the REVIEW.
+        # The summary is built lazily when the review/coach is fetched (off this path).
         return self.state()
 
     # --------------------------------------------------- coach assembly ---
@@ -439,7 +434,31 @@ class PlaySession:
 
     @property
     def summary(self) -> Optional[dict[str, Any]]:
-        return getattr(self, "_summary", None)
+        # Lazy: the (slow) equity build runs on first access — i.e. when the review or
+        # coach is fetched, never on the action response. ``_summary`` is set (possibly
+        # to None for a no-decision hand) once the build has run.
+        if not hasattr(self, "_summary"):
+            self._build_summary()
+        return self._summary
+
+    def _grounded_review(self) -> Optional[dict[str, Any]]:
+        """The instant LLM-free review dict, from an ALREADY-built summary. Returns None
+        if the equity hasn't been computed yet (so ``state`` never triggers the build)."""
+        s = getattr(self, "_summary", None)
+        if not s:
+            return None
+        return {
+            "opponent": {"label": s["decisive_opponent"]["style_label"],
+                         "leak": s["decisive_opponent"]["leak"]},
+            "decisions": getattr(self, "_review_decisions", []),
+        }
+
+    def review(self) -> Optional[dict[str, Any]]:
+        """Public: ensure the (lazy) equity build has run, then return the review."""
+        if not self.hand.complete:
+            raise RuntimeError("hand is not complete yet")
+        _ = self.summary  # triggers the build if needed
+        return self._grounded_review()
 
     def coaching(self, *, client: Any = None, model: str = LIVE_COACH_MODEL) -> Optional[dict[str, Any]]:
         if not self.hand.complete:

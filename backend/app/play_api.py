@@ -115,6 +115,18 @@ def get_coaching(sid: str) -> dict:
     return {"session_id": sid, "coaching": session.coaching(), "version": _version()}
 
 
+@router.get("/{sid}/review")
+def get_review(sid: str) -> dict:
+    """The instant LLM-free grounded review (opponent leak + per-decision equity).
+    Triggers the lazy equity build — kept OFF the action response so the hand result
+    shows immediately and the review fills in a beat later."""
+    session = _get(sid)
+    if not session.hand.complete:
+        raise HTTPException(status_code=409, detail="hand is not complete yet")
+    return {"session_id": sid, "review": session.review(),
+            "summary_ms": getattr(session, "_summary_ms", 0)}
+
+
 @router.get("/{sid}/coach/stream")
 async def coach_stream(sid: str) -> EventSourceResponse:
     """Stream the coaching as it generates (SSE). Each `delta` event is a JSON-encoded

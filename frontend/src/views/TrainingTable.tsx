@@ -495,6 +495,7 @@ export function TrainingTable() {
   const [coachBusy, setCoachBusy] = useState(false)
   const [autoCoach, setAutoCoach] = useState(true)
   const [partial, setPartial] = useState<Coaching | null>(null)
+  const [review, setReview] = useState<HandReview | null>(null) // grounded review (fetched on complete)
   const [debug, setDebug] = useState<{
     clientMs: number
     ttfaMs: number
@@ -521,6 +522,7 @@ export function TrainingTable() {
     setError(null)
     setCoach(null)
     setPartial(null)
+    setReview(null)
     try {
       const nSeats = slots.filter(Boolean).length + 1
       const next = await playApi.newHand({
@@ -548,8 +550,12 @@ export function TrainingTable() {
     setError(null)
     try {
       const next = await playApi.act(sid, kind, amount)
-      setEnv(next)
-      if (next.state.complete && autoCoach) startCoach(sid)
+      setEnv(next) // the RESULT shows immediately (no equity on this path)
+      if (next.state.complete) {
+        // grounded review (per-decision equity) fills in a beat after the result
+        playApi.review(sid).then((r) => setReview(r.review)).catch(() => {})
+        if (autoCoach) startCoach(sid)
+      }
     } catch (e) {
       setError(String((e as Error).message))
     } finally {
@@ -770,17 +776,22 @@ export function TrainingTable() {
       {/* right column: AI coach and hand action, each with its OWN scroll */}
       <aside className="flex min-h-0 flex-col gap-4">
         <div className="min-h-0 overflow-y-auto lg:flex-1">
-          {st?.complete && (st.review || coach || partial) ? (
-            // One card: the grounded review paints instantly and stays put; the AI coach
-            // streams its verdicts/reasoning INTO those same rows (no overwrite/swap).
+          {st?.complete && (review || coach || partial || coachBusy) ? (
+            // One card: the grounded review (fetched a beat after the result) paints and
+            // stays put; the AI coach streams its verdicts INTO those same rows.
             <ReviewCoachCard
-              review={st.review}
+              review={review}
               coaching={partial ?? coach?.coaching ?? null}
               streaming={!!partial && coachBusy}
               busy={coachBusy && !partial}
               guardrail={!!coach && !coach.coaching}
               onCoach={!autoCoach && !coach && !coachBusy && sid ? () => startCoach(sid) : undefined}
             />
+          ) : st?.complete ? (
+            <div className="rounded-xl border border-line bg-surface p-4 text-[0.84rem] text-muted">
+              <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-brass" />
+              Reviewing the hand…
+            </div>
           ) : (
             <div className="rounded-xl border border-dashed border-line bg-surface-2 p-4 text-[0.84rem] text-muted">
               Play a hand to the end and the AI coach reviews your decisions against the opponents’ specific leaks.
