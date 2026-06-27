@@ -34,31 +34,44 @@ export function seatPositions(n: number): { top: string; left: string }[] {
   })
 }
 
-/** A round seat avatar — archetype glyph on a hue-derived felt, same as the table. */
+/** A round seat avatar — archetype glyph on a hue-derived felt, same as the table.
+ *  When `imageUrl` is given it shows that portrait instead of the emoji (the avatar
+ *  cast); the emoji remains the zero-asset fallback. */
 export function SeatAvatar({
   archetype,
   label,
   isHero = false,
   size = 'md',
+  imageUrl,
 }: {
   archetype?: string | null
   label: string
   isHero?: boolean
-  size?: 'sm' | 'md'
+  size?: 'sm' | 'md' | 'lg'
+  imageUrl?: string | null
 }) {
   const emoji = isHero ? '🧑' : (ARCH_AVATAR[archetype ?? ''] ?? '🎭')
   const hue = hashHue(label)
-  const dim = size === 'sm' ? 'h-7 w-7 border text-[0.85rem]' : 'h-11 w-11 border-2 text-[1.35rem]'
+  const dim =
+    size === 'sm'
+      ? 'h-7 w-7 border text-[0.85rem]'
+      : size === 'lg'
+        ? 'h-14 w-14 border-2 text-[1.7rem]'
+        : 'h-11 w-11 border-2 text-[1.35rem]'
   return (
     <div
-      className={`grid ${dim} shrink-0 place-items-center rounded-full leading-none shadow-[0_1px_4px_rgba(0,0,0,0.45)]`}
+      className={`grid ${dim} shrink-0 place-items-center overflow-hidden rounded-full leading-none shadow-[0_1px_4px_rgba(0,0,0,0.45)]`}
       style={{
         borderColor: isHero ? 'var(--color-brass)' : '#3a4555',
         background: `radial-gradient(circle at 30% 25%, hsl(${hue} 42% 36%), hsl(${hue} 46% 15%))`,
       }}
       aria-hidden="true"
     >
-      {emoji}
+      {imageUrl ? (
+        <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        emoji
+      )}
     </div>
   )
 }

@@ -2,8 +2,33 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import { PlayerLobbyView } from '../src/views/PlayerLobby'
+import { LobbySidecar } from '../src/components/LobbySidecar'
 import { loadRouterLobby } from '../src/data/shim'
-import type { LobbyTable } from '../src/data/types'
+import type { LobbyTable, OperatorTableDetail } from '../src/data/types'
+
+/** An operator detail whose archetypes embed forbidden terms (predator/cluster). */
+const SAMPLE_DETAIL: OperatorTableDetail = {
+  table_id: 'T-22',
+  stakes: '$1/$2',
+  seated_count: 4,
+  max_seats: 6,
+  open_seats: 2,
+  full: false,
+  composition: [
+    { archetype: 'aggressive_predatory', count: 1 },
+    { archetype: 'cluster_member', count: 1 },
+    { archetype: 'recreational', count: 2 },
+  ],
+  health: 58,
+  band: 'medium',
+  terms: { P_pred: 20, P_frag: 10, P_clus: 8, P_bleed: 5 },
+  reasons: [{ code: 'predation_pressure', detail: 'skill-weighted aggressor load' }],
+  rank: 3,
+  badge: 'available',
+  fit: 0.5,
+  delta_health: -4,
+  seating_risk: 'medium',
+}
 
 afterEach(cleanup)
 
@@ -64,5 +89,29 @@ describe('player lobby guardrail — the player/operator wall (R17 / AE2)', () =
     const p104 = file.routed.find((r) => r.player_id === 'P-104')
     expect(p104).toBeDefined()
     expect(p104!.player_lobby.some((t) => t.table_id === 'T-11')).toBe(false)
+  })
+})
+
+describe('lobby sidecar — player view never leaks archetype (the curtain wall)', () => {
+  it('player view: seats render handles but no archetype text or attribute', () => {
+    render(<LobbySidecar detail={SAMPLE_DETAIL} onClose={() => {}} initialCurtain={false} />)
+    // Seats rendered (so the assertion below is meaningful, not vacuous).
+    expect(document.querySelectorAll('[data-testid="seat-row"]').length).toBeGreaterThan(0)
+    // No seat carries an archetype attribute in the player view.
+    expect(document.querySelectorAll('[data-archetype]').length).toBe(0)
+    // No operator/integrity language leaks into the player-view text.
+    const text = (document.body.textContent ?? '').toLowerCase()
+    for (const term of FORBIDDEN_TERMS) {
+      expect(text).not.toContain(term)
+    }
+  })
+
+  it('pit-boss view DOES reveal archetype (proves the player-view test discriminates)', () => {
+    render(<LobbySidecar detail={SAMPLE_DETAIL} onClose={() => {}} initialCurtain={true} />)
+    expect(document.querySelectorAll('[data-archetype]').length).toBeGreaterThan(0)
+    const text = (document.body.textContent ?? '').toLowerCase()
+    // The archetype names embed forbidden substrings — expected on the operator side.
+    expect(text).toContain('predator')
+    expect(text).toContain('cluster')
   })
 })

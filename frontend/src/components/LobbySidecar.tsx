@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import pokerTable from '../assets/poker-table.png'
 import type { OperatorTableDetail } from '../data/types'
 import { ARCH_AVATAR, SeatAvatar, seatPositions } from './tableArt'
+import { expandSeats, avatarFor, handleFor, stackFor, forecastFor } from '../lib/lobbyIdentity'
 
 /**
  * In-flow table detail panel (lives in a reserved column beside the lobby — never
@@ -99,14 +100,65 @@ function ViewTab({
   )
 }
 
+/**
+ * The seated players as large portraits. `reveal=false` (player view) shows only
+ * face + handle + stack — NO archetype, ever (the wall). `reveal=true` (pit-boss)
+ * adds the archetype glyph + tone and an illustrative sit-time forecast.
+ */
+function SeatList({ detail, reveal }: { detail: OperatorTableDetail; reveal: boolean }) {
+  const seats = expandSeats(detail.table_id, detail.composition)
+  if (seats.length === 0) {
+    return <p className="text-[0.74rem] text-[#6f7682]">Empty table — no one seated yet.</p>
+  }
+  return (
+    <ul className="space-y-1.5" aria-label={reveal ? 'who is seated (operator)' : 'who is seated'}>
+      {seats.map((s) => (
+        <li
+          key={s.id}
+          data-testid="seat-row"
+          {...(reveal ? { 'data-archetype': s.archetype } : {})}
+          className="flex items-center gap-2.5 rounded-md border border-[#23262d] bg-[rgba(0,0,0,0.22)] px-2 py-1.5"
+        >
+          <SeatAvatar
+            archetype={reveal ? s.archetype : undefined}
+            label={s.id}
+            imageUrl={avatarFor(s.id)}
+            size="lg"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="truncate text-[0.86rem] font-semibold text-[#f3ece0]">
+                {handleFor(s.id)}
+              </span>
+              <span className="font-mono text-[0.74rem] text-[#cdb98a]">${stackFor(s.id)}</span>
+            </div>
+            {reveal ? (
+              <div className="flex flex-wrap items-center gap-x-2 text-[0.7rem]">
+                <span className={`rounded-full border px-1.5 py-[0.05rem] ${archTone(s.archetype)}`}>
+                  {ARCH_AVATAR[s.archetype] ?? ''} {s.archetype.replace(/_/g, ' ')}
+                </span>
+                <span className="text-[#7e8694]">~{forecastFor(s.id, s.archetype)} min (est.)</span>
+              </div>
+            ) : (
+              <div className="text-[0.7rem] text-[#7e8694]">in the game</div>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export function LobbySidecar({
   detail,
   onClose,
+  initialCurtain = false,
 }: {
   detail: OperatorTableDetail
   onClose: () => void
+  initialCurtain?: boolean
 }) {
-  const [curtain, setCurtain] = useState(false)
+  const [curtain, setCurtain] = useState(initialCurtain)
   const band = detail.band ?? '—'
   const rec =
     detail.badge === 'recommended'
@@ -161,8 +213,9 @@ export function LobbySidecar({
               {detail.open_seats === 1 ? '' : 's'}
               {detail.full ? ' · table full' : ''}
             </p>
+            <SeatList detail={detail} reveal={false} />
             <p className="text-[0.68rem] leading-snug text-[#6f7682]">
-              The neutral preview a player sees. Switch to{' '}
+              The neutral preview a player sees — handles and stacks only. Switch to{' '}
               <span className="text-[#8b8276]">Pit-boss</span> to reveal who's seated and why this
               table is ranked where it is (operator-only).
             </p>
@@ -219,20 +272,8 @@ export function LobbySidecar({
             )}
 
             <div>
-              <div className="mb-1 text-[#8b8276]">Who's seated</div>
-              <div className="flex flex-wrap gap-1.5">
-                {detail.composition.length === 0 && (
-                  <span className="text-[0.74rem] text-[#6f7682]">empty table</span>
-                )}
-                {detail.composition.map((c) => (
-                  <span
-                    key={c.archetype}
-                    className={`rounded-full border px-1.5 py-[0.05rem] text-[0.7rem] ${archTone(c.archetype)}`}
-                  >
-                    {ARCH_AVATAR[c.archetype] ?? ''} {c.count}× {c.archetype.replace(/_/g, ' ')}
-                  </span>
-                ))}
-              </div>
+              <div className="mb-1.5 text-[#8b8276]">Who's seated</div>
+              <SeatList detail={detail} reveal />
             </div>
 
             {detail.reasons && detail.reasons.length > 0 && (
