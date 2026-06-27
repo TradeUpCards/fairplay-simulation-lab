@@ -208,6 +208,50 @@ def test_liveness_seeds_healthy_forming_table_instead_of_topping_off_fuller_bad_
     assert d.reason == "liveness_forming"
 
 
+def test_liveness_grows_existing_one_player_table_before_seeding_empty_table():
+    class StubAdapter:
+        classifications = {}
+
+        def recommend(self, seeker_int_id, live_tables):
+            return Placement(
+                table_id="T-empty",
+                badge="good_fit",
+                rank=95.0,
+                health=95.0,
+                health_band="healthy",
+                operator_view=[
+                    {
+                        "table_id": "T-empty", "rank": 95.0, "badge": "good_fit",
+                        "fit": 95.0, "health": 95.0,
+                        "health_band": "healthy",
+                        "delta_health": 0.0, "seating_risk": "low",
+                        "integrity_gated": False,
+                    },
+                    {
+                        "table_id": "T-one", "rank": 80.0, "badge": "good_fit",
+                        "fit": 80.0, "health": 92.0,
+                        "health_band": "healthy",
+                        "delta_health": 0.0, "seating_risk": "low",
+                        "integrity_gated": False,
+                    },
+                ],
+            )
+
+    empty = _table("T-empty", [], max_seats=6, style="Low Stakes / Beginner-Friendly",
+                   table_mode="forming")
+    one_player = _table("T-one", [62], max_seats=6,
+                        style="Low Stakes / Beginner-Friendly",
+                        table_mode="forming")
+
+    d = FairPlayLivenessPolicy(StubAdapter()).choose(
+        Seeker(104, "new"),
+        [empty, one_player],
+    )
+
+    assert d.table_id == "T-one"
+    assert d.reason == "liveness_forming"
+
+
 # --- config switch --------------------------------------------------------
 
 def test_make_policy_switch(adapter):
