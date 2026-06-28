@@ -46,6 +46,14 @@ def test_large_room_sweep_reuses_shared_arrivals_by_policy(tmp_path):
     assert next(iter(arrival_counts)) > 0
     assert all(row["total_paid_seat_hours"] >= row["vulnerable_paid_seat_hours"]
                for row in payload["runs"])
+    for row in payload["runs"]:
+        assert "departure_rate_per_hour" in row
+        assert "terminal_churn_rate_per_hour" in row
+        assert "reseek_departure_rate_per_hour" in row
+        assert "demand_drop_rate" in row
+        assert row["departure_rate_per_hour"] >= row["terminal_churn_rate_per_hour"]
+        assert row["departure_rate_per_hour"] >= row["reseek_departure_rate_per_hour"]
+        assert 0.0 <= row["demand_drop_rate"] <= 1.0
 
 
 DEPARTURE_KEYS = (

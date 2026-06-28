@@ -35,6 +35,14 @@ METRICS = [
     ("arrival_count", "Arrivals", "n", False),
     ("arrival_seated_count", "Arrivals seated", "n", False),
     ("arrival_balk_count", "Arrival balks", "n", True),
+    ("arrival_balk_rate", "Arrival balk rate", "pct", True),
+    ("demand_drop_rate", "Demand drop rate", "pct", True),
+    ("seated_departure_count", "Seated departures", "n", True),
+    ("terminal_churn_count", "Non-reseat exits", "n", True),
+    ("reseek_departure_count", "Re-seat departures", "n", True),
+    ("departure_rate_per_hour", "Departures / hr", "rate", True),
+    ("terminal_churn_rate_per_hour", "Non-reseat exits / hr", "rate", True),
+    ("reseek_departure_rate_per_hour", "Re-seat departures / hr", "rate", True),
     ("wait_balk_count", "Wait balks", "n", True),
     ("break_count", "Table breaks", "n", True),
     ("break_balk_count", "Break balks", "n", True),
@@ -85,13 +93,25 @@ def normalize_cell(path):
     policies = meta.get("policies") or sorted({r["policy"] for r in runs})
     seeds = sorted({r["seed"] for r in runs})
 
-    # rate / table shape: cells are single-rate in the static sweep; if a file
-    # carries multiple rates we split per rate so the grid stays clean.
-    rates = sorted({float(r["arrival_rate_per_hour"]) for r in runs})
+    # rate / table shape: older files carry table shape in meta; agentic runs
+    # carry it per-row because a single result can contain multiple cells.
+    shape_keys = sorted({
+        (
+            r.get("tables", meta.get("tables")),
+            r.get("active_tables", meta.get("active_tables")),
+            float(r["arrival_rate_per_hour"]),
+        )
+        for r in runs
+    })
 
     cells = []
-    for rate in rates:
-        rate_runs = [r for r in runs if float(r["arrival_rate_per_hour"]) == rate]
+    for tables, active_tables, rate in shape_keys:
+        rate_runs = [
+            r for r in runs
+            if r.get("tables", meta.get("tables")) == tables
+            and r.get("active_tables", meta.get("active_tables")) == active_tables
+            and float(r["arrival_rate_per_hour"]) == rate
+        ]
 
         # per-policy means across seeds
         means = {}
@@ -148,8 +168,8 @@ def normalize_cell(path):
 
         cells.append(
             {
-                "tables": meta.get("tables"),
-                "active_tables": meta.get("active_tables"),
+                "tables": tables,
+                "active_tables": active_tables,
                 "rate": rate,
                 "source_file": os.path.basename(path),
                 "policies": policies,
@@ -174,6 +194,7 @@ def build_dataset(dataset_id, label, paths):
             continue
         meta, cells = loaded
         if not config:
+            fixed = meta.get("fixed", {})
             config = {
                 k: meta.get(k)
                 for k in (
@@ -189,6 +210,16 @@ def build_dataset(dataset_id, label, paths):
                     "note",
                 )
             }
+            if fixed:
+                config.update({
+                    "players": fixed.get("players"),
+                    "fixture_seed": fixed.get("fixture_seed"),
+                    "horizon_min": fixed.get("horizon_min"),
+                    "equity_samples": fixed.get("samples"),
+                    "formation_mode": fixed.get("formation_mode"),
+                    "behavior": fixed.get("behavior"),
+                })
+                config["agentic_experiment"] = meta.get("experiment")
         for c in cells:
             seeds_seen.update(c["seeds"])
             for p in c["policies"]:
@@ -240,6 +271,12 @@ def dataset_files(out_dir):
     for path in bench:
         name = os.path.splitext(os.path.basename(path))[0]
         groups.append((name, "Benchmark · " + name.replace("large-room-benchmark-", ""), [path]))
+    agentic_groups = defaultdict(list)
+    for path in sorted(glob.glob(os.path.join(out_dir, "agentic*", "experiment-*-results.json"))):
+        parent = os.path.basename(os.path.dirname(path))
+        agentic_groups[parent].append(path)
+    for parent, paths in sorted(agentic_groups.items()):
+        groups.append((parent, "Agentic · " + parent.replace("agentic-", ""), paths))
     return groups
 
 

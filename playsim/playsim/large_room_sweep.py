@@ -21,6 +21,13 @@ from .room import COHORT, RoomSim
 from .router_adapter import RouterAdapter
 
 DEFAULT_POLICIES = ("standard", "fairplay", "fairplay_liveness")
+RESEEK_EXIT_REASONS = frozenset({
+    "table_thinning",
+    "table_break",
+    "break",
+    "bad_fit_decline",
+    "boredom_low_action",
+})
 
 # Terminal site-departure buckets, keyed off ``session.exit_reason``. These are
 # players who *left the room*, not mid-session table relocations (table_break /
@@ -124,24 +131,57 @@ def _metrics(result, intents) -> dict:
         state = table["final_state"]
         final_states[state] = final_states.get(state, 0) + 1
 
+    horizon_hours = result.horizon_min / 60.0 if result.horizon_min else 0.0
+    non_horizon_sessions = [
+        s for s in result.sessions
+        if s.get("exit_reason") != "horizon"
+    ]
+    reseek_departures = [
+        s for s in non_horizon_sessions
+        if s.get("exit_reason") in RESEEK_EXIT_REASONS
+    ]
+    terminal_churn = [
+        s for s in non_horizon_sessions
+        if s.get("exit_reason") not in RESEEK_EXIT_REASONS
+    ]
+    arrival_count = len(intents)
+    arrival_balk_count = sum(
+        1 for d in result.routing_decisions
+        if d.get("origin") == "arrival" and d.get("table_id") is None
+    )
+    wait_balk_count = len(result.wait_balked)
+
     instr = result.instrumentation
     return {
         "total_paid_seat_hours": round(sum(result.seat_minutes.values()) / 60.0, 3),
         "vulnerable_paid_seat_hours": round(
             sum(result.seat_minutes[p] for p in cohort_players) / 60.0, 3
         ),
-        "arrival_count": len(intents),
+        "arrival_count": arrival_count,
         "arrival_seated_count": len(arrival_seated),
-        "arrival_balk_count": sum(
-            1 for d in result.routing_decisions
-            if d.get("origin") == "arrival" and d.get("table_id") is None
-        ),
+        "arrival_balk_count": arrival_balk_count,
+        "arrival_balk_rate": round(arrival_balk_count / arrival_count, 4) if arrival_count else 0.0,
+        "demand_drop_rate": round(
+            (arrival_balk_count + wait_balk_count) / arrival_count, 4
+        ) if arrival_count else 0.0,
+        "seated_departure_count": len(non_horizon_sessions),
+        "terminal_churn_count": len(terminal_churn),
+        "reseek_departure_count": len(reseek_departures),
+        "departure_rate_per_hour": round(
+            len(non_horizon_sessions) / horizon_hours, 4
+        ) if horizon_hours else 0.0,
+        "terminal_churn_rate_per_hour": round(
+            len(terminal_churn) / horizon_hours, 4
+        ) if horizon_hours else 0.0,
+        "reseek_departure_rate_per_hour": round(
+            len(reseek_departures) / horizon_hours, 4
+        ) if horizon_hours else 0.0,
         "break_count": sum(1 for e in result.seat_events if e.get("event") == "break"),
         "break_balk_count": sum(
             1 for d in result.routing_decisions
             if d.get("origin") == "break_displace" and d.get("table_id") is None
         ),
-        "wait_balk_count": len(result.wait_balked),
+        "wait_balk_count": wait_balk_count,
         "no_good_existing_seat_count": instr["no_good_existing_seat_count"],
         "empty_table_available_count": instr["empty_table_available_count"],
         "sub_quorum_table_available_count": instr["sub_quorum_table_available_count"],
@@ -173,6 +213,14 @@ def summarize_runs(runs: list[dict]) -> list[dict]:
         "arrival_count",
         "arrival_seated_count",
         "arrival_balk_count",
+        "arrival_balk_rate",
+        "demand_drop_rate",
+        "seated_departure_count",
+        "terminal_churn_count",
+        "reseek_departure_count",
+        "departure_rate_per_hour",
+        "terminal_churn_rate_per_hour",
+        "reseek_departure_rate_per_hour",
         "break_count",
         "break_balk_count",
         "wait_balk_count",
@@ -320,8 +368,8 @@ def render_markdown_report(payload: dict) -> str:
         "North star: total paid seat-hours across all users and tables. "
         "Vulnerable paid seat-hours remains the FairPlay cohort check.",
         "",
-        "| arrival/hr | policy | total seat-hrs | vulnerable seat-hrs | arrivals seated | breaks | wait balks | forming seats | activations | final active |",
-        "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| arrival/hr | policy | total seat-hrs | vulnerable seat-hrs | arrivals seated | demand drop | departures/hr | non-reseat exits/hr | breaks | wait balks | forming seats | activations | final active |",
+        "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in payload["summary"]:
         lines.append(
@@ -329,6 +377,9 @@ def render_markdown_report(payload: dict) -> str:
             f"{row['total_paid_seat_hours_mean']:.2f} | "
             f"{row['vulnerable_paid_seat_hours_mean']:.2f} | "
             f"{row['arrival_seated_count_mean']:.1f} | "
+            f"{row['demand_drop_rate_mean']:.1%} | "
+            f"{row['departure_rate_per_hour_mean']:.2f} | "
+            f"{row['terminal_churn_rate_per_hour_mean']:.2f} | "
             f"{row['break_count_mean']:.1f} | "
             f"{row['wait_balk_count_mean']:.1f} | "
             f"{row['forming_seat_count_mean']:.1f} | "

@@ -253,6 +253,36 @@ def _large_room_sweep(args) -> int:
     return 0
 
 
+def _agentic(args) -> int:
+    from .agentic import default_spec, load_spec, run_agentic_loop, write_spec
+
+    if args.write_default_spec:
+        spec = default_spec()
+        write_spec(spec, Path(args.write_default_spec))
+        print(f"\n  wrote default agentic experiment spec to {args.write_default_spec}\n")
+        return 0
+
+    spec = load_spec(Path(args.spec)) if args.spec else default_spec()
+    ledger = run_agentic_loop(
+        spec,
+        out_dir=Path(args.out_dir),
+        max_iterations=args.max_iterations,
+        planner=args.planner,
+        planner_model=args.llm_model,
+    )
+    print(
+        f"\n  agentic experiment loop   iterations={ledger['completed_iterations']}   "
+        f"planner={ledger['planner']}   out={args.out_dir}\n"
+    )
+    for item in ledger["ledger"]:
+        print(
+            f"  [{item['iteration']}] verdict={item['verdict']}  "
+            f"report={item['report']}"
+        )
+    print(f"\n  ledger={Path(args.out_dir) / 'ledger.json'}\n")
+    return 0
+
+
 def _room_sim(args) -> int:
     from .service import simulate_room
 
@@ -417,6 +447,23 @@ def main(argv=None) -> int:
     lrs.add_argument("--out-json", default="out/large-room-sweep.json")
     lrs.add_argument("--out-md", default="out/large-room-sweep.md")
     lrs.set_defaults(fn=_large_room_sweep)
+
+    ag = sub.add_parser(
+        "agentic",
+        help="run a bounded autonomous Standard-vs-FairPlay-liveness experiment loop",
+    )
+    ag.add_argument("--spec", help="JSON experiment spec; defaults to the built-in v1 spec")
+    ag.add_argument("--out-dir", default="out/agentic",
+                    help="directory for specs, results, evaluations, reports, and ledger")
+    ag.add_argument("--max-iterations", type=int,
+                    help="requested iteration cap; cannot exceed autonomy_contract.max_experiments")
+    ag.add_argument("--planner", choices=["rule", "llm"], default="rule",
+                    help="next-experiment planner (default: deterministic rule)")
+    ag.add_argument("--llm-model", default="gpt-5.5",
+                    help="OpenAI model for --planner llm (default: gpt-5.5)")
+    ag.add_argument("--write-default-spec",
+                    help="write the built-in default spec to this path and exit")
+    ag.set_defaults(fn=_agentic)
 
     rs = sub.add_parser(
         "room-sim",
