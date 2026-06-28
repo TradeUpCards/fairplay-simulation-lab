@@ -80,13 +80,23 @@ const DWELL_BASE: Record<string, number> = {
 }
 
 /**
- * Illustrative sit-duration forecast (minutes) for an identity. Operator-side only
- * (it leans on archetype). Seeded jitter keeps it stable and varied per player.
+ * Illustrative sit-duration forecast (minutes). Heuristic, not a trained model:
+ * an archetype dwell baseline + seeded jitter, then modulated by the *table's
+ * computed health* when provided — healthier table → longer expected sit (the
+ * FairPlay thesis). The health term is the real engine score; the mapping to
+ * minutes is illustrative. Operator-side (it leans on archetype).
  */
-export function forecastFor(id: string, archetype?: string | null): number {
+export function forecastFor(
+  id: string,
+  archetype?: string | null,
+  tableHealth?: number | null,
+): number {
   const base = DWELL_BASE[archetype ?? ''] ?? 60
   const jitter = (seedInt(id + ':dwell') % 41) - 20 // ±20 min
-  return Math.max(8, Math.round((base + jitter) / 5) * 5)
+  // health 0→100 maps to ×0.7→×1.3 (neutral ×1 at ~50). Undefined health = ×1.
+  const hm =
+    tableHealth == null ? 1 : 0.7 + 0.6 * (Math.max(0, Math.min(100, tableHealth)) / 100)
+  return Math.max(8, Math.round(((base + jitter) * hm) / 5) * 5)
 }
 
 export interface SyntheticSeat {

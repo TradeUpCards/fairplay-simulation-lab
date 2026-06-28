@@ -32,12 +32,13 @@ function archTone(a: string): string {
   return 'border-[#3a4757] bg-[#1c2028] text-[#b8c0cf]'
 }
 
-/** Seat ring on the real felt; `reveal` swaps neutral seats for archetype avatars. */
-function MiniTable({ detail, reveal }: { detail: OperatorTableDetail; reveal: boolean }) {
-  const seated = detail.composition.flatMap((c) => Array<string>(c.count).fill(c.archetype))
+/** Seat ring on the real felt — each seat shows the player's handle + balance
+ *  (same synthetic ids as the seat list below, so they always match). */
+function MiniTable({ detail }: { detail: OperatorTableDetail }) {
+  const seats = expandSeats(detail.table_id, detail.composition)
   const pos = seatPositions(detail.max_seats)
   return (
-    <div className="relative mx-auto my-2 aspect-3/2 w-full max-w-[17rem]">
+    <div className="relative mx-auto my-2 aspect-3/2 w-full max-w-[18rem]">
       <img
         src={pokerTable}
         className="absolute inset-0 h-full w-full rounded-[14px] object-cover"
@@ -46,30 +47,31 @@ function MiniTable({ detail, reveal }: { detail: OperatorTableDetail; reveal: bo
       />
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center leading-tight">
         <div className="font-mono text-[0.62rem] text-[#f0e8d6] [text-shadow:0_1px_3px_rgba(0,0,0,0.7)]">
-          {detail.table_id}
+          {detail.table_id.replace('LR-', 'T-')}
         </div>
         <div className="text-[0.6rem] text-[#dccf9f] [text-shadow:0_1px_3px_rgba(0,0,0,0.7)]">
           {detail.seated_count}/{detail.max_seats}
         </div>
       </div>
       {pos.map((p, i) => {
-        const arch = seated[i]
+        const s = seats[i]
         return (
           <div
             key={i}
             className="absolute -translate-x-1/2 -translate-y-1/2"
             style={{ left: p.left, top: p.top }}
           >
-            {!arch ? (
-              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-dashed border-[#3a4757] bg-[rgba(0,0,0,0.45)] text-[0.7rem] text-[#7a828e]">
+            {!s ? (
+              <span className="flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-[#3a4757] bg-[rgba(0,0,0,0.45)] text-[0.65rem] text-[#7a828e]">
                 +
               </span>
-            ) : reveal ? (
-              <SeatAvatar archetype={arch} label={`${detail.table_id}-${i}`} size="sm" />
             ) : (
-              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#4a5260] bg-[#39414c] text-[0.8rem] text-[#aeb6c2]">
-                🧑
-              </span>
+              <div className="flex min-w-[3.1rem] flex-col items-center rounded-[5px] border border-[#3a4555] bg-[rgba(8,10,14,0.82)] px-1 py-[0.1rem] leading-tight shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
+                <span className="max-w-[3.4rem] truncate text-[0.56rem] font-semibold text-[#e7e0d2]">
+                  {handleFor(s.id)}
+                </span>
+                <span className="font-mono text-[0.56rem] text-[#cdb98a]">${stackFor(s.id)}</span>
+              </div>
             )}
           </div>
         )
@@ -137,7 +139,9 @@ function SeatList({ detail, reveal }: { detail: OperatorTableDetail; reveal: boo
                 <span className={`rounded-full border px-1.5 py-[0.05rem] ${archTone(s.archetype)}`}>
                   {ARCH_AVATAR[s.archetype] ?? ''} {s.archetype.replace(/_/g, ' ')}
                 </span>
-                <span className="text-[#7e8694]">~{forecastFor(s.id, s.archetype)} min (est.)</span>
+                <span className="text-[#7e8694]">
+                  ~{forecastFor(s.id, s.archetype, detail.health)} min (est.)
+                </span>
               </div>
             ) : (
               <div className="text-[0.7rem] text-[#7e8694]">in the game</div>
@@ -204,7 +208,7 @@ export function LobbySidecar({
       </div>
 
       <div className="px-3 py-2 text-[0.8rem]">
-        <MiniTable detail={detail} reveal={curtain} />
+        <MiniTable detail={detail} />
 
         {!curtain ? (
           <div className="mt-1 space-y-2">

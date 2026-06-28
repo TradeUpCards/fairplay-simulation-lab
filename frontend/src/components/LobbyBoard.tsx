@@ -1,13 +1,16 @@
 import { useSyncExternalStore } from 'react'
-import type { LobbyRow, LobbySequence, SeatEvent } from '../data/types'
+import type { LobbyRow, LobbySequence, OperatorTableDetail, SeatEvent } from '../data/types'
 import { loadLobbySequence } from '../data/shim'
 import { useResource } from '../state/useResource'
 import { lobbyStore } from '../state/lobbyStore'
 import { ResourceBoundary } from './ResourceBoundary'
 import { LobbyDataTable } from './LobbyDataTable'
 import { LobbySidecar } from './LobbySidecar'
-import { SeatAvatar } from './tableArt'
+import { SeatAvatar, ARCH_AVATAR } from './tableArt'
 import { avatarFor, handleFor, forecastFor } from '../lib/lobbyIdentity'
+
+type OpDetailMap = Record<string, OperatorTableDetail>
+const tShort = (id: string | null | undefined) => (id ?? '—').replace('LR-', 'T-')
 
 /**
  * Demo Part 2 — staged as scenes. Scene 1 ("curtain down"): just the Standard
@@ -44,9 +47,8 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
     <div className="flex h-[62vh] w-full flex-col xl:h-[calc(62vh+2.875rem)] xl:w-[23rem] xl:shrink-0">
       {ui.selected && cur.op_detail?.[ui.selected] ? (
         <LobbySidecar
-          key={`${ui.selected}-${ui.revealed}`}
+          key={ui.selected}
           detail={cur.op_detail[ui.selected]}
-          initialCurtain={ui.revealed}
           onClose={() => lobbyStore.setSelected(null)}
         />
       ) : (
@@ -193,12 +195,16 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
               subtitle="packs the fullest table"
               accent="standard"
               events={cur.events?.standard ?? []}
+              opDetail={cur.op_detail}
+              prevOpDetail={prev?.op_detail}
             />
             <EventColumn
               title="FairPlay"
               subtitle="routes toward a healthy seat"
               accent="fairplay"
               events={cur.events?.fairplay ?? []}
+              opDetail={cur.op_detail}
+              prevOpDetail={prev?.op_detail}
             />
           </div>
         )}
@@ -217,47 +223,69 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
 
 /**
  * Scene-2 callout — a one-line, data-derived contrast of the two policies at this
- * step. Player-safe: occupancy facts only (full / occupied table counts), never a
- * score or archetype. Derived from the rows, not hand-written.
+ * step. Player-safe: occupancy facts only, never a score or archetype. The honest
+ * difference between the rooms is concentration: the SAME players fill the SAME
+ * number of tables, but Standard packs more of them to capacity (a few crowded
+ * tables) while FairPlay leaves seats open (spread thinner). Derived, not written.
  */
 function RevealHeadline({ standard, fairplay }: { standard: LobbyRow[]; fairplay: LobbyRow[] }) {
-  const full = (rs: LobbyRow[]) => rs.filter((r) => r.open_seats <= 0).length
-  const occupied = (rs: LobbyRow[]) => rs.filter((r) => r.seated_count > 0).length
-  const stdFull = full(standard)
-  const fpOcc = occupied(fairplay)
-  const fpFull = full(fairplay)
+  const fullCount = (rs: LobbyRow[]) => rs.filter((r) => r.open_seats <= 0).length
+  const seated = standard.reduce((n, r) => n + r.seated_count, 0)
+  const stdFull = fullCount(standard)
+  const fpFull = fullCount(fairplay)
+  const diverged = stdFull !== fpFull
 
   return (
     <div
-      className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-[#33415a] bg-[linear-gradient(180deg,rgba(47,106,138,0.16),rgba(0,0,0,0.18))] px-3 py-2 text-[0.84rem]"
+      className="mb-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded-md border border-[#33415a] bg-[linear-gradient(180deg,rgba(47,106,138,0.16),rgba(0,0,0,0.18))] px-3 py-2 text-[0.84rem]"
       data-testid="reveal-headline"
     >
-      <span aria-hidden className="text-[1rem]">🎭</span>
-      <span className="text-[#cdd4df]">Same players —</span>
-      <span className="font-semibold text-[#f0c98b]">Standard</span>
-      <span className="text-[#cdd4df]">
-        concentrates them into <strong className="text-[#f3ece0]">{stdFull}</strong> packed table
-        {stdFull === 1 ? '' : 's'};
-      </span>
-      <span className="font-semibold text-[#8be3a7]">FairPlay</span>
-      <span className="text-[#cdd4df]">
-        spreads them across <strong className="text-[#f3ece0]">{fpOcc}</strong> tables, only{' '}
-        <strong className="text-[#f3ece0]">{fpFull}</strong> full.
-      </span>
+      <span aria-hidden className="mr-0.5 text-[1rem]">⚖️</span>
+      {diverged ? (
+        <>
+          <span className="text-[#cdd4df]">
+            Same <strong className="text-[#f3ece0]">{seated}</strong> players —
+          </span>
+          <span className="font-semibold text-[#f0c98b]">Standard</span>
+          <span className="text-[#cdd4df]">
+            packs <strong className="text-[#f3ece0]">{stdFull}</strong> tables to capacity;
+          </span>
+          <span className="font-semibold text-[#8be3a7]">FairPlay</span>
+          <span className="text-[#cdd4df]">
+            keeps only <strong className="text-[#f3ece0]">{fpFull}</strong> full — open seats let it
+            spread players apart.
+          </span>
+        </>
+      ) : (
+        <span className="text-[#cdd4df]">
+          Same room so far. Hit{' '}
+          <span className="font-semibold text-[#f0c98b]">Simulate room activity</span> and watch{' '}
+          <span className="font-semibold text-[#f0c98b]">Standard</span> pack tables full while{' '}
+          <span className="font-semibold text-[#8be3a7]">FairPlay</span> keeps seats open.
+        </span>
+      )}
     </div>
   )
 }
 
-/** Archetype → the health term it pressures (operator-side framing for the drawer). */
-function impactOf(archetype: string | null | undefined): { label: string; tone: string } {
-  if (!archetype) return { label: 'neutral', tone: 'text-[#9098a4]' }
-  if (['aggressive_predatory', 'solver_like', 'grinder'].includes(archetype))
-    return { label: '↑ predation pressure', tone: 'text-[#e3a08b]' }
-  if (['new', 'recreational', 'promo_hunter'].includes(archetype))
-    return { label: '↑ fragility (vulnerable seat)', tone: 'text-[#8fd0ef]' }
-  if (['cluster_member', 'shared_device_household'].includes(archetype))
-    return { label: '↑ cluster signal', tone: 'text-[#e3c98b]' }
-  return { label: 'neutral', tone: 'text-[#9098a4]' }
+/** Health-change chip: table health before → after this round (real engine scores).
+ *  Lower health is worse, so a drop is warm/red, a rise cool/green. */
+function HealthDelta({ before, after }: { before?: number; after?: number }) {
+  if (after == null) return null
+  if (before == null) {
+    return <span className="text-[#a9b0bb]">health <strong className="text-[#d8d2c6]">{Math.round(after)}</strong></span>
+  }
+  const d = after - before
+  const tone = d < -0.5 ? 'text-[#e3a08b]' : d > 0.5 ? 'text-[#8be3a7]' : 'text-[#9098a4]'
+  const arrow = d < -0.5 ? '▼' : d > 0.5 ? '▲' : '•'
+  return (
+    <span className="text-[#a9b0bb]">
+      health <strong className="text-[#d8d2c6]">{Math.round(before)}</strong>
+      <span className="text-[#6f7682]">→</span>
+      <strong className="text-[#d8d2c6]">{Math.round(after)}</strong>{' '}
+      <span className={tone}>{arrow}{Math.abs(Math.round(d))}</span>
+    </span>
+  )
 }
 
 function EventColumn({
@@ -265,11 +293,15 @@ function EventColumn({
   subtitle,
   accent,
   events,
+  opDetail,
+  prevOpDetail,
 }: {
   title: string
   subtitle: string
   accent: 'standard' | 'fairplay'
   events: SeatEvent[]
+  opDetail?: OpDetailMap
+  prevOpDetail?: OpDetailMap
 }) {
   const head = accent === 'fairplay' ? 'text-[#8be3a7]' : 'text-[#cdd4df]'
   const sits = events.filter((e) => e.action === 'sit')
@@ -279,12 +311,14 @@ function EventColumn({
         <span className={`text-[0.9rem] font-semibold ${head}`}>{title}</span>
         <span className="text-[0.7rem] text-[#7e8694]">{subtitle}</span>
       </div>
-      <div className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
+      <div className="max-h-80 space-y-1.5 overflow-y-auto pr-1">
         {sits.length === 0 && <div className="text-[0.74rem] text-[#6f7682]">no arrivals this round</div>}
         {sits.map((e, i) => {
           const id = e.player_id
-          const impact = impactOf(e.archetype)
-          const mins = forecastFor(id, e.archetype)
+          const t = e.table_id ?? undefined
+          const after = t ? opDetail?.[t]?.health : undefined
+          const before = t ? prevOpDetail?.[t]?.health : undefined
+          const mins = forecastFor(id, e.archetype, after)
           return (
             <div
               key={`${id}-${i}`}
@@ -294,14 +328,19 @@ function EventColumn({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="truncate text-[0.82rem] font-semibold text-[#f3ece0]">
-                    {handleFor(id)}
+                    {ARCH_AVATAR[e.archetype ?? ''] ?? ''} {handleFor(id)}
                   </span>
                   <span className="font-mono text-[0.66rem] text-[#7e8694]">
-                    → {(e.table_id ?? '—').replace('LR-', 'T-')}
+                    → {tShort(e.table_id)}
                   </span>
+                  {e.occ_after && (
+                    <span className="rounded-[3px] bg-[rgba(255,255,255,0.06)] px-1 font-mono text-[0.64rem] text-[#cdb98a]">
+                      now {e.occ_after}
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 text-[0.7rem]">
-                  <span className={impact.tone}>{impact.label}</span>
+                  <HealthDelta before={before} after={after} />
                   <span className="text-[#6f7682]">·</span>
                   <span className="text-[#a9b0bb]">
                     sits <strong className="text-[#d8d2c6]">~{mins} min</strong> (est.)
