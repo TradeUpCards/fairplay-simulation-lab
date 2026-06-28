@@ -17,17 +17,37 @@ const POLICY_COLORS: Record<string, string> = {
 }
 const POLICY_LABELS: Record<string, string> = {
   standard: 'Standard',
-  fairplay: 'FairPlay-route',
-  fairplay_liveness: 'FairPlay', // the liveness arm is the dashboard's "FairPlay"
+  fairplay: 'FairPlay',
+  fairplay_liveness: 'FairPlay-Liveness',
 }
 
 export const colorOf = (policy: string): string => POLICY_COLORS[policy] ?? '#9aa2b3'
 export const policyLabel = (policy: string): string =>
   POLICY_LABELS[policy] ?? policy.replace(/_/g, ' ')
 
-// The dashboard surfaces only Standard and the liveness arm (relabelled "FairPlay").
+// The heatmap/table score the liveness arm (relabelled "FairPlay") vs Standard.
 export const CANDIDATE_POLICY = 'fairplay_liveness'
 export const DISPLAY_POLICIES = ['standard', 'fairplay_liveness']
+
+/**
+ * The cinematic race shows every policy present in the time-series for one
+ * regime. Palette + ordering match demo/fairplay-live-sim.html: the liveness
+ * arm is the glowing emerald hero; Standard and the plain route are neutral
+ * rivals. `random` is reserved for when a synthetic baseline is added (it is
+ * not in the frozen time-series yet).
+ */
+export interface RacePolicyMeta {
+  label: string
+  color: string
+  hero: boolean
+  order: number
+}
+export const RACE_POLICY_META: Record<string, RacePolicyMeta> = {
+  random: { label: 'Random', color: '#5a6478', hero: false, order: 0 },
+  standard: { label: 'Standard', color: '#9fb1cc', hero: false, order: 1 },
+  fairplay: { label: 'FairPlay', color: '#7c8cff', hero: false, order: 2 },
+  fairplay_liveness: { label: 'FairPlay-Liveness', color: '#2ee6a6', hero: true, order: 3 },
+}
 
 // Distinct hues so each regime's pair of lines reads apart on the multi-line chart.
 export const REGIME_COLORS = [
