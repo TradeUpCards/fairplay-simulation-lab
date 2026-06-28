@@ -16,6 +16,7 @@ import {
   type PlayState,
   type SeatView,
 } from '../state/playApi'
+import { avatarFor } from '../lib/lobbyIdentity'
 
 /**
  * The training table — a single human at a 2-6 handed No-Limit Hold'em table of
@@ -77,18 +78,20 @@ function hashHue(s: string): number {
   return h
 }
 function Avatar({ sv }: { sv: SeatView }) {
+  // Same portrait cast as the lobby sidecar (by name); hero stays the "you" marker.
+  const imageUrl = sv.is_hero ? null : avatarFor(sv.label)
   const emoji = sv.is_hero ? '🧑' : (ARCH_AVATAR[sv.archetype ?? ''] ?? '🎭')
   const hue = hashHue(sv.label)
   return (
     <div
-      className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 text-[1.35rem] leading-none shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
+      className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border-2 text-[1.35rem] leading-none shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
       style={{
         borderColor: sv.is_hero ? 'var(--color-brass)' : '#3a4555',
         background: `radial-gradient(circle at 30% 25%, hsl(${hue} 42% 36%), hsl(${hue} 46% 15%))`,
       }}
       aria-hidden="true"
     >
-      {emoji}
+      {imageUrl ? <img src={imageUrl} alt="" className="h-full w-full object-cover" /> : emoji}
     </div>
   )
 }
