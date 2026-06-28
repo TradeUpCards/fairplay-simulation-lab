@@ -48,6 +48,31 @@ describe('Slideshow — presentation deck shell', () => {
     expect(screen.getByLabelText('Next slide').hasAttribute('disabled')).toBe(true)
   })
 
+  it('steps a staged slide through its stages with → before moving on, and ← steps back', () => {
+    // deep-link to the staged routing slide (id "policy-routing")
+    const idx = SLIDES.findIndex((s) => s.id === 'policy-routing')
+    expect(idx).toBeGreaterThanOrEqual(0)
+    window.history.replaceState(null, '', `#/slideshow/${idx + 1}`)
+    render(<Slideshow />)
+    expect(screen.getByText(page(idx + 1))).toBeTruthy()
+    // stage 0 → the control offers "Show FairPlay"
+    expect(screen.getByText(/Show FairPlay/)).toBeTruthy()
+
+    // → advances the internal stage, NOT the slide
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+    expect(screen.getByText(page(idx + 1))).toBeTruthy() // still on the same slide
+    expect(screen.getByText(/Show Liveness/)).toBeTruthy() // stage advanced
+
+    // ← steps the stage back, still on the same slide
+    fireEvent.keyDown(window, { key: 'ArrowLeft' })
+    expect(screen.getByText(page(idx + 1))).toBeTruthy()
+    expect(screen.getByText(/Show FairPlay/)).toBeTruthy()
+
+    // at stage 0, ← falls through to the shell → moves to the previous slide
+    fireEvent.keyDown(window, { key: 'ArrowLeft' })
+    expect(screen.getByText(page(idx))).toBeTruthy()
+  })
+
   it('keeps the deck chrome (logo + exit) across slides', () => {
     render(<Slideshow />)
     // Advance off the title slide (which has its own logo) so only the
