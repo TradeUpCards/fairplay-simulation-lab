@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { interpAt, formatHrMin } from '../lib/dashboard'
+import { interpAt } from '../lib/dashboard'
 import { Standings, type StandingRow } from './Standings'
 import { runChipBurst } from '../lib/chipBurst'
 import { raceSound } from '../lib/raceSound'
@@ -59,7 +59,7 @@ export function SweepReplayChart({
   onShowAll,
   onHideAll,
   resetKey,
-  autoPlay = true,
+  autoPlay = false,
 }: {
   lines: ChartLine[]
   tHr: number[]
@@ -93,6 +93,7 @@ export function SweepReplayChart({
   const [p, setP] = useState(0)
   const [playing, setPlaying] = useState(autoPlay)
   const [muted, setMuted] = useState(false)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
   const pRef = useRef(0)
   const chipCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const chipCancelRef = useRef<(() => void) | null>(null)
@@ -132,6 +133,7 @@ export function SweepReplayChart({
   }, [playing, N])
 
   const atEnd = p >= N && N > 0
+  const bannerShown = atEnd && !bannerDismissed
   const seek = (v: number) => {
     raceSound.resume()
     pRef.current = v
@@ -203,6 +205,7 @@ export function SweepReplayChart({
     }
     if (!atEnd && firedRef.current) {
       firedRef.current = false
+      setBannerDismissed(false)
       chipCancelRef.current?.()
       chipCancelRef.current = null
     }
@@ -255,9 +258,6 @@ export function SweepReplayChart({
             <figcaption className="font-mono text-[0.66rem] uppercase tracking-[0.16em] text-faint">
               {metricLabel} over the {Math.round(xMax)}-hour room · cumulative replay
             </figcaption>
-            <span className="font-mono text-[0.72rem] text-muted" data-testid="replay-clock">
-              {formatHrMin(nowHr)} / {formatHrMin(xMax)}
-            </span>
           </div>
 
           <div className="relative">
@@ -343,18 +343,58 @@ export function SweepReplayChart({
               className="pointer-events-none absolute inset-0 h-full w-full"
               aria-hidden="true"
             />
+            {/* large run-clock readout, top-left of the chart */}
+            {/* live leading score — highest seat-hours at the playhead; lands on
+                the winning standing at the finish. Sits below the top y-axis label. */}
+            <div className="pointer-events-none absolute left-12 top-12">
+              <div className="font-mono text-[0.56rem] uppercase tracking-[0.18em] text-faint">
+                Leading · {metricLabel}
+              </div>
+              <div
+                data-testid="replay-score"
+                className="font-mono text-[2rem] font-bold leading-none tabular-nums text-brass"
+              >
+                {winner ? fmtVal(winner.v) : '—'}
+                <span className="ml-1 text-[1rem] font-semibold text-muted">
+                  {unit === 'hrs' ? 'h' : ''}
+                </span>
+              </div>
+            </div>
             {banner && (
               <div
                 data-testid="winner-banner"
-                data-shown={atEnd}
-                className={`pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-xl border border-brass/40 bg-[rgba(18,26,22,0.93)] px-5 py-2.5 text-center shadow-[0_18px_50px_rgba(0,0,0,0.5)] backdrop-blur transition-all duration-500 ${
-                  atEnd ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+                data-shown={bannerShown}
+                className={`pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 rounded-2xl border border-brass/40 bg-[rgba(18,26,22,0.93)] px-10 py-5 pr-12 text-center shadow-[0_24px_64px_rgba(0,0,0,0.55)] backdrop-blur transition-all duration-500 ${
+                  bannerShown ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
                 }`}
               >
-                <div className="text-[0.95rem] font-bold tracking-[-0.01em] text-text">
+                <div className="text-[1.9rem] font-bold tracking-[-0.01em] text-text">
                   <span className="text-brass">{banner.lead}</span> {banner.main}
                 </div>
-                <div className="mt-0.5 text-[0.74rem] text-muted">{banner.sub}</div>
+                <div className="mt-1.5 text-[1.48rem] text-muted">{banner.sub}</div>
+                {bannerShown && (
+                  <button
+                    type="button"
+                    onClick={() => setBannerDismissed(true)}
+                    aria-label="dismiss winner banner"
+                    className="pointer-events-auto absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full border border-line text-[0.95rem] leading-none text-muted hover:border-brass hover:text-text"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            )}
+            {/* center CTA — manual start (no autoplay on load) */}
+            {p === 0 && !playing && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-[rgba(8,12,10,0.45)]">
+                <button
+                  type="button"
+                  onClick={toggle}
+                  aria-label={`run the ${Math.round(xMax)}-hour simulation`}
+                  className="flex items-center gap-3 rounded-2xl border border-brass/50 bg-[rgba(18,26,22,0.94)] px-8 py-4 text-[1.1rem] font-bold text-text shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur transition hover:border-brass hover:bg-[rgba(30,42,34,0.96)]"
+                >
+                  <span className="text-brass">▶</span> Run {Math.round(xMax)}-Hour Simulation
+                </button>
               </div>
             )}
           </div>

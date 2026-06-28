@@ -287,6 +287,25 @@ describe('DashboardView render', () => {
     expect(screen.getByTestId('winner-banner').getAttribute('data-shown')).toBe('true')
   })
 
+  it('dismisses the winner banner with the close button', () => {
+    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
+    fireEvent.change(screen.getByLabelText('scrub replay'), { target: { value: '1' } })
+    expect(screen.getByTestId('winner-banner').getAttribute('data-shown')).toBe('true')
+    fireEvent.click(screen.getByLabelText('dismiss winner banner'))
+    expect(screen.getByTestId('winner-banner').getAttribute('data-shown')).toBe('false')
+  })
+
+  it('the leading-score readout matches the top standing at the finish', () => {
+    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
+    fireEvent.change(screen.getByLabelText('scrub replay'), { target: { value: '1' } })
+    // FairPlay's final sample (13.8) leads → score rounds to "14"
+    expect(screen.getByTestId('replay-score').textContent).toContain('14')
+    const leaderRow = screen
+      .getAllByTestId(/^standing-/)
+      .find((r) => r.getAttribute('data-rank') === '0')
+    expect(leaderRow?.textContent).toContain('14')
+  })
+
   it('toggles every FairPlay line at once with the policy control', () => {
     render(<DashboardView sweep={SWEEP} timeseries={TS} />)
     expect(screen.getByTestId('replay-line-20|40|fairplay_liveness')).toBeTruthy()
@@ -299,6 +318,15 @@ describe('DashboardView render', () => {
     // clicking again brings them back
     fireEvent.click(screen.getByLabelText('toggle all FairPlay lines'))
     expect(screen.getByTestId('replay-line-20|40|fairplay_liveness')).toBeTruthy()
+  })
+
+  it('does not autoplay — a center button starts the simulation', () => {
+    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
+    const run = screen.getByRole('button', { name: /run the 8-hour simulation/i })
+    expect(run).toBeTruthy()
+    fireEvent.click(run)
+    // once running, the center run button disappears
+    expect(screen.queryByRole('button', { name: /run the 8-hour simulation/i })).toBeNull()
   })
 
   it('toggles the race-sound mute control', () => {
