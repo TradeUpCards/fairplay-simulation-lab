@@ -1,0 +1,1252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Playsim Agentic Experiment Engine</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202f;
+      --muted: #687386;
+      --line: #d9e0ea;
+      --paper: #f7f8fb;
+      --panel: #ffffff;
+      --teal: #118a83;
+      --teal-soft: #dff3f1;
+      --gold: #b77a14;
+      --gold-soft: #fff0d6;
+      --coral: #c24f42;
+      --coral-soft: #fde7e3;
+      --green: #2f8a52;
+      --green-soft: #e1f3e8;
+      --shadow: 0 20px 60px rgba(27, 36, 55, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.94), rgba(247,248,251,0.96)),
+        repeating-linear-gradient(90deg, rgba(23,32,47,0.035) 0 1px, transparent 1px 72px),
+        repeating-linear-gradient(0deg, rgba(23,32,47,0.035) 0 1px, transparent 1px 72px);
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .deck {
+      width: min(1180px, 100%);
+      min-height: min(720px, calc(100vh - 48px));
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 18px;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.9);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, var(--teal) 0 52%, transparent 52%),
+        linear-gradient(315deg, var(--gold) 0 50%, var(--coral) 50%);
+      border: 1px solid rgba(23,32,47,0.12);
+      flex: 0 0 auto;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 14px;
+      letter-spacing: 0;
+      line-height: 1.1;
+    }
+
+    .brand span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid #b8c2d2;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .dot.active {
+      width: 28px;
+      border-radius: 999px;
+      background: var(--teal);
+      border-color: var(--teal);
+    }
+
+    main {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      display: none;
+      min-height: 100%;
+      padding: clamp(28px, 4vw, 58px);
+    }
+
+    .slide.active {
+      display: grid;
+      align-content: center;
+      gap: 28px;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 980px;
+      font-size: clamp(42px, 7vw, 82px);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: clamp(30px, 4vw, 52px);
+      line-height: 1.04;
+      letter-spacing: 0;
+      max-width: 920px;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: clamp(17px, 2vw, 24px);
+      line-height: 1.45;
+      max-width: 850px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: #0e5d59;
+      background: var(--teal-soft);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .accent-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      max-width: 900px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 18px;
+      min-height: 118px;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      background: #fff;
+    }
+
+    .stat b {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .knobs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .knob {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 22px;
+      display: grid;
+      gap: 18px;
+      min-height: 310px;
+      background: #fff;
+    }
+
+    .knob:nth-child(1) { border-top: 6px solid var(--teal); }
+    .knob:nth-child(2) { border-top: 6px solid var(--gold); }
+    .knob:nth-child(3) { border-top: 6px solid var(--coral); }
+
+    .knob h3 {
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .knob p {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 13px;
+      background: var(--paper);
+      white-space: nowrap;
+    }
+
+    .loop {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(112px, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .node {
+      position: relative;
+      min-height: 150px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 14px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      background: #fff;
+    }
+
+    .node:after {
+      content: "";
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      width: 12px;
+      height: 2px;
+      background: #a9b4c5;
+    }
+
+    .node:last-child:after { display: none; }
+
+    .node .num {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--teal-soft);
+      color: #0e5d59;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .node h3 {
+      font-size: 17px;
+      line-height: 1.15;
+    }
+
+    .node p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .guardrail {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 26px;
+      align-items: center;
+    }
+
+    .code-card {
+      border-radius: 12px;
+      border: 1px solid #cfd7e4;
+      background: #152033;
+      color: #d8f3ef;
+      padding: 22px;
+      min-height: 330px;
+      overflow: hidden;
+      display: grid;
+      align-content: center;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .callouts {
+      display: grid;
+      gap: 14px;
+    }
+
+    .callout {
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      padding: 18px;
+      display: grid;
+      gap: 7px;
+      background: #fff;
+    }
+
+    .callout b {
+      font-size: 18px;
+    }
+
+    .callout p {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .routing-slide.active {
+      align-content: start;
+      gap: 18px;
+    }
+
+    .routing-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 22px;
+      align-items: end;
+    }
+
+    .routing-head h2 {
+      font-size: clamp(28px, 3.6vw, 46px);
+    }
+
+    .policy-flow {
+      display: grid;
+      gap: 12px;
+    }
+
+    .policy-flow-row {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 14px;
+      align-items: stretch;
+      min-height: 0;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 360ms ease, transform 360ms ease, max-height 360ms ease;
+    }
+
+    .routing-slide[data-stage="0"] .policy-flow-row[data-step="0"],
+    .routing-slide[data-stage="1"] .policy-flow-row[data-step="0"],
+    .routing-slide[data-stage="1"] .policy-flow-row[data-step="1"],
+    .routing-slide[data-stage="2"] .policy-flow-row {
+      min-height: 154px;
+      max-height: 190px;
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .policy-flow-row .runner,
+    .policy-flow-row .route-fill {
+      animation-play-state: paused;
+    }
+
+    .routing-slide[data-stage="0"] .policy-flow-row[data-step="0"] .runner,
+    .routing-slide[data-stage="0"] .policy-flow-row[data-step="0"] .route-fill,
+    .routing-slide[data-stage="1"] .policy-flow-row[data-step="0"] .runner,
+    .routing-slide[data-stage="1"] .policy-flow-row[data-step="0"] .route-fill,
+    .routing-slide[data-stage="1"] .policy-flow-row[data-step="1"] .runner,
+    .routing-slide[data-stage="1"] .policy-flow-row[data-step="1"] .route-fill,
+    .routing-slide[data-stage="2"] .policy-flow-row .runner,
+    .routing-slide[data-stage="2"] .policy-flow-row .route-fill {
+      animation-play-state: running;
+    }
+
+    .policy-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      background: #fff;
+      display: grid;
+      align-content: center;
+      gap: 8px;
+    }
+
+    .policy-card b {
+      font-size: 19px;
+      line-height: 1.1;
+    }
+
+    .policy-card span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .policy-flow-row[data-step="0"] .policy-card { border-left: 6px solid #53627a; }
+    .policy-flow-row[data-step="1"] .policy-card { border-left: 6px solid var(--gold); }
+    .policy-flow-row[data-step="2"] .policy-card { border-left: 6px solid var(--teal); }
+
+    .flow-stage {
+      position: relative;
+      min-height: 154px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      background:
+        linear-gradient(90deg, rgba(247,248,251,0.95), rgba(255,255,255,0.96)),
+        repeating-linear-gradient(90deg, rgba(23,32,47,0.035) 0 1px, transparent 1px 44px);
+      overflow: hidden;
+    }
+
+    .arrival-label {
+      position: absolute;
+      left: 16px;
+      top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .tables {
+      position: absolute;
+      inset: 34px 16px 14px 132px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      z-index: 2;
+    }
+
+    .mini-table {
+      position: relative;
+      border: 1px solid #bdc8d8;
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,0.92);
+      display: grid;
+      align-content: space-between;
+      min-width: 0;
+    }
+
+    .mini-table.full {
+      background: #f1f4f8;
+    }
+
+    .mini-table.forming {
+      border-color: #8fc8c4;
+      background: #ecfaf8;
+    }
+
+    .mini-table.empty {
+      background: rgba(255,255,255,0.58);
+    }
+
+    .table-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .table-title small {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .seat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 18px);
+      gap: 6px;
+      justify-content: center;
+      padding-top: 8px;
+    }
+
+    .seat {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid #afbacb;
+      background: #fff;
+    }
+
+    .seat.filled {
+      background: #52627b;
+      border-color: #52627b;
+    }
+
+    .seat.vulnerable {
+      background: var(--coral);
+      border-color: var(--coral);
+    }
+
+    .seat.arriving {
+      background: var(--teal);
+      border-color: var(--teal);
+      animation: pulseSeat 1.6s ease-in-out infinite;
+    }
+
+    .seat.target {
+      background: #fff;
+      border: 2px solid var(--teal);
+      animation: pulseSeat 2.2s ease-in-out infinite;
+    }
+
+    .seat.route-fill {
+      animation: seatRouteFill 12s ease-in-out infinite;
+      animation-delay: var(--fill-delay, 0s);
+    }
+
+    .seat.route-fill.table3-fill {
+      animation-name: table3RouteFill;
+    }
+
+    .seat.route-fill.gold { --fill-color: var(--gold); --fill-border: var(--gold); }
+    .seat.route-fill.coral { --fill-color: var(--coral); --fill-border: var(--coral); }
+
+    .seat.fit {
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+
+    .runner {
+      position: absolute;
+      left: 20px;
+      top: var(--y);
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--teal);
+      border: 2px solid #fff;
+      box-shadow: 0 3px 10px rgba(17, 138, 131, 0.35);
+      z-index: 3;
+      animation: flowUser var(--speed, 8.16s) linear infinite;
+      animation-delay: var(--delay, 0s);
+    }
+
+    .runner.gold { background: var(--gold); box-shadow: 0 3px 10px rgba(183, 122, 20, 0.35); }
+    .runner.coral { background: var(--coral); box-shadow: 0 3px 10px rgba(194, 79, 66, 0.35); }
+
+    @keyframes flowUser {
+      0% { transform: translate(0, 0) scale(0.75); opacity: 0; }
+      10% { opacity: 1; }
+      78% { transform: translate(var(--x), var(--dy, 0px)) scale(1); opacity: 1; }
+      100% { transform: translate(var(--x), var(--dy, 0px)) scale(0.8); opacity: 0; }
+    }
+
+    @keyframes pulseSeat {
+      0%, 100% { transform: scale(1); box-shadow: none; }
+      50% { transform: scale(1.14); box-shadow: 0 0 0 5px rgba(17, 138, 131, 0.16); }
+    }
+
+    @keyframes seatRouteFill {
+      0%, 10% {
+        background: #fff;
+        border-color: #afbacb;
+        box-shadow: none;
+        transform: scale(1);
+      }
+      16%, 82% {
+        background: var(--fill-color, var(--teal));
+        border-color: var(--fill-border, var(--teal));
+        box-shadow: 0 0 0 5px rgba(17, 138, 131, 0.14);
+        transform: scale(1.08);
+      }
+      92%, 100% {
+        background: #fff;
+        border-color: #afbacb;
+        box-shadow: none;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes table3RouteFill {
+      0%, 46% {
+        background: #fff;
+        border-color: #afbacb;
+        box-shadow: none;
+        transform: scale(1);
+      }
+      52%, 82% {
+        background: var(--fill-color, var(--teal));
+        border-color: var(--fill-border, var(--teal));
+        box-shadow: 0 0 0 5px rgba(17, 138, 131, 0.14);
+        transform: scale(1.08);
+      }
+      92%, 100% {
+        background: #fff;
+        border-color: #afbacb;
+        box-shadow: none;
+        transform: scale(1);
+      }
+    }
+
+    .cycle-slide.active {
+      align-content: start;
+      gap: 18px;
+    }
+
+    .cycle-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.18fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .cycle-summary {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .iteration-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+      background: var(--paper);
+      display: grid;
+      gap: 12px;
+    }
+
+    .iteration-card b {
+      font-size: 20px;
+    }
+
+    .iteration-card span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .iteration-badge {
+      width: fit-content;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: var(--teal-soft);
+      color: #0e5d59;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .cycle-stack {
+      position: relative;
+      display: grid;
+      gap: 10px;
+      padding: 4px 0;
+    }
+
+    .cycle-step {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px 16px 58px;
+      background: #fff;
+      min-height: 86px;
+      display: grid;
+      align-content: center;
+      gap: 5px;
+      opacity: 0.38;
+      transform: translateY(8px);
+      transition: opacity 300ms ease, transform 300ms ease, border-color 300ms ease, background 300ms ease;
+    }
+
+    .cycle-step:before {
+      content: attr(data-num);
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #e9edf4;
+      color: #52627b;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .cycle-step:after {
+      content: "";
+      position: absolute;
+      left: 30px;
+      bottom: -11px;
+      width: 2px;
+      height: 11px;
+      background: #b9c3d1;
+    }
+
+    .cycle-step:last-child:after {
+      height: 26px;
+      bottom: -30px;
+      border-left: 2px solid #b9c3d1;
+      border-bottom: 2px solid #b9c3d1;
+      border-radius: 0 0 0 12px;
+      background: transparent;
+      width: calc(100% - 44px);
+    }
+
+    .cycle-step h3 {
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .cycle-step p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .cycle-slide[data-cycle-step="0"] .cycle-step[data-cycle-index="0"],
+    .cycle-slide[data-cycle-step="1"] .cycle-step[data-cycle-index="0"],
+    .cycle-slide[data-cycle-step="1"] .cycle-step[data-cycle-index="1"],
+    .cycle-slide[data-cycle-step="2"] .cycle-step[data-cycle-index="0"],
+    .cycle-slide[data-cycle-step="2"] .cycle-step[data-cycle-index="1"],
+    .cycle-slide[data-cycle-step="2"] .cycle-step[data-cycle-index="2"],
+    .cycle-slide[data-cycle-step="3"] .cycle-step {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .cycle-slide[data-cycle-step="0"] .cycle-step[data-cycle-index="0"],
+    .cycle-slide[data-cycle-step="1"] .cycle-step[data-cycle-index="1"],
+    .cycle-slide[data-cycle-step="2"] .cycle-step[data-cycle-index="2"],
+    .cycle-slide[data-cycle-step="3"] .cycle-step[data-cycle-index="3"] {
+      border-color: #8fc8c4;
+      background: var(--teal-soft);
+    }
+
+    .cycle-slide[data-cycle-step="0"] .cycle-step[data-cycle-index="0"]:before,
+    .cycle-slide[data-cycle-step="1"] .cycle-step[data-cycle-index="1"]:before,
+    .cycle-slide[data-cycle-step="2"] .cycle-step[data-cycle-index="2"]:before,
+    .cycle-slide[data-cycle-step="3"] .cycle-step[data-cycle-index="3"]:before {
+      background: var(--teal);
+      color: #fff;
+      animation: pulseSeat 1.8s ease-in-out infinite;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .demo-step {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      background: #fff;
+      min-height: 220px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .demo-step:nth-child(1) { background: var(--teal-soft); }
+    .demo-step:nth-child(2) { background: var(--gold-soft); }
+    .demo-step:nth-child(3) { background: var(--coral-soft); }
+
+    .demo-step h3 {
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .demo-step p {
+      color: #334052;
+      line-height: 1.4;
+      font-size: 15px;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,0.9);
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink);
+      min-width: 42px;
+      height: 38px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    button.primary {
+      min-width: 120px;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 800;
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    .slide-count {
+      color: var(--muted);
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 900px) {
+      body { padding: 0; }
+      .deck {
+        min-height: 100vh;
+        border-radius: 0;
+      }
+      header, footer {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      .slide { padding: 28px 18px; }
+      .accent-row, .knobs, .guardrail, .demo-grid, .routing-head, .cycle-layout {
+        grid-template-columns: 1fr;
+      }
+      .policy-flow-row {
+        grid-template-columns: 1fr;
+      }
+      .routing-slide[data-stage="0"] .policy-flow-row[data-step="0"],
+      .routing-slide[data-stage="1"] .policy-flow-row[data-step="0"],
+      .routing-slide[data-stage="1"] .policy-flow-row[data-step="1"],
+      .routing-slide[data-stage="2"] .policy-flow-row {
+        max-height: 340px;
+      }
+      .flow-stage {
+        min-height: 210px;
+      }
+      .tables {
+        inset: 44px 12px 48px 72px;
+        gap: 8px;
+      }
+      .loop {
+        grid-template-columns: 1fr;
+      }
+      .node {
+        min-height: auto;
+      }
+      .node:after {
+        right: auto;
+        left: 28px;
+        top: auto;
+        bottom: -12px;
+        width: 2px;
+        height: 12px;
+      }
+      .progress {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="deck" aria-label="Playsim agentic experiment engine presentation">
+    <header>
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <strong>FairPlay Simulation Lab</strong>
+          <span>Agentic experiment engine</span>
+        </div>
+      </div>
+      <nav class="progress" aria-label="Slides"></nav>
+    </header>
+
+    <main>
+      <article class="slide active routing-slide" data-stage="0">
+        <div class="routing-head">
+          <div>
+            <span class="eyebrow">Policy routing behavior</span>
+            <h2>Same arrivals, different table-filling strategy.</h2>
+          </div>
+        </div>
+
+        <div class="policy-flow">
+          <section class="policy-flow-row" data-step="0">
+            <div class="policy-card">
+              <b>Standard</b>
+              <span>Top off the next available table. Table 2 fills first; once it is full, overflow moves to Table 3.</span>
+            </div>
+            <div class="flow-stage">
+              <span class="arrival-label">Arrivals</span>
+              <span class="runner" style="--x: min(52vw, 500px); --y: 48px; --dy: 2px; --delay: 0.4s;"></span>
+              <span class="runner gold" style="--x: min(52vw, 500px); --y: 76px; --dy: -4px; --delay: 2s;"></span>
+              <span class="runner" style="--x: min(52vw, 500px); --y: 104px; --dy: -8px; --delay: 3.6s;"></span>
+              <span class="runner coral" style="--x: min(70vw, 670px); --y: 118px; --dy: -14px; --delay: 8.2s;"></span>
+              <div class="tables">
+                <div class="mini-table full">
+                  <div class="table-title"><span>Table 1</span><small>6/6</small></div>
+                  <div class="seat-grid" aria-hidden="true">
+                    <span class="seat filled"></span><span class="seat vulnerable"></span><span class="seat filled"></span>
+                    <span class="seat filled"></span><span class="seat fit"></span><span class="seat filled"></span>
+                  </div>
+                </div>
+                <div class="mini-table empty">
+                  <div class="table-title"><span>Table 2</span><small>starts 0/6, fills first</small></div>
+                  <div class="seat-grid" aria-hidden="true">
+                    <span class="seat route-fill" style="--fill-delay: .6s;"></span><span class="seat route-fill gold" style="--fill-delay: 1.7s;"></span><span class="seat route-fill" style="--fill-delay: 2.8s;"></span>
+                    <span class="seat route-fill coral" style="--fill-delay: 3.9s;"></span><span class="seat route-fill" style="--fill-delay: 5s;"></span><span class="seat route-fill gold" style="--fill-delay: 6.1s;"></span>
+                  </div>
+                </div>
+                <div class="mini-table empty">
+                  <div class="table-title"><span>Table 3</span><small>late overflow</small></div>
+                  <div class="seat-grid" aria-hidden="true">
+                    <span class="seat route-fill table3-fill coral" style="--fill-delay: 8.1s;"></span><span class="seat"></span><span class="seat"></span>
+                    <span class="seat"></span><span class="seat"></span><span class="seat"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="policy-flow-row" data-step="1">
+            <div class="policy-card">
+              <b>FairPlay</b>
+              <span>Ranks by health and fit. Without liveness, compatible-looking empty tables can split demand.</span>
+            </div>
+            <div class="flow-stage">
+              <span class="arrival-label">Arrivals</span>
+              <span class="runner gold" style="--x: min(52vw, 500px); --y: 50px; --dy: 0px; --delay: .6s;"></span>
+              <span class="runner" style="--x: min(70vw, 670px); --y: 82px; --dy: -8px; --delay: 2.2s;"></span>
+              <span class="runner coral" style="--x: min(52vw, 500px); --y: 116px; --dy: -14px; --delay: 3.8s;"></span>
+              <span class="runner" style="--x: min(70vw, 670px); --y: 54px; --dy: 8px; --delay: 5.4s;"></span>
+              <div class="tables">
+                <div class="mini-table full">
+                  <div class="table-title"><span>Table 1</span><small>6/6</small></div>
+                  <div class="seat-grid" aria-hidden="true">
+                    <span class="seat filled"></span><span class="seat vulnerable"></span><span class="seat filled"></span>
+                    <span class="seat filled"></span><span class="seat fit"></span><span class="seat filled"></span>
+                  </div>
+                </div>
+                <div class="mini-table empty">
+                  <div class="table-title"><span>Table 2</span><small>arrival 1, 3</small></div>
+                  <div class="seat-grid" aria-hidden="true">
+                    <span class="seat route-fill gold" style="--fill-delay: .8s;"></span><span class="seat"></span><span class="seat route-fill coral" style="--fill-delay: 3.8s;"></span>
+                    <span class="seat"></span><span class="seat"></span><span class="seat"></span>
+                  </div>
+                </div>
+                <div class="mini-table empty">
+                  <div class="table-title"><span>Table 3</span><small>arrival 2, 4</small></div>
+                  <div class="seat-grid" aria-hidden="true">
+                    <span class="seat"></span><span class="seat route-fill table3-fill" style="--fill-delay: 2.3s;"></span><span class="seat"></span>
+                    <span class="seat route-fill table3-fill" style="--fill-delay: 5.4s;"></span><span class="seat"></span><span class="seat"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="policy-flow-row" data-step="2">
+            <div class="policy-card">
+              <b>FairPlay-liveness</b>
+              <span>Uses health and liveness: concentrate compatible arrivals before seeding another empty table.</span>
+            </div>
+            <div class="flow-stage">
+              <span class="arrival-label">Arrivals</span>
+              <span class="runner" style="--x: min(52vw, 500px); --y: 48px; --dy: 4px; --delay: .6s;"></span>
+              <span class="runner gold" style="--x: min(52vw, 500px); --y: 82px; --dy: -3px; --delay: 2.1s;"></span>
+              <span class="runner coral" style="--x: min(52vw, 500px); --y: 114px; --dy: -9px; --delay: 3.6s;"></span>
+              <span class="runner" style="--x: min(70vw, 670px); --y: 62px; --dy: 8px; --delay: 6.1s;"></span>
+              <div class="tables">
+                <div class="mini-table full">
+                  <div class="table-title"><span>Table 1</span><small>6/6</small></div>
+                  <div class="seat-grid" aria-hidden="true">
+                    <span class="seat filled"></span><span class="seat vulnerable"></span><span class="seat filled"></span>
+                    <span class="seat filled"></span><span class="seat fit"></span><span class="seat filled"></span>
+                  </div>
+                </div>
+                <div class="mini-table empty">
+                  <div class="table-title"><span>Table 2</span><small>0/6 -> 3-seat quorum</small></div>
+                  <div class="seat-grid" aria-hidden="true">
+                    <span class="seat route-fill" style="--fill-delay: .7s;"></span><span class="seat route-fill gold" style="--fill-delay: 2.1s;"></span><span class="seat route-fill coral" style="--fill-delay: 3.6s;"></span>
+                    <span class="seat"></span><span class="seat"></span><span class="seat"></span>
+                  </div>
+                </div>
+                <div class="mini-table empty">
+                  <div class="table-title"><span>Table 3</span><small>after quorum</small></div>
+                  <div class="seat-grid" aria-hidden="true">
+                    <span class="seat route-fill table3-fill" style="--fill-delay: 6.1s;"></span><span class="seat"></span><span class="seat"></span>
+                    <span class="seat"></span><span class="seat"></span><span class="seat"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </article>
+
+      <article class="slide">
+        <span class="eyebrow">The simulation problem</span>
+        <h1>We needed evidence</h1>
+        <p class="lead">
+          Under which assumptions does FairPlay-liveness beat Standard,
+          where does it fail, and what should we tune next?
+        </p>
+        <div class="knobs">
+          <section class="knob">
+            <h3>Room Dynamics</h3>
+            <p>Controls the shape of the poker room and how much demand enters the room.</p>
+            <div class="chips">
+              <span class="chip">total tables</span>
+              <span class="chip">active tables</span>
+              <span class="chip">arrival rate</span>
+              <span class="chip">horizon</span>
+              <span class="chip">seeds</span>
+            </div>
+          </section>
+          <section class="knob">
+            <h3>Player Behavior</h3>
+            <p>Controls how players respond to thin tables, bad fit, waits, exits, and re-seat opportunities.</p>
+            <div class="chips">
+              <span class="chip">formation-aware</span>
+              <span class="chip">reason-aware</span>
+              <span class="chip">wait tolerance</span>
+              <span class="chip">re-seat intent</span>
+            </div>
+          </section>
+          <section class="knob">
+            <h3>Routing / Scoring</h3>
+            <p>Controls the policy comparison and any named scorer variants that remain outside production defaults.</p>
+            <div class="chips">
+              <span class="chip">standard</span>
+              <span class="chip">fairplay-liveness</span>
+              <span class="chip">health floors</span>
+              <span class="chip">liveness weighting</span>
+            </div>
+          </section>
+        </div>
+      </article>
+
+      <article class="slide cycle-slide" data-cycle-step="0">
+        <span class="eyebrow">Agentic loop architecture</span>
+        <h2>One iteration becomes the prompt for the next one.</h2>
+        <div class="cycle-layout">
+          <div class="cycle-summary">
+            <p class="lead">
+              The agent does not change simulator code. It proposes a bounded experiment,
+              runs the deterministic engine, reads the evidence, and writes the next spec.
+            </p>
+            <div class="iteration-card">
+              <span class="iteration-badge">Iteration 002 -> 003</span>
+              <b>Result becomes context</b>
+              <span>Each run leaves behind a spec, raw output, evaluation, report, next-spec proposal, and ledger entry.</span>
+            </div>
+          </div>
+          <div class="cycle-stack" aria-label="LLM experiment simulation engine cycle">
+            <section class="cycle-step" data-cycle-index="0" data-num="1">
+              <h3>Bounded experiment spec</h3>
+              <p>Allowed knobs, seeds, policy pair, metric targets, and stop conditions.</p>
+            </section>
+            <section class="cycle-step" data-cycle-index="1" data-num="2">
+              <h3>Deterministic playsim sweep</h3>
+              <p>Standard and FairPlay-liveness see the same seeded demand stream.</p>
+            </section>
+            <section class="cycle-step" data-cycle-index="2" data-num="3">
+              <h3>Evaluator report</h3>
+              <p>Seat-hours, vulnerable seat-hours, demand drop, churn, and formation metrics.</p>
+            </section>
+            <section class="cycle-step" data-cycle-index="3" data-num="4">
+              <h3>LLM planner proposes next spec</h3>
+              <p>The next iteration narrows, expands, or changes one operating assumption.</p>
+            </section>
+          </div>
+        </div>
+      </article>
+
+    </main>
+
+    <footer>
+      <div class="slide-count" aria-live="polite"></div>
+      <div class="controls">
+        <button type="button" class="prev" aria-label="Previous slide">&#8592;</button>
+        <button type="button" class="next primary" aria-label="Next slide">Next</button>
+      </div>
+    </footer>
+  </section>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const progress = document.querySelector(".progress");
+    const count = document.querySelector(".slide-count");
+    const prev = document.querySelector(".prev");
+    const next = document.querySelector(".next");
+    let index = 0;
+    let routingStage = 0;
+    let cycleStage = 0;
+    const cycleSlideIndex = 2;
+
+    slides.forEach((_, i) => {
+      const dot = document.createElement("button");
+      dot.className = "dot";
+      dot.type = "button";
+      dot.setAttribute("aria-label", `Go to slide ${i + 1}`);
+      dot.addEventListener("click", () => {
+        if (i === 0) routingStage = 0;
+        if (i === cycleSlideIndex) cycleStage = 0;
+        show(i);
+      });
+      progress.appendChild(dot);
+    });
+
+    const dots = Array.from(document.querySelectorAll(".dot"));
+
+    function applyRoutingStage() {
+      const routingSlide = slides[0];
+      routingSlide.dataset.stage = String(routingStage);
+      if (index === 0 && routingStage === 0) next.textContent = "Show FairPlay";
+      else if (index === 0 && routingStage === 1) next.textContent = "Show Liveness";
+      else next.textContent = index === slides.length - 1 ? "Restart" : "Next";
+    }
+
+    function applyCycleStage() {
+      const cycleSlide = slides[cycleSlideIndex];
+      cycleSlide.dataset.cycleStep = String(cycleStage);
+      if (index !== cycleSlideIndex) return;
+
+      if (cycleStage === 0) next.textContent = "Run Sweep";
+      else if (cycleStage === 1) next.textContent = "Evaluate";
+      else if (cycleStage === 2) next.textContent = "Plan Next";
+      else next.textContent = "Next";
+    }
+
+    function updateNextLabel() {
+      if (index === 0) {
+        applyRoutingStage();
+        return;
+      }
+
+      if (index === cycleSlideIndex) {
+        applyCycleStage();
+        return;
+      }
+
+      next.textContent = index === slides.length - 1 ? "Restart" : "Next";
+    }
+
+    function show(nextIndex) {
+      index = Math.max(0, Math.min(slides.length - 1, nextIndex));
+      slides.forEach((slide, i) => slide.classList.toggle("active", i === index));
+      dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
+      count.textContent = `Slide ${index + 1} of ${slides.length}`;
+      prev.disabled = index === 0 && routingStage === 0;
+      applyRoutingStage();
+      applyCycleStage();
+      updateNextLabel();
+    }
+
+    function advance() {
+      if (index === 0 && routingStage < 2) {
+        routingStage += 1;
+        show(0);
+        return;
+      }
+
+      if (index === cycleSlideIndex && cycleStage < 3) {
+        cycleStage += 1;
+        show(cycleSlideIndex);
+        return;
+      }
+
+      if (index === slides.length - 1) {
+        routingStage = 0;
+        cycleStage = 0;
+        show(0);
+        return;
+      }
+
+      show(index + 1);
+    }
+
+    function retreat() {
+      if (index === 0 && routingStage > 0) {
+        routingStage -= 1;
+        show(0);
+        return;
+      }
+
+      if (index === cycleSlideIndex && cycleStage > 0) {
+        cycleStage -= 1;
+        show(cycleSlideIndex);
+        return;
+      }
+
+      show(index - 1);
+    }
+
+    prev.addEventListener("click", retreat);
+    next.addEventListener("click", advance);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" || event.key === " ") advance();
+      if (event.key === "ArrowLeft") retreat();
+    });
+
+    show(0);
+  </script>
+</body>
+</html>
