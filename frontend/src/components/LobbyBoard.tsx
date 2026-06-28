@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import type { LobbyRow, LobbySequence, OperatorTableDetail, SeatEvent } from '../data/types'
 import { loadLobbySequence } from '../data/shim'
 import { useResource } from '../state/useResource'
@@ -42,6 +42,16 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
   const ev = cur.events?.standard ?? []
   const sits = ev.filter((e) => e.action === 'sit').length
   const stands = ev.filter((e) => e.action === 'stand').length
+
+  // Esc closes the seat-events drawer.
+  useEffect(() => {
+    if (!ui.diagOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') lobbyStore.toggleDiag()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [ui.diagOpen])
 
   // Focus mode: when a table is open in pit-boss view, the panel grows wide and the
   // lobby recedes behind it (easier to call out the operator evidence).
@@ -202,8 +212,54 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
             </span>
           ) : null}
         </button>
-        {ui.diagOpen && (
-          <div className="grid gap-5 border-t border-[#1e2128] px-3 py-3 md:grid-cols-2">
+      </div>
+
+      <p className="mt-3 text-[0.72rem] text-[#6f7682]">
+        Same arrivals, seated by each policy — Standard packs the fullest tables (they fill and drop
+        to the bottom as <span className="text-[#8b8276]">Waitlist</span>); FairPlay routes toward
+        healthy tables. The <span className="text-[#8b8276]">vs</span> column shows each table’s rank
+        in the other room; click a table to inspect it (preview + pit-boss view). Illustrative
+        synthetic room — not a live cash game.
+      </p>
+
+      {/* seat-events bottom drawer — slides up on click, closes back down */}
+      <div
+        className={`fixed inset-0 z-[80] bg-black/50 transition-opacity duration-300 ${
+          ui.diagOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+        onClick={lobbyStore.toggleDiag}
+        aria-hidden="true"
+      />
+      <aside
+        className={`fixed inset-x-0 bottom-0 z-[81] flex max-h-[72vh] flex-col rounded-t-2xl border-t-2 border-t-brass bg-[#0e1014] shadow-[0_-22px_54px_rgba(0,0,0,0.55)] transition-transform duration-[340ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+          ui.diagOpen ? 'translate-y-0' : 'translate-y-full'
+        }`}
+        role="dialog"
+        aria-label="seat events this round"
+        aria-hidden={!ui.diagOpen}
+      >
+        <div className="mx-auto flex w-full max-w-[1100px] flex-col overflow-hidden px-4 pb-5 pt-3.5">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <div className="text-[0.95rem] font-semibold text-[#f3ece0]">
+                How each policy seated this round
+              </div>
+              {sits + stands > 0 && (
+                <div className="text-[0.74rem] text-[#8b8276]">
+                  {sits} sat · {stands} stood — same arrivals, two policies
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={lobbyStore.toggleDiag}
+              aria-label="close"
+              className="rounded-md border border-[#3a3f47] px-2 py-0.5 text-[0.95rem] text-[#b8c0cf] hover:border-brass hover:text-brass"
+            >
+              ×
+            </button>
+          </div>
+          <div className="grid gap-6 overflow-y-auto md:grid-cols-2">
             <EventColumn
               title="Standard"
               subtitle="packs the fullest table"
@@ -221,16 +277,8 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
               prevOpDetail={prev?.op_detail}
             />
           </div>
-        )}
-      </div>
-
-      <p className="mt-3 text-[0.72rem] text-[#6f7682]">
-        Same arrivals, seated by each policy — Standard packs the fullest tables (they fill and drop
-        to the bottom as <span className="text-[#8b8276]">Waitlist</span>); FairPlay routes toward
-        healthy tables. The <span className="text-[#8b8276]">vs</span> column shows each table’s rank
-        in the other room; click a table to inspect it (preview + pit-boss view). Illustrative
-        synthetic room — not a live cash game.
-      </p>
+        </div>
+      </aside>
     </section>
   )
 }
