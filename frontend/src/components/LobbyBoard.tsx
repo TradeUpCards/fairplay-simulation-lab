@@ -333,10 +333,10 @@ function EventColumn({
                     src={archetypeBadge(e.archetype) as string}
                     alt=""
                     title={(e.archetype ?? '').replace(/_/g, ' ')}
-                    className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-[#0e1014] bg-[#0e1014] object-cover"
+                    className="absolute -bottom-1.5 -right-1.5 h-6 w-6 rounded-full border-2 border-[#0e1014] bg-[#0e1014] object-cover"
                   />
                 ) : e.archetype ? (
-                  <span className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full border border-[#0e1014] bg-[#1c2028] text-[0.55rem]">
+                  <span className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full border border-[#0e1014] bg-[#1c2028] text-[0.6rem]">
                     {ARCH_AVATAR[e.archetype] ?? ''}
                   </span>
                 ) : null}

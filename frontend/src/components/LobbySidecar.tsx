@@ -25,6 +25,7 @@ function SeatFace({
   size: 'sm' | 'md' | 'lg'
 }) {
   const badge = reveal ? archetypeBadge(archetype) : null
+  const badgeDim = size === 'lg' ? 'h-7 w-7' : size === 'md' ? 'h-6 w-6' : 'h-4 w-4'
   return (
     <div className="relative shrink-0">
       <SeatAvatar label={id} imageUrl={avatarFor(id)} size={size} />
@@ -33,7 +34,7 @@ function SeatFace({
           src={badge}
           alt=""
           title={archetype.replace(/_/g, ' ')}
-          className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-[#0e1014] bg-[#0e1014] object-cover"
+          className={`absolute -bottom-1 -right-1.5 ${badgeDim} rounded-full border-2 border-[#0e1014] bg-[#0e1014] object-cover`}
         />
       )}
     </div>
@@ -71,7 +72,7 @@ function archTone(a: string): string {
 /** Seat ring on the real felt — each seat is a round avatar portrait sitting above
  *  and behind a name + balance card (its bottom tucked behind the card), pushed out
  *  toward the rail. Same synthetic ids as the seat list, so they always match. */
-function MiniTable({ detail }: { detail: OperatorTableDetail }) {
+function MiniTable({ detail, reveal }: { detail: OperatorTableDetail; reveal: boolean }) {
   const seats = expandSeats(detail.table_id, detail.composition)
   const pos = seatPositions(detail.max_seats, 50, 44)
   return (
@@ -105,11 +106,19 @@ function MiniTable({ detail }: { detail: OperatorTableDetail }) {
             ) : (
               <div className="flex w-[3.6rem] flex-col items-center">
                 <SeatAvatar label={s.id} imageUrl={avatarFor(s.id)} size="md" />
-                <div className="-mt-2 z-10 w-full rounded-[5px] border border-[#3a4555] bg-[rgba(8,10,14,0.92)] px-1 pb-[0.12rem] pt-[0.18rem] text-center leading-tight shadow-[0_1px_4px_rgba(0,0,0,0.55)]">
+                <div className="relative -mt-2 z-10 w-full rounded-[5px] border border-[#3a4555] bg-[rgba(8,10,14,0.92)] px-1 pb-[0.12rem] pt-[0.18rem] text-center leading-tight shadow-[0_1px_4px_rgba(0,0,0,0.55)]">
                   <div className="truncate text-[0.55rem] font-semibold text-[#e7e0d2]">
                     {handleFor(s.id)}
                   </div>
                   <div className="font-mono text-[0.55rem] text-[#cdb98a]">${stackFor(s.id)}</div>
+                  {reveal && archetypeBadge(s.archetype) && (
+                    <img
+                      src={archetypeBadge(s.archetype) as string}
+                      alt=""
+                      title={s.archetype.replace(/_/g, ' ')}
+                      className="absolute -right-2.5 -top-3 z-20 h-6 w-6 rounded-full border-2 border-[#0e1014] bg-[#0e1014] object-cover"
+                    />
+                  )}
                 </div>
               </div>
             )}
@@ -216,7 +225,9 @@ export function LobbySidecar({
       <div className="sticky top-0 z-10 border-b border-[#23262d] bg-[#0e1014] px-3 py-2.5">
         <div className="flex items-start justify-between">
           <div>
-            <div className="font-mono text-[1rem] font-semibold text-[#f3ece0]">{detail.table_id}</div>
+            <div className="font-mono text-[1rem] font-semibold text-[#f3ece0]">
+              {detail.table_id.replace('LR-', 'T-')}
+            </div>
             <div className="text-[0.72rem] text-[#a9b0bb]">
               {detail.stakes} · {detail.seated_count}/{detail.max_seats} · {detail.open_seats} open
             </div>
@@ -243,7 +254,7 @@ export function LobbySidecar({
       </div>
 
       <div className="px-3 py-2 text-[0.8rem]">
-        <MiniTable detail={detail} />
+        <MiniTable detail={detail} reveal={curtain} />
 
         {!curtain ? (
           <div className="mt-1 space-y-2">
