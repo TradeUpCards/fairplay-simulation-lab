@@ -124,7 +124,7 @@ function seatPositions(n: number): { top: string; left: string }[] {
     const theta = Math.PI / 2 + (i / n) * Math.PI * 2
     // Push the pods OUT past the rail (off the felt) so the cards-over-avatar don't
     // spill onto the table; vertical radius a touch tighter so top/bottom don't clip.
-    return { left: `${50 + 54 * Math.cos(theta)}%`, top: `${50 + 40 * Math.sin(theta)}%` }
+    return { left: `${50 + 54 * Math.cos(theta)}%`, top: `${50 + 34 * Math.sin(theta)}%` }
   })
 }
 
@@ -180,6 +180,76 @@ function Seat({ sv }: { sv: SeatView }) {
   )
 }
 
+// A configurable seat (shown when not mid-hand): the name placard IS the type picker,
+// including "Empty seat". Same vertical design as a live seat — avatar above a card.
+function ConfigSeat({
+  value,
+  onChange,
+  isHero = false,
+}: {
+  value: string
+  onChange?: (v: string) => void
+  isHero?: boolean
+}) {
+  if (isHero) {
+    return (
+      <div className="flex w-[112px] flex-col items-center -translate-x-1/2 -translate-y-1/2">
+        <div
+          className="grid h-16 w-16 shrink-0 place-items-center rounded-full border-2 border-brass text-[1.7rem] shadow-[0_2px_6px_rgba(0,0,0,0.5)]"
+          style={{ background: 'radial-gradient(circle at 30% 25%, hsl(40 42% 36%), hsl(40 46% 15%))' }}
+          aria-hidden="true"
+        >
+          🧑
+        </div>
+        <div className="-mt-3 z-20 w-full rounded-lg border border-brass-soft bg-[#1c1a12] px-1.5 pb-1.5 pt-2.5 text-center">
+          <div className="text-[0.78rem] font-semibold text-brass">You</div>
+        </div>
+      </div>
+    )
+  }
+  const empty = !value
+  const imageUrl = empty ? null : archetypeBadge(value)
+  const hue = hashHue(value || 'empty')
+  return (
+    <div className="flex w-[128px] flex-col items-center -translate-x-1/2 -translate-y-1/2">
+      <div
+        className={`grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border-2 text-[1.4rem] shadow-[0_2px_6px_rgba(0,0,0,0.5)] ${
+          empty ? 'border-dashed border-[#454d5a] text-[#6f7682]' : 'border-[#3a4555]'
+        }`}
+        style={empty ? undefined : { background: `radial-gradient(circle at 30% 25%, hsl(${hue} 42% 36%), hsl(${hue} 46% 15%))` }}
+        aria-hidden="true"
+      >
+        {imageUrl ? (
+          <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+        ) : empty ? (
+          '+'
+        ) : (
+          (ARCH_AVATAR[value] ?? '🎭')
+        )}
+      </div>
+      <div
+        className={`-mt-3 z-20 w-full rounded-lg border bg-[#10141b] ${
+          empty ? 'border-dashed border-[#39414c]' : 'border-[#2c3543]'
+        }`}
+      >
+        <select
+          value={value}
+          onChange={(e) => onChange?.(e.target.value)}
+          aria-label="seat player type"
+          className="w-full cursor-pointer rounded-lg bg-transparent px-1 py-1.5 text-center text-[0.72rem] font-semibold text-text focus:outline-none focus:ring-1 focus:ring-brass"
+        >
+          <option value="">Empty seat</option>
+          {BOT_CHOICES.map((c) => (
+            <option key={c.archetype} value={c.archetype}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  )
+}
+
 function logName(e: LogEntry, seats: SeatView[]): string {
   const sv = seats.find((s) => s.seat === e.seat)
   if (sv?.is_hero) return 'You'
@@ -225,7 +295,7 @@ function ChatLog({ log, seats }: { log: LogEntry[]; seats: SeatView[] }) {
   const order: string[] = []
   for (const e of log) if (!order.includes(e.street)) order.push(e.street)
   return (
-    <aside className="hidden min-h-0 flex-col rounded-xl border border-line bg-surface lg:flex">
+    <aside className="hidden h-[212px] min-h-0 flex-col self-end rounded-xl border border-line bg-surface lg:flex">
       <div className="flex shrink-0 items-center gap-2 border-b border-line px-3.5 py-2.5">
         <span aria-hidden className="text-[0.95rem]">💬</span>
         <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-muted">
@@ -869,22 +939,9 @@ export function TrainingTable() {
             </>
           ) : (
             <>
-              <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-muted">Seat</span>
-              {slots.map((b, i) => (
-                <select
-                  key={i}
-                  value={b}
-                  onChange={(e) => setSlots((prev) => prev.map((p, j) => (j === i ? e.target.value : p)))}
-                  className="rounded-md border border-line bg-surface-2 px-2 py-1 text-[0.76rem] text-text"
-                >
-                  <option value="">— Empty —</option>
-                  {BOT_CHOICES.map((c) => (
-                    <option key={c.archetype} value={c.archetype}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              ))}
+              <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-muted">
+                Pick player types at the seats →
+              </span>
               <button
                 type="button"
                 onClick={() => setSlots((prev) => prev.map(() => ARCHS[Math.floor(Math.random() * ARCHS.length)]))}
@@ -939,7 +996,7 @@ export function TrainingTable() {
             action controls overlay the bottom-right rail (poker-client composition) */}
         <div className="relative min-h-0 flex-1">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative aspect-3/2 h-full max-h-full w-auto max-w-full">
+            <div className="relative aspect-3/2 h-full max-h-[88%] w-auto max-w-full">
               <img
                 className="absolute inset-0 h-full w-full object-contain opacity-[0.92]"
                 src={pokerTable}
@@ -960,15 +1017,30 @@ export function TrainingTable() {
                   </span>
                 )}
               </div>
-              {/* seats */}
-              {st?.seats.map((sv) => {
-                const pos = positions[seatToSlot[sv.seat] ?? 0]
-                return (
-                  <div key={sv.seat} className="absolute" style={pos}>
-                    <Seat sv={sv} />
-                  </div>
-                )
-              })}
+              {/* seats — configurable placards when idle/complete, live seats mid-hand */}
+              {!st || st.complete
+                ? positions.map((pos, slot) => (
+                    <div key={`cfg-${slot}`} className="absolute" style={pos}>
+                      {slot === 0 ? (
+                        <ConfigSeat isHero value="" />
+                      ) : (
+                        <ConfigSeat
+                          value={slots[slot - 1] ?? ''}
+                          onChange={(v) =>
+                            setSlots((prev) => prev.map((p, j) => (j === slot - 1 ? v : p)))
+                          }
+                        />
+                      )}
+                    </div>
+                  ))
+                : st.seats.map((sv) => {
+                    const pos = positions[seatToSlot[sv.seat] ?? 0]
+                    return (
+                      <div key={sv.seat} className="absolute" style={pos}>
+                        <Seat sv={sv} />
+                      </div>
+                    )
+                  })}
             </div>
           </div>
         </div>
