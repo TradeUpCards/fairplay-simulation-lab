@@ -909,7 +909,7 @@ export function TrainingTable() {
 
   return (
     <>
-      <div className="grid h-full min-h-0 grid-cols-1 gap-5 overflow-y-auto lg:grid-cols-[320px_1fr_352px] lg:overflow-hidden">
+      <div className="grid h-full min-h-0 grid-cols-1 gap-5 overflow-y-auto lg:grid-cols-[440px_1fr_352px] lg:overflow-hidden">
       {/* left column: the hand-action "table feed" chat window */}
       <ChatLog log={st?.log ?? []} seats={st?.seats ?? []} />
       <div className="flex min-h-0 flex-col">
