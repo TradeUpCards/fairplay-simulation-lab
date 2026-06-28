@@ -78,6 +78,11 @@ export const raceSound = {
   isMuted(): boolean {
     return muted
   },
+  /** A soft, quiet tick as each simulated hour ticks over. */
+  hour(): void {
+    ensure()
+    tone(1300, 0, 0.04, 'sine', 0.02)
+  },
   /** A two-note rising blip when the lead changes hands. */
   overtake(): void {
     ensure()

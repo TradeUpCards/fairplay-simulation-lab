@@ -127,13 +127,14 @@ const tsCell = (tables: number, rate: number) => ({
       active_tables: [14, 13],
     },
     fairplay: {
-      total_paid_seat_hours: [6, 14],
-      vulnerable_paid_seat_hours: [1.5, 2.8],
+      total_paid_seat_hours: [6, 13],
+      vulnerable_paid_seat_hours: [1.5, 2.6],
       active_tables: [16, 15],
     },
     fairplay_liveness: {
-      total_paid_seat_hours: [6, 13.8],
-      vulnerable_paid_seat_hours: [1.4, 2.8],
+      // the liveness arm leads both metrics at the finish
+      total_paid_seat_hours: [6, 14],
+      vulnerable_paid_seat_hours: [1.4, 3.0],
       active_tables: [16, 16],
     },
   },
@@ -171,7 +172,7 @@ describe('dashboard helpers', () => {
     // dataset cell rate is 40 (number); ts key is "20|40.0" — must still resolve.
     const found = findTimeseriesCell(TS.datasets['static-capacity'], 20, 40)
     expect(found?.tables).toBe(20)
-    expect(found?.policies.fairplay.total_paid_seat_hours).toEqual([6, 14])
+    expect(found?.policies.fairplay.total_paid_seat_hours).toEqual([6, 13])
   })
 
   it('interpAt linearly interpolates a fractional index', () => {
@@ -205,44 +206,45 @@ describe('DashboardView render', () => {
     vi.unstubAllGlobals()
   })
 
-  it('renders title, caveat, and a multi-regime replay (Standard + FairPlay lines)', () => {
+  it('renders title, caveat, and the one-regime policy race (Standard, FairPlay, Liveness)', () => {
     render(<DashboardView sweep={SWEEP} timeseries={TS} />)
     expect(screen.getByText(/Routing sweep/)).toBeTruthy()
     // the illustrative-data caveat still lives in the footer note
     expect(screen.getByText(/illustrative until calibrated/i)).toBeTruthy()
-    expect(screen.getByText(/all regimes/)).toBeTruthy()
-    expect(screen.getByTestId('replay-line-20|40|standard')).toBeTruthy()
-    expect(screen.getByTestId('replay-line-20|40|fairplay_liveness')).toBeTruthy()
+    // one line per policy for the selected regime (per-policy test ids now)
+    expect(screen.getByTestId('race-line-standard')).toBeTruthy()
+    expect(screen.getByTestId('race-line-fairplay')).toBeTruthy()
+    expect(screen.getByTestId('race-line-fairplay_liveness')).toBeTruthy()
   })
 
-  it('shows the liveness arm AS "FairPlay" and hides the plain route arm', () => {
+  it('surfaces all three real policy names (no relabelling of the liveness arm)', () => {
     render(<DashboardView sweep={SWEEP} timeseries={TS} />)
-    // the liveness arm is surfaced as "FairPlay" (table rows, chart key)…
-    expect(screen.getAllByText('FairPlay').length).toBeGreaterThan(0)
-    // …never under the raw liveness/route names
-    expect(screen.queryByText('FairPlay-liveness')).toBeNull()
+    expect(screen.getAllByText('Standard').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('FairPlay-Liveness').length).toBeGreaterThan(0)
+    // the plain route is now shown under its own name, never the old aliases
     expect(screen.queryByText('FairPlay-route')).toBeNull()
+    expect(screen.queryByText('FairPlay-liveness')).toBeNull()
   })
 
-  it('switching the metric tab re-colours toward vulnerable seat-hrs', () => {
+  it('switching the metric tab re-colours toward total seat-hrs', () => {
     render(<DashboardView sweep={SWEEP} timeseries={TS} />)
-    fireEvent.click(screen.getByRole('tab', { name: /Vulnerable seat-hrs/ }))
-    expect(screen.getAllByText(/Vulnerable seat-hrs/).length).toBeGreaterThan(0)
+    fireEvent.click(screen.getByRole('tab', { name: /Total seat-hrs/ }))
+    expect(screen.getAllByText(/Total/).length).toBeGreaterThan(0)
   })
 
-  it('toggling a key chip hides that line', () => {
+  it('clicking a heatmap cell re-points the race to that regime and scrolls into view', () => {
     render(<DashboardView sweep={SWEEP} timeseries={TS} />)
-    expect(screen.getByTestId('replay-line-20|40|standard')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: '20t · 40/hr Standard' }))
-    expect(screen.queryByTestId('replay-line-20|40|standard')).toBeNull()
-  })
-
-  it('clicking a heatmap cell solos that regime and scrolls the chart into view', () => {
-    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
+    // defaults to the most FairPlay-favourable regime (20t · 40/hr)
+    expect(screen.getByText(/Live standings · 20t · 40\/hr/)).toBeTruthy()
     fireEvent.click(screen.getByTitle(/10 tables · 20\/hr/))
-    expect(screen.getByTestId('replay-line-10|20|fairplay_liveness')).toBeTruthy()
-    expect(screen.queryByTestId('replay-line-20|40|standard')).toBeNull()
+    expect(screen.getByText(/Live standings · 10t · 20\/hr/)).toBeTruthy()
     expect(Element.prototype.scrollIntoView).toHaveBeenCalled()
+  })
+
+  it('selecting a regime pill re-points the race', () => {
+    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
+    fireEvent.click(screen.getByRole('button', { name: '20t · 20/hr' }))
+    expect(screen.getByText(/Live standings · 20t · 20\/hr/)).toBeTruthy()
   })
 
   it('shows the descriptive departures panel for the selected regime and follows selection', () => {
@@ -268,56 +270,28 @@ describe('DashboardView render', () => {
     expect(screen.queryByText(/Where players left/)).toBeNull()
   })
 
-  it('renders live standings that rank the visible lines by value', () => {
+  it('ranks the policies by value at the playhead, with the liveness arm leading at the finish', () => {
     render(<DashboardView sweep={SWEEP} timeseries={TS} />)
     expect(screen.getByText(/Live standings/i)).toBeTruthy()
-    const live = screen.getByTestId('standing-20|40|fairplay_liveness')
-    const std = screen.getByTestId('standing-20|40|standard')
-    // FairPlay's opening value leads Standard's → it holds the better (lower) rank
+    // scrub to the end (N = tHr.length - 1 = 1); liveness leads both metrics there
+    fireEvent.change(screen.getByLabelText('scrub replay'), { target: { value: '1' } })
+    const live = screen.getByTestId('race-standing-fairplay_liveness')
+    const std = screen.getByTestId('race-standing-standard')
+    expect(live.getAttribute('data-rank')).toBe('0')
     expect(Number(live.getAttribute('data-rank'))).toBeLessThan(
       Number(std.getAttribute('data-rank')),
     )
   })
 
-  it('reveals the winner banner only once the replay reaches the finish', () => {
-    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
-    expect(screen.getByTestId('winner-banner').getAttribute('data-shown')).toBe('false')
-    // scrub to the end (N = tHr.length - 1 = 1)
-    fireEvent.change(screen.getByLabelText('scrub replay'), { target: { value: '1' } })
-    expect(screen.getByTestId('winner-banner').getAttribute('data-shown')).toBe('true')
-  })
-
-  it('dismisses the winner banner with the close button', () => {
+  it('the big HUD readout matches the leading policy at the finish', () => {
     render(<DashboardView sweep={SWEEP} timeseries={TS} />)
     fireEvent.change(screen.getByLabelText('scrub replay'), { target: { value: '1' } })
-    expect(screen.getByTestId('winner-banner').getAttribute('data-shown')).toBe('true')
-    fireEvent.click(screen.getByLabelText('dismiss winner banner'))
-    expect(screen.getByTestId('winner-banner').getAttribute('data-shown')).toBe('false')
-  })
-
-  it('the leading-score readout matches the top standing at the finish', () => {
-    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
-    fireEvent.change(screen.getByLabelText('scrub replay'), { target: { value: '1' } })
-    // FairPlay's final sample (13.8) leads → score rounds to "14"
-    expect(screen.getByTestId('replay-score').textContent).toContain('14')
+    // default metric is vulnerable seat-hrs; liveness final (3.0) rounds to "3"
+    expect(screen.getByTestId('race-score').textContent).toContain('3')
     const leaderRow = screen
-      .getAllByTestId(/^standing-/)
+      .getAllByTestId(/^race-standing-/)
       .find((r) => r.getAttribute('data-rank') === '0')
-    expect(leaderRow?.textContent).toContain('14')
-  })
-
-  it('toggles every FairPlay line at once with the policy control', () => {
-    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
-    expect(screen.getByTestId('replay-line-20|40|fairplay_liveness')).toBeTruthy()
-    fireEvent.click(screen.getByLabelText('toggle all FairPlay lines'))
-    // all FairPlay regimes drop out…
-    expect(screen.queryByTestId('replay-line-20|40|fairplay_liveness')).toBeNull()
-    expect(screen.queryByTestId('replay-line-10|20|fairplay_liveness')).toBeNull()
-    // …while Standard lines stay
-    expect(screen.getByTestId('replay-line-20|40|standard')).toBeTruthy()
-    // clicking again brings them back
-    fireEvent.click(screen.getByLabelText('toggle all FairPlay lines'))
-    expect(screen.getByTestId('replay-line-20|40|fairplay_liveness')).toBeTruthy()
+    expect(leaderRow?.textContent).toContain('3')
   })
 
   it('does not autoplay — a center button starts the simulation', () => {
