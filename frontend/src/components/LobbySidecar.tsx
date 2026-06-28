@@ -156,7 +156,20 @@ function MiniTable({
               </span>
             ) : (
               <div className="flex w-[3.6rem] flex-col items-center">
-                <SeatAvatar label={s.id} imageUrl={avatarFor(s.id)} size="md" />
+                <div className="relative">
+                  <SeatAvatar label={s.id} imageUrl={avatarFor(s.id)} size="md" />
+                  {reveal &&
+                    (() => {
+                      const h = seatHeat(detail, s.archetype)
+                      if (!h) return null
+                      return (
+                        <span
+                          title={`${PTL_LABEL[h.tone]} — ${h.why}`}
+                          className={`absolute -right-0.5 -top-0.5 z-20 h-3.5 w-3.5 rounded-full border-2 border-[#0e1014] ${PTL_DOT[h.tone]}`}
+                        />
+                      )
+                    })()}
+                </div>
                 <div className="relative -mt-2 z-10 w-full rounded-[5px] border border-[#3a4555] bg-[rgba(8,10,14,0.92)] px-1 pb-[0.12rem] pt-[0.18rem] text-center leading-tight shadow-[0_1px_4px_rgba(0,0,0,0.55)]">
                   <div className="truncate text-[0.55rem] font-semibold text-[#e7e0d2]">
                     {handleFor(s.id)}
