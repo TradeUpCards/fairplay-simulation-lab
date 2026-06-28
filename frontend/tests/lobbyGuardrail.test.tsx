@@ -94,7 +94,7 @@ describe('player lobby guardrail — the player/operator wall (R17 / AE2)', () =
 
 describe('lobby sidecar — player view never leaks archetype (the curtain wall)', () => {
   it('player view: seats render handles but no archetype text or attribute', () => {
-    render(<LobbySidecar detail={SAMPLE_DETAIL} onClose={() => {}} initialCurtain={false} />)
+    render(<LobbySidecar detail={SAMPLE_DETAIL} onClose={() => {}} pitboss={false} onPitbossChange={() => {}} />)
     // Seats rendered (so the assertion below is meaningful, not vacuous).
     expect(document.querySelectorAll('[data-testid="seat-row"]').length).toBeGreaterThan(0)
     // No seat carries an archetype attribute in the player view.
@@ -107,7 +107,7 @@ describe('lobby sidecar — player view never leaks archetype (the curtain wall)
   })
 
   it('pit-boss view DOES reveal archetype (proves the player-view test discriminates)', () => {
-    render(<LobbySidecar detail={SAMPLE_DETAIL} onClose={() => {}} initialCurtain={true} />)
+    render(<LobbySidecar detail={SAMPLE_DETAIL} onClose={() => {}} pitboss={true} onPitbossChange={() => {}} />)
     expect(document.querySelectorAll('[data-archetype]').length).toBeGreaterThan(0)
     const text = (document.body.textContent ?? '').toLowerCase()
     // The archetype names embed forbidden substrings — expected on the operator side.

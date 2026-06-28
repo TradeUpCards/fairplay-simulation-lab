@@ -43,12 +43,24 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
   const sits = ev.filter((e) => e.action === 'sit').length
   const stands = ev.filter((e) => e.action === 'stand').length
 
+  // Focus mode: when a table is open in pit-boss view, the panel grows wide and the
+  // lobby recedes behind it (easier to call out the operator evidence).
+  const expanded = ui.pitboss && !!ui.selected && !!cur.op_detail?.[ui.selected]
+  const lobbyAreaCls = `transition-opacity duration-500 ${expanded ? 'opacity-40' : ''}`
+
   const sidecar = (
-    <div className="flex h-[62vh] w-full flex-col xl:h-[calc(62vh+2.875rem)] xl:w-[23rem] xl:shrink-0">
+    <div
+      className={`flex h-[62vh] w-full flex-col transition-[width] duration-500 xl:h-[calc(62vh+2.875rem)] xl:shrink-0 ${
+        expanded ? 'xl:w-[46rem]' : 'xl:w-[23rem]'
+      }`}
+    >
       {ui.selected && cur.op_detail?.[ui.selected] ? (
         <LobbySidecar
           key={ui.selected}
           detail={cur.op_detail[ui.selected]}
+          pitboss={ui.pitboss}
+          onPitbossChange={lobbyStore.setPitboss}
+          expanded={expanded}
           onClose={() => lobbyStore.setSelected(null)}
         />
       ) : (
@@ -85,7 +97,7 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
         </div>
 
         <div className="flex flex-col gap-4 xl:flex-row">
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div className={`flex min-w-0 flex-1 flex-col ${lobbyAreaCls}`}>
             <LobbyDataTable
               rows={cur.standard}
               policy="Standard"
@@ -147,7 +159,7 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
       <RevealHeadline standard={cur.standard} fairplay={cur.fairplay} />
 
       <div className="flex flex-col gap-4 xl:flex-row">
-        <div className="flex min-w-0 flex-1 flex-col gap-5 lg:flex-row">
+        <div className={`flex min-w-0 flex-1 flex-col gap-5 lg:flex-row ${lobbyAreaCls}`}>
           <LobbyDataTable
             rows={cur.standard}
             policy="Standard"

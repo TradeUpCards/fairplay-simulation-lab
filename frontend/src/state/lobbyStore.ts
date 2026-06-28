@@ -8,12 +8,15 @@
  *  - `diagOpen` whether the admin seat-events diagnostics are expanded (both at once)
  *  - `revealed` demo scene gate: false = Standard-only lobby (Scene 1); true =
  *               "curtain pulled back" → the side-by-side Standard vs FairPlay board.
+ *  - `pitboss`  sidecar view: false = player preview (small); true = operator reveal
+ *               (promotes to a wide focus panel). Resets to false on each new select.
  */
 export interface LobbyUiState {
   step: number
   selected: string | null
   diagOpen: boolean
   revealed: boolean
+  pitboss: boolean
 }
 
 export type LobbyListener = (state: LobbyUiState) => void
@@ -23,6 +26,7 @@ const DEFAULT_STATE: LobbyUiState = {
   selected: null,
   diagOpen: false,
   revealed: false,
+  pitboss: false,
 }
 
 export interface LobbyStore {
@@ -33,6 +37,7 @@ export interface LobbyStore {
   toggleSelected: (id: string) => void
   toggleDiag: () => void
   setRevealed: (revealed: boolean) => void
+  setPitboss: (pitboss: boolean) => void
   reset: () => void
 }
 
@@ -57,16 +62,19 @@ export function createLobbyStore(initial?: Partial<LobbyUiState>): LobbyStore {
       set({ step })
     },
     setSelected(selected) {
-      set({ selected })
+      set({ selected, pitboss: false })
     },
     toggleSelected(id) {
-      set({ selected: state.selected === id ? null : id })
+      set({ selected: state.selected === id ? null : id, pitboss: false })
     },
     toggleDiag() {
       set({ diagOpen: !state.diagOpen })
     },
     setRevealed(revealed) {
       set({ revealed })
+    },
+    setPitboss(pitboss) {
+      set({ pitboss })
     },
     reset() {
       set({ ...DEFAULT_STATE })

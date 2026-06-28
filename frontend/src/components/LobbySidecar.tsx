@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import pokerTable from '../assets/poker-table.png'
 import type { OperatorTableDetail } from '../data/types'
 import { ARCH_AVATAR, SeatAvatar, seatPositions } from './tableArt'
@@ -72,11 +72,21 @@ function archTone(a: string): string {
 /** Seat ring on the real felt — each seat is a round avatar portrait sitting above
  *  and behind a name + balance card (its bottom tucked behind the card), pushed out
  *  toward the rail. Same synthetic ids as the seat list, so they always match. */
-function MiniTable({ detail, reveal }: { detail: OperatorTableDetail; reveal: boolean }) {
+function MiniTable({
+  detail,
+  reveal,
+  large = false,
+}: {
+  detail: OperatorTableDetail
+  reveal: boolean
+  large?: boolean
+}) {
   const seats = expandSeats(detail.table_id, detail.composition)
   const pos = seatPositions(detail.max_seats, 50, 44)
   return (
-    <div className="relative mx-auto my-6 aspect-3/2 w-full max-w-[17rem]">
+    <div
+      className={`relative mx-auto my-6 aspect-3/2 w-full ${large ? 'max-w-[22rem]' : 'max-w-[17rem]'}`}
+    >
       <img
         src={pokerTable}
         className="absolute inset-0 h-full w-full rounded-[14px] object-cover"
@@ -200,13 +210,16 @@ function SeatList({ detail, reveal }: { detail: OperatorTableDetail; reveal: boo
 export function LobbySidecar({
   detail,
   onClose,
-  initialCurtain = false,
+  pitboss,
+  onPitbossChange,
+  expanded = false,
 }: {
   detail: OperatorTableDetail
   onClose: () => void
-  initialCurtain?: boolean
+  pitboss: boolean
+  onPitbossChange: (v: boolean) => void
+  expanded?: boolean
 }) {
-  const [curtain, setCurtain] = useState(initialCurtain)
   const band = detail.band ?? '—'
   const rec =
     detail.badge === 'recommended'
@@ -217,10 +230,90 @@ export function LobbySidecar({
           ? 'Full — no open seat'
           : 'Not recommended'
 
+  const routingLine = (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-[#8b8276]">Routing:</span>
+      <span className="font-semibold text-[#f3ece0]">{rec}</span>
+      {detail.seating_risk && (
+        <span
+          className={`rounded-full border px-1.5 py-[0.05rem] text-[0.7rem] ${
+            RISK_TONE[detail.seating_risk] ?? RISK_TONE.medium
+          }`}
+        >
+          seating risk: {detail.seating_risk}
+        </span>
+      )}
+      {detail.rank != null && (
+        <span className="text-[0.72rem] text-[#6f7682]">rank {detail.rank}</span>
+      )}
+    </div>
+  )
+
+  const healthBlock = detail.health != null && (
+    <div>
+      <div className="mb-1 flex items-baseline justify-between">
+        <span className="text-[#8b8276]">Table health</span>
+        <span className="text-[#f3ece0]">
+          <span className={expanded ? 'text-[1.4rem] font-semibold' : 'text-[1.05rem] font-semibold'}>
+            {detail.health}
+          </span>
+          <span className="ml-1 text-[0.72rem] text-[#a9b0bb]">/ 100 · {band}</span>
+        </span>
+      </div>
+      <div className="space-y-1">
+        {detail.terms &&
+          Object.entries(TERM_MAX).map(([k, max]) => {
+            const v = detail.terms?.[k] ?? 0
+            return (
+              <div key={k} className="flex items-center gap-2">
+                <span className="w-16 text-[0.68rem] text-[#8b8276]">{TERM_LABEL[k]}</span>
+                <span className={`${expanded ? 'h-2' : 'h-1.5'} flex-1 overflow-hidden rounded-full bg-[#1c2028]`}>
+                  <span
+                    className="block h-full rounded-full bg-[#c98b93]"
+                    style={{ width: `${Math.min(100, (v / max) * 100)}%` }}
+                  />
+                </span>
+                <span className="w-10 text-right text-[0.66rem] text-[#6f7682]">
+                  {Math.round(v)}/{max}
+                </span>
+              </div>
+            )
+          })}
+      </div>
+    </div>
+  )
+
+  const seatedBlock = (
+    <div>
+      <div className="mb-1.5 text-[#8b8276]">Who's seated</div>
+      <SeatList detail={detail} reveal />
+    </div>
+  )
+
+  const reasonsBlock = detail.reasons && detail.reasons.length > 0 && (
+    <div>
+      <div className="mb-1 text-[#8b8276]">Why this rank</div>
+      <ul className="space-y-1.5">
+        {detail.reasons.map((r) => (
+          <li key={r.code} className="text-[0.74rem] leading-snug text-[#b8c0cf]">
+            <span className="text-[#8fd0ef]">{r.code.replace(/_/g, ' ')}</span> — {r.detail}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+
+  const footer = (
+    <p className="border-t border-[#23262d] pt-2 text-[0.68rem] leading-snug text-[#6f7682]">
+      Operator-only — the reasoning behind the ranking. Players never see scores or risk language.
+    </p>
+  )
+
   return (
     <aside
       className="flex min-h-0 w-full flex-1 flex-col overflow-y-auto rounded-md border border-[#2a2e36] bg-[#0e1014]"
       aria-label="table detail"
+      data-expanded={expanded ? 'true' : undefined}
     >
       <div className="sticky top-0 z-10 border-b border-[#23262d] bg-[#0e1014] px-3 py-2.5">
         <div className="flex items-start justify-between">
@@ -234,10 +327,10 @@ export function LobbySidecar({
           </div>
           <div className="flex items-center gap-2">
             <div className="inline-flex gap-0.5 rounded-full border border-line bg-surface-2 p-0.5">
-              <ViewTab active={!curtain} onClick={() => setCurtain(false)}>
+              <ViewTab active={!pitboss} onClick={() => onPitbossChange(false)}>
                 Player
               </ViewTab>
-              <ViewTab active={curtain} onClick={() => setCurtain(true)}>
+              <ViewTab active={pitboss} onClick={() => onPitbossChange(true)}>
                 Pit-boss
               </ViewTab>
             </div>
@@ -254,96 +347,50 @@ export function LobbySidecar({
       </div>
 
       <div className="px-3 py-2 text-[0.8rem]">
-        <MiniTable detail={detail} reveal={curtain} />
-
-        {!curtain ? (
-          <div className="mt-1 space-y-2">
-            <p className="text-[0.74rem] text-[#a9b0bb]">
-              {detail.seated_count} seated · {detail.open_seats} open seat
-              {detail.open_seats === 1 ? '' : 's'}
-              {detail.full ? ' · table full' : ''}
-            </p>
-            <SeatList detail={detail} reveal={false} />
-            <p className="text-[0.68rem] leading-snug text-[#6f7682]">
-              The neutral preview a player sees — handles and stacks only. Switch to{' '}
-              <span className="text-[#8b8276]">Pit-boss</span> to reveal who's seated and why this
-              table is ranked where it is (operator-only).
-            </p>
-          </div>
+        {!pitboss ? (
+          <>
+            <MiniTable detail={detail} reveal={false} />
+            <div className="mt-1 space-y-2">
+              <p className="text-[0.74rem] text-[#a9b0bb]">
+                {detail.seated_count} seated · {detail.open_seats} open seat
+                {detail.open_seats === 1 ? '' : 's'}
+                {detail.full ? ' · table full' : ''}
+              </p>
+              <SeatList detail={detail} reveal={false} />
+              <p className="text-[0.68rem] leading-snug text-[#6f7682]">
+                The neutral preview a player sees — handles and stacks only. Switch to{' '}
+                <span className="text-[#8b8276]">Pit-boss</span> to reveal who's seated and why this
+                table is ranked where it is (operator-only).
+              </p>
+            </div>
+          </>
+        ) : expanded ? (
+          // Focus mode — two columns: the felt + seats, and the analysis.
+          <>
+            <div className="grid gap-6 xl:grid-cols-2">
+              <div className="space-y-4">
+                <MiniTable detail={detail} reveal large />
+                {seatedBlock}
+              </div>
+              <div className="space-y-5">
+                {routingLine}
+                {healthBlock}
+                {reasonsBlock}
+              </div>
+            </div>
+            <div className="mt-4">{footer}</div>
+          </>
         ) : (
-          <div className="mt-1 space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[#8b8276]">Routing:</span>
-              <span className="font-semibold text-[#f3ece0]">{rec}</span>
-              {detail.seating_risk && (
-                <span
-                  className={`rounded-full border px-1.5 py-[0.05rem] text-[0.7rem] ${
-                    RISK_TONE[detail.seating_risk] ?? RISK_TONE.medium
-                  }`}
-                >
-                  seating risk: {detail.seating_risk}
-                </span>
-              )}
-              {detail.rank != null && (
-                <span className="text-[0.72rem] text-[#6f7682]">rank {detail.rank}</span>
-              )}
+          <>
+            <MiniTable detail={detail} reveal />
+            <div className="mt-1 space-y-4">
+              {routingLine}
+              {healthBlock}
+              {seatedBlock}
+              {reasonsBlock}
+              {footer}
             </div>
-
-            {detail.health != null && (
-              <div>
-                <div className="mb-1 flex items-baseline justify-between">
-                  <span className="text-[#8b8276]">Table health</span>
-                  <span className="text-[#f3ece0]">
-                    <span className="text-[1.05rem] font-semibold">{detail.health}</span>
-                    <span className="ml-1 text-[0.72rem] text-[#a9b0bb]">/ 100 · {band}</span>
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  {detail.terms &&
-                    Object.entries(TERM_MAX).map(([k, max]) => {
-                      const v = detail.terms?.[k] ?? 0
-                      return (
-                        <div key={k} className="flex items-center gap-2">
-                          <span className="w-16 text-[0.68rem] text-[#8b8276]">{TERM_LABEL[k]}</span>
-                          <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#1c2028]">
-                            <span
-                              className="block h-full rounded-full bg-[#c98b93]"
-                              style={{ width: `${Math.min(100, (v / max) * 100)}%` }}
-                            />
-                          </span>
-                          <span className="w-10 text-right text-[0.66rem] text-[#6f7682]">
-                            {Math.round(v)}/{max}
-                          </span>
-                        </div>
-                      )
-                    })}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <div className="mb-1.5 text-[#8b8276]">Who's seated</div>
-              <SeatList detail={detail} reveal />
-            </div>
-
-            {detail.reasons && detail.reasons.length > 0 && (
-              <div>
-                <div className="mb-1 text-[#8b8276]">Why this rank</div>
-                <ul className="space-y-1.5">
-                  {detail.reasons.map((r) => (
-                    <li key={r.code} className="text-[0.74rem] leading-snug text-[#b8c0cf]">
-                      <span className="text-[#8fd0ef]">{r.code.replace(/_/g, ' ')}</span> — {r.detail}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <p className="border-t border-[#23262d] pt-2 text-[0.68rem] leading-snug text-[#6f7682]">
-              Operator-only — the reasoning behind the ranking. Players never see scores or risk
-              language.
-            </p>
-          </div>
+          </>
         )}
       </div>
     </aside>
