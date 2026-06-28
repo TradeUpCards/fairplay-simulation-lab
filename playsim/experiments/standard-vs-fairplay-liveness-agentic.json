@@ -1,0 +1,51 @@
+{
+  "experiment": "standard_vs_fairplay_liveness_static_capacity",
+  "hypothesis": "FairPlay-liveness can beat Standard on room-wide paid seat-hours when enough visible capacity exists for healthy table formation.",
+  "objective": {
+    "primary": "total_paid_seat_hours_delta",
+    "secondary": [
+      "vulnerable_paid_seat_hours_delta",
+      "demand_drop_rate_delta",
+      "departure_rate_per_hour_delta",
+      "terminal_churn_rate_per_hour_delta",
+      "reseek_departure_rate_per_hour_delta",
+      "estimated_avg_user_session_min"
+    ]
+  },
+  "autonomy_contract": {
+    "allowed_knob_families": [
+      "room_demand",
+      "behavior",
+      "policy",
+      "scoring_named_variants"
+    ],
+    "max_experiments": 1,
+    "escalate_if": {
+      "estimated_avg_user_session_min": "> 150",
+      "demand_drop_rate_delta": "> 0.10",
+      "terminal_churn_rate_per_hour_delta": "> 2.0"
+    },
+    "forbidden_claims": [
+      "validated retention improvement without real room data",
+      "canonical backend scoring changed by an exploratory sweep"
+    ]
+  },
+  "fixed": {
+    "fixture_seed": 42,
+    "horizon_min": 480,
+    "seeds": [42, 7, 99],
+    "behavior": "formation-aware",
+    "formation_mode": "forming",
+    "samples": 1,
+    "players": 1000,
+    "active_tables": 35,
+    "max_seats": 6,
+    "start_fill_min": 4,
+    "start_fill_max": 6,
+    "policies": ["standard", "fairplay_liveness"]
+  },
+  "sweep": {
+    "tables": [40, 50, 60, 70],
+    "arrival_rate_per_hour": [10, 20, 30, 40]
+  }
+}

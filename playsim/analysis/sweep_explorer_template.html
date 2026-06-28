@@ -248,6 +248,8 @@ function fmt(v, unit){
   if(v===null||v===undefined) return "—";
   if(unit==="hrs") return v.toFixed(1);
   if(unit==="ratio") return v.toFixed(2) + "x";
+  if(unit==="pct") return (v*100).toFixed(1) + "%";
+  if(unit==="rate") return v.toFixed(2);
   const r = Math.round(v*10)/10;
   return Number.isInteger(r) ? String(r) : r.toFixed(1);
 }
@@ -256,6 +258,7 @@ function fmtSigned(v, dec){
   dec = dec===undefined?2:dec;
   return (v>=0?"+":"") + v.toFixed(dec);
 }
+function decFor(unit){ return (unit==="hrs"||unit==="pct"||unit==="rate") ? 2 : 1; }
 function lerp(a,b,t){ return a+(b-a)*t; }
 function hexToRgb(h){ return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
 function rgb(c){ return `rgb(${c[0]|0},${c[1]|0},${c[2]|0})`; }
@@ -517,7 +520,7 @@ function heatmapPanel(){
       if(delta){
         const dd=deltaOf(c,pol,metricKey);
         const cls = dd.n&&dd.wins===dd.n ? "full" : (dd.wins>0?"part":"none");
-        mid=`<div class="badge">${fmtSigned(raw, md.unit==="hrs"?2:1)}</div>
+        mid=`<div class="badge">${fmtSigned(raw, decFor(md.unit))}</div>
              <div class="stab" title="${dd.wins}/${dd.n} seeds">${Object.values(dd.deltas).map(x=>`<i style="background:${(x*dd.sign>0)?POS_END:NEG_END}"></i>`).join("")}</div>`;
       } else {
         mid=`<div class="badge">${md.label}</div>`;
@@ -636,7 +639,7 @@ function tablePanel(){
         const dd=deltaOf(c,col.pol,S.tableMetric);
         const cls=dd.n&&dd.wins===dd.n?"full":(dd.wins>0?"part":"none");
         const sgn = dd.good>0?"pos":"neg";
-        return `<td><span class="delta ${sgn}">${fmtSigned(v,md.unit==="hrs"?2:1)}</span><span class="winbadge ${cls}">${dd.wins}/${dd.n}</span></td>`;
+        return `<td><span class="delta ${sgn}">${fmtSigned(v,decFor(md.unit))}</span><span class="winbadge ${cls}">${dd.wins}/${dd.n}</span></td>`;
       }
       if(col.tradeoff){
         const tr=tradeoffOf(c,col.pol);
@@ -677,11 +680,12 @@ function openCell(key){
     const rowFor=(mk)=>{
       const dd=deltaOf(c,p,mk); const md=metricDef(mk);
       const cls=dd.n&&dd.wins===dd.n?"full":(dd.wins>0?"part":"none");
-      const chips=Object.keys(dd.deltas).sort().map(s=>`<span class="seedchip ${dd.deltas[s]*dd.sign>0?"pos":"neg"}">seed ${s}: ${fmtSigned(dd.deltas[s],md.unit==="hrs"?2:1)}</span>`).join("");
+      const dec = decFor(md.unit);
+      const chips=Object.keys(dd.deltas).sort().map(s=>`<span class="seedchip ${dd.deltas[s]*dd.sign>0?"pos":"neg"}">seed ${s}: ${fmtSigned(dd.deltas[s],dec)}</span>`).join("");
       return `<div style="margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <span style="font-size:12.5px;color:var(--muted)">${md.label}</span>
-          <span><b style="font-variant-numeric:tabular-nums">${fmtSigned(dd.meanRaw,md.unit==="hrs"?2:1)}</b> <span class="winbadge ${cls}">${dd.wins}/${dd.n} seeds</span></span>
+          <span><b style="font-variant-numeric:tabular-nums">${fmtSigned(dd.meanRaw,dec)}</b> <span class="winbadge ${cls}">${dd.wins}/${dd.n} seeds</span></span>
         </div><div class="seedchips">${chips}</div></div>`;
     };
     const tradeoffRow=()=>{
@@ -715,7 +719,7 @@ function openCell(key){
   }).join("");
 
   // per-seed runs
-  const coreMetrics=["total_paid_seat_hours","vulnerable_paid_seat_hours","arrival_seated_count","arrival_balk_count","formation_activation_count","final_active_tables"]
+  const coreMetrics=["total_paid_seat_hours","vulnerable_paid_seat_hours","arrival_seated_count","demand_drop_rate","departure_rate_per_hour","terminal_churn_rate_per_hour","formation_activation_count","final_active_tables"]
     .filter(k=>d.metrics.some(m=>m.key===k));
   let runHead=`<th>Seed</th><th>Policy</th>`+coreMetrics.map(k=>`<th>${metricDef(k).label}</th>`).join("");
   let runBody="";

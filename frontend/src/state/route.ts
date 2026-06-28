@@ -5,14 +5,21 @@ import { useEffect, useState } from 'react'
  * it from any host path or `file://`), so a hash route is the portable way to
  * give the dashboard its own URL — `#/dashboard` — without a server rewrite.
  */
-export type Route = 'home' | 'dashboard'
+export type Route = 'home' | 'dashboard' | 'slideshow'
 
 function parse(): Route {
-  return window.location.hash.replace(/^#\/?/, '') === 'dashboard' ? 'dashboard' : 'home'
+  const path = window.location.hash.replace(/^#\/?/, '')
+  if (path === 'dashboard') return 'dashboard'
+  // The slideshow deep-links a slide index as `#/slideshow/3`, so match the
+  // prefix too — the deck reads the trailing number itself (see views/Slideshow).
+  if (path === 'slideshow' || path.startsWith('slideshow/')) return 'slideshow'
+  return 'home'
 }
 
 export function navigate(route: Route): void {
-  window.location.hash = route === 'dashboard' ? '#/dashboard' : '#/'
+  if (route === 'dashboard') window.location.hash = '#/dashboard'
+  else if (route === 'slideshow') window.location.hash = '#/slideshow'
+  else window.location.hash = '#/'
 }
 
 export function useHashRoute(): Route {

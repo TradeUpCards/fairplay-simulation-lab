@@ -3,7 +3,7 @@ PY ?= python3.12
 VENV ?= .venv
 BIN := $(VENV)/bin
 
-.PHONY: venv install test run replay tables calibrate health routing explorer scoring-sensitivity docker clean
+.PHONY: venv install test run replay tables calibrate health routing explorer scoring-sensitivity agentic agentic-llm docker clean
 
 venv:
 	$(PY) -m venv $(VENV)
@@ -41,6 +41,17 @@ explorer:   ## build the self-contained sweep-explorer web UI from out/*.json
 scoring-sensitivity:   ## run scoring sensitivity sweep + dashboard
 	$(BIN)/python analysis/scoring_sensitivity_sweep.py
 	@echo "open: out/scoring-sensitivity-explorer.html"
+
+agentic:   ## run the bounded Standard-vs-FairPlay-liveness experiment loop
+	$(BIN)/python -m playsim.cli agentic \
+		--spec experiments/standard-vs-fairplay-liveness-agentic.json \
+		--out-dir out/agentic
+
+agentic-llm:   ## run the bounded loop with the optional OpenAI planner
+	$(BIN)/python -m playsim.cli agentic \
+		--spec experiments/standard-vs-fairplay-liveness-agentic.json \
+		--out-dir out/agentic-llm \
+		--planner llm
 
 docker:
 	docker compose run --rm playsim run --table case_c --hands 500 --seed 42 --db /data/sim.db
