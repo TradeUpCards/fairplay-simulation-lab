@@ -77,16 +77,23 @@ function hashHue(s: string): number {
   for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) % 360
   return h
 }
+// Large round portrait — the same design as the lobby sidecar seats. Carries the
+// turn/winner ring state so the circle (not a box) is the seat's focal point.
 function Avatar({ sv }: { sv: SeatView }) {
-  // Same portrait cast as the lobby sidecar (by name); hero stays the "you" marker.
   const imageUrl = sv.is_hero ? null : avatarFor(sv.label)
   const emoji = sv.is_hero ? '🧑' : (ARCH_AVATAR[sv.archetype ?? ''] ?? '🎭')
   const hue = hashHue(sv.label)
+  const ring = sv.won
+    ? 'border-felt shadow-[0_0_0_3px_rgba(47,143,91,0.45)]'
+    : sv.to_act
+      ? 'border-brass animate-turn-pulse'
+      : sv.is_hero
+        ? 'border-brass'
+        : 'border-[#3a4555]'
   return (
     <div
-      className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border-2 text-[1.35rem] leading-none shadow-[0_1px_4px_rgba(0,0,0,0.45)]"
+      className={`grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border-2 text-[1.7rem] leading-none shadow-[0_2px_6px_rgba(0,0,0,0.5)] ${ring}`}
       style={{
-        borderColor: sv.is_hero ? 'var(--color-brass)' : '#3a4555',
         background: `radial-gradient(circle at 30% 25%, hsl(${hue} 42% 36%), hsl(${hue} 46% 15%))`,
       }}
       aria-hidden="true"
@@ -125,18 +132,21 @@ function Seat({ sv }: { sv: SeatView }) {
   // backs while an opponent is still in the hand; nothing once folded.
   const showCards = sv.hole !== null || !sv.folded
   const cards: (string | undefined)[] = sv.hole ?? [undefined, undefined]
-  // SOLID (opaque) pod so the felt never bleeds through and washes out the text.
-  // Active player breathes a brass ring; winner gets a steady felt ring.
-  const boxTone = sv.won
-    ? 'border-felt bg-[#12251a] shadow-[0_0_0_3px_rgba(47,143,91,0.3)]'
+  // Same design as the lobby sidecar: a large portrait above a name + stack card
+  // (the card tucked behind the circle's lower edge). Active/winner state tints both
+  // the avatar ring (in <Avatar/>) and the card border.
+  const cardTone = sv.won
+    ? 'border-felt bg-[#12251a]'
     : sv.to_act
-      ? 'border-brass bg-[#1c1a12] animate-turn-pulse'
+      ? 'border-brass bg-[#1c1a12]'
       : 'border-[#2c3543] bg-[#10141b]'
   return (
-    // The BOX is the anchor — its CENTER sits on the seat point. Cards (above) and the
-    // bet chip (below) are absolutely positioned, so showing/hiding either never nudges
-    // the pod's position.
-    <div className={`relative w-[150px] -translate-x-1/2 -translate-y-1/2 ${sv.folded ? 'opacity-40' : ''}`}>
+    // The avatar+card unit is the anchor — its CENTER sits on the seat point. Hole
+    // cards (above the avatar) and the bet chip (below the card) are absolutely
+    // positioned, so showing/hiding either never nudges the seat.
+    <div
+      className={`relative flex w-[112px] flex-col items-center -translate-x-1/2 -translate-y-1/2 ${sv.folded ? 'opacity-40' : ''}`}
+    >
       {showCards && (
         <div className="absolute bottom-full left-1/2 mb-1 flex -translate-x-1/2 gap-1">
           {cards.map((c, i) => (
@@ -144,20 +154,20 @@ function Seat({ sv }: { sv: SeatView }) {
           ))}
         </div>
       )}
-      <div className={`flex w-full items-center gap-1.5 rounded-xl border px-1.5 py-1 ${boxTone}`}>
-        <Avatar sv={sv} />
-        <div className="min-w-0 flex-1 text-left">
-          <div className="flex items-center gap-1">
-            <span
-              className={`truncate text-[0.8rem] font-semibold ${sv.is_hero ? 'text-brass' : 'text-text'}`}
-            >
-              {sv.label}
-            </span>
-            {sv.role && <Chip tone="role">{sv.role}</Chip>}
-          </div>
-          <div className="font-mono text-[0.72rem] font-semibold text-[#d9c08a]">
-            {sv.stack_bb}bb{sv.won && <span className="text-felt"> · won</span>}
-          </div>
+      <Avatar sv={sv} />
+      <div
+        className={`relative -mt-3 z-10 w-full rounded-lg border px-1.5 pb-1 pt-2.5 text-center leading-tight ${cardTone}`}
+      >
+        <div className="flex items-center justify-center gap-1">
+          <span
+            className={`truncate text-[0.78rem] font-semibold ${sv.is_hero ? 'text-brass' : 'text-text'}`}
+          >
+            {sv.label}
+          </span>
+          {sv.role && <Chip tone="role">{sv.role}</Chip>}
+        </div>
+        <div className="font-mono text-[0.72rem] font-semibold text-[#d9c08a]">
+          {sv.stack_bb}bb{sv.won && <span className="text-felt"> · won</span>}
         </div>
       </div>
       {sv.bet_bb > 0 && (
