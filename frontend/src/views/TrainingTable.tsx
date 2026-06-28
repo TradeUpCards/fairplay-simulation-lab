@@ -202,21 +202,57 @@ function logVerb(e: LogEntry): string {
   }
 }
 
+// Colour the verb by aggression so the hand reads at a glance.
+function actionTone(a: LogEntry['action']): string {
+  switch (a) {
+    case 'fold':
+      return 'text-faint'
+    case 'check':
+      return 'text-[#9aa2b3]'
+    case 'call':
+      return 'text-[#8fd0ef]'
+    case 'bet':
+    case 'raise':
+      return 'text-brass'
+    default:
+      return 'text-text'
+  }
+}
+
 function ActionLog({ log, seats }: { log: LogEntry[]; seats: SeatView[] }) {
   if (!log.length) return null
+  // group consecutive streets in the order they appear (preflop → river)
+  const order: string[] = []
+  for (const e of log) if (!order.includes(e.street)) order.push(e.street)
   return (
-    <div className="rounded-xl border border-line bg-surface p-3">
-      <div className="mb-2 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-muted">Hand action</div>
-      <ol className="m-0 flex list-none flex-col gap-1 p-0">
-        {log.map((e, i) => (
-          <li key={i} className="flex items-baseline gap-2 text-[0.8rem]">
-            <span className="w-12 font-mono text-[0.58rem] uppercase tracking-wider text-faint">{e.street}</span>
-            <span className="text-text">
-              <span className="font-semibold">{logName(e, seats)}</span> {logVerb(e)}
-            </span>
-          </li>
+    <div className="rounded-xl border border-line bg-surface p-3.5">
+      <div className="mb-3 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-muted">
+        Hand action
+      </div>
+      <div className="flex flex-col gap-3">
+        {order.map((street) => (
+          <div key={street}>
+            <div className="mb-1.5 flex items-center gap-2">
+              <span className="font-mono text-[0.56rem] uppercase tracking-[0.16em] text-brass">
+                {street}
+              </span>
+              <span className="h-px flex-1 bg-[#262b34]" />
+            </div>
+            <ul className="m-0 flex list-none flex-col gap-1 p-0">
+              {log
+                .filter((e) => e.street === street)
+                .map((e, i) => (
+                  <li key={i} className="flex items-baseline justify-between gap-3 text-[0.8rem]">
+                    <span className="font-semibold text-text">{logName(e, seats)}</span>
+                    <span className={`font-mono text-[0.76rem] ${actionTone(e.action)}`}>
+                      {logVerb(e)}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </div>
         ))}
-      </ol>
+      </div>
     </div>
   )
 }
@@ -920,18 +956,49 @@ export function TrainingTable() {
             <div className="w-full max-w-[440px] rounded-xl border border-line bg-[rgba(20,25,34,0.97)] p-3 shadow-[0_6px_24px_rgba(0,0,0,0.5)]">
               {error && <div className="mb-2 text-[0.8rem] text-[#e0607a]">{error}</div>}
               {!st && <div className="text-[0.84rem] text-muted">Seat 1–5 opponents, then deal.</div>}
-              {st?.complete && (
-                <div className="text-[0.84rem] text-muted">
-                  Hand complete
-                  {coachBusy
-                    ? ' — coaching…'
+              {st?.complete &&
+                (() => {
+                  const winners = st.seats.filter((s) => s.won)
+                  const heroWon = winners.some((s) => s.is_hero)
+                  const title = heroWon
+                    ? 'You win the pot'
+                    : winners.length === 1
+                      ? `${winners[0].label} wins`
+                      : winners.length > 1
+                        ? 'Split pot'
+                        : 'Hand complete'
+                  const status = coachBusy
+                    ? 'Coaching your decisions…'
                     : coach
-                      ? ''
+                      ? 'Coaching ready — see the review.'
                       : autoCoach
-                        ? ' — fetching coaching…'
-                        : ' — “Coach this hand”, or deal again.'}
-                </div>
-              )}
+                        ? 'Reviewing the hand…'
+                        : 'Review on the right, or play on.'
+                  return (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[rgba(199,154,75,0.16)] text-[1.05rem]">
+                          🏆
+                        </span>
+                        <div className="min-w-0">
+                          <div className="text-[0.92rem] font-semibold text-text">{title}</div>
+                          <div className="truncate text-[0.74rem] text-muted">{status}</div>
+                        </div>
+                        <span className="ml-auto rounded-full bg-[rgba(0,0,0,0.4)] px-2.5 py-0.5 font-mono text-[0.74rem] text-[#f0e6cf]">
+                          {bbStr(st.pot)}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={deal}
+                        disabled={busy}
+                        className="w-full rounded-lg border border-brass bg-brass px-4 py-2 text-[0.82rem] font-semibold text-[#1a1407] transition hover:brightness-105 disabled:opacity-50"
+                      >
+                        Deal next hand →
+                      </button>
+                    </div>
+                  )
+                })()}
               {heroTurn && legal && st && (
                 <>
                   <ActionClock left={clockLeft} total={CLOCK_SECONDS} />
