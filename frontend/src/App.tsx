@@ -5,6 +5,7 @@ import { Simulator } from './views/Simulator'
 import { PitBossConsole } from './views/PitBossConsole'
 import { PlayerLobby } from './views/PlayerLobby'
 import { EvalPanel } from './views/EvalPanel'
+import { TrainingTable } from './views/TrainingTable'
 import { Dashboard } from './views/Dashboard'
 import { useHashRoute, navigate } from './state/route'
 import './styles.css'
@@ -17,7 +18,7 @@ import './styles.css'
  * view at a time (Console → Simulator → Eval) instead of stacking all three.
  */
 export function App() {
-  const [mode, setMode] = useState<ViewMode>('operator')
+  const [mode, setMode] = useState<ViewMode>('player')
   const [operatorView, setOperatorView] = useState<OperatorView>('console')
   const route = useHashRoute()
 
@@ -32,7 +33,9 @@ export function App() {
   const scrim =
     mode === 'player'
       ? 'bg-[radial-gradient(140%_100%_at_50%_-20%,rgba(82,63,40,0.34),transparent_55%),rgba(9,7,4,0.5)]'
-      : 'bg-[radial-gradient(150%_100%_at_50%_-15%,rgba(62,76,68,0.22),transparent_55%),rgba(10,9,7,0.5)]'
+      : mode === 'training'
+        ? 'bg-[radial-gradient(150%_100%_at_50%_-15%,rgba(47,143,91,0.2),transparent_55%),rgba(9,8,5,0.55)]'
+        : 'bg-[radial-gradient(150%_100%_at_50%_-15%,rgba(62,76,68,0.22),transparent_55%),rgba(10,9,7,0.5)]'
 
   return (
     <div className={`min-h-screen ${scrim}`}>
@@ -54,6 +57,10 @@ export function App() {
             {operatorView === 'simulator' && <Simulator />}
             {operatorView === 'eval' && <EvalPanel />}
           </div>
+        </main>
+      ) : mode === 'training' ? (
+        <main className="mx-auto h-[calc(100vh-3.4rem)] max-w-[1360px] overflow-hidden px-6 pb-4 pt-4">
+          <TrainingTable />
         </main>
       ) : (
         <main className="mx-auto max-w-[1360px] px-6 pb-12 pt-8">

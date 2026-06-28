@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+// @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import type { RoomSweepFile, RoomTimeseriesFile, SweepCell, SweepDataset } from '../src/data/types'

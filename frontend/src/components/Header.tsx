@@ -1,6 +1,6 @@
 import logo from '../assets/fairplay-iq-logo-brass.svg'
 
-export type ViewMode = 'operator' | 'player'
+export type ViewMode = 'operator' | 'player' | 'training'
 
 /**
  * App header — the brass rail atop the console. The FairPlay IQ wordmark anchors
@@ -42,19 +42,6 @@ export function Header({
           <button
             type="button"
             role="tab"
-            aria-selected={mode === 'operator'}
-            className={`rounded-full border-none px-[0.95rem] py-[0.32rem] text-[0.74rem] tracking-wider ${
-              mode === 'operator'
-                ? 'bg-brass font-semibold text-[#1a1407]'
-                : 'bg-transparent text-muted hover:text-text'
-            }`}
-            onClick={() => onModeChange('operator')}
-          >
-            Pit Boss
-          </button>
-          <button
-            type="button"
-            role="tab"
             aria-selected={mode === 'player'}
             className={`rounded-full border-none px-[0.95rem] py-[0.32rem] text-[0.74rem] tracking-wider ${
               mode === 'player'
@@ -64,6 +51,32 @@ export function Header({
             onClick={() => onModeChange('player')}
           >
             Player
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'training'}
+            className={`rounded-full border-none px-[0.95rem] py-[0.32rem] text-[0.74rem] tracking-wider ${
+              mode === 'training'
+                ? 'bg-brass font-semibold text-[#1a1407]'
+                : 'bg-transparent text-muted hover:text-text'
+            }`}
+            onClick={() => onModeChange('training')}
+          >
+            Train
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'operator'}
+            className={`rounded-full border-none px-[0.95rem] py-[0.32rem] text-[0.74rem] tracking-wider ${
+              mode === 'operator'
+                ? 'bg-brass font-semibold text-[#1a1407]'
+                : 'bg-transparent text-muted hover:text-text'
+            }`}
+            onClick={() => onModeChange('operator')}
+          >
+            Pit Boss
           </button>
         </div>
 

@@ -123,6 +123,82 @@ export interface SeededCaseLabelsFile {
   eval_summary: EvalSummary
 }
 
+// ── Lobby sequence (data/derived/lobby_sequence.json) — demo Part 2 ───────────
+// PLAYER-FACING / player-safe. One room shown across a few churn steps, ordered
+// two ways (Standard = fullness; FairPlay = the router). Produced by the
+// playsim → router pipeline; the same tables appear in both `standard` and
+// `fairplay`, only the order differs. No scores / archetypes / risk language.
+
+export interface LobbyRow {
+  table_id: string
+  stakes: string
+  game_type: string
+  max_seats: number
+  seated_count: number
+  open_seats: number
+  pace_label: string
+  badge: LobbyTable['badge']
+  badge_label: LobbyTable['badge_label']
+  /** Poker-lobby stat columns (from the room roster; player-safe). */
+  avg_pot_usd?: number
+  hands_per_hour?: number
+  plrs_per_flop_pct?: number
+}
+
+/** One seating decision in a step (admin diagnostic — shows policy behavior). */
+export interface SeatEvent {
+  player_id: string
+  archetype?: string | null
+  action: 'sit' | 'stand'
+  table_id: string | null
+  occ_after?: string
+}
+
+/**
+ * OPERATOR-side per-table detail (the "pull back the curtain" view). Shown only
+ * behind the curtain in the lobby demo — never in the player-facing rows.
+ */
+export interface OperatorTableDetail {
+  table_id: string
+  stakes: string
+  seated_count: number
+  max_seats: number
+  open_seats: number
+  full: boolean
+  composition: { archetype: string; count: number }[]
+  health?: number
+  band?: string
+  terms?: Record<string, number>
+  reasons?: { code: string; detail: string }[]
+  rank?: number
+  badge?: string
+  fit?: number
+  delta_health?: number
+  seating_risk?: string | null
+}
+
+export interface LobbyStep {
+  label: string
+  standard: LobbyRow[]
+  fairplay: LobbyRow[]
+  /** per-policy seat events that produced this step (admin diagnostic). */
+  events?: { standard: SeatEvent[]; fairplay: SeatEvent[] }
+  /** operator detail per table (the curtain) — keyed by table_id. */
+  op_detail?: Record<string, OperatorTableDetail>
+}
+
+export interface LobbySequence {
+  meta: {
+    source: string
+    seed?: number
+    arrival_rate_per_hour?: number
+    player_id?: string
+    note?: string
+    [k: string]: unknown
+  }
+  steps: LobbyStep[]
+}
+
 // ── Sweep dashboard (data/room_sweep.json — normalized regime payload) ────────
 // Emitted by playsim/analysis/build_dashboard_data.py (reusing the sweep-explorer
 // normalizer, so the heatmap / win-stability math lives once, in Python).

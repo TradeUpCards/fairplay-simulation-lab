@@ -29,6 +29,10 @@
 
   /* the live-floor heartbeat — used as `animate-live-pulse` */
   --animate-live-pulse: live-pulse 1.8s ease-in-out infinite;
+  /* the active player's turn ring — brass heartbeat (used as `animate-turn-pulse`) */
+  --animate-turn-pulse: turn-pulse 1.3s ease-in-out infinite;
+  /* a board card sliding/fading onto the felt as a street is dealt (`animate-deal-in`) */
+  --animate-deal-in: deal-in 0.34s cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
 /* The carpet asset, resolved by Vite once here and reused via var(--carpet)
@@ -77,4 +81,73 @@
   50% {
     box-shadow: 0 0 0 5px rgba(47, 143, 91, 0.05);
   }
+}
+
+/* the active player's turn: a brass ring that breathes to draw the eye */
+@keyframes turn-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(199, 154, 75, 0.65), 0 0 12px 1px rgba(199, 154, 75, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(199, 154, 75, 0.35), 0 0 20px 3px rgba(199, 154, 75, 0.14);
+  }
+}
+
+/* a board card being dealt: drop in from slightly above with a quick fade */
+@keyframes deal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-turn-pulse,
+  .animate-deal-in,
+  .animate-live-pulse {
+    animation: none !important;
+  }
+}
+
+/* The bet-size slider — a poker-client look: thin brass-filled track + a round,
+   raised brass handle. Plain `accent-color` can't express the handle, so it is
+   styled per-engine here. The filled portion is painted via a JS-set gradient
+   (var(--fill)) so the track shows progress like the reference clients. */
+.bet-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--color-brass) 0%,
+    var(--color-brass) var(--fill, 50%),
+    #2a323f var(--fill, 50%),
+    #2a323f 100%
+  );
+  cursor: pointer;
+}
+.bet-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f0d9a2, var(--color-brass));
+  border: 1px solid #1a1407;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.bet-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f0d9a2, var(--color-brass));
+  border: 1px solid #1a1407;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }

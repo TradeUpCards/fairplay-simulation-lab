@@ -2,3 +2,4 @@ fastapi>=0.110,<1.0
 uvicorn[standard]>=0.29,<1.0
 sse-starlette>=2.1,<3.0
 anthropic>=0.69            # AI Investigator (P4) — evidence packet -> case summary
+pokerkit==0.7.4           # training-table engine (playsim) — pinned to match playsim/

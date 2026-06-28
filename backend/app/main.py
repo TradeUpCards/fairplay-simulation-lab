@@ -23,7 +23,28 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
+# Bootstrap the sibling packages the play surface needs (coach, play, playsim) so the
+# app resolves them the same way whether launched from the repo root or backend/.
+import sys  # noqa: E402
+import pathlib  # noqa: E402
+
+_BK = pathlib.Path(__file__).resolve().parents[1]
+for _p in (_BK, _BK.parent / "playsim"):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+
+# Best-effort .env load so a local/dev/deploy server picks up ANTHROPIC_API_KEY (for
+# the coach) without a manual export. setdefault — a real env var always wins.
+_env_file = _BK.parent / ".env"
+if _env_file.exists():
+    for _line in _env_file.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip().strip('"').strip("'"))
+
 from .hub import Hub
+from .play_api import router as play_router
 from .room import Room, RoomError
 
 app = FastAPI(title="FairPlay live-scoring API", version="0.1.0")
@@ -42,6 +63,8 @@ app.add_middleware(
 
 room = Room()
 hub = Hub()
+
+app.include_router(play_router)
 
 
 class SitBody(BaseModel):
