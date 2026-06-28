@@ -9,6 +9,9 @@ import { tableSlide } from './table'
 import { intelligenceSlide } from './intelligence'
 import { dashboardSlide } from './dashboard'
 import { closeSlide } from './close'
+import { routingSlide } from './routing'
+import { evidenceSlide } from './evidence'
+import { agenticSlide } from './agentic'
 
 /**
  * The deck, in order. This array IS the presentation — reorder, add, or remove
@@ -26,4 +29,9 @@ export const SLIDES: SlideDef[] = [
   intelligenceSlide, // 8 · the intelligence behind it
   dashboardSlide, // 9 · the 8-hour A/B results
   closeSlide, // 10 · close
+  // — appended: the agentic experiment-engine deck (ported from
+  //   docs/learn/playsim-agentic-simulator-deck.html) —
+  routingSlide, // 11 · policy routing behavior (staged + animated)
+  evidenceSlide, // 12 · why we simulate — the knobs
+  agenticSlide, // 13 · the agentic experiment loop (staged)
 ]
