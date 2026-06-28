@@ -49,6 +49,20 @@ METRICS = [
 ]
 METRIC_KEYS = [m[0] for m in METRICS]
 
+# Terminal site-departure buckets, carried per cell/policy as DESCRIPTIVE room
+# context — NOT registered in METRICS, so they never appear in the heatmap/table
+# comparison selector. Departure counts are flat across routing arms (the
+# FairPlay win is session duration, not who leaves), so they describe the room,
+# they don't rank the policy. The frontend labels these.
+DEPARTURE_KEYS = [
+    "left_satisfied_count",
+    "left_damaged_count",
+    "couldnt_seat_count",
+    "cohort_left_satisfied_count",
+    "cohort_left_damaged_count",
+    "cohort_couldnt_seat_count",
+]
+
 # Stability is computed against this baseline policy for each comparison metric.
 BASELINE = "standard"
 STABILITY_METRICS = ["vulnerable_paid_seat_hours", "total_paid_seat_hours"]
@@ -81,11 +95,17 @@ def normalize_cell(path):
 
         # per-policy means across seeds
         means = {}
+        departures = {}
         for pol in policies:
             pol_runs = [r for r in rate_runs if r["policy"] == pol]
             means[pol] = {
                 k: _mean([r.get(k) for r in pol_runs]) for k in METRIC_KEYS
             }
+            # descriptive departure context — only present once the sweep was run
+            # with the departure buckets (older files lack the keys -> all None).
+            dep = {k: _mean([r.get(k) for r in pol_runs]) for k in DEPARTURE_KEYS}
+            if any(v is not None for v in dep.values()):
+                departures[pol] = dep
 
         # per-seed lookup for stability + drilldown
         by_seed = defaultdict(dict)
@@ -135,6 +155,7 @@ def normalize_cell(path):
                 "policies": policies,
                 "seeds": seeds,
                 "means": means,
+                "departures": departures,
                 "runs": slim_runs,
                 "stability": stability,
             }
