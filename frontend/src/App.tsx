@@ -7,6 +7,7 @@ import { PlayerLobby } from './views/PlayerLobby'
 import { EvalPanel } from './views/EvalPanel'
 import { TrainingTable } from './views/TrainingTable'
 import { Dashboard } from './views/Dashboard'
+import { Slideshow } from './views/Slideshow'
 import { useHashRoute, navigate } from './state/route'
 import './styles.css'
 
@@ -28,6 +29,10 @@ export function App() {
     navigate('home')
   }
 
+  // The presentation deck is a full-screen surface of its own — it drops the
+  // app chrome (header, scrim) entirely. Render it before anything else.
+  if (route === 'slideshow') return <Slideshow />
+
   // mode scrim — a warm vignette over the carpet for the player floor, a cooler
   // one for the operator console; both layered on a darkening wash.
   const scrim =
@@ -44,6 +49,7 @@ export function App() {
         onModeChange={onModeChange}
         route={route}
         onOpenDashboard={() => navigate('dashboard')}
+        slideshowHref={`${window.location.href.split('#')[0]}#/slideshow`}
       />
       {route === 'dashboard' ? (
         <main className="mx-auto max-w-[1360px] px-6 pb-12 pt-7">

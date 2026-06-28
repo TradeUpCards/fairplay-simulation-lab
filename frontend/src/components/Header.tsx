@@ -14,11 +14,13 @@ export function Header({
   onModeChange,
   route = 'home',
   onOpenDashboard,
+  slideshowHref,
 }: {
   mode: ViewMode
   onModeChange: (mode: ViewMode) => void
-  route?: 'home' | 'dashboard'
+  route?: 'home' | 'dashboard' | 'slideshow'
   onOpenDashboard?: () => void
+  slideshowHref?: string
 }) {
   return (
     <header
@@ -93,6 +95,17 @@ export function Header({
           >
             Sweep Dashboard
           </button>
+        )}
+
+        {slideshowHref && (
+          <a
+            href={slideshowHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center rounded-full border border-line bg-surface-2 px-[0.9rem] py-[0.32rem] text-[0.72rem] tracking-wider text-muted no-underline hover:text-text"
+          >
+            Slideshow ↗
+          </a>
         )}
 
         <p className="m-0 flex items-center gap-[0.45rem] font-mono text-[0.66rem] uppercase tracking-[0.16em] text-faint max-[560px]:hidden">
