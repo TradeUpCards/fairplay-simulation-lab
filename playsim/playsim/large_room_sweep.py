@@ -22,6 +22,14 @@ from .router_adapter import RouterAdapter
 
 DEFAULT_POLICIES = ("standard", "fairplay", "fairplay_liveness")
 
+# Terminal site-departure buckets, keyed off ``session.exit_reason``. These are
+# players who *left the room*, not mid-session table relocations (table_break /
+# thinning re-seeks stay in the reseek funnel, not here). "Couldn't seat" is the
+# acceptance-channel failure (balked / wait-balked) and is counted from the balk
+# lists since those players were never seated and so have no session row.
+DEPART_SATISFIED = {"profit_taking", "time_budget_complete"}
+DEPART_DAMAGED = {"tilt_bleed", "tilt"}
+
 
 def _has_fixture(root: Path) -> bool:
     return all(
@@ -72,6 +80,38 @@ def _policy_factory(name: str, adapter: RouterAdapter, live_adapter: RouterAdapt
     raise ValueError(f"unknown policy {name!r}")
 
 
+def _departures(result) -> dict:
+    """3-bucket terminal site-departure counts, with a vulnerable-cohort split.
+
+    Satisfied / damaged come from seated players' ``session.exit_reason``;
+    couldn't-seat comes from the balk lists (never-seated players have no
+    session row). Cohort membership reuses the ``archetype in COHORT`` test that
+    every other cohort metric in this file uses, so the split is free.
+    """
+    arch = result.archetype_of
+    satisfied = damaged = c_satisfied = c_damaged = 0
+    for s in result.sessions:
+        reason = s.get("exit_reason", "")
+        in_cohort = s.get("archetype") in COHORT
+        if reason in DEPART_SATISFIED:
+            satisfied += 1
+            c_satisfied += in_cohort
+        elif reason in DEPART_DAMAGED:
+            damaged += 1
+            c_damaged += in_cohort
+    never_seated = list(result.balked) + list(result.wait_balked)
+    couldnt_seat = len(never_seated)
+    c_couldnt = sum(1 for pid in never_seated if arch.get(pid) in COHORT)
+    return {
+        "left_satisfied_count": satisfied,
+        "left_damaged_count": damaged,
+        "couldnt_seat_count": couldnt_seat,
+        "cohort_left_satisfied_count": c_satisfied,
+        "cohort_left_damaged_count": c_damaged,
+        "cohort_couldnt_seat_count": c_couldnt,
+    }
+
+
 def _metrics(result, intents) -> dict:
     cohort_players = [p for p, arch in result.archetype_of.items() if arch in COHORT]
     arrival_seated = {
@@ -112,6 +152,7 @@ def _metrics(result, intents) -> dict:
         "final_forming_tables": final_states.get("forming", 0),
         "final_empty_tables": final_states.get("empty", 0) + final_states.get("broken_empty", 0),
         "hands_total": result.hands_total,
+        **_departures(result),
     }
 
 
@@ -142,6 +183,12 @@ def summarize_runs(runs: list[dict]) -> list[dict]:
         "final_active_tables",
         "final_forming_tables",
         "final_empty_tables",
+        "left_satisfied_count",
+        "left_damaged_count",
+        "couldnt_seat_count",
+        "cohort_left_satisfied_count",
+        "cohort_left_damaged_count",
+        "cohort_couldnt_seat_count",
     ]
     for (rate, policy), rows in sorted(groups.items()):
         item = {

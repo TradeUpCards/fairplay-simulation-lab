@@ -28,17 +28,30 @@ function downloadCsv(dataset: SweepDataset): void {
  * selected cell is highlighted and clicking any row selects its regime. */
 export function RegimeTable({
   dataset,
+  policies,
   selectedKey,
   onSelect,
 }: {
   dataset: SweepDataset
+  /** Which policies (and order) to show; defaults to all in the dataset. */
+  policies?: string[]
   selectedKey: string | null
   onSelect: (cell: SweepCell) => void
 }) {
+  const shownPolicies = policies ?? dataset.policies
   const metrics = dataset.metrics.filter((m) => DISPLAY_KEYS.includes(m.key))
-  const ordered = [...metrics].sort(
-    (a, b) => DISPLAY_KEYS.indexOf(a.key) - DISPLAY_KEYS.indexOf(b.key),
-  )
+  // drop columns that are entirely zero/empty across shown regimes (e.g. table
+  // breaks under formation mode) — they reappear automatically if data shows up.
+  const ordered = [...metrics]
+    .sort((a, b) => DISPLAY_KEYS.indexOf(a.key) - DISPLAY_KEYS.indexOf(b.key))
+    .filter((m) =>
+      dataset.cells.some((c) =>
+        shownPolicies.some((p) => {
+          const v = c.means[p]?.[m.key]
+          return v != null && v !== 0
+        }),
+      ),
+    )
 
   return (
     <div>
@@ -69,7 +82,7 @@ export function RegimeTable({
           <tbody>
             {dataset.cells.map((cell) => {
               const selected = cellKey(cell) === selectedKey
-              return dataset.policies.map((policy, pi) => (
+              return shownPolicies.map((policy, pi) => (
                 <tr
                   key={`${cellKey(cell)}-${policy}`}
                   onClick={() => onSelect(cell)}

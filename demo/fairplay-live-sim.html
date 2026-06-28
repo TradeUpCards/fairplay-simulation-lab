@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FairPlay · Live Room Simulation</title>
+<style>
+  :root{
+    --bg0:#070b14; --bg1:#0c1322; --bg2:#111c30;
+    --ink:#eaf1fb; --muted:#8fa2bf; --faint:#5d6e8c;
+    --hero:#2ee6a6; --hero-glow:rgba(46,230,166,.55);
+    --std:#9fb1cc; --fp:#7c8cff; --rand:#5a6478;
+    --line:#1b2942;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:var(--sans); color:var(--ink); overflow:hidden;
+    background:
+      radial-gradient(1200px 700px at 78% -8%, rgba(46,230,166,.10), transparent 60%),
+      radial-gradient(1000px 700px at 10% 110%, rgba(124,140,255,.10), transparent 60%),
+      linear-gradient(160deg, var(--bg1), var(--bg0));
+  }
+  .stage{ position:fixed; inset:0; display:flex; flex-direction:column; padding:28px 40px 26px; }
+
+  /* ---- top bar ---- */
+  .top{ display:flex; align-items:center; gap:18px; }
+  .logo{ display:flex; align-items:center; gap:11px; }
+  .logo .mark{ width:30px; height:30px; border-radius:9px;
+    background:conic-gradient(from 200deg, var(--hero), var(--fp), var(--hero));
+    box-shadow:0 0 24px var(--hero-glow); position:relative; }
+  .logo .mark::after{ content:""; position:absolute; inset:6px; border-radius:5px; background:var(--bg0); }
+  .logo .name{ font-weight:700; font-size:17px; letter-spacing:-.01em; }
+  .logo .name b{ color:var(--hero); }
+  .logo .sub{ color:var(--faint); font-size:12px; margin-top:1px; }
+
+  .pivot{ margin-left:auto; display:flex; gap:6px; background:rgba(255,255,255,.03);
+    border:1px solid var(--line); border-radius:12px; padding:5px; }
+  .pivot button{ border:0; background:transparent; color:var(--muted); font:inherit; font-weight:600;
+    font-size:13px; padding:8px 15px; border-radius:8px; cursor:pointer; transition:.18s; white-space:nowrap; }
+  .pivot button.on{ background:linear-gradient(180deg, rgba(46,230,166,.20), rgba(46,230,166,.08));
+    color:var(--hero); box-shadow:inset 0 0 0 1px rgba(46,230,166,.35); }
+  .pivot button:hover:not(.on){ color:var(--ink); }
+  .tag{ font-size:10.5px; color:var(--faint); border:1px solid var(--line); border-radius:999px;
+    padding:3px 9px; letter-spacing:.04em; text-transform:uppercase; }
+
+  /* ---- main grid ---- */
+  .main{ flex:1; display:grid; grid-template-columns:1fr 318px; gap:26px; margin-top:18px; min-height:0; }
+
+  .chartwrap{ position:relative; border:1px solid var(--line); border-radius:18px;
+    background:linear-gradient(180deg, rgba(17,28,48,.55), rgba(9,14,24,.4));
+    overflow:hidden; }
+  canvas{ display:block; width:100%; height:100%; }
+
+  /* clock + headline metric overlay */
+  .hud{ position:absolute; left:26px; top:22px; pointer-events:none; }
+  .hud .clk{ font-family:var(--mono); font-size:13px; color:var(--muted); letter-spacing:.06em; }
+  .hud .clk b{ color:var(--ink); font-weight:600; }
+  .hud .metricname{ font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--faint); margin-top:16px; }
+  .hud .bignum{ font-size:54px; font-weight:800; letter-spacing:-.03em; line-height:1; margin-top:6px;
+    font-variant-numeric:tabular-nums; color:var(--hero); text-shadow:0 0 34px var(--hero-glow); }
+  .hud .bignum small{ font-size:22px; font-weight:600; color:var(--muted); text-shadow:none; }
+  .hud .deltaline{ font-size:14px; color:var(--muted); margin-top:8px; font-weight:600; }
+  .hud .deltaline b{ color:var(--hero); }
+
+  .progress{ position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(255,255,255,.05); }
+  .progress i{ display:block; height:100%; width:0; background:linear-gradient(90deg,var(--fp),var(--hero)); box-shadow:0 0 12px var(--hero-glow); }
+
+  /* ---- leaderboard ---- */
+  .board{ position:relative; }
+  .board h3{ font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--faint); margin:4px 0 14px; font-weight:700; }
+  .rows{ position:relative; }
+  .row{ position:absolute; left:0; right:0; height:64px; transition:transform .6s cubic-bezier(.3,.8,.2,1);
+    display:flex; align-items:center; gap:13px;
+    border:1px solid var(--line); border-radius:13px; padding:0 15px; background:rgba(255,255,255,.022); }
+  .row.hero{ border-color:rgba(46,230,166,.45); background:linear-gradient(100deg, rgba(46,230,166,.10), rgba(46,230,166,.02));
+    box-shadow:0 0 0 1px rgba(46,230,166,.18), 0 8px 30px rgba(46,230,166,.10); }
+  .row .rank{ font-family:var(--mono); font-size:13px; color:var(--faint); width:18px; }
+  .row .dot{ width:11px; height:11px; border-radius:50%; flex:none; box-shadow:0 0 10px currentColor; }
+  .row .pol{ flex:1; min-width:0; }
+  .row .pol .pn{ font-weight:650; font-size:14px; letter-spacing:-.01em; white-space:nowrap; }
+  .row .pol .pd{ font-size:11.5px; color:var(--faint); margin-top:1px; }
+  .row .val{ font-variant-numeric:tabular-nums; font-weight:750; font-size:20px; letter-spacing:-.02em; }
+  .row .val small{ font-size:12px; color:var(--muted); font-weight:600; margin-left:2px; }
+  .row.hero .val{ color:var(--hero); }
+  .row .crown{ opacity:0; margin-left:2px; font-size:15px; transition:opacity .4s; }
+  .row.hero.leading .crown{ opacity:1; }
+
+  .mechstrip{ margin-top:14px; border:1px solid var(--line); border-radius:13px; padding:13px 15px;
+    background:rgba(255,255,255,.022); }
+  .mechstrip .lbl{ font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--faint); }
+  .mechstrip .mrow{ display:flex; justify-content:space-between; align-items:baseline; margin-top:8px; }
+  .mechstrip .mrow .k{ font-size:12.5px; color:var(--muted); }
+  .mechstrip .mrow .v{ font-variant-numeric:tabular-nums; font-weight:700; font-size:15px; }
+  .mechstrip .mrow .v.h{ color:var(--hero); }
+
+  /* ---- run / replay button ---- */
+  .runlayer{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:20px; background:radial-gradient(600px 400px at 50% 45%, rgba(12,19,34,.55), rgba(7,11,20,.82)); z-index:20;
+    transition:opacity .5s; }
+  .runlayer.hide{ opacity:0; pointer-events:none; }
+  .runbtn{ border:0; cursor:pointer; font:inherit; font-weight:750; font-size:18px; letter-spacing:.01em;
+    color:#04120c; padding:18px 38px; border-radius:15px;
+    background:linear-gradient(180deg,#46f3b4,#1fbf86); box-shadow:0 12px 40px rgba(46,230,166,.4), inset 0 1px 0 rgba(255,255,255,.4);
+    display:flex; align-items:center; gap:13px; transition:transform .12s, box-shadow .2s; }
+  .runbtn:hover{ transform:translateY(-2px); box-shadow:0 18px 52px rgba(46,230,166,.55), inset 0 1px 0 rgba(255,255,255,.4); }
+  .runbtn:active{ transform:translateY(0); }
+  .runbtn .tri{ width:0;height:0;border-left:15px solid #04120c;border-top:9px solid transparent;border-bottom:9px solid transparent; }
+  .runhint{ color:var(--muted); font-size:13.5px; max-width:440px; text-align:center; line-height:1.5; }
+  .runhint b{ color:var(--ink); }
+
+  /* ---- end headline ---- */
+  .verdict{ position:absolute; left:50%; bottom:34px; transform:translate(-50%, 24px); opacity:0;
+    transition:opacity .6s, transform .6s; z-index:15; pointer-events:none;
+    border:1px solid rgba(46,230,166,.4); border-radius:16px; padding:16px 26px;
+    background:linear-gradient(180deg, rgba(13,28,24,.92), rgba(9,18,16,.92));
+    box-shadow:0 20px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(46,230,166,.12); text-align:center; backdrop-filter:blur(6px); }
+  .verdict.show{ opacity:1; transform:translate(-50%,0); }
+  .verdict .big{ font-size:23px; font-weight:800; letter-spacing:-.02em; }
+  .verdict .big b{ color:var(--hero); }
+  .verdict .small{ color:var(--muted); font-size:13px; margin-top:5px; }
+  .replay{ position:absolute; right:20px; top:18px; z-index:18; opacity:0; transition:opacity .5s;
+    border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--ink); font:inherit; font-weight:600;
+    font-size:13px; padding:8px 14px; border-radius:10px; cursor:pointer; }
+  .replay.show{ opacity:1; }
+  .replay:hover{ border-color:var(--hero); color:var(--hero); }
+
+  .foot{ position:fixed; left:40px; bottom:12px; color:var(--faint); font-size:11px; letter-spacing:.02em; }
+
+  /* ---- right-side control cluster ---- */
+  .controls{ margin-left:auto; display:flex; align-items:center; gap:12px; }
+  .ctl{ display:flex; align-items:center; gap:9px; }
+  .ctl .clab{ font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--faint); font-weight:700; }
+  .rate{ display:flex; gap:4px; background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:11px; padding:4px; }
+  .rate button{ border:0; background:transparent; color:var(--muted); font:inherit; font-weight:650; font-size:13px;
+    padding:7px 12px; border-radius:8px; cursor:pointer; transition:.15s; font-variant-numeric:tabular-nums; }
+  .rate button.on{ background:rgba(124,140,255,.18); color:#aeb8ff; box-shadow:inset 0 0 0 1px rgba(124,140,255,.4); }
+  .rate button:hover:not(.on){ color:var(--ink); }
+  .snd{ border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--muted); width:40px; height:40px;
+    border-radius:11px; cursor:pointer; font-size:16px; transition:.15s; }
+  .snd:hover{ color:var(--ink); border-color:var(--fp); }
+  .snd.off{ opacity:.45; }
+
+  /* ---- poker felt grain + rail vignette (shows through the transparent canvas) ---- */
+  .chartwrap::before{ content:""; position:absolute; inset:0; pointer-events:none; z-index:1;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity:.05; mix-blend-mode:soft-light; }
+  .chartwrap::after{ content:""; position:absolute; inset:0; pointer-events:none; z-index:1;
+    background:radial-gradient(135% 120% at 50% 8%, rgba(46,230,166,.05), transparent 52%),
+               radial-gradient(130% 120% at 50% 14%, transparent 58%, rgba(4,8,15,.55));
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.03); }
+  canvas#cv{ position:relative; z-index:2; }
+  .hud{ z-index:6; }
+  #fx{ position:absolute; inset:0; z-index:12; pointer-events:none; }
+  @keyframes pulseB{ 0%{box-shadow:0 0 0 0 rgba(46,230,166,0);} 32%{box-shadow:0 0 0 2px rgba(46,230,166,.55), inset 0 0 60px rgba(46,230,166,.14);} 100%{box-shadow:0 0 0 0 rgba(46,230,166,0);} }
+  .chartwrap.pulse{ animation:pulseB .8s ease; }
+
+  /* ---- decorative chip stack on the run screen ---- */
+  .chipstack{ display:flex; margin-bottom:4px; }
+  .chipstack .chip{ width:38px; height:38px; border-radius:50%; margin-left:-13px; position:relative;
+    background:radial-gradient(circle at 50% 36%, rgba(255,255,255,.28), transparent 42%), var(--c,#e5484d);
+    border:2px dashed rgba(255,255,255,.6); box-shadow:0 7px 16px rgba(0,0,0,.5), inset 0 0 0 4px rgba(0,0,0,.12);
+    animation:chipIn .5s cubic-bezier(.2,1.3,.4,1) backwards; }
+  .chipstack .chip:nth-child(1){ margin-left:0; animation-delay:.02s; }
+  .chipstack .chip:nth-child(2){ animation-delay:.09s; }
+  .chipstack .chip:nth-child(3){ animation-delay:.16s; }
+  .chipstack .chip:nth-child(4){ animation-delay:.23s; }
+  @keyframes chipIn{ from{ transform:translateY(-16px) rotate(-25deg); opacity:0; } to{ transform:none; opacity:1; } }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="top">
+    <div class="logo">
+      <div class="mark"></div>
+      <div>
+        <div class="name">Fair<b>Play</b> · Live Room Simulation</div>
+        <div class="sub">8-hour poker room · 1,000 players · 50 tables · seat-time economics</div>
+      </div>
+    </div>
+    <span class="tag" id="modeTag">simulated</span>
+    <div class="controls">
+      <div class="ctl"><span class="clab">Arrivals/hr</span><div class="rate" id="rate"></div></div>
+      <div class="pivot" id="pivot"></div>
+      <button class="snd" id="sndBtn" title="Toggle sound">🔊</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="chartwrap" id="chartwrap">
+      <canvas id="cv"></canvas>
+      <canvas id="fx"></canvas>
+      <div class="hud">
+        <div class="clk">RUN CLOCK · <b id="clk">00:00</b> / 08:00</div>
+        <div class="metricname" id="metricName">Vulnerable Player Protection</div>
+        <div class="bignum"><span id="bignum">0.0</span><small id="bigunit">h</small></div>
+        <div class="deltaline" id="deltaLine">&nbsp;</div>
+      </div>
+      <div class="progress"><i id="prog"></i></div>
+
+      <div class="verdict" id="verdict">
+        <div class="big" id="verdictBig"></div>
+        <div class="small" id="verdictSmall"></div>
+      </div>
+      <button class="replay" id="replay">↻ Replay</button>
+
+      <div class="runlayer" id="runlayer">
+        <div class="chipstack">
+          <span class="chip" style="--c:#e5484d"></span>
+          <span class="chip" style="--c:#4f7cff"></span>
+          <span class="chip" style="--c:#2ecc71"></span>
+          <span class="chip" style="--c:#f5c451"></span>
+        </div>
+        <button class="runbtn" id="runbtn"><span class="tri"></span> Run 8-Hour Simulation</button>
+        <div class="runhint">Watch four seating policies compete for <b>retained paid seat-time</b> across a full room day — compressed into 10 seconds.</div>
+      </div>
+    </div>
+
+    <div class="board">
+      <h3>Live Standings</h3>
+      <div class="rows" id="rows"></div>
+      <div class="mechstrip">
+        <div class="lbl">Why FairPlay-Liveness wins</div>
+        <div class="mrow"><span class="k">Healthy tables active</span>
+          <span><span class="v" id="mStd">34</span> <span style="color:var(--faint)">vs</span> <span class="v h" id="mLive">50</span></span></div>
+        <div class="mrow"><span class="k">New tables formed for fish</span>
+          <span class="v h" id="mForm">0</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="foot">Illustrative synthetic model · endpoints anchored to playsim large-room sweep (50 tables, rate 20/hr, seeds 42/7/99)</div>
+
+<script>
+/* ---------------- demo data ----------------
+   Endpoints anchored to the curated large-room cell; "random" and original
+   "fairplay" are illustrative fill so the race has a field. Curves are
+   synthesized for the demo (cumulative seat-time over the 8h run). */
+const POLICIES = [
+  { id:"liveness", name:"FairPlay-Liveness", desc:"health + liquidity aware", color:"#2ee6a6", hero:true, shape:1.30 },
+  { id:"standard", name:"Standard",          desc:"most-full / liquidity",    color:"#9fb1cc", shape:0.62 },
+  { id:"fairplay", name:"FairPlay (route)",  desc:"health-aware routing",     color:"#7c8cff", shape:0.70 },
+  { id:"random",   name:"Random",            desc:"no intelligence",          color:"#5a6478", shape:0.78 },
+];
+// shape: <1 => front-loaded (1-(1-x)^p with p=1/shape-ish); we map below.
+const METRICS = {
+  vuln:   { label:"Vulnerable Player Protection", unit:"h", dec:1,
+            why:"protected seat-time for new & recreational players" },
+  total:  { label:"Total Seat-Time Economics", unit:"h", dec:0,
+            why:"total paid seat-hours across the whole room" },
+  tables: { label:"Healthy Tables Formed", unit:"", dec:0, integer:true,
+            why:"active dealing tables sustained at hour 8" },
+};
+/* Per arrival-rate endpoints (50-table room). Anchored to the playsim
+   large-room sweep; the FairPlay-Liveness lead is widest at moderate demand
+   and narrows toward saturation (40/hr) — the real regime story. */
+const RATES = {
+  10:{ vuln:{liveness:25.6,  standard:22.83, fairplay:24.07, random:21.8},
+       total:{liveness:1010, standard:995.6, fairplay:990.6, random:965},
+       tables:{liveness:40,  standard:30,    fairplay:32,    random:29},
+       activeStd:30, activeLive:40, formed:151, tag:"light demand" },
+  20:{ vuln:{liveness:32.54, standard:28.22, fairplay:29.28, random:26.4},
+       total:{liveness:1225.6,standard:1201.9,fairplay:1186.9,random:1150},
+       tables:{liveness:50,  standard:34,    fairplay:39,    random:31},
+       activeStd:34, activeLive:50, formed:362, tag:"moderate demand" },
+  30:{ vuln:{liveness:39.3,  standard:35.38, fairplay:35.34, random:33.5},
+       total:{liveness:1424, standard:1401.4,fairplay:1372.9,random:1340},
+       tables:{liveness:50,  standard:41,    fairplay:46,    random:39},
+       activeStd:41, activeLive:50, formed:486, tag:"busy" },
+  40:{ vuln:{liveness:44.1,  standard:42.33, fairplay:41.91, random:39.8},
+       total:{liveness:1612, standard:1599.2,fairplay:1571.3,random:1530},
+       tables:{liveness:50,  standard:49,    fairplay:50,    random:48},
+       activeStd:49, activeLive:50, formed:524, tag:"saturated" },
+};
+let curRate=20;
+function tgt(p){ return RATES[curRate][metricKey][p.id]; }
+const DURATION = 10000;   // ms of real time = 8 sim hours
+const SIM_HOURS = 8;
+
+/* deterministic jitter so the demo replays identically */
+function mulberry32(a){ return function(){ a|=0;a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+let metricKey="vuln";
+let raf=null, running=false, done=false;
+
+/* normalized progress curve per policy: hero back-loaded (late surge),
+   others front-loaded. f(0)=0, f(1)=1, monotonic. */
+/* hero default: normalized logistic — lags early, then a hard mid-race surge
+   that overtakes ~60% through (≈5h / ≈6s in). */
+const _LK=5.5, _LX=0.52;
+const _L0=1/(1+Math.exp(_LK*_LX));            // logistic at x=0
+const _L1=1/(1+Math.exp(-_LK*(1-_LX)));       // logistic at x=1
+const _LD=_L1-_L0;
+function smoothstep(x){ return x*x*(3-2*x); }
+function curve(p, x){
+  if(metricKey==="total"){
+    // Total economics: Liveness takes an early lead, then Standard surges late
+    // as tables fill and concentration pays off — nearly catching at the wire.
+    if(p.hero) return smoothstep(x);                       // slightly behind at the gun, early lead, then eases (stays top — highest target)
+    if(p.id==="standard") return 0.4*(1-Math.pow(1-x,1.7)) + 0.6*Math.pow(x,2.2); // brief early edge, steady late catch-up
+    return smoothstep(x);                                  // fairplay / random track just below the hero (lower targets)
+  }
+  // Vulnerable / tables: dramatic late overtake for the hero.
+  if(p.hero){
+    const L=1/(1+Math.exp(-_LK*(x-_LX)));
+    return (L-_L0)/_LD;
+  }
+  const pe = 1.35 + (1-p.shape)*0.6;                       // front-loaded exponent
+  return 1 - Math.pow(1-x, pe);
+}
+
+/* organic churn wobble — minor ups & downs (players leaving/joining).
+   Windowed by sin(πx) so every line starts at 0 and lands exactly on its
+   endpoint; the jitter peaks mid-run where churn is most visible. */
+const RNG = {};
+function wobble(p, x){
+  const r = (RNG[p.id] || (RNG[p.id]=mulberry32(p.id.length*7919 + 13)));
+  if(!p._w){ p._w=[
+    [r()*4+3,   r()*6.28, 0.60],   // slow swell
+    [r()*6+8,   r()*6.28, 0.30],   // mid ripple
+    [r()*10+16, r()*6.28, 0.15],   // fast ticks — players leaving
+  ]; }
+  let s=0; p._w.forEach(([f,ph,a])=> s+=Math.sin(x*f+ph)*a );
+  const win=Math.sin(Math.PI*Math.max(0,Math.min(1,x)));   // 0 at both ends, 1 mid
+  return s*0.022*win;
+}
+
+/* smooth (jitter-free) value — drives the HUD counters and leaderboard so
+   numbers don't flicker. */
+function curveVal(p, x){ return tgt(p)*Math.max(0, Math.min(1, curve(p,x))); }
+/* jittery value — drives the chart lines so they show live churn. */
+function valueAt(p, x){
+  const t = tgt(p);
+  const f = Math.max(0, Math.min(1, curve(p,x) + wobble(p,x)));
+  return t*f;
+}
+
+/* ---------------- canvas chart ---------------- */
+const cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+const fx=document.getElementById("fx"), fxc=fx.getContext("2d");
+let W=0,H=0,DPR=Math.min(2,window.devicePixelRatio||1);
+const PAD={l:58,r:24,t:108,b:40};
+function resize(){
+  const wrap=document.getElementById("chartwrap").getBoundingClientRect();
+  W=wrap.width; H=wrap.height;
+  cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+  fx.width=W*DPR; fx.height=H*DPR; fxc.setTransform(DPR,0,0,DPR,0,0);
+  drawFrame(curProg);
+}
+window.addEventListener("resize", resize);
+
+let curProg=0;
+function yMax(){
+  const t=RATES[curRate][metricKey];
+  return Math.max(...Object.values(t))*1.08;
+}
+function px(x){ return PAD.l + x*(W-PAD.l-PAD.r); }
+function py(v,max){ return H-PAD.b - (v/max)*(H-PAD.t-PAD.b); }
+
+function drawFrame(prog){
+  curProg=prog;
+  const max=yMax();
+  ctx.clearRect(0,0,W,H);
+
+  // gridlines (y)
+  ctx.font="11px var(--mono), monospace";
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  for(let i=0;i<=4;i++){
+    const v=max*i/4, y=py(v,max);
+    ctx.strokeStyle="rgba(255,255,255,.045)"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(W-PAD.r,y); ctx.stroke();
+    ctx.fillStyle="#5d6e8c";
+    ctx.fillText(METRICS[metricKey].integer? Math.round(v): v.toFixed(METRICS[metricKey].dec), PAD.l-10, y);
+  }
+  // hour ticks (x)
+  ctx.textAlign="center"; ctx.textBaseline="top";
+  for(let h=0;h<=SIM_HOURS;h++){
+    const x=px(h/SIM_HOURS);
+    ctx.fillStyle="#4a5871"; ctx.fillText(h+"h", x, H-PAD.b+8);
+  }
+
+  // "now" sweep line
+  const nx=px(prog);
+  if(prog>0){
+    ctx.strokeStyle="rgba(46,230,166,.22)"; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(nx,PAD.t-18); ctx.lineTo(nx,H-PAD.b); ctx.stroke();
+  }
+
+  // lines (draw non-hero first, hero last for glow on top)
+  const order=[...POLICIES].sort((a,b)=> (a.hero?1:0)-(b.hero?1:0));
+  order.forEach(p=>{
+    const N=Math.max(2, Math.floor(prog*240));
+    ctx.beginPath();
+    for(let i=0;i<=N;i++){
+      const x=prog*i/N;
+      const X=px(x), Y=py(valueAt(p,x),max);
+      i? ctx.lineTo(X,Y) : ctx.moveTo(X,Y);
+    }
+    if(p.hero){ ctx.shadowColor=p.color; ctx.shadowBlur=18; ctx.strokeStyle=p.color; ctx.lineWidth=3.4; }
+    else { ctx.shadowBlur=0; ctx.strokeStyle=p.color; ctx.lineWidth=2; ctx.globalAlpha=0.92; }
+    ctx.lineJoin="round"; ctx.stroke(); ctx.globalAlpha=1; ctx.shadowBlur=0;
+
+    // head dot
+    const hx=px(prog), hy=py(valueAt(p,prog),max);
+    ctx.beginPath(); ctx.arc(hx,hy, p.hero?5.5:3.6, 0, Math.PI*2);
+    ctx.fillStyle=p.hero?"#eafff7":"#cfe6ff";
+    if(p.hero){ ctx.shadowColor=p.color; ctx.shadowBlur=22; }
+    ctx.fill(); ctx.shadowBlur=0;
+    if(p.hero){ ctx.beginPath(); ctx.arc(hx,hy,11,0,Math.PI*2); ctx.strokeStyle="rgba(46,230,166,.5)"; ctx.lineWidth=2; ctx.stroke(); }
+  });
+}
+
+/* ---------------- leaderboard ---------------- */
+function buildRows(){
+  const box=document.getElementById("rows");
+  box.style.height=(POLICIES.length*72)+"px";
+  box.innerHTML=POLICIES.map(p=>`
+    <div class="row ${p.hero?'hero':''}" id="row-${p.id}">
+      <span class="rank" id="rank-${p.id}"></span>
+      <span class="dot" style="color:${p.color};background:${p.color}"></span>
+      <span class="pol"><div class="pn">${p.name}</div><div class="pd">${p.desc}</div></span>
+      <span class="val"><span id="val-${p.id}">0</span><small>${METRICS[metricKey].unit}</small><span class="crown">👑</span></span>
+    </div>`).join("");
+}
+function updateRows(prog){
+  const m=METRICS[metricKey];
+  const vals=POLICIES.map(p=>({p, v:curveVal(p,prog)}));
+  vals.sort((a,b)=> b.v-a.v);
+  vals.forEach((o,i)=>{
+    const row=document.getElementById("row-"+o.p.id);
+    row.style.transform=`translateY(${i*72}px)`;
+    document.getElementById("rank-"+o.p.id).textContent=(i+1);
+    const el=document.getElementById("val-"+o.p.id);
+    el.textContent = m.integer? Math.round(o.v) : o.v.toFixed(m.dec);
+    el.parentElement.querySelector("small").textContent=m.unit;
+    row.classList.toggle("leading", o.p.hero && i===0);
+  });
+}
+
+/* ---------------- mechanism strip (counts up with prog) ---------------- */
+function updateMech(prog){
+  const R=RATES[curRate];
+  const liveT=Math.round(lerp(35, R.activeLive, easeOut(prog)));
+  const stdT =Math.round(lerp(35, R.activeStd, prog));
+  const form =Math.round(lerp(0, R.formed, Math.pow(prog,1.1)));
+  document.getElementById("mLive").textContent=liveT;
+  document.getElementById("mStd").textContent=stdT;
+  document.getElementById("mForm").textContent=form;
+}
+function lerp(a,b,t){ return a+(b-a)*t; }
+function easeOut(x){ return 1-Math.pow(1-x,2); }
+
+/* ---------------- HUD ---------------- */
+function updateHUD(prog){
+  const m=METRICS[metricKey];
+  const hero=POLICIES.find(p=>p.hero);
+  const std=POLICIES.find(p=>p.id==="standard");
+  const hv=curveVal(hero,prog), sv=curveVal(std,prog);
+  document.getElementById("bignum").textContent = m.integer? Math.round(hv): hv.toFixed(m.dec);
+  document.getElementById("bigunit").textContent = m.unit;
+  const mins=Math.floor(prog*SIM_HOURS*60);
+  document.getElementById("clk").textContent = String(Math.floor(mins/60)).padStart(2,"0")+":"+String(mins%60).padStart(2,"0");
+  document.getElementById("prog").style.width=(prog*100)+"%";
+  // delta vs standard
+  if(prog>0.04){
+    const d=hv-sv, pct = sv>0? (d/sv*100):0;
+    const ahead = d>=0;
+    document.getElementById("deltaLine").innerHTML = ahead
+      ? `<b>FairPlay-Liveness ahead</b> · +${m.integer?Math.round(d):d.toFixed(m.dec)}${m.unit} (${pct>=0?"+":""}${pct.toFixed(1)}%) vs Standard`
+      : `trailing Standard by ${(-d).toFixed(m.dec)}${m.unit} — the surge is coming…`;
+  } else { document.getElementById("deltaLine").innerHTML="&nbsp;"; }
+}
+
+/* ---------------- sound (WebAudio synth — no asset files) ---------------- */
+const Sound=(function(){
+  let actx=null, muted=false;
+  function ensure(){ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+    if(actx.state==="suspended") actx.resume(); return actx; }
+  function tone(f,t0,dur,type,g){ const a=ensure(); if(!a||muted) return; const o=a.createOscillator(), gn=a.createGain();
+    o.type=type||"sine"; o.frequency.value=f; o.connect(gn); gn.connect(a.destination);
+    const t=a.currentTime+t0; gn.gain.setValueAtTime(0.0001,t); gn.gain.exponentialRampToValueAtTime(g||0.16,t+0.012);
+    gn.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.start(t); o.stop(t+dur+0.03); }
+  function clink(t0,g){ const a=ensure(); if(!a||muted) return; const n=Math.floor(a.sampleRate*0.09), b=a.createBuffer(1,n,a.sampleRate), d=b.getChannelData(0);
+    for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2); const s=a.createBufferSource(); s.buffer=b;
+    const bp=a.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2700; bp.Q.value=1.6;
+    const gn=a.createGain(); gn.gain.value=g||0.10; s.connect(bp); bp.connect(gn); gn.connect(a.destination); s.start(a.currentTime+t0); }
+  return {
+    resume(){ ensure(); }, setMuted(m){ muted=m; }, isMuted(){ return muted; },
+    start(){ tone(196,0,0.45,"sine",0.10); tone(98,0.02,0.55,"triangle",0.07); },
+    hour(){ tone(1300,0,0.04,"sine",0.022); },
+    overtake(){ tone(523,0,0.13,"triangle",0.10); tone(784,0.07,0.20,"triangle",0.10); },
+    win(){ [523,659,784,1047].forEach((f,i)=> tone(f,i*0.10,0.55,"triangle",0.13)); clink(0,0.10); clink(0.13,0.09); clink(0.27,0.08); }
+  };
+})();
+
+/* ---------------- chip-burst (canvas particles on win) ---------------- */
+const CHIP_COLORS=["#e5484d","#4f7cff","#2ecc71","#f5c451","#eef1f5","#1c2230"];
+let chips=[], chipRAF=null, chipT0=null;
+function drawChip(g,x,y,r,rot,color){
+  g.save(); g.translate(x,y); g.rotate(rot);
+  g.beginPath(); g.arc(0,0,r,0,Math.PI*2); g.fillStyle=color; g.fill();
+  g.lineWidth=2; g.strokeStyle="rgba(255,255,255,.85)";
+  for(let i=0;i<6;i++){ g.save(); g.rotate(i*Math.PI/3); g.beginPath(); g.moveTo(0,-r); g.lineTo(0,-r+5); g.stroke(); g.restore(); }
+  g.beginPath(); g.arc(0,0,r*0.58,0,Math.PI*2); g.strokeStyle="rgba(255,255,255,.55)"; g.lineWidth=1.5; g.stroke();
+  g.beginPath(); g.arc(-r*0.22,-r*0.26,r*0.18,0,Math.PI*2); g.fillStyle="rgba(255,255,255,.35)"; g.fill();
+  g.restore();
+}
+function burst(x,y){
+  chips=[]; for(let i=0;i<28;i++){ const a=(-Math.PI/2)+(Math.random()-0.5)*1.8, sp=4+Math.random()*7.5;
+    chips.push({x,y,vx:Math.cos(a)*sp+(Math.random()-0.5)*2, vy:Math.sin(a)*sp-2.5, r:7+Math.random()*6,
+      rot:Math.random()*6.28, vr:(Math.random()-0.5)*0.5, c:CHIP_COLORS[i%CHIP_COLORS.length]}); }
+  chipT0=null; cancelAnimationFrame(chipRAF); chipRAF=requestAnimationFrame(stepChips);
+}
+function stepChips(ts){
+  if(chipT0===null) chipT0=ts; const e=(ts-chipT0)/1000;
+  fxc.clearRect(0,0,W,H); let alive=false;
+  chips.forEach(c=>{ c.vy+=0.34; c.x+=c.vx; c.y+=c.vy; c.vx*=0.99; c.rot+=c.vr;
+    const a=Math.max(0,1-e/1.5); if(c.y<H+50 && a>0){ alive=true; fxc.globalAlpha=a; drawChip(fxc,c.x,c.y,c.r,c.rot,c.c); } });
+  fxc.globalAlpha=1;
+  if(alive && e<1.7) chipRAF=requestAnimationFrame(stepChips); else fxc.clearRect(0,0,W,H);
+}
+function clearFx(){ cancelAnimationFrame(chipRAF); fxc.clearRect(0,0,W,H); }
+function flashOvertake(){ const w=document.getElementById("chartwrap"); w.classList.remove("pulse"); void w.offsetWidth; w.classList.add("pulse"); }
+
+/* ---------------- run loop ---------------- */
+let startT=null, lastHour=-1, wasAhead=false;
+function tick(ts){
+  if(startT===null) startT=ts;
+  let prog=Math.min(1,(ts-startT)/DURATION);
+  const eased = prog; // linear clock; curves carry the drama
+  drawFrame(eased); updateRows(eased); updateHUD(eased); updateMech(eased);
+  // per-hour blip
+  const hr=Math.floor(eased*SIM_HOURS);
+  if(hr!==lastHour){ lastHour=hr; if(hr>0 && hr<SIM_HOURS) Sound.hour(); }
+  // overtake moment: hero passes Standard
+  const hero=POLICIES.find(p=>p.hero), std=POLICIES.find(p=>p.id==="standard");
+  const ahead=curveVal(hero,eased) >= curveVal(std,eased);
+  if(ahead && !wasAhead && eased>0.12){ wasAhead=true; Sound.overtake(); flashOvertake(); }
+  if(prog<1){ raf=requestAnimationFrame(tick); }
+  else { running=false; done=true; finish(); }
+}
+function run(){
+  cancelAnimationFrame(raf); startT=null; running=true; done=false;
+  lastHour=-1; wasAhead=false; clearFx();
+  document.getElementById("verdict").classList.remove("show");
+  document.getElementById("replay").classList.remove("show");
+  document.getElementById("runlayer").classList.add("hide");
+  POLICIES.forEach(p=>p._w=null); // reset wobble harmonics per metric
+  Sound.resume(); Sound.start();
+  raf=requestAnimationFrame(tick);
+}
+function finish(){
+  const m=METRICS[metricKey];
+  const hero=POLICIES.find(p=>p.hero), std=POLICIES.find(p=>p.id==="standard");
+  const hv=RATES[curRate][metricKey][hero.id], sv=RATES[curRate][metricKey][std.id];
+  const pct=((hv-sv)/sv*100);
+  document.getElementById("verdictBig").innerHTML =
+    `<b>FairPlay-Liveness wins</b> — ${pct>=0?"+":""}${pct.toFixed(1)}% ${m.label.toLowerCase()}`;
+  document.getElementById("verdictSmall").textContent =
+    `${(m.integer?Math.round(hv):hv.toFixed(m.dec))}${m.unit} vs ${(m.integer?Math.round(sv):sv.toFixed(m.dec))}${m.unit} for Standard · ${m.why}`;
+  document.getElementById("verdict").classList.add("show");
+  document.getElementById("replay").classList.add("show");
+  // chip-burst from the hero line head + win chime
+  burst(px(1), py(hv, yMax()));
+  Sound.win();
+}
+
+/* static (pre-run / metric switch) render at prog=0, then a peek of final */
+function rest(){
+  cancelAnimationFrame(raf); running=false; done=false; startT=null;
+  lastHour=-1; wasAhead=false; clearFx();
+  document.getElementById("metricName").textContent=METRICS[metricKey].label;
+  buildRows(); drawFrame(0); updateRows(0); updateHUD(0); updateMech(0);
+}
+
+/* ---------------- pivot pills ---------------- */
+function buildPivot(){
+  const order=[["vuln","Vulnerable Protection"],["total","Total Economics"],["tables","Tables Formed"]];
+  const el=document.getElementById("pivot");
+  el.innerHTML=order.map(([k,l])=>`<button data-k="${k}" class="${k===metricKey?'on':''}">${l}</button>`).join("");
+  el.querySelectorAll("button").forEach(b=> b.onclick=()=>{
+    if(b.dataset.k===metricKey) return;
+    metricKey=b.dataset.k;
+    el.querySelectorAll("button").forEach(x=>x.classList.toggle("on", x.dataset.k===metricKey));
+    document.getElementById("verdict").classList.remove("show");
+    document.getElementById("replay").classList.remove("show");
+    document.getElementById("runlayer").classList.remove("hide");
+    rest();
+  });
+}
+
+/* ---------------- arrival-rate selector ---------------- */
+function buildRate(){
+  const el=document.getElementById("rate");
+  el.innerHTML=Object.keys(RATES).map(r=>`<button data-r="${r}" class="${+r===curRate?'on':''}">${r}</button>`).join("");
+  el.querySelectorAll("button").forEach(b=> b.onclick=()=>{
+    const r=+b.dataset.r; if(r===curRate) return; curRate=r;
+    el.querySelectorAll("button").forEach(x=>x.classList.toggle("on", +x.dataset.r===curRate));
+    document.getElementById("verdict").classList.remove("show");
+    document.getElementById("replay").classList.remove("show");
+    document.getElementById("runlayer").classList.remove("hide");
+    rest();
+  });
+}
+
+/* ---------------- boot ---------------- */
+document.getElementById("runbtn").onclick=run;
+document.getElementById("replay").onclick=()=>{ document.getElementById("runlayer").classList.add("hide"); run(); };
+const sndBtn=document.getElementById("sndBtn");
+sndBtn.onclick=()=>{ const m=!Sound.isMuted(); Sound.setMuted(m); sndBtn.classList.toggle("off",m); sndBtn.textContent=m?"🔇":"🔊"; if(!m) Sound.resume(); };
+buildPivot(); buildRate();
+requestAnimationFrame(()=>{ resize(); rest(); });
+
+/* debug hooks for screenshotting: ?frame=end|mid · ?metric=total · ?rate=30 */
+const q=new URLSearchParams(location.search);
+if(q.get("rate") && RATES[q.get("rate")]){ curRate=+q.get("rate"); buildRate(); }
+if(q.get("metric") && METRICS[q.get("metric")]){ metricKey=q.get("metric"); buildPivot(); }
+if(q.get("frame")==="end"){
+  requestAnimationFrame(()=>{ resize();
+    document.getElementById("runlayer").style.display="none";
+    drawFrame(1); updateRows(1); updateHUD(1); updateMech(1); finish();
+  });
+} else if(q.get("frame")==="mid"){
+  requestAnimationFrame(()=>{ resize();
+    document.getElementById("runlayer").style.display="none";
+    drawFrame(0.7); updateRows(0.7); updateHUD(0.7); updateMech(0.7);
+  });
+}
+</script>
+</body>
+</html>

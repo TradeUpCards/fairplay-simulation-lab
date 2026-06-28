@@ -48,6 +48,37 @@ def test_large_room_sweep_reuses_shared_arrivals_by_policy(tmp_path):
                for row in payload["runs"])
 
 
+DEPARTURE_KEYS = (
+    "left_satisfied_count",
+    "left_damaged_count",
+    "couldnt_seat_count",
+    "cohort_left_satisfied_count",
+    "cohort_left_damaged_count",
+    "cohort_couldnt_seat_count",
+)
+
+
+def test_large_room_sweep_reports_departure_buckets(tmp_path):
+    payload = _small_sweep(tmp_path)
+
+    for row in payload["runs"]:
+        # every bucket present as a non-negative int
+        for key in DEPARTURE_KEYS:
+            assert key in row, f"missing {key} in run row"
+            assert isinstance(row[key], int) and row[key] >= 0
+        # the cohort split can never exceed the all-players bucket
+        assert row["cohort_left_satisfied_count"] <= row["left_satisfied_count"]
+        assert row["cohort_left_damaged_count"] <= row["left_damaged_count"]
+        assert row["cohort_couldnt_seat_count"] <= row["couldnt_seat_count"]
+        # couldn't-seat is balked + wait-balked, so it covers wait-balks at least
+        assert row["couldnt_seat_count"] >= row["wait_balk_count"]
+
+    # buckets seed-average into the summary alongside the existing metrics
+    for row in payload["summary"]:
+        for key in DEPARTURE_KEYS:
+            assert f"{key}_mean" in row
+
+
 def test_large_room_sweep_cli_writes_outputs(tmp_path):
     rc = main([
         "large-room-sweep",
