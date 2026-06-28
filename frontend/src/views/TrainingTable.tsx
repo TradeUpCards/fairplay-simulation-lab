@@ -219,41 +219,64 @@ function actionTone(a: LogEntry['action']): string {
   }
 }
 
-function ActionLog({ log, seats }: { log: LogEntry[]; seats: SeatView[] }) {
-  if (!log.length) return null
-  // group consecutive streets in the order they appear (preflop → river)
+// Left-rail "table feed" — the hand action as a chat window: hero on the right in a
+// brass bubble, opponents on the left, grouped by street with a divider.
+function ChatLog({ log, seats }: { log: LogEntry[]; seats: SeatView[] }) {
   const order: string[] = []
   for (const e of log) if (!order.includes(e.street)) order.push(e.street)
   return (
-    <div className="rounded-xl border border-line bg-surface p-3.5">
-      <div className="mb-3 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-muted">
-        Hand action
+    <aside className="hidden min-h-0 flex-col rounded-xl border border-line bg-surface lg:flex">
+      <div className="flex shrink-0 items-center gap-2 border-b border-line px-3.5 py-2.5">
+        <span aria-hidden className="text-[0.95rem]">💬</span>
+        <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-muted">
+          Hand action
+        </span>
       </div>
-      <div className="flex flex-col gap-3">
-        {order.map((street) => (
-          <div key={street}>
-            <div className="mb-1.5 flex items-center gap-2">
-              <span className="font-mono text-[0.56rem] uppercase tracking-[0.16em] text-brass">
-                {street}
-              </span>
-              <span className="h-px flex-1 bg-[#262b34]" />
-            </div>
-            <ul className="m-0 flex list-none flex-col gap-1 p-0">
-              {log
-                .filter((e) => e.street === street)
-                .map((e, i) => (
-                  <li key={i} className="flex items-baseline justify-between gap-3 text-[0.8rem]">
-                    <span className="font-semibold text-text">{logName(e, seats)}</span>
-                    <span className={`font-mono text-[0.76rem] ${actionTone(e.action)}`}>
-                      {logVerb(e)}
-                    </span>
-                  </li>
-                ))}
-            </ul>
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        {log.length === 0 ? (
+          <div className="flex h-full items-center justify-center px-2 text-center text-[0.78rem] text-faint">
+            Deal a hand — the table’s action shows up here, street by street.
           </div>
-        ))}
+        ) : (
+          <div className="flex flex-col gap-3.5">
+            {order.map((street) => (
+              <div key={street}>
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="h-px flex-1 bg-[#262b34]" />
+                  <span className="font-mono text-[0.54rem] uppercase tracking-[0.16em] text-brass">
+                    {street}
+                  </span>
+                  <span className="h-px flex-1 bg-[#262b34]" />
+                </div>
+                <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                  {log
+                    .filter((e) => e.street === street)
+                    .map((e, i) => {
+                      const hero = seats.find((s) => s.seat === e.seat)?.is_hero
+                      return (
+                        <li key={i} className={`flex flex-col gap-0.5 ${hero ? 'items-end' : 'items-start'}`}>
+                          <span className="px-1 text-[0.56rem] uppercase tracking-wider text-faint">
+                            {logName(e, seats)}
+                          </span>
+                          <span
+                            className={`max-w-[88%] rounded-2xl px-2.5 py-1 text-[0.78rem] ${
+                              hero
+                                ? 'rounded-tr-sm bg-[rgba(199,154,75,0.16)] font-semibold text-brass'
+                                : 'rounded-tl-sm bg-surface-2'
+                            }`}
+                          >
+                            <span className={hero ? '' : actionTone(e.action)}>{logVerb(e)}</span>
+                          </span>
+                        </li>
+                      )
+                    })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </aside>
   )
 }
 
@@ -816,7 +839,9 @@ export function TrainingTable() {
 
   return (
     <>
-      <div className="grid h-full min-h-0 grid-cols-1 gap-6 overflow-y-auto lg:grid-cols-[1fr_360px] lg:overflow-hidden">
+      <div className="grid h-full min-h-0 grid-cols-1 gap-5 overflow-y-auto lg:grid-cols-[260px_1fr_352px] lg:overflow-hidden">
+      {/* left column: the hand-action "table feed" chat window */}
+      <ChatLog log={st?.log ?? []} seats={st?.seats ?? []} />
       <div className="flex min-h-0 flex-col">
         {/* setup bar */}
         <div className="mb-4 flex shrink-0 flex-wrap items-center gap-2">
@@ -1019,7 +1044,7 @@ export function TrainingTable() {
 
       </div>
 
-      {/* right column: AI coach and hand action, each with its OWN scroll */}
+      {/* right column: the AI coach review */}
       <aside className="flex min-h-0 flex-col gap-4">
         <div className="min-h-0 overflow-y-auto lg:flex-1">
           {st?.complete && (review || coach || partial || coachBusy) ? (
@@ -1044,11 +1069,6 @@ export function TrainingTable() {
             </div>
           )}
         </div>
-        {st && st.log.length > 0 && (
-          <div className="max-h-[14rem] shrink-0 overflow-y-auto">
-            <ActionLog log={st.log} seats={st.seats} />
-          </div>
-        )}
       </aside>
       </div>
       {debug && (
