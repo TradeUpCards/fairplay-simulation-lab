@@ -236,11 +236,13 @@ function ConfigSeat({
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
           aria-label="seat player type"
-          className="w-full cursor-pointer rounded-lg bg-transparent px-1 py-1.5 text-center text-[0.72rem] font-semibold text-text focus:outline-none focus:ring-1 focus:ring-brass"
+          className="w-full cursor-pointer rounded-lg bg-transparent px-1 py-1.5 text-center text-[0.72rem] font-semibold text-text [color-scheme:dark] focus:outline-none focus:ring-1 focus:ring-brass"
         >
-          <option value="">Empty seat</option>
+          <option value="" className="bg-[#15171c] text-text">
+            Empty seat
+          </option>
           {BOT_CHOICES.map((c) => (
-            <option key={c.archetype} value={c.archetype}>
+            <option key={c.archetype} value={c.archetype} className="bg-[#15171c] text-text">
               {c.label}
             </option>
           ))}
@@ -736,6 +738,7 @@ export function TrainingTable() {
   const [autoCoach, setAutoCoach] = useState(true)
   const [partial, setPartial] = useState<Coaching | null>(null)
   const [review, setReview] = useState<HandReview | null>(null) // grounded review (fetched on complete)
+  const [editSeats, setEditSeats] = useState(false) // re-open the seat pickers after a hand
   const [debug, setDebug] = useState<{
     clientMs: number
     ttfaMs: number
@@ -796,6 +799,7 @@ export function TrainingTable() {
     setCoach(null)
     setPartial(null)
     setReview(null)
+    setEditSeats(false)
     try {
       const nSeats = slots.filter(Boolean).length + 1
       const next = await playApi.newHand({
@@ -1016,8 +1020,9 @@ export function TrainingTable() {
                   </span>
                 )}
               </div>
-              {/* seats — configurable placards when idle/complete, live seats mid-hand */}
-              {!st || st.complete
+              {/* seats — config pickers pre-deal or when explicitly editing; otherwise
+                  the live/finished placards (so end-of-hand stacks stay visible) */}
+              {!st || (st.complete && editSeats)
                 ? positions.map((pos, slot) => (
                     <div key={`cfg-${slot}`} className="absolute" style={pos}>
                       {slot === 0 ? (
@@ -1086,14 +1091,23 @@ export function TrainingTable() {
                           {bbStr(st.pot)}
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={deal}
-                        disabled={busy}
-                        className="w-full rounded-lg border border-brass bg-brass px-4 py-2 text-[0.82rem] font-semibold text-[#1a1407] transition hover:brightness-105 disabled:opacity-50"
-                      >
-                        Deal next hand →
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditSeats((v) => !v)}
+                          className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-[0.78rem] text-muted transition hover:border-brass-soft hover:text-text"
+                        >
+                          {editSeats ? 'View result' : '✎ Change players'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={deal}
+                          disabled={busy}
+                          className="flex-1 rounded-lg border border-brass bg-brass px-4 py-2 text-[0.82rem] font-semibold text-[#1a1407] transition hover:brightness-105 disabled:opacity-50"
+                        >
+                          Deal next hand →
+                        </button>
+                      </div>
                     </div>
                   )
                 })()}
