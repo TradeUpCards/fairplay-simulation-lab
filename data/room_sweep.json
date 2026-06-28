@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-27 14:41",
+  "generated_at": "2026-06-27 19:38",
   "datasets": [
     {
       "id": "static-capacity",
@@ -204,6 +204,32 @@
               "final_forming_tables": 0.0,
               "final_empty_tables": 0.0,
               "hands_total": 17773.3333
+            }
+          },
+          "departures": {
+            "standard": {
+              "left_satisfied_count": 5.3333,
+              "left_damaged_count": 105.3333,
+              "couldnt_seat_count": 0.0,
+              "cohort_left_satisfied_count": 5.3333,
+              "cohort_left_damaged_count": 105.3333,
+              "cohort_couldnt_seat_count": 0.0
+            },
+            "fairplay": {
+              "left_satisfied_count": 5.6667,
+              "left_damaged_count": 105.0,
+              "couldnt_seat_count": 0.3333,
+              "cohort_left_satisfied_count": 5.6667,
+              "cohort_left_damaged_count": 105.0,
+              "cohort_couldnt_seat_count": 0.3333
+            },
+            "fairplay_liveness": {
+              "left_satisfied_count": 2.6667,
+              "left_damaged_count": 107.6667,
+              "couldnt_seat_count": 0.3333,
+              "cohort_left_satisfied_count": 2.6667,
+              "cohort_left_damaged_count": 107.6667,
+              "cohort_couldnt_seat_count": 0.3333
             }
           },
           "runs": [
@@ -506,6 +532,32 @@
               "hands_total": 18370.3333
             }
           },
+          "departures": {
+            "standard": {
+              "left_satisfied_count": 5.0,
+              "left_damaged_count": 126.3333,
+              "couldnt_seat_count": 117.3333,
+              "cohort_left_satisfied_count": 5.0,
+              "cohort_left_damaged_count": 126.3333,
+              "cohort_couldnt_seat_count": 47.6667
+            },
+            "fairplay": {
+              "left_satisfied_count": 8.0,
+              "left_damaged_count": 124.0,
+              "couldnt_seat_count": 116.6667,
+              "cohort_left_satisfied_count": 8.0,
+              "cohort_left_damaged_count": 124.0,
+              "cohort_couldnt_seat_count": 47.0
+            },
+            "fairplay_liveness": {
+              "left_satisfied_count": 5.6667,
+              "left_damaged_count": 126.3333,
+              "couldnt_seat_count": 117.3333,
+              "cohort_left_satisfied_count": 5.6667,
+              "cohort_left_damaged_count": 126.3333,
+              "cohort_couldnt_seat_count": 47.6667
+            }
+          },
           "runs": [
             {
               "seed": 7,
@@ -804,6 +856,32 @@
               "final_forming_tables": 0.0,
               "final_empty_tables": 0.0,
               "hands_total": 18683.3333
+            }
+          },
+          "departures": {
+            "standard": {
+              "left_satisfied_count": 6.0,
+              "left_damaged_count": 124.0,
+              "couldnt_seat_count": 269.0,
+              "cohort_left_satisfied_count": 6.0,
+              "cohort_left_damaged_count": 124.0,
+              "cohort_couldnt_seat_count": 111.0
+            },
+            "fairplay": {
+              "left_satisfied_count": 8.3333,
+              "left_damaged_count": 121.0,
+              "couldnt_seat_count": 269.0,
+              "cohort_left_satisfied_count": 8.3333,
+              "cohort_left_damaged_count": 121.0,
+              "cohort_couldnt_seat_count": 111.0
+            },
+            "fairplay_liveness": {
+              "left_satisfied_count": 6.3333,
+              "left_damaged_count": 124.6667,
+              "couldnt_seat_count": 268.6667,
+              "cohort_left_satisfied_count": 6.3333,
+              "cohort_left_damaged_count": 124.6667,
+              "cohort_couldnt_seat_count": 110.6667
             }
           },
           "runs": [
@@ -1106,6 +1184,32 @@
               "hands_total": 26833.0
             }
           },
+          "departures": {
+            "standard": {
+              "left_satisfied_count": 6.6667,
+              "left_damaged_count": 111.3333,
+              "couldnt_seat_count": 0.0,
+              "cohort_left_satisfied_count": 6.6667,
+              "cohort_left_damaged_count": 111.3333,
+              "cohort_couldnt_seat_count": 0.0
+            },
+            "fairplay": {
+              "left_satisfied_count": 8.3333,
+              "left_damaged_count": 110.3333,
+              "couldnt_seat_count": 0.0,
+              "cohort_left_satisfied_count": 8.3333,
+              "cohort_left_damaged_count": 110.3333,
+              "cohort_couldnt_seat_count": 0.0
+            },
+            "fairplay_liveness": {
+              "left_satisfied_count": 9.0,
+              "left_damaged_count": 108.3333,
+              "couldnt_seat_count": 1.0,
+              "cohort_left_satisfied_count": 9.0,
+              "cohort_left_damaged_count": 108.3333,
+              "cohort_couldnt_seat_count": 1.0
+            }
+          },
           "runs": [
             {
               "seed": 7,
@@ -1406,6 +1510,32 @@
               "hands_total": 28970.3333
             }
           },
+          "departures": {
+            "standard": {
+              "left_satisfied_count": 9.6667,
+              "left_damaged_count": 168.0,
+              "couldnt_seat_count": 2.0,
+              "cohort_left_satisfied_count": 9.6667,
+              "cohort_left_damaged_count": 168.0,
+              "cohort_couldnt_seat_count": 0.6667
+            },
+            "fairplay": {
+              "left_satisfied_count": 12.3333,
+              "left_damaged_count": 166.3333,
+              "couldnt_seat_count": 1.6667,
+              "cohort_left_satisfied_count": 12.3333,
+              "cohort_left_damaged_count": 166.3333,
+              "cohort_couldnt_seat_count": 0.6667
+            },
+            "fairplay_liveness": {
+              "left_satisfied_count": 13.0,
+              "left_damaged_count": 165.6667,
+              "couldnt_seat_count": 2.0,
+              "cohort_left_satisfied_count": 13.0,
+              "cohort_left_damaged_count": 165.6667,
+              "cohort_couldnt_seat_count": 1.0
+            }
+          },
           "runs": [
             {
               "seed": 7,
@@ -1704,6 +1834,32 @@
               "final_forming_tables": 0.0,
               "final_empty_tables": 0.0,
               "hands_total": 30065.3333
+            }
+          },
+          "departures": {
+            "standard": {
+              "left_satisfied_count": 10.0,
+              "left_damaged_count": 174.6667,
+              "couldnt_seat_count": 143.0,
+              "cohort_left_satisfied_count": 10.0,
+              "cohort_left_damaged_count": 174.6667,
+              "cohort_couldnt_seat_count": 60.3333
+            },
+            "fairplay": {
+              "left_satisfied_count": 9.0,
+              "left_damaged_count": 175.3333,
+              "couldnt_seat_count": 143.6667,
+              "cohort_left_satisfied_count": 9.0,
+              "cohort_left_damaged_count": 175.3333,
+              "cohort_couldnt_seat_count": 61.0
+            },
+            "fairplay_liveness": {
+              "left_satisfied_count": 8.0,
+              "left_damaged_count": 177.3333,
+              "couldnt_seat_count": 142.6667,
+              "cohort_left_satisfied_count": 8.0,
+              "cohort_left_damaged_count": 177.3333,
+              "cohort_couldnt_seat_count": 60.0
             }
           },
           "runs": [
