@@ -16,7 +16,7 @@ import {
   type PlayState,
   type SeatView,
 } from '../state/playApi'
-import { avatarFor } from '../lib/lobbyIdentity'
+import { archetypeBadge } from '../lib/lobbyIdentity'
 
 /**
  * The training table — a single human at a 2-6 handed No-Limit Hold'em table of
@@ -80,7 +80,8 @@ function hashHue(s: string): number {
 // Large round portrait — the same design as the lobby sidecar seats. Carries the
 // turn/winner ring state so the circle (not a box) is the seat's focal point.
 function Avatar({ sv }: { sv: SeatView }) {
-  const imageUrl = sv.is_hero ? null : avatarFor(sv.label)
+  // Cartoon archetype mascot (shark/fish/robot…); null in Mystery mode → neutral face.
+  const imageUrl = sv.is_hero ? null : archetypeBadge(sv.archetype)
   const emoji = sv.is_hero ? '🧑' : (ARCH_AVATAR[sv.archetype ?? ''] ?? '🎭')
   const hue = hashHue(sv.label)
   const ring = sv.won
@@ -121,9 +122,9 @@ function Chip({ children, tone }: { children: ReactNode; tone?: 'role' | 'bet' }
 function seatPositions(n: number): { top: string; left: string }[] {
   return Array.from({ length: n }, (_, i) => {
     const theta = Math.PI / 2 + (i / n) * Math.PI * 2
-    // Push the pods OUT past the rail (off the felt) so they don't sit on the table;
-    // vertical radius stays a bit tighter so top/bottom pods + cards don't clip.
-    return { left: `${50 + 48 * Math.cos(theta)}%`, top: `${50 + 35 * Math.sin(theta)}%` }
+    // Push the pods OUT past the rail (off the felt) so the cards-over-avatar don't
+    // spill onto the table; vertical radius a touch tighter so top/bottom don't clip.
+    return { left: `${50 + 54 * Math.cos(theta)}%`, top: `${50 + 40 * Math.sin(theta)}%` }
   })
 }
 
@@ -147,27 +148,27 @@ function Seat({ sv }: { sv: SeatView }) {
     <div
       className={`relative flex w-[112px] flex-col items-center -translate-x-1/2 -translate-y-1/2 ${sv.folded ? 'opacity-40' : ''}`}
     >
-      {showCards && (
-        <div className="absolute bottom-full left-1/2 mb-1 flex -translate-x-1/2 gap-1">
-          {cards.map((c, i) => (
-            <PlayingCard key={i} card={c} small={!sv.is_hero} />
-          ))}
-        </div>
-      )}
-      <Avatar sv={sv} />
+      <div className="relative">
+        {showCards && (
+          <div className="absolute bottom-1 left-1/2 z-10 flex -translate-x-1/2 gap-0.5">
+            {cards.map((c, i) => (
+              <PlayingCard key={i} card={c} small={!sv.is_hero} />
+            ))}
+          </div>
+        )}
+        <Avatar sv={sv} />
+      </div>
       <div
-        className={`relative -mt-3 z-10 w-full rounded-lg border px-1.5 pb-1 pt-2.5 text-center leading-tight ${cardTone}`}
+        className={`relative -mt-3 z-20 w-full rounded-lg border px-1.5 pb-1 pt-2.5 text-center leading-tight ${cardTone}`}
       >
-        <div className="flex items-center justify-center gap-1">
-          <span
-            className={`truncate text-[0.78rem] font-semibold ${sv.is_hero ? 'text-brass' : 'text-text'}`}
-          >
-            {sv.label}
-          </span>
-          {sv.role && <Chip tone="role">{sv.role}</Chip>}
+        <div className={`text-[0.76rem] font-semibold ${sv.is_hero ? 'text-brass' : 'text-text'}`}>
+          {sv.label}
         </div>
-        <div className="font-mono text-[0.72rem] font-semibold text-[#d9c08a]">
-          {sv.stack_bb}bb{sv.won && <span className="text-felt"> · won</span>}
+        <div className="mt-0.5 flex items-center justify-center gap-1 font-mono text-[0.7rem] font-semibold text-[#d9c08a]">
+          {sv.role && <Chip tone="role">{sv.role}</Chip>}
+          <span>
+            {sv.stack_bb}bb{sv.won && <span className="text-felt"> · won</span>}
+          </span>
         </div>
       </div>
       {sv.bet_bb > 0 && (
