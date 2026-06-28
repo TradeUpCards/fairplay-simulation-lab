@@ -295,7 +295,7 @@ function ChatLog({ log, seats }: { log: LogEntry[]; seats: SeatView[] }) {
   const order: string[] = []
   for (const e of log) if (!order.includes(e.street)) order.push(e.street)
   return (
-    <aside className="hidden h-[212px] min-h-0 flex-col self-end rounded-xl border border-line bg-surface lg:flex">
+    <aside className="hidden h-full w-[440px] min-h-0 flex-col rounded-xl border border-line bg-surface lg:flex">
       <div className="flex shrink-0 items-center gap-2 border-b border-line px-3.5 py-2.5">
         <span aria-hidden className="text-[0.95rem]">💬</span>
         <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-muted">
@@ -909,9 +909,7 @@ export function TrainingTable() {
 
   return (
     <>
-      <div className="grid h-full min-h-0 grid-cols-1 gap-5 overflow-y-auto lg:grid-cols-[440px_1fr_352px] lg:overflow-hidden">
-      {/* left column: the hand-action "table feed" chat window */}
-      <ChatLog log={st?.log ?? []} seats={st?.seats ?? []} />
+      <div className="grid h-full min-h-0 grid-cols-1 gap-5 overflow-y-auto lg:grid-cols-[1fr_360px] lg:overflow-hidden">
       <div className="flex min-h-0 flex-col">
         {/* setup bar */}
         <div className="mb-4 flex shrink-0 flex-wrap items-center gap-2">
@@ -996,7 +994,7 @@ export function TrainingTable() {
             action controls overlay the bottom-right rail (poker-client composition) */}
         <div className="relative min-h-0 flex-1">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative aspect-3/2 h-full max-h-[88%] w-auto max-w-full">
+            <div className="relative aspect-3/2 h-full max-h-full w-auto max-w-full">
               <img
                 className="absolute inset-0 h-full w-full object-contain opacity-[0.92]"
                 src={pokerTable}
@@ -1048,7 +1046,9 @@ export function TrainingTable() {
         {/* action region — FIXED height, always present, so the felt above never
             reflows when the controls show/hide. The inner box is top-aligned and only
             rendered when there's something to say. */}
-        <div className="mt-2 flex h-[212px] shrink-0 items-start justify-end">
+        <div className="mt-2 flex h-[212px] shrink-0 items-stretch gap-4">
+          <ChatLog log={st?.log ?? []} seats={st?.seats ?? []} />
+          <div className="flex flex-1 items-start justify-end">
           {(!!error || !st || st.complete || heroTurn) && (
             <div className="w-full max-w-[440px] rounded-xl border border-line bg-[rgba(20,25,34,0.97)] p-3 shadow-[0_6px_24px_rgba(0,0,0,0.5)]">
               {error && <div className="mb-2 text-[0.8rem] text-[#e0607a]">{error}</div>}
@@ -1112,6 +1112,7 @@ export function TrainingTable() {
               )}
             </div>
           )}
+          </div>
         </div>
 
       </div>
