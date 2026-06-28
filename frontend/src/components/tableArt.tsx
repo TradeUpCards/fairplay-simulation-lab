@@ -26,11 +26,12 @@ export function hashHue(s: string): number {
   return h
 }
 
-/** Seats evenly around an ellipse, slot 0 at the bottom (matches the training table). */
-export function seatPositions(n: number): { top: string; left: string }[] {
+/** Seats evenly around an ellipse, slot 0 at the bottom (matches the training table).
+ *  `rx`/`ry` are the ellipse radii in % — bump them to push seats out toward the rail. */
+export function seatPositions(n: number, rx = 48, ry = 35): { top: string; left: string }[] {
   return Array.from({ length: Math.max(n, 1) }, (_, i) => {
     const theta = Math.PI / 2 + (i / Math.max(n, 1)) * Math.PI * 2
-    return { left: `${50 + 48 * Math.cos(theta)}%`, top: `${50 + 35 * Math.sin(theta)}%` }
+    return { left: `${50 + rx * Math.cos(theta)}%`, top: `${50 + ry * Math.sin(theta)}%` }
   })
 }
 

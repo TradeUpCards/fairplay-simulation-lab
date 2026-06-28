@@ -32,13 +32,14 @@ function archTone(a: string): string {
   return 'border-[#3a4757] bg-[#1c2028] text-[#b8c0cf]'
 }
 
-/** Seat ring on the real felt — each seat shows the player's handle + balance
- *  (same synthetic ids as the seat list below, so they always match). */
+/** Seat ring on the real felt — each seat is a round avatar portrait sitting above
+ *  and behind a name + balance card (its bottom tucked behind the card), pushed out
+ *  toward the rail. Same synthetic ids as the seat list, so they always match. */
 function MiniTable({ detail }: { detail: OperatorTableDetail }) {
   const seats = expandSeats(detail.table_id, detail.composition)
-  const pos = seatPositions(detail.max_seats)
+  const pos = seatPositions(detail.max_seats, 50, 44)
   return (
-    <div className="relative mx-auto my-2 aspect-3/2 w-full max-w-[18rem]">
+    <div className="relative mx-auto my-6 aspect-3/2 w-full max-w-[17rem]">
       <img
         src={pokerTable}
         className="absolute inset-0 h-full w-full rounded-[14px] object-cover"
@@ -66,11 +67,14 @@ function MiniTable({ detail }: { detail: OperatorTableDetail }) {
                 +
               </span>
             ) : (
-              <div className="flex min-w-[3.1rem] flex-col items-center rounded-[5px] border border-[#3a4555] bg-[rgba(8,10,14,0.82)] px-1 py-[0.1rem] leading-tight shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
-                <span className="max-w-[3.4rem] truncate text-[0.56rem] font-semibold text-[#e7e0d2]">
-                  {handleFor(s.id)}
-                </span>
-                <span className="font-mono text-[0.56rem] text-[#cdb98a]">${stackFor(s.id)}</span>
+              <div className="flex w-[3.6rem] flex-col items-center">
+                <SeatAvatar label={s.id} imageUrl={avatarFor(s.id)} size="md" />
+                <div className="-mt-2 z-10 w-full rounded-[5px] border border-[#3a4555] bg-[rgba(8,10,14,0.92)] px-1 pb-[0.12rem] pt-[0.18rem] text-center leading-tight shadow-[0_1px_4px_rgba(0,0,0,0.55)]">
+                  <div className="truncate text-[0.55rem] font-semibold text-[#e7e0d2]">
+                    {handleFor(s.id)}
+                  </div>
+                  <div className="font-mono text-[0.55rem] text-[#cdb98a]">${stackFor(s.id)}</div>
+                </div>
               </div>
             )}
           </div>
