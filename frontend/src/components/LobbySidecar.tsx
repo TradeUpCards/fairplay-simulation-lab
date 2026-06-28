@@ -1,6 +1,8 @@
 import { type ReactNode } from 'react'
 import pokerTable from '../assets/poker-table.png'
-import type { OperatorTableDetail } from '../data/types'
+import type { OperatorTableDetail, Archetype, HealthBand, HealthTerms } from '../data/types'
+import { computePtl } from '../lib/ptl'
+import { ptlTone, type PtlTone } from '../lib/table'
 import { ARCH_AVATAR, SeatAvatar, seatPositions } from './tableArt'
 import {
   expandSeats,
@@ -58,6 +60,45 @@ const RISK_TONE: Record<string, string> = {
   low: 'border-[#2f7d4a] bg-[#16341f] text-[#8be3a7]',
   medium: 'border-[#8a6d2f] bg-[#332a16] text-[#e3c98b]',
   high: 'border-[#8a3a3a] bg-[#341a1a] text-[#e38b8b]',
+}
+
+// PTL (propensity to leave) heat — reuses the dedicated pit-boss model so the lobby
+// curtain shows the same signal: vulnerable seats run hot at a fragile/predatory table.
+const PTL_DOT: Record<PtlTone, string> = {
+  pending: 'bg-[#4a5466]',
+  cool: 'bg-[#5fcf8a]',
+  warm: 'bg-[#e3b25f]',
+  hot: 'bg-[#ff7b7b]',
+}
+const PTL_TEXT: Record<PtlTone, string> = {
+  pending: 'text-faint',
+  cool: 'text-[#5fcf8a]',
+  warm: 'text-[#e3b25f]',
+  hot: 'text-[#ff7b7b]',
+}
+const PTL_LABEL: Record<PtlTone, string> = {
+  pending: '—',
+  cool: 'staying',
+  warm: 'restless',
+  hot: 'about to leave',
+}
+
+function seatHeat(
+  detail: OperatorTableDetail,
+  archetype: string,
+): { tone: PtlTone; why: string } | null {
+  if (!detail.terms || !detail.band) return null
+  try {
+    const r = computePtl(archetype as Archetype, {
+      table_id: detail.table_id,
+      band: detail.band as HealthBand,
+      terms: detail.terms as unknown as HealthTerms,
+    })
+    if (Number.isNaN(r.ptl)) return null
+    return { tone: ptlTone(r.ptl), why: r.reason_codes[1]?.detail ?? r.reason_codes[0]?.detail ?? '' }
+  } catch {
+    return null
+  }
 }
 
 /** Composition chip tone — predators/sharks warm, vulnerable cool, rest neutral. */
@@ -189,10 +230,20 @@ function SeatList({ detail, reveal }: { detail: OperatorTableDetail; reveal: boo
               <span className="font-mono text-[0.74rem] text-[#cdb98a]">${stackFor(s.id)}</span>
             </div>
             {reveal ? (
-              <div className="flex flex-wrap items-center gap-x-2 text-[0.7rem]">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.7rem]">
                 <span className={`rounded-full border px-1.5 py-[0.05rem] ${archTone(s.archetype)}`}>
                   {ARCH_AVATAR[s.archetype] ?? ''} {s.archetype.replace(/_/g, ' ')}
                 </span>
+                {(() => {
+                  const h = seatHeat(detail, s.archetype)
+                  if (!h) return null
+                  return (
+                    <span className="inline-flex items-center gap-1" title={h.why}>
+                      <span className={`h-2 w-2 rounded-full ${PTL_DOT[h.tone]}`} />
+                      <span className={PTL_TEXT[h.tone]}>{PTL_LABEL[h.tone]}</span>
+                    </span>
+                  )
+                })()}
                 <span className="text-[#7e8694]">
                   ~{forecastFor(s.id, s.archetype, detail.health)} min (est.)
                 </span>
