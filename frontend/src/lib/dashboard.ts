@@ -12,23 +12,61 @@ export const BASELINE_POLICY = 'standard'
  * liveness arm gets a felt-green so all three read apart. */
 const POLICY_COLORS: Record<string, string> = {
   standard: '#d98c5f',
-  fairplay: '#5fb0d9',
-  fairplay_liveness: '#7bd88f',
+  fairplay: '#8aa0b8', // plain route — not shown in the current dashboard
+  fairplay_liveness: '#5fb0d9', // shown AS "FairPlay"
 }
 const POLICY_LABELS: Record<string, string> = {
   standard: 'Standard',
-  fairplay: 'FairPlay',
-  fairplay_liveness: 'FairPlay-liveness',
+  fairplay: 'FairPlay-route',
+  fairplay_liveness: 'FairPlay', // the liveness arm is the dashboard's "FairPlay"
 }
 
 export const colorOf = (policy: string): string => POLICY_COLORS[policy] ?? '#9aa2b3'
 export const policyLabel = (policy: string): string =>
   POLICY_LABELS[policy] ?? policy.replace(/_/g, ' ')
 
+// The dashboard surfaces only Standard and the liveness arm (relabelled "FairPlay").
+export const CANDIDATE_POLICY = 'fairplay_liveness'
+export const DISPLAY_POLICIES = ['standard', 'fairplay_liveness']
+
+// Distinct hues so each regime's pair of lines reads apart on the multi-line chart.
+export const REGIME_COLORS = [
+  '#5fb0d9', '#d98c5f', '#7bd88f', '#c79a4b', '#b98cd9', '#e0697f', '#6fd0c0', '#cdbf6a',
+]
+export const regimeColor = (i: number): string => REGIME_COLORS[i % REGIME_COLORS.length]
+export const regimeLabel = (tables: number | null, rate: number): string => `${tables}t · ${rate}/hr`
+
 /** Metrics the heatmap can colour by (both have per-seed stability vs baseline). */
 export const ADVANTAGE_METRICS = [
   { key: 'total_paid_seat_hours', label: 'Total seat-hrs' },
   { key: 'vulnerable_paid_seat_hours', label: 'Vulnerable seat-hrs' },
+] as const
+
+/**
+ * Descriptive terminal-departure buckets for the per-regime context panel.
+ * NOT a comparison metric: counts are flat across routing arms (FairPlay's edge
+ * is session duration, not who leaves), so this characterises the room rather
+ * than ranking the policy. `cohortKey` is the vulnerable-player subset of each.
+ */
+export const DEPARTURE_BUCKETS = [
+  {
+    key: 'left_satisfied_count',
+    cohortKey: 'cohort_left_satisfied_count',
+    label: 'Left satisfied',
+    hint: 'planned exit — hit a profit target or time budget',
+  },
+  {
+    key: 'left_damaged_count',
+    cohortKey: 'cohort_left_damaged_count',
+    label: 'Left tilted / busted',
+    hint: 'left after a losing, tilted session',
+  },
+  {
+    key: 'couldnt_seat_count',
+    cohortKey: 'cohort_couldnt_seat_count',
+    label: 'Couldn’t seat',
+    hint: 'never seated or gave up waiting — only fires when the room is saturated',
+  },
 ] as const
 
 /** Chart metrics (the animation can also show the live active-table count). */

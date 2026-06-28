@@ -1,19 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
-import type { TimeseriesCell } from '../data/types'
-import { colorOf, interpAt, policyLabel, formatHrMin } from '../lib/dashboard'
+import { interpAt, formatHrMin } from '../lib/dashboard'
 
-const W = 760
-const H = 340
-const PAD_L = 56
+const W = 820
+const H = 460
+const PAD_L = 58
 const PAD_R = 18
-const PAD_T = 18
+const PAD_T = 16
 const PAD_B = 34
 const DURATION_SEC = 8 // wall-clock seconds for a full horizon replay
-const POLICY_ORDER = ['standard', 'fairplay', 'fairplay_liveness']
 
-interface Series {
+export interface ChartLine {
+  id: string
+  regimeLabel: string
+  tables: number | null
+  rate: number
   policy: string
-  xs: number[]
+  policyLabel: string
+  color: string
+  dash: boolean
   ys: number[]
 }
 
@@ -36,51 +40,61 @@ function lineUpTo(
 }
 
 /**
- * Animated Standard-vs-FairPlay replay for one regime cell: each policy's
- * cumulative trace draws out over the horizon to a moving playhead. Dependency-
- * free inline SVG (matches DivergenceChart) with a RAF clock, play/pause, scrub,
- * and a live legend. The y-domain is fixed to the full series so lines grow into
- * a stable frame rather than rescaling mid-play.
+ * Multi-regime replay: Standard (dashed) + FairPlay (solid) for every regime,
+ * colour-coded by regime, drawing out over the horizon to a moving playhead.
+ * The y-axis auto-fits the *visible* lines (non-zero baseline), so toggling the
+ * key down to one regime zooms in and the Standard-vs-FairPlay gap expands.
  */
 export function SweepReplayChart({
-  cell,
-  cellId,
-  metricKey,
+  lines,
+  tHr,
   metricLabel,
   unit,
+  visible,
+  onToggle,
+  onShowAll,
+  onHideAll,
+  resetKey,
   autoPlay = true,
 }: {
-  cell: TimeseriesCell
-  cellId: string
-  metricKey: string
+  lines: ChartLine[]
+  tHr: number[]
   metricLabel: string
   unit: string
+  visible: Set<string>
+  onToggle: (id: string) => void
+  onShowAll: () => void
+  onHideAll: () => void
+  resetKey: string
   autoPlay?: boolean
 }) {
-  // origin-anchored series (prepend t=0, value=0) so every line starts at 0.
-  const series: Series[] = POLICY_ORDER.filter((p) => cell.policies[p]).map((policy) => ({
-    policy,
-    xs: [0, ...cell.t_hr],
-    ys: [0, ...(cell.policies[policy][metricKey] ?? cell.t_hr.map(() => 0))],
-  }))
+  const visibleLines = lines.filter((l) => visible.has(l.id))
+  const N = tHr.length > 0 ? tHr.length - 1 : 0
+  const xMax = tHr.length > 0 ? tHr[tHr.length - 1] : 1
 
-  const N = series.length ? series[0].xs.length - 1 : 0
-  const xMax = series.length ? series[0].xs[series[0].xs.length - 1] : 1
-  const yMax = Math.max(1, ...series.flatMap((s) => s.ys))
+  const vals = visibleLines.flatMap((l) => l.ys)
+  const rawMin = vals.length ? Math.min(...vals) : 0
+  const rawMax = vals.length ? Math.max(...vals) : 1
+  const pad = (rawMax - rawMin) * 0.06 || Math.abs(rawMax) * 0.06 || 1
+  // non-zero baseline to maximise vertical spread, but never show a negative
+  // axis for non-negative (cumulative) data.
+  let yMin = rawMin - pad
+  if (rawMin >= 0 && yMin < 0) yMin = 0
+  const yMax = rawMax + pad
 
   const sx = (x: number) => PAD_L + (x / (xMax || 1)) * (W - PAD_L - PAD_R)
-  const sy = (y: number) => H - PAD_B - (y / yMax) * (H - PAD_T - PAD_B)
+  const sy = (y: number) => H - PAD_B - ((y - yMin) / (yMax - yMin || 1)) * (H - PAD_T - PAD_B)
 
   const [p, setP] = useState(0)
   const [playing, setPlaying] = useState(autoPlay)
   const pRef = useRef(0)
 
-  // reset + (auto)play whenever the selected regime or metric changes.
+  // reset + (auto)play whenever the metric/dataset changes (not on toggle).
   useEffect(() => {
     pRef.current = 0
     setP(0)
     setPlaying(autoPlay)
-  }, [cellId, metricKey, autoPlay])
+  }, [resetKey, autoPlay])
 
   useEffect(() => {
     if (!playing || N <= 0) return
@@ -121,9 +135,25 @@ export function SweepReplayChart({
     setPlaying((on) => !on)
   }
 
-  const nowHr = interpAt(series.length ? series[0].xs : [0], p)
-  const fmtVal = (v: number) => (unit === 'hrs' ? v.toFixed(1) : Math.round(v).toString())
+  const nowHr = interpAt(tHr.length ? tHr : [0], p)
+  const fmtVal = (v: number) => (unit === 'hrs' ? v.toFixed(0) : Math.round(v).toString())
   const hourTicks = Array.from({ length: Math.floor(xMax) + 1 }, (_, i) => i)
+
+  // two-level key grouping: one row per table count (inventory), rate sub-groups inline.
+  const byTables: { tables: number | null; rates: { rate: number; lines: ChartLine[] }[] }[] = []
+  for (const l of lines) {
+    let tg = byTables.find((t) => t.tables === l.tables)
+    if (!tg) {
+      tg = { tables: l.tables, rates: [] }
+      byTables.push(tg)
+    }
+    let rg = tg.rates.find((r) => r.rate === l.rate)
+    if (!rg) {
+      rg = { rate: l.rate, lines: [] }
+      tg.rates.push(rg)
+    }
+    rg.lines.push(l)
+  }
 
   return (
     <figure className="m-0">
@@ -140,65 +170,48 @@ export function SweepReplayChart({
         className="h-auto w-full rounded-lg border border-line bg-surface-2"
         viewBox={`0 0 ${W} ${H}`}
         role="img"
-        aria-label={`${metricLabel} replay, Standard vs FairPlay`}
+        aria-label={`${metricLabel} replay across regimes, Standard vs FairPlay`}
       >
-        {/* y gridlines + labels (0, mid, max) */}
         {[0, 0.5, 1].map((f) => {
-          const yv = yMax * f
+          const yv = yMin + (yMax - yMin) * f
           return (
             <g key={f}>
-              <line
-                x1={PAD_L}
-                x2={W - PAD_R}
-                y1={sy(yv)}
-                y2={sy(yv)}
-                className="stroke-line"
-                strokeWidth={1}
-              />
+              <line x1={PAD_L} x2={W - PAD_R} y1={sy(yv)} y2={sy(yv)} className="stroke-line" strokeWidth={1} />
               <text x={PAD_L - 8} y={sy(yv) + 3} textAnchor="end" className="fill-faint text-[10px]">
                 {fmtVal(yv)}
               </text>
             </g>
           )
         })}
-
-        {/* hour ticks */}
         {hourTicks.map((h) => (
           <text key={h} x={sx(h)} y={H - PAD_B / 3} textAnchor="middle" className="fill-faint text-[9px]">
             {h}
           </text>
         ))}
-
-        {/* playhead */}
-        {N > 0 && (
-          <line
-            x1={sx(nowHr)}
-            x2={sx(nowHr)}
-            y1={PAD_T}
-            y2={H - PAD_B}
-            className="stroke-[#4a5466]"
-            strokeWidth={1}
-            strokeDasharray="3 3"
-          />
+        {N > 0 && visibleLines.length > 0 && (
+          <line x1={sx(nowHr)} x2={sx(nowHr)} y1={PAD_T} y2={H - PAD_B} className="stroke-[#4a5466]" strokeWidth={1} strokeDasharray="3 3" />
         )}
-
-        {/* policy lines drawing up to the playhead + leading dot */}
-        {series.map((s) => (
-          <g key={s.policy}>
+        {visibleLines.map((l) => (
+          <g key={l.id}>
             <polyline
-              data-testid={`replay-line-${s.policy}`}
-              points={lineUpTo(s.xs, s.ys, p, sx, sy)}
+              data-testid={`replay-line-${l.id}`}
+              points={lineUpTo(tHr, l.ys, p, sx, sy)}
               fill="none"
-              stroke={colorOf(s.policy)}
-              strokeWidth={2.25}
+              stroke={l.color}
+              strokeWidth={2}
               strokeLinejoin="round"
               strokeLinecap="round"
+              strokeDasharray={l.dash ? '5 4' : undefined}
+              opacity={0.92}
             />
-            {N > 0 && (
-              <circle cx={sx(nowHr)} cy={sy(interpAt(s.ys, p))} r={3.5} fill={colorOf(s.policy)} />
-            )}
+            {N > 0 && <circle cx={sx(nowHr)} cy={sy(interpAt(l.ys, p))} r={3} fill={l.color} />}
           </g>
         ))}
+        {visibleLines.length === 0 && (
+          <text x={W / 2} y={H / 2} textAnchor="middle" className="fill-muted text-[13px]">
+            All lines hidden — enable some in the key below
+          </text>
+        )}
       </svg>
 
       {/* transport */}
@@ -223,22 +236,58 @@ export function SweepReplayChart({
         />
       </div>
 
-      {/* live legend with current values at the playhead */}
-      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[0.8rem]">
-        {series.map((s) => (
-          <span key={s.policy} className="inline-flex items-center gap-[0.4rem] text-muted">
-            <span
-              className="inline-block h-[0.7rem] w-[0.7rem] rounded-xs"
-              style={{ backgroundColor: colorOf(s.policy) }}
-              aria-hidden="true"
-            />
-            {policyLabel(s.policy)}
-            <strong className="text-text">
-              {fmtVal(interpAt(s.ys, p))}
-              {unit === 'hrs' ? ' h' : ''}
-            </strong>
-          </span>
-        ))}
+      {/* toggle key — Standard (dashed) + FairPlay (solid) per regime */}
+      <div className="mt-3">
+        <div className="mb-1.5 flex items-center gap-3 text-[0.72rem] text-muted">
+          <span className="font-mono uppercase tracking-[0.12em] text-faint">Lines</span>
+          <button type="button" onClick={onShowAll} className="rounded border border-line bg-surface px-2 py-0.5 hover:border-brass">
+            Show all
+          </button>
+          <button type="button" onClick={onHideAll} className="rounded border border-line bg-surface px-2 py-0.5 hover:border-brass">
+            Hide all
+          </button>
+          <span className="text-faint">solid = FairPlay · dashed = Standard</span>
+        </div>
+        <div className="grid gap-2">
+          {byTables.map((tg) => (
+            <div key={String(tg.tables)} className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+              <span className="w-[34px] shrink-0 font-mono text-[0.74rem] text-muted">{tg.tables}t</span>
+              {tg.rates.map((rg) => (
+                <div key={rg.rate} className="flex items-center gap-1.5">
+                  <span className="font-mono text-[0.68rem] text-faint">{rg.rate}/hr</span>
+                  {rg.lines.map((l) => {
+                    const on = visible.has(l.id)
+                    return (
+                      <button
+                        key={l.id}
+                        type="button"
+                        onClick={() => onToggle(l.id)}
+                        aria-pressed={on}
+                        aria-label={`${l.regimeLabel} ${l.policyLabel}`}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[0.72rem] ${
+                          on ? 'border-line text-text' : 'border-line/60 text-faint line-through'
+                        }`}
+                      >
+                        <svg width="16" height="8" aria-hidden="true">
+                          <line
+                            x1="0"
+                            y1="4"
+                            x2="16"
+                            y2="4"
+                            stroke={on ? l.color : '#5b6473'}
+                            strokeWidth="2"
+                            strokeDasharray={l.dash ? '4 3' : undefined}
+                          />
+                        </svg>
+                        {l.policyLabel}
+                      </button>
+                    )
+                  })}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </figure>
   )

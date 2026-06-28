@@ -151,6 +151,13 @@ export interface SweepCell {
   seeds: number[]
   /** policy → metricKey → seed-averaged mean. */
   means: Record<string, Record<string, number | null>>
+  /**
+   * policy → departure-bucket → seed-averaged count. DESCRIPTIVE room context,
+   * not a comparison metric: departure counts are flat across routing arms (the
+   * FairPlay win is session duration, not who leaves). Absent on cells built
+   * before the buckets existed; a policy is omitted if it carried no data.
+   */
+  departures?: Record<string, Record<string, number | null>>
   /** slim per-seed rows (seed, policy, + summary metric values). */
   runs: Array<Record<string, number | string>>
   /** candidate policy → metricKey → stability vs the baseline (baseline omitted). */

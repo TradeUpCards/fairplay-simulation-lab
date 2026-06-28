@@ -1,19 +1,22 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { RoomSweepFile, RoomTimeseriesFile, SweepCell } from '../data/types'
 import { loadRoomSweep, loadRoomTimeseries } from '../data/shim'
 import { useResource } from '../state/useResource'
 import { ResourceBoundary } from '../components/ResourceBoundary'
-import { SweepReplayChart } from '../components/SweepReplayChart'
+import { SweepReplayChart, type ChartLine } from '../components/SweepReplayChart'
 import { RegimeHeatmap } from '../components/RegimeHeatmap'
 import { RegimeTable } from '../components/RegimeTable'
+import { DeparturesPanel } from '../components/DeparturesPanel'
 import {
   ADVANTAGE_METRICS,
-  advantage,
-  candidatePolicies,
+  CANDIDATE_POLICY,
   cellKey,
+  DISPLAY_POLICIES,
   findTimeseriesCell,
   pickDefaultCell,
   policyLabel,
+  regimeColor,
+  regimeLabel,
 } from '../lib/dashboard'
 
 interface DashboardData {
@@ -50,47 +53,88 @@ export function Dashboard() {
 export function DashboardView({ sweep, timeseries }: DashboardData) {
   const [datasetIdx, setDatasetIdx] = useState(0)
   const [metricKey, setMetricKey] = useState<string>(ADVANTAGE_METRICS[0].key)
-  const [candidatePref, setCandidatePref] = useState<string>('fairplay')
 
   const dataset = sweep.datasets[datasetIdx] ?? sweep.datasets[0]
-  const metric =
-    ADVANTAGE_METRICS.find((m) => m.key === metricKey) ?? ADVANTAGE_METRICS[0]
-  // which non-baseline policy the heatmap scores against; fall back if absent.
-  const candidates = candidatePolicies(dataset)
-  const candidate = candidates.includes(candidatePref) ? candidatePref : (candidates[0] ?? 'fairplay')
-
-  const [selectedKey, setSelectedKey] = useState<string | null>(
-    () => {
-      const d = pickDefaultCell(dataset, metricKey, candidate)
-      return d ? cellKey(d) : null
-    },
-  )
-
-  const selectedCell: SweepCell | undefined =
-    dataset.cells.find((c) => cellKey(c) === selectedKey) ?? dataset.cells[0]
-
+  const metric = ADVANTAGE_METRICS.find((m) => m.key === metricKey) ?? ADVANTAGE_METRICS[0]
+  // The dashboard scores the liveness arm against Standard, relabelled "FairPlay".
+  const candidate = CANDIDATE_POLICY
   const tsDataset = timeseries.datasets[dataset.id]
-  const tsCell = selectedCell
-    ? findTimeseriesCell(tsDataset, selectedCell.tables, selectedCell.rate)
-    : undefined
 
-  // headline read: how many regimes favour the candidate on the chosen metric.
-  const wins = useMemo(
-    () => dataset.cells.filter((c) => (advantage(c, metricKey, candidate) ?? 0) > 0).length,
-    [dataset, metricKey, candidate],
-  )
+  // Shared time axis (all regimes share the sampling cadence/horizon).
+  const tHr = useMemo(() => {
+    const first = Object.values(tsDataset?.cells ?? {})[0]
+    return first?.t_hr ?? []
+  }, [tsDataset])
 
-  // Selecting from the heatmap/table re-binds the hero; bring it back into view
-  // (the chart often sits above the fold once you've scrolled to pick a cell).
+  // One line per (regime, shown-policy): Standard dashed + FairPlay solid, coloured by regime.
+  const lines: ChartLine[] = useMemo(() => {
+    const out: ChartLine[] = []
+    dataset.cells.forEach((c, i) => {
+      const tc = findTimeseriesCell(tsDataset, c.tables, c.rate)
+      if (!tc) return
+      const color = regimeColor(i)
+      for (const pol of DISPLAY_POLICIES) {
+        const ys = tc.policies[pol]?.[metric.key]
+        if (!ys) continue
+        out.push({
+          id: `${c.tables}|${c.rate}|${pol}`,
+          regimeLabel: regimeLabel(c.tables, c.rate),
+          tables: c.tables,
+          rate: c.rate,
+          policy: pol,
+          policyLabel: policyLabel(pol),
+          color,
+          dash: pol === 'standard',
+          ys,
+        })
+      }
+    })
+    return out
+  }, [dataset, tsDataset, metric.key])
+
+  const allIds = useMemo(() => lines.map((l) => l.id), [lines])
+  const [visible, setVisible] = useState<Set<string>>(() => new Set(allIds))
+  // Reset to "all visible" when the dataset (and thus the line set) changes.
+  useEffect(() => {
+    setVisible(new Set(lines.map((l) => l.id)))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataset.id])
+
+  const toggleLine = (id: string) =>
+    setVisible((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  const showAll = () => setVisible(new Set(allIds))
+  const hideAll = () => setVisible(new Set())
+
+  const [selectedKey, setSelectedKey] = useState<string | null>(() => {
+    const d = pickDefaultCell(dataset, metricKey, candidate)
+    return d ? cellKey(d) : null
+  })
+
+  // Clicking a regime in the heatmap/table solos its two lines and scrolls the chart up.
   const heroRef = useRef<HTMLDivElement>(null)
   const select = (cell: SweepCell) => {
     setSelectedKey(cellKey(cell))
+    const ids = DISPLAY_POLICIES.map((p) => `${cell.tables}|${cell.rate}|${p}`).filter((id) =>
+      allIds.includes(id),
+    )
+    if (ids.length) setVisible(new Set(ids))
     const el = heroRef.current
     if (el && typeof el.scrollIntoView === 'function') {
       const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
       el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
     }
   }
+
+  const hasSeries = tHr.length > 0 && lines.length > 0
+  const selectedCell = useMemo(
+    () => dataset.cells.find((c) => cellKey(c) === selectedKey) ?? null,
+    [dataset, selectedKey],
+  )
 
   return (
     <div className="grid gap-6">
@@ -118,14 +162,6 @@ export function DashboardView({ sweep, timeseries }: DashboardData) {
           </span>
         </div>
       </header>
-
-      {/* stat strip */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Regimes tested" value={String(dataset.cells.length)} hint={`${dataset.table_axis.length} inventories × ${dataset.rate_axis.length} rates`} />
-        <Stat label={`${policyLabel(candidate)}-ahead cells`} value={`${wins}/${dataset.cells.length}`} hint={metric.label} />
-        <Stat label="Policies" value={String(dataset.policies.length)} hint={dataset.policies.map((p) => p.replace('fairplay_', 'fp-')).join(' · ')} />
-        <Stat label="Seeds / cell" value={String(dataset.seeds.length)} hint="per-seed win dots below" />
-      </div>
 
       {/* controls */}
       <div className="flex flex-wrap items-center gap-4">
@@ -169,58 +205,36 @@ export function DashboardView({ sweep, timeseries }: DashboardData) {
             ))}
           </div>
         </div>
-        {candidates.length > 1 && (
-          <div className="inline-flex items-center gap-2 text-[0.8rem] text-muted">
-            Compare
-            <div className="inline-flex rounded-full border border-line bg-surface-2 p-0.5" role="tablist" aria-label="advantage policy">
-              {candidates.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  role="tab"
-                  aria-selected={candidate === p}
-                  onClick={() => setCandidatePref(p)}
-                  className={`rounded-full border-none px-3 py-[0.3rem] text-[0.74rem] ${
-                    candidate === p ? 'bg-brass font-semibold text-[#1a1407]' : 'bg-transparent text-muted hover:text-text'
-                  }`}
-                >
-                  {policyLabel(p)}
-                </button>
-              ))}
-            </div>
-            <span className="text-faint">vs Standard</span>
-          </div>
-        )}
       </div>
 
-      {/* animated hero, bound to the selected regime */}
+      {/* animated hero — every regime, Standard vs FairPlay */}
       <div ref={heroRef} className="scroll-mt-24 rounded-xl border border-line bg-surface p-4">
         <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="m-0 text-[1rem] text-text">
-            {selectedCell ? (
-              <>
-                Replay · <span className="text-brass">{selectedCell.tables} tables · {selectedCell.rate} joins/hr</span>
-              </>
-            ) : (
-              'Replay'
-            )}
+            Replay · <span className="text-brass">all regimes</span> · {metric.label}
           </h3>
-          <span className="text-[0.74rem] text-muted">Click any heatmap cell or table row to replay that regime</span>
+          <span className="text-[0.74rem] text-muted">
+            Click a heatmap cell or table row to solo a regime · toggle lines in the key
+          </span>
         </div>
-        {tsCell ? (
+        {hasSeries ? (
           <SweepReplayChart
-            cell={tsCell}
-            cellId={`${dataset.id}|${selectedKey ?? ''}`}
-            metricKey={metric.key}
+            lines={lines}
+            tHr={tHr}
             metricLabel={metric.label}
             unit="hrs"
+            visible={visible}
+            onToggle={toggleLine}
+            onShowAll={showAll}
+            onHideAll={hideAll}
+            resetKey={`${dataset.id}|${metric.key}`}
           />
         ) : (
-          <p className="text-muted">No time-series available for this regime.</p>
+          <p className="text-muted">No time-series available for this dataset.</p>
         )}
       </div>
 
-      {/* heatmap + table */}
+      {/* heatmap */}
       <div className="rounded-xl border border-line bg-surface p-4">
         <RegimeHeatmap
           dataset={dataset}
@@ -232,26 +246,30 @@ export function DashboardView({ sweep, timeseries }: DashboardData) {
         />
       </div>
 
+      {/* per-regime table (Standard + FairPlay only) */}
       <div className="rounded-xl border border-line bg-surface p-4">
-        <RegimeTable dataset={dataset} selectedKey={selectedKey} onSelect={select} />
+        <RegimeTable
+          dataset={dataset}
+          policies={DISPLAY_POLICIES}
+          selectedKey={selectedKey}
+          onSelect={select}
+        />
       </div>
 
-      <p className="text-[0.72rem] leading-relaxed text-faint">
-        Each cell is a deterministic, seed-averaged run of the closed-loop room simulator over a
-        shared arrival stream (the A/B invariant). Throughput (total seat-hrs) structurally rewards
-        concentration; vulnerable seat-hrs is the FairPlay cohort check. Numbers are illustrative
-        until calibrated to real room traffic.
-      </p>
-    </div>
-  )
-}
+      {/* descriptive departure breakdown for the selected regime (renders only
+          when the frozen data carries departure buckets) */}
+      {selectedCell?.departures && (
+        <div className="rounded-xl border border-line bg-surface p-4">
+          <DeparturesPanel cell={selectedCell} policies={DISPLAY_POLICIES} />
+        </div>
+      )}
 
-function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <div className="rounded-lg border border-line bg-surface px-3 py-2.5">
-      <div className="font-mono text-[0.6rem] uppercase tracking-[0.13em] text-faint">{label}</div>
-      <div className="mt-0.5 text-[1.35rem] font-semibold text-text">{value}</div>
-      <div className="mt-0.5 text-[0.7rem] text-muted">{hint}</div>
+      <p className="text-[0.72rem] leading-relaxed text-faint">
+        Each line is a deterministic, seed-averaged run of the closed-loop room simulator over a
+        shared arrival stream (the A/B invariant); "FairPlay" is the liveness-aware arm. Throughput
+        (total seat-hrs) structurally rewards concentration; vulnerable seat-hrs is the FairPlay
+        cohort check. Numbers are illustrative until calibrated to real room traffic.
+      </p>
     </div>
   )
 }
