@@ -24,7 +24,10 @@ function cell(tables: number, rate: number, stdTotal: number, fpTotal: number): 
     means: {
       standard: { total_paid_seat_hours: stdTotal, vulnerable_paid_seat_hours: stdTotal / 5 },
       fairplay: { total_paid_seat_hours: fpTotal, vulnerable_paid_seat_hours: fpTotal / 5 },
-      fairplay_liveness: { total_paid_seat_hours: fpTotal - 0.2, vulnerable_paid_seat_hours: fpTotal / 5 },
+      fairplay_liveness: {
+        total_paid_seat_hours: fpTotal - 0.2,
+        vulnerable_paid_seat_hours: fpTotal / 5,
+      },
     },
     departures: {
       standard: {
@@ -45,13 +48,33 @@ function cell(tables: number, rate: number, stdTotal: number, fpTotal: number): 
       },
     },
     runs: [
-      { seed: 7, policy: 'standard', total_paid_seat_hours: stdTotal, vulnerable_paid_seat_hours: stdTotal / 5 },
-      { seed: 7, policy: 'fairplay', total_paid_seat_hours: fpTotal, vulnerable_paid_seat_hours: fpTotal / 5 },
+      {
+        seed: 7,
+        policy: 'standard',
+        total_paid_seat_hours: stdTotal,
+        vulnerable_paid_seat_hours: stdTotal / 5,
+      },
+      {
+        seed: 7,
+        policy: 'fairplay',
+        total_paid_seat_hours: fpTotal,
+        vulnerable_paid_seat_hours: fpTotal / 5,
+      },
     ],
     stability: {
       fairplay: {
-        total_paid_seat_hours: { wins: fpTotal > stdTotal ? 2 : 0, n: 2, deltas: { '7': fpTotal - stdTotal, '42': fpTotal - stdTotal }, mean_delta: fpTotal - stdTotal },
-        vulnerable_paid_seat_hours: { wins: 1, n: 2, deltas: { '7': 0.1, '42': -0.1 }, mean_delta: 0 },
+        total_paid_seat_hours: {
+          wins: fpTotal > stdTotal ? 2 : 0,
+          n: 2,
+          deltas: { '7': fpTotal - stdTotal, '42': fpTotal - stdTotal },
+          mean_delta: fpTotal - stdTotal,
+        },
+        vulnerable_paid_seat_hours: {
+          wins: 1,
+          n: 2,
+          deltas: { '7': 0.1, '42': -0.1 },
+          mean_delta: 0,
+        },
       },
     },
   }
@@ -67,8 +90,18 @@ const DATASET: SweepDataset = {
   table_axis: [10, 20],
   rate_axis: [20, 40],
   metrics: [
-    { key: 'total_paid_seat_hours', label: 'Total paid seat-hrs', unit: 'hrs', lower_is_better: false },
-    { key: 'vulnerable_paid_seat_hours', label: 'Vulnerable seat-hrs', unit: 'hrs', lower_is_better: false },
+    {
+      key: 'total_paid_seat_hours',
+      label: 'Total paid seat-hrs',
+      unit: 'hrs',
+      lower_is_better: false,
+    },
+    {
+      key: 'vulnerable_paid_seat_hours',
+      label: 'Vulnerable seat-hrs',
+      unit: 'hrs',
+      lower_is_better: false,
+    },
     { key: 'final_active_tables', label: 'Final active tables', unit: 'n', lower_is_better: false },
   ],
   cells: [
@@ -88,9 +121,21 @@ const tsCell = (tables: number, rate: number) => ({
   t_hr: [4, 8],
   seeds: [7, 42],
   policies: {
-    standard: { total_paid_seat_hours: [5, 10], vulnerable_paid_seat_hours: [1, 2], active_tables: [14, 13] },
-    fairplay: { total_paid_seat_hours: [6, 14], vulnerable_paid_seat_hours: [1.5, 2.8], active_tables: [16, 15] },
-    fairplay_liveness: { total_paid_seat_hours: [6, 13.8], vulnerable_paid_seat_hours: [1.4, 2.8], active_tables: [16, 16] },
+    standard: {
+      total_paid_seat_hours: [5, 10],
+      vulnerable_paid_seat_hours: [1, 2],
+      active_tables: [14, 13],
+    },
+    fairplay: {
+      total_paid_seat_hours: [6, 14],
+      vulnerable_paid_seat_hours: [1.5, 2.8],
+      active_tables: [16, 15],
+    },
+    fairplay_liveness: {
+      total_paid_seat_hours: [6, 13.8],
+      vulnerable_paid_seat_hours: [1.4, 2.8],
+      active_tables: [16, 16],
+    },
   },
 })
 
@@ -163,7 +208,8 @@ describe('DashboardView render', () => {
   it('renders title, caveat, and a multi-regime replay (Standard + FairPlay lines)', () => {
     render(<DashboardView sweep={SWEEP} timeseries={TS} />)
     expect(screen.getByText(/Routing sweep/)).toBeTruthy()
-    expect(screen.getByText(/Illustrative synthetic data/)).toBeTruthy()
+    // the illustrative-data caveat still lives in the footer note
+    expect(screen.getByText(/illustrative until calibrated/i)).toBeTruthy()
     expect(screen.getByText(/all regimes/)).toBeTruthy()
     expect(screen.getByTestId('replay-line-20|40|standard')).toBeTruthy()
     expect(screen.getByTestId('replay-line-20|40|fairplay_liveness')).toBeTruthy()
@@ -202,17 +248,13 @@ describe('DashboardView render', () => {
   it('shows the descriptive departures panel for the selected regime and follows selection', () => {
     render(<DashboardView sweep={SWEEP} timeseries={TS} />)
     // defaults to the most FairPlay-favourable regime (20t · 40/hr)
-    expect(
-      screen.getByRole('heading', { name: /Where players left.*20t · 40\/hr/ }),
-    ).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /Where players left.*20t · 40\/hr/ })).toBeTruthy()
     // the three descriptive buckets are labelled (not a comparison metric)
     expect(screen.getByText('Left satisfied')).toBeTruthy()
     expect(screen.getByText('Left tilted / busted')).toBeTruthy()
     // selecting another regime re-points the panel
     fireEvent.click(screen.getByTitle(/10 tables · 20\/hr/))
-    expect(
-      screen.getByRole('heading', { name: /Where players left.*10t · 20\/hr/ }),
-    ).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /Where players left.*10t · 20\/hr/ })).toBeTruthy()
   })
 
   it('omits the departures panel when the data carries no departure buckets', () => {
@@ -224,5 +266,44 @@ describe('DashboardView render', () => {
     }
     render(<DashboardView sweep={sweep} timeseries={TS} />)
     expect(screen.queryByText(/Where players left/)).toBeNull()
+  })
+
+  it('renders live standings that rank the visible lines by value', () => {
+    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
+    expect(screen.getByText(/Live standings/i)).toBeTruthy()
+    const live = screen.getByTestId('standing-20|40|fairplay_liveness')
+    const std = screen.getByTestId('standing-20|40|standard')
+    // FairPlay's opening value leads Standard's → it holds the better (lower) rank
+    expect(Number(live.getAttribute('data-rank'))).toBeLessThan(
+      Number(std.getAttribute('data-rank')),
+    )
+  })
+
+  it('reveals the winner banner only once the replay reaches the finish', () => {
+    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
+    expect(screen.getByTestId('winner-banner').getAttribute('data-shown')).toBe('false')
+    // scrub to the end (N = tHr.length - 1 = 1)
+    fireEvent.change(screen.getByLabelText('scrub replay'), { target: { value: '1' } })
+    expect(screen.getByTestId('winner-banner').getAttribute('data-shown')).toBe('true')
+  })
+
+  it('toggles every FairPlay line at once with the policy control', () => {
+    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
+    expect(screen.getByTestId('replay-line-20|40|fairplay_liveness')).toBeTruthy()
+    fireEvent.click(screen.getByLabelText('toggle all FairPlay lines'))
+    // all FairPlay regimes drop out…
+    expect(screen.queryByTestId('replay-line-20|40|fairplay_liveness')).toBeNull()
+    expect(screen.queryByTestId('replay-line-10|20|fairplay_liveness')).toBeNull()
+    // …while Standard lines stay
+    expect(screen.getByTestId('replay-line-20|40|standard')).toBeTruthy()
+    // clicking again brings them back
+    fireEvent.click(screen.getByLabelText('toggle all FairPlay lines'))
+    expect(screen.getByTestId('replay-line-20|40|fairplay_liveness')).toBeTruthy()
+  })
+
+  it('toggles the race-sound mute control', () => {
+    render(<DashboardView sweep={SWEEP} timeseries={TS} />)
+    fireEvent.click(screen.getByLabelText('mute race sounds'))
+    expect(screen.getByLabelText('unmute race sounds')).toBeTruthy()
   })
 })

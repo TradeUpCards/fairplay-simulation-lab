@@ -29,15 +29,6 @@ const loadDashboard = async (): Promise<DashboardData> => ({
   timeseries: await loadRoomTimeseries(),
 })
 
-const CONFIG_CHIPS: { key: string; label: string }[] = [
-  { key: 'fixture', label: 'fixture' },
-  { key: 'horizon_min', label: 'horizon (min)' },
-  { key: 'arrival_mode', label: 'arrivals' },
-  { key: 'formation_mode', label: 'formation' },
-  { key: 'behavior', label: 'behavior' },
-  { key: 'equity_samples', label: 'equity samples' },
-]
-
 export function Dashboard() {
   const state = useResource(loadDashboard, (d) => d.sweep.datasets.length === 0)
   return (
@@ -109,6 +100,19 @@ export function DashboardView({ sweep, timeseries }: DashboardData) {
     })
   const showAll = () => setVisible(new Set(allIds))
   const hideAll = () => setVisible(new Set())
+  // flip every line of one policy (all Standard / all FairPlay) at once: hide
+  // them if any are showing, otherwise reveal them all.
+  const togglePolicy = (policy: string) =>
+    setVisible((prev) => {
+      const ids = lines.filter((l) => l.policy === policy).map((l) => l.id)
+      const anyOn = ids.some((id) => prev.has(id))
+      const next = new Set(prev)
+      for (const id of ids) {
+        if (anyOn) next.delete(id)
+        else next.add(id)
+      }
+      return next
+    })
 
   const [selectedKey, setSelectedKey] = useState<string | null>(() => {
     const d = pickDefaultCell(dataset, metricKey, candidate)
@@ -138,28 +142,10 @@ export function DashboardView({ sweep, timeseries }: DashboardData) {
 
   return (
     <div className="grid gap-6">
-      {/* title + caveat */}
+      {/* title */}
       <header className="grid gap-2">
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="m-0 text-[1.25rem] text-text">Routing sweep — Standard vs FairPlay</h2>
-          <span className="rounded-full border border-[#7a5b34] bg-[rgba(199,154,75,0.10)] px-2.5 py-0.5 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-brass">
-            Illustrative synthetic data — not a validated retention claim
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.66rem] text-faint">
-          {CONFIG_CHIPS.map(({ key, label }) =>
-            dataset.config[key] != null ? (
-              <span key={key}>
-                {label} <span className="text-muted">{String(dataset.config[key])}</span>
-              </span>
-            ) : null,
-          )}
-          <span>
-            seeds <span className="text-muted">{dataset.seeds.join(' / ')}</span>
-          </span>
-          <span>
-            generated <span className="text-muted">{sweep.generated_at}</span>
-          </span>
         </div>
       </header>
 
@@ -188,7 +174,11 @@ export function DashboardView({ sweep, timeseries }: DashboardData) {
         )}
         <div className="inline-flex items-center gap-2 text-[0.8rem] text-muted">
           Metric
-          <div className="inline-flex rounded-full border border-line bg-surface-2 p-0.5" role="tablist" aria-label="metric">
+          <div
+            className="inline-flex rounded-full border border-line bg-surface-2 p-0.5"
+            role="tablist"
+            aria-label="metric"
+          >
             {ADVANTAGE_METRICS.map((m) => (
               <button
                 key={m.key}
@@ -197,7 +187,9 @@ export function DashboardView({ sweep, timeseries }: DashboardData) {
                 aria-selected={metricKey === m.key}
                 onClick={() => setMetricKey(m.key)}
                 className={`rounded-full border-none px-3 py-[0.3rem] text-[0.74rem] ${
-                  metricKey === m.key ? 'bg-brass font-semibold text-[#1a1407]' : 'bg-transparent text-muted hover:text-text'
+                  metricKey === m.key
+                    ? 'bg-brass font-semibold text-[#1a1407]'
+                    : 'bg-transparent text-muted hover:text-text'
                 }`}
               >
                 {m.label}
@@ -213,9 +205,6 @@ export function DashboardView({ sweep, timeseries }: DashboardData) {
           <h3 className="m-0 text-[1rem] text-text">
             Replay · <span className="text-brass">all regimes</span> · {metric.label}
           </h3>
-          <span className="text-[0.74rem] text-muted">
-            Click a heatmap cell or table row to solo a regime · toggle lines in the key
-          </span>
         </div>
         {hasSeries ? (
           <SweepReplayChart
@@ -225,6 +214,7 @@ export function DashboardView({ sweep, timeseries }: DashboardData) {
             unit="hrs"
             visible={visible}
             onToggle={toggleLine}
+            onTogglePolicy={togglePolicy}
             onShowAll={showAll}
             onHideAll={hideAll}
             resetKey={`${dataset.id}|${metric.key}`}
