@@ -16,7 +16,8 @@ evaluation-only. (The legacy `backend/sim/` is deprecated; `playsim` supersedes 
 > **Where this sits in the AI decision** ([`docs/learn/ai-hand-generation-decision.md`](../docs/learn/ai-hand-generation-decision.md)):
 > these are **seeded-brain agents** — the deterministic substrate that powers
 > the health/routing backtest and feeds the integrity detector. The LLM is *not*
-> in this loop; it only explains the resulting evidence.
+> in the hand-playing or room-execution loop; optional agentic planner mode can
+> read completed evidence and propose the next bounded experiment spec.
 
 ## Why an engine (not hand-set stats)
 
@@ -70,6 +71,7 @@ docker compose run --rm playsim population \
 | `population` | simulate `data/players.json` + `data/table_roster.json` into playsim-native hand JSON |
 | `large-room-fixture` | generate a playsim-only 50-table / 1000-player data root for room-economics experiments |
 | `large-room-sweep` | generate/reuse the large-room fixture, compare policy arms, and write JSON/Markdown results |
+| `agentic` | run the bounded Standard-vs-FairPlay-liveness experiment controller; default planner is deterministic, `--planner llm` is optional |
 | `replay --table T` | re-run a seed twice and assert byte-identical (determinism) |
 | `calibrate` | tune `postflop_aggression` until realized AF ≈ targets |
 | `tables` | list demo tables and archetypes |
@@ -178,6 +180,45 @@ python -m playsim.cli large-room-sweep \
   --samples 1 \
   --out-json out/large-room-sweep.json \
   --out-md out/large-room-sweep.md
+```
+
+The LLM agentic simulator is additive and opt-in. It does **not** replace
+`large-room-sweep`, and other agents should keep using the standard sweep when
+they need a direct deterministic comparison:
+
+```bash
+# Standard deterministic sweep path.
+python -m playsim.cli large-room-sweep \
+  --fixture-out out/large-room-data \
+  --regenerate-fixture \
+  --policies standard,fairplay_liveness \
+  --seeds 42,7,99 \
+  --arrival-rates 10,20,30,40 \
+  --horizon 480 \
+  --samples 1 \
+  --out-json out/large-room-sweep.json \
+  --out-md out/large-room-sweep.md
+
+# Deterministic agentic controller around the same simulation primitives.
+python -m playsim.cli agentic \
+  --spec experiments/standard-vs-fairplay-liveness-agentic.json \
+  --out-dir out/agentic \
+  --planner rule
+
+# Optional OpenAI-backed planner. Requires OPENAI_API_KEY and only proposes
+# JSON experiment specs; local validation decides whether anything runs.
+python -m playsim.cli agentic \
+  --spec experiments/standard-vs-fairplay-liveness-agentic.json \
+  --out-dir out/agentic-llm \
+  --planner llm
+```
+
+Agentic outputs are written as `out/agentic*/experiment-*-results.json`,
+`experiment-*-planner.json`, reports, and a `ledger.json`. The existing sweep
+dashboard builder ingests both normal sweep outputs and agentic result files:
+
+```bash
+python analysis/build_sweep_explorer.py --out-dir out --out sweep-explorer.html
 ```
 
 `fixture-once` remains the historical small-fixture replay mode. For large-room
