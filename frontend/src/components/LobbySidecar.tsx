@@ -2,7 +2,43 @@ import { useState, type ReactNode } from 'react'
 import pokerTable from '../assets/poker-table.png'
 import type { OperatorTableDetail } from '../data/types'
 import { ARCH_AVATAR, SeatAvatar, seatPositions } from './tableArt'
-import { expandSeats, avatarFor, handleFor, stackFor, forecastFor } from '../lib/lobbyIdentity'
+import {
+  expandSeats,
+  avatarFor,
+  handleFor,
+  stackFor,
+  forecastFor,
+  archetypeBadge,
+} from '../lib/lobbyIdentity'
+
+/** A round identity face with an optional small cartoon archetype badge pinned at
+ *  its lower-right (the pit-boss "reveal" — face stays the same, badge denotes role). */
+function SeatFace({
+  id,
+  archetype,
+  reveal,
+  size,
+}: {
+  id: string
+  archetype: string
+  reveal: boolean
+  size: 'sm' | 'md' | 'lg'
+}) {
+  const badge = reveal ? archetypeBadge(archetype) : null
+  return (
+    <div className="relative shrink-0">
+      <SeatAvatar label={id} imageUrl={avatarFor(id)} size={size} />
+      {badge && (
+        <img
+          src={badge}
+          alt=""
+          title={archetype.replace(/_/g, ' ')}
+          className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-2 border-[#0e1014] bg-[#0e1014] object-cover"
+        />
+      )}
+    </div>
+  )
+}
 
 /**
  * In-flow table detail panel (lives in a reserved column beside the lobby — never
@@ -125,12 +161,7 @@ function SeatList({ detail, reveal }: { detail: OperatorTableDetail; reveal: boo
           {...(reveal ? { 'data-archetype': s.archetype } : {})}
           className="flex items-center gap-2.5 rounded-md border border-[#23262d] bg-[rgba(0,0,0,0.22)] px-2 py-1.5"
         >
-          <SeatAvatar
-            archetype={reveal ? s.archetype : undefined}
-            label={s.id}
-            imageUrl={avatarFor(s.id)}
-            size="lg"
-          />
+          <SeatFace id={s.id} archetype={s.archetype} reveal={reveal} size="lg" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
               <span className="truncate text-[0.86rem] font-semibold text-[#f3ece0]">

@@ -22,25 +22,79 @@ export function seedInt(s: string): number {
   return h >>> 0
 }
 
-// Avatar cast — auto-loaded from assets/avatars/ at build time. Zero files → empty
-// (callers fall back to the emoji seat). Drop nano-banana JPEGs in to light it up.
-const AVATAR_GLOB = import.meta.glob('../assets/avatars/*.{jpg,jpeg,png,webp}', {
+// Avatar casts — auto-loaded from assets/avatars/<set>/ at build time. Zero files →
+// empty (callers fall back to the emoji seat). Drop nano-banana JPEGs in to light up.
+const sortedEntries = (g: Record<string, string>): { stem: string; url: string }[] =>
+  Object.keys(g)
+    .sort()
+    .map((p) => ({ stem: p.split('/').pop()?.replace(/\.\w+$/, '') ?? p, url: g[p] }))
+
+// Identity faces — realistic + film portraits mixed into ONE pool, assigned to
+// players by identity hash (no toggle). Drop more JPGs into either folder to extend
+// the cast. Zero files → empty (callers fall back to the emoji seat).
+const FACE_ENTRIES = [
+  ...sortedEntries(
+    import.meta.glob('../assets/avatars/realistic/*.{jpg,jpeg,png,webp}', {
+      eager: true,
+      import: 'default',
+    }) as Record<string, string>,
+  ),
+  ...sortedEntries(
+    import.meta.glob('../assets/avatars/film/*.{jpg,jpeg,png,webp}', {
+      eager: true,
+      import: 'default',
+    }) as Record<string, string>,
+  ),
+]
+const FACES = FACE_ENTRIES.map((e) => e.url)
+const URL_TO_STEM: Record<string, string> = {}
+for (const e of FACE_ENTRIES) URL_TO_STEM[e.url] = e.stem
+
+// Some faces get a handle that *fits* the character (the film cast especially), so a
+// recognizable face reads with a fitting name. Keyed by file stem; evocative, not
+// exact trademarks. Faces are still assigned by identity (not archetype) — a themed
+// handle is flavor, never a classification.
+const THEMED_HANDLE: Record<string, string> = {
+  'film-01': 'MartiniShaken',
+  'film-02': 'ArcReactor',
+  'film-03': 'HighNoon',
+  'film-04': 'WhySoSerious',
+  'film-05': 'DarkSideRaise',
+  'film-06': 'TheDanger',
+  'film-07': 'TheDon',
+  'film-08': 'PinstripeAl',
+  'film-09': 'LilFriend',
+  'film-10': 'LosPollos',
+  'film-11': 'NumberOne',
+  'film-12': 'FedoraWhip',
+  'avatar-01': 'DustyTrail',
+  'avatar-03': 'AlohaWhale',
+  'avatar-05': 'GranGrinder',
+  'avatar-07': 'SolverSam',
+}
+
+// Cartoon set is keyed by archetype (filename == archetype), used as the small
+// pit-boss "reveal" badge pinned on a seat — NOT as an identity face.
+const CARTOON_GLOB = import.meta.glob('../assets/avatars/cartoon/*.{jpg,jpeg,png,webp}', {
   eager: true,
   import: 'default',
 }) as Record<string, string>
-
-const AVATAR_URLS: string[] = Object.keys(AVATAR_GLOB)
-  .sort()
-  .map((k) => AVATAR_GLOB[k])
-
-export function hasAvatars(): boolean {
-  return AVATAR_URLS.length > 0
+const CARTOON_BY_ARCH: Record<string, string> = {}
+for (const [path, url] of Object.entries(CARTOON_GLOB)) {
+  const name = path.split('/').pop()?.replace(/\.\w+$/, '')
+  if (name) CARTOON_BY_ARCH[name] = url
 }
 
-/** A stable avatar image URL for an identity, or null if no cast is installed. */
+/** A stable identity-face URL for a player (mixed realistic+film pool), or null. */
 export function avatarFor(id: string): string | null {
-  if (AVATAR_URLS.length === 0) return null
-  return AVATAR_URLS[seedInt(id) % AVATAR_URLS.length]
+  if (FACES.length === 0) return null
+  return FACES[seedInt(id) % FACES.length]
+}
+
+/** The small cartoon archetype badge (pit-boss reveal), or null if none installed. */
+export function archetypeBadge(archetype?: string | null): string | null {
+  if (!archetype) return null
+  return CARTOON_BY_ARCH[archetype] ?? null
 }
 
 // Neutral, fun poker handles — no archetype signal. Assigned by identity seed.
@@ -51,8 +105,12 @@ const HANDLES = [
   'ValueTown', 'BackdoorBob', 'StoneCold', 'FlopHouse', 'TurnedNuts', 'RailBird',
 ]
 
-/** A stable display handle for an identity. */
+/** A stable display handle for an identity. If the player's assigned face is one of
+ *  the themed faces, use the handle that fits it; otherwise a stable generic handle. */
 export function handleFor(id: string): string {
+  const url = avatarFor(id)
+  const stem = url ? URL_TO_STEM[url] : undefined
+  if (stem && THEMED_HANDLE[stem]) return THEMED_HANDLE[stem]
   return HANDLES[seedInt(id) % HANDLES.length]
 }
 

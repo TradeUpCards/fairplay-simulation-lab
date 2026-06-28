@@ -7,7 +7,7 @@ import { ResourceBoundary } from './ResourceBoundary'
 import { LobbyDataTable } from './LobbyDataTable'
 import { LobbySidecar } from './LobbySidecar'
 import { SeatAvatar, ARCH_AVATAR } from './tableArt'
-import { avatarFor, handleFor, forecastFor } from '../lib/lobbyIdentity'
+import { avatarFor, handleFor, forecastFor, archetypeBadge } from '../lib/lobbyIdentity'
 
 type OpDetailMap = Record<string, OperatorTableDetail>
 const tShort = (id: string | null | undefined) => (id ?? '—').replace('LR-', 'T-')
@@ -71,15 +71,17 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
             <span className="font-mono text-[0.9rem] font-semibold text-[#f3ece0]">Standard lobby</span>
             <span className="text-[0.74rem] text-[#a9b0bb]">most-full tables first</span>
           </div>
-          <button
-            type="button"
-            data-testid="reveal"
-            onClick={() => lobbyStore.setRevealed(true)}
-            className="group rounded-md border border-brass bg-[linear-gradient(180deg,#e6c47e,#b78a3c)] px-3.5 py-1.5 text-[0.82rem] font-semibold text-[#241806] shadow-[0_0_0_0_rgba(224,189,118,0.5)] transition hover:brightness-105 hover:shadow-[0_0_18px_2px_rgba(224,189,118,0.35)]"
-          >
-            Pull back the curtain
-            <span className="ml-1.5 inline-block transition-transform group-hover:translate-x-0.5">→</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              data-testid="reveal"
+              onClick={() => lobbyStore.setRevealed(true)}
+              className="group rounded-md border border-brass bg-[linear-gradient(180deg,#e6c47e,#b78a3c)] px-3.5 py-1.5 text-[0.82rem] font-semibold text-[#241806] shadow-[0_0_0_0_rgba(224,189,118,0.5)] transition hover:brightness-105 hover:shadow-[0_0_18px_2px_rgba(224,189,118,0.35)]"
+            >
+              Pull back the curtain
+              <span className="ml-1.5 inline-block transition-transform group-hover:translate-x-0.5">→</span>
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col gap-4 xl:flex-row">
@@ -324,11 +326,25 @@ function EventColumn({
               key={`${id}-${i}`}
               className="flex items-center gap-2.5 rounded-md border border-[#23262d] bg-[rgba(0,0,0,0.22)] px-2 py-1.5"
             >
-              <SeatAvatar archetype={e.archetype} label={id} imageUrl={avatarFor(id)} size="md" />
+              <div className="relative shrink-0">
+                <SeatAvatar label={id} imageUrl={avatarFor(id)} size="md" />
+                {archetypeBadge(e.archetype) ? (
+                  <img
+                    src={archetypeBadge(e.archetype) as string}
+                    alt=""
+                    title={(e.archetype ?? '').replace(/_/g, ' ')}
+                    className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border border-[#0e1014] bg-[#0e1014] object-cover"
+                  />
+                ) : e.archetype ? (
+                  <span className="absolute -bottom-1 -right-1 grid h-4 w-4 place-items-center rounded-full border border-[#0e1014] bg-[#1c2028] text-[0.55rem]">
+                    {ARCH_AVATAR[e.archetype] ?? ''}
+                  </span>
+                ) : null}
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="truncate text-[0.82rem] font-semibold text-[#f3ece0]">
-                    {ARCH_AVATAR[e.archetype ?? ''] ?? ''} {handleFor(id)}
+                    {handleFor(id)}
                   </span>
                   <span className="font-mono text-[0.66rem] text-[#7e8694]">
                     → {tShort(e.table_id)}

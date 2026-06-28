@@ -18,7 +18,12 @@ export interface LobbyUiState {
 
 export type LobbyListener = (state: LobbyUiState) => void
 
-const DEFAULT_STATE: LobbyUiState = { step: 0, selected: null, diagOpen: false, revealed: false }
+const DEFAULT_STATE: LobbyUiState = {
+  step: 0,
+  selected: null,
+  diagOpen: false,
+  revealed: false,
+}
 
 export interface LobbyStore {
   getState: () => LobbyUiState
