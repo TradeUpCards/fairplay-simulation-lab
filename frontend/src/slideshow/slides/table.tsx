@@ -1,23 +1,44 @@
-import { Slide, Placeholder } from '../Slide'
+import t05PitBoss from '../../assets/t05-pitboss.png'
+import { Slide, Bullets } from '../Slide'
 import type { SlideDef } from '../types'
 
 function TableSlide() {
   return (
-    <Slide kicker="2 · Zoom in" title="Focus on a single table">
-      <div className="flex h-full flex-col gap-5">
-        <p className="m-0 max-w-[64ch] text-[1.15rem] leading-relaxed text-muted">
-          On the pit-boss console, the same table reads very differently: a{' '}
-          <span className="text-text">seat ring</span> with each player&apos;s{' '}
-          <span className="text-text">propensity-to-leave</span> heat, a composite{' '}
-          <span className="text-text">health score</span>, and any integrity flags — operator-only.
-        </p>
-        {/* COLLEAGUE: drop the live pit-boss table view (SeatRing + health score)
-            or a screenshot here. Components: src/views/PitBossTable.tsx,
-            src/components/SeatRing.tsx. */}
-        <Placeholder title="Pit-boss table view">
-          Seat ring · health score · propensity-to-leave heat. Swap this for the live{' '}
-          <code>PitBossTable</code> / <code>SeatRing</code> or a screenshot.
-        </Placeholder>
+    <Slide kicker="Pull back the curtain" title="Why FairPlay buries it">
+      <div className="grid h-full grid-cols-[minmax(0,0.92fr)_1fr] items-center gap-8">
+        <div className="grid h-full place-items-center overflow-hidden rounded-xl border border-line bg-[#0b0e13] p-2 shadow-[0_10px_24px_rgba(0,0,0,0.42)]">
+          <img
+            src={t05PitBoss}
+            alt="Pit-boss view of T-05 — health 59 (fragile), predation and fragility bars, who's seated, why this rank"
+            className="max-h-full max-w-full object-contain"
+          />
+        </div>
+        <div className="flex flex-col gap-6">
+          <p className="m-0 text-[1.2rem] leading-relaxed text-text">
+            The pit-boss view reveals what the player can&apos;t see — straight from the scoring
+            engine, no LLM.
+          </p>
+          <Bullets
+            items={[
+              <>
+                Table health <span className="font-semibold text-[#e09098]">59 / 100 — fragile</span>.
+              </>,
+              <>
+                A <span className="text-[#e3a08b]">shark</span> and grinders on a thinning,{' '}
+                <span className="text-text">declining</span> table — predation + fragility.
+              </>,
+              <>
+                Standard says <span className="text-brass">&ldquo;it&apos;s full — join it.&rdquo;</span>{' '}
+                FairPlay routes a recreational player <span className="text-[#5fcf8a]">away</span>.
+              </>,
+            ]}
+          />
+          <p className="m-0 max-w-[44ch] border-t border-dashed border-line pt-4 text-[0.92rem] text-faint">
+            Reason codes are verbatim from the engine. A new player would barely move the table&apos;s
+            health (ΔHealth <span className="text-[#5fcf8a]">+0.5</span>) — so it&apos;s{' '}
+            <span className="text-text">seating-risk</span>, not health-delta, that protects them.
+          </p>
+        </div>
       </div>
     </Slide>
   )
