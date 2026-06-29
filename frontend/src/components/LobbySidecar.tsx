@@ -294,12 +294,16 @@ export function LobbySidecar({
   pitboss,
   onPitbossChange,
   expanded = false,
+  analysisFooter,
 }: {
   detail: OperatorTableDetail
   onClose: () => void
   pitboss: boolean
   onPitbossChange: (v: boolean) => void
   expanded?: boolean
+  /** Optional content dropped into the empty space at the bottom of the expanded
+   *  analysis column (e.g. the slide's "how health is scored" formula callout). */
+  analysisFooter?: ReactNode
 }) {
   const band = detail.band ?? '—'
   const rec =
@@ -472,10 +476,11 @@ export function LobbySidecar({
                 <MiniTable detail={detail} reveal large />
                 {seatedBlock}
               </div>
-              <div className="space-y-5">
+              <div className="flex flex-col gap-5">
                 {routingLine}
                 {healthBlock}
                 {reasonsBlock}
+                {analysisFooter && <div className="mt-auto pt-2">{analysisFooter}</div>}
               </div>
             </div>
             <div className="mt-3">{footer}</div>
