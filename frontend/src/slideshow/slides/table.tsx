@@ -46,7 +46,7 @@ function TableSlide() {
           frozen scores, no LLM. <span className="text-text">Flip Player ↔ Pit-boss — it&apos;s live.</span>
         </p>
         {detail ? (
-          <FitToBox width={1100}>
+          <FitToBox width={1550}>
             <LobbySidecar
               detail={detail}
               pitboss={pitboss}
@@ -69,4 +69,5 @@ export const tableSlide: SlideDef = {
   id: 'table',
   label: 'The table',
   Component: TableSlide,
+  wide: true,
 }
