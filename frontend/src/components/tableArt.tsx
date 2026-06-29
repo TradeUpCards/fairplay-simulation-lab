@@ -48,7 +48,7 @@ export function SeatAvatar({
   archetype?: string | null
   label: string
   isHero?: boolean
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   imageUrl?: string | null
 }) {
   const emoji = isHero ? '🧑' : (ARCH_AVATAR[archetype ?? ''] ?? '🎭')
@@ -58,7 +58,9 @@ export function SeatAvatar({
       ? 'h-7 w-7 border text-[0.85rem]'
       : size === 'lg'
         ? 'h-14 w-14 border-2 text-[1.7rem]'
-        : 'h-11 w-11 border-2 text-[1.35rem]'
+        : size === 'xl'
+          ? 'h-[4.5rem] w-[4.5rem] border-2 text-[2.4rem]'
+          : 'h-11 w-11 border-2 text-[1.35rem]'
   return (
     <div
       className={`grid ${dim} shrink-0 place-items-center overflow-hidden rounded-full leading-none shadow-[0_1px_4px_rgba(0,0,0,0.45)]`}

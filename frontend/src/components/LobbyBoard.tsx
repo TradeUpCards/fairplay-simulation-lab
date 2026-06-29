@@ -241,11 +241,11 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
         <div className="mx-auto flex w-full max-w-[1100px] flex-col overflow-hidden px-4 pb-5 pt-3.5">
           <div className="mb-3 flex items-center justify-between">
             <div>
-              <div className="text-[0.95rem] font-semibold text-[#f3ece0]">
+              <div className="text-[1.3rem] font-semibold text-[#f3ece0]">
                 How each policy seated this round
               </div>
               {sits + stands > 0 && (
-                <div className="text-[0.74rem] text-[#8b8276]">
+                <div className="text-[0.95rem] text-[#8b8276]">
                   {sits} sat · {stands} stood — same arrivals, two policies
                 </div>
               )}
@@ -369,12 +369,12 @@ function EventColumn({
   const sits = events.filter((e) => e.action === 'sit')
   return (
     <div>
-      <div className="mb-3 flex items-baseline gap-2.5 border-b border-[#1e2128] pb-2">
-        <span className={`text-[1.1rem] font-semibold ${head}`}>{title}</span>
-        <span className="text-[0.85rem] text-[#7e8694]">{subtitle}</span>
+      <div className="mb-3 flex items-baseline gap-3 border-b border-[#1e2128] pb-2.5">
+        <span className={`text-[1.5rem] font-semibold ${head}`}>{title}</span>
+        <span className="text-[1.1rem] text-[#7e8694]">{subtitle}</span>
       </div>
-      <div className="max-h-[46vh] space-y-2 overflow-y-auto pr-1">
-        {sits.length === 0 && <div className="text-[0.9rem] text-[#6f7682]">no arrivals this round</div>}
+      <div className="max-h-[52vh] space-y-2.5 overflow-y-auto pr-1">
+        {sits.length === 0 && <div className="text-[1.1rem] text-[#6f7682]">no arrivals this round</div>}
         {sits.map((e, i) => {
           const id = e.player_id
           const t = e.table_id ?? undefined
@@ -384,36 +384,36 @@ function EventColumn({
           return (
             <div
               key={`${id}-${i}`}
-              className="flex items-center gap-3 rounded-lg border border-[#23262d] bg-[rgba(0,0,0,0.22)] px-3 py-2.5"
+              className="flex items-center gap-4 rounded-xl border border-[#23262d] bg-[rgba(0,0,0,0.22)] px-4 py-3.5"
             >
               <div className="relative shrink-0">
-                <SeatAvatar label={id} imageUrl={avatarFor(id)} size="lg" />
+                <SeatAvatar label={id} imageUrl={avatarFor(id)} size="xl" />
                 {archetypeBadge(e.archetype) ? (
                   <img
                     src={archetypeBadge(e.archetype) as string}
                     alt=""
                     title={(e.archetype ?? '').replace(/_/g, ' ')}
-                    className="absolute -bottom-1.5 -right-1.5 h-7 w-7 rounded-full border-2 border-[#0e1014] bg-[#0e1014] object-cover"
+                    className="absolute -bottom-1.5 -right-1.5 h-9 w-9 rounded-full border-2 border-[#0e1014] bg-[#0e1014] object-cover"
                   />
                 ) : e.archetype ? (
-                  <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full border border-[#0e1014] bg-[#1c2028] text-[0.72rem]">
+                  <span className="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full border border-[#0e1014] bg-[#1c2028] text-[0.95rem]">
                     {ARCH_AVATAR[e.archetype] ?? ''}
                   </span>
                 ) : null}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="truncate text-[1rem] font-semibold text-[#f3ece0]">
+                <div className="flex items-center gap-2.5">
+                  <span className="truncate text-[1.35rem] font-semibold text-[#f3ece0]">
                     {handleFor(id)}
                   </span>
-                  <span className="font-mono text-[0.8rem] text-[#7e8694]">→ {tShort(e.table_id)}</span>
+                  <span className="font-mono text-[1.05rem] text-[#7e8694]">→ {tShort(e.table_id)}</span>
                   {e.occ_after && (
-                    <span className="rounded-[4px] bg-[rgba(255,255,255,0.06)] px-1.5 py-[0.05rem] font-mono text-[0.78rem] text-[#cdb98a]">
+                    <span className="rounded-[5px] bg-[rgba(255,255,255,0.06)] px-2 py-[0.1rem] font-mono text-[1rem] text-[#cdb98a]">
                       now {e.occ_after}
                     </span>
                   )}
                 </div>
-                <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 text-[0.86rem]">
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 text-[1.15rem]">
                   <HealthDelta before={before} after={after} />
                   <span className="text-[#6f7682]">·</span>
                   <span className="text-[#a9b0bb]">
