@@ -10,11 +10,12 @@ function ApproachSlide() {
             Seating score
           </div>
           <div className="mt-3 font-mono text-[1.5rem] font-bold tracking-tight text-brass">
-            Rank = 0.30 · Fit + 0.40 · Health + 0.30 · ΔHealth
+            Rank = w₁ · Fit + w₂ · Health + w₃ · ΔHealth
           </div>
           <p className="mt-3 text-[0.95rem] text-faint">
-            Deterministic, no model in the decision loop — the standard policy just fills the
-            most-full table; FairPlay ranks by predicted table health instead.
+            <span className="text-text">w₁, w₂, w₃</span> are calibrated weights. Deterministic, no
+            model in the decision loop — the standard policy just fills the most-full table; FairPlay
+            ranks by predicted table health instead.
           </p>
         </Card>
 
