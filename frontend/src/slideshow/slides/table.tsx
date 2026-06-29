@@ -31,22 +31,22 @@ function TableSlide() {
 
   return (
     <Slide>
-      <div className="flex h-full min-h-0 flex-col gap-2">
+      <div className="flex h-full min-h-0 flex-col gap-1.5">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-          <span className="font-mono text-[0.74rem] uppercase tracking-[0.26em] text-brass">
+          <span className="font-mono text-[0.72rem] uppercase tracking-[0.26em] text-brass">
             Pull back the curtain
           </span>
-          <h2 className="m-0 text-[1.7rem] font-bold leading-tight tracking-[-0.01em] text-text">
+          <h2 className="m-0 text-[1.5rem] font-bold leading-tight tracking-[-0.01em] text-text">
             Why FairPlay buries it
           </h2>
+          <span className="text-[0.9rem] text-muted">
+            health terms, who&apos;s seated, each seat&apos;s{' '}
+            <span className="text-text">propensity-to-leave</span> heat, reason codes — frozen scores,
+            no LLM. <span className="text-text">Flip Player ↔ Pit-boss; it&apos;s live.</span>
+          </span>
         </div>
-        <p className="m-0 text-[0.95rem] leading-snug text-muted">
-          What the player can&apos;t see — health terms, who&apos;s seated, each seat&apos;s{' '}
-          <span className="text-text">propensity-to-leave</span> heat, and the reason codes. From the
-          frozen scores, no LLM. <span className="text-text">Flip Player ↔ Pit-boss — it&apos;s live.</span>
-        </p>
         {detail ? (
-          <FitToBox width={1550}>
+          <FitToBox width={1480}>
             <LobbySidecar
               detail={detail}
               pitboss={pitboss}
