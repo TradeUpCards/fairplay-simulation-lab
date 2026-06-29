@@ -7,9 +7,6 @@ import { approachSlide } from './approach'
 import { lobbyStandardSlide } from './lobbyStandard'
 import { lobbySlide } from './lobby'
 import { tableSlide } from './table'
-import { intelligenceSlide } from './intelligence'
-import { dashboardSlide } from './dashboard'
-import { closeSlide } from './close'
 import { routingSlide } from './routing'
 import { evidenceSlide } from './evidence'
 import { agenticSlide } from './agentic'
@@ -28,12 +25,9 @@ export const SLIDES: SlideDef[] = [
   approachSlide, // 6 · FairPlay routing
   lobbySlide, // 7 · player lobby (live, Standard vs FairPlay)
   tableSlide, // 8 · zoom into a table (live curtain)
-  intelligenceSlide, // 9 · the intelligence behind it
-  dashboardSlide, // 10 · the 8-hour A/B results
-  closeSlide, // 11 · close
   // — appended: the agentic experiment-engine deck (ported from
   //   docs/learn/playsim-agentic-simulator-deck.html) —
-  routingSlide, // 11 · policy routing behavior (staged + animated)
-  evidenceSlide, // 12 · why we simulate — the knobs
-  agenticSlide, // 13 · the agentic experiment loop (staged)
+  routingSlide, // 9 · policy routing behavior (staged + animated)
+  evidenceSlide, // 10 · why we simulate — the knobs
+  agenticSlide, // 11 · the agentic experiment loop (staged)
 ]
