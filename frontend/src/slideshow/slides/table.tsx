@@ -3,8 +3,11 @@ import { Slide } from '../Slide'
 import { FitToBox } from '../FitToBox'
 import { LobbySidecar } from '../../components/LobbySidecar'
 import { loadLobbySequence } from '../../data/shim'
-import type { OperatorTableDetail } from '../../data/types'
+import type { HealthBand, OperatorTableDetail } from '../../data/types'
+import { BAND_META, BAND_TEXT } from '../../lib/health'
 import type { SlideDef } from '../types'
+
+const BANDS: HealthBand[] = ['healthy', 'fragile', 'beginner_unfriendly', 'collapsed']
 
 /**
  * Live slide — the actual lobby curtain (LobbySidecar) for T-05 in its wide,
@@ -53,6 +56,7 @@ function TableSlide() {
               onPitbossChange={setPitboss}
               expanded
               onClose={() => {}}
+              analysisFooter={<HealthFormula />}
             />
           </FitToBox>
         ) : (
@@ -60,26 +64,39 @@ function TableSlide() {
             loading T-05…
           </div>
         )}
-
-        {/* How table health is scored — formula callout, pinned bottom-right */}
-        <div className="pointer-events-none absolute bottom-0 right-0 z-10 max-w-[27rem] rounded-xl border border-brass/40 bg-[rgba(9,11,15,0.97)] px-4 py-3 shadow-[0_12px_32px_rgba(0,0,0,0.6)]">
-          <div className="mb-1.5 font-mono text-[0.64rem] uppercase tracking-[0.24em] text-brass">
-            How table health is scored
-          </div>
-          <div className="font-mono text-[1.02rem] leading-relaxed text-text">
-            <span className="font-bold text-[#8be3a7]">Health</span> = 100 −{' '}
-            <span className="text-[#e3a08b]">Predation</span> −{' '}
-            <span className="text-[#e3a08b]">Fragility</span> −{' '}
-            <span className="text-[#e3a08b]">Cluster</span> −{' '}
-            <span className="text-[#e3a08b]">Bleed</span>
-          </div>
-          <div className="mt-1.5 font-mono text-[0.72rem] text-muted">
-            penalty caps 45 · 25 · 30 · 20 — <span className="text-[#8be3a7]">100 = safe</span>,
-            lower = riskier for recreational players
-          </div>
-        </div>
       </div>
     </Slide>
+  )
+}
+
+/** How table health is scored — a compact, color-coded formula callout that fills
+ *  the empty space at the bottom of the curtain's analysis column. */
+function HealthFormula() {
+  return (
+    <div className="rounded-xl border border-brass/40 bg-[rgba(255,255,255,0.02)] px-4 py-3">
+      <div className="mb-1.5 font-mono text-[0.66rem] uppercase tracking-[0.24em] text-brass">
+        How table health is scored
+      </div>
+      <div className="font-mono text-[1.02rem] leading-relaxed text-text">
+        <span className="font-bold text-[#8be3a7]">Health</span> = 100 −{' '}
+        <span className="text-[#e3a08b]">Predation</span> −{' '}
+        <span className="text-[#e3a08b]">Fragility</span> −{' '}
+        <span className="text-[#e3a08b]">Cluster</span> −{' '}
+        <span className="text-[#e3a08b]">Bleed</span>
+      </div>
+      <div className="mt-1.5 font-mono text-[0.72rem] text-muted">
+        penalty caps 45 · 25 · 30 · 20 — higher = riskier for recreational players
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-[#23262d] pt-2 font-mono text-[0.72rem]">
+        {BANDS.map((b) => (
+          <span key={b} className="flex items-center gap-1.5">
+            <span className={`text-[0.7rem] ${BAND_TEXT[b]}`}>●</span>
+            <span className="text-text">{BAND_META[b].label}</span>
+            <span className="text-faint">{BAND_META[b].range}</span>
+          </span>
+        ))}
+      </div>
+    </div>
   )
 }
 
