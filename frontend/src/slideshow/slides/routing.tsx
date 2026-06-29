@@ -38,7 +38,7 @@ const CSS = `
 .pr8 .pf-row[data-step="1"] .pcard { border-left:5px solid #c79a4b; }
 .pr8 .pf-row[data-step="2"] .pcard { border-left:5px solid #5fcf8a; }
 .pr8 .pcard b { font-size:1.15rem; line-height:1.1; color:#e6e9ef; }
-.pr8 .pcard span { color:#aeb6c4; font-size:0.86rem; line-height:1.38; }
+.pr8 .pcard span { color:#aeb6c4; font-size:1.03rem; line-height:1.38; }
 
 .pr8 .stage {
   position:relative; min-height:138px; border:1px solid #232a36; border-radius:12px;
@@ -129,10 +129,7 @@ function RoutingSlide() {
             <section className="pf-row" data-step="0">
               <div className="pcard">
                 <b>Standard</b>
-                <span>
-                  Top off the next available table. Table 2 fills first; once it is full, overflow
-                  moves to Table 3.
-                </span>
+                <span>Top off the next available table.</span>
               </div>
               <div className="stage">
                 <span className="arrivals">Arrivals</span>
@@ -175,10 +172,7 @@ function RoutingSlide() {
             <section className="pf-row" data-step="1">
               <div className="pcard">
                 <b>FairPlay</b>
-                <span>
-                  Ranks by health and fit. Without liveness, compatible-looking empty tables can
-                  split demand.
-                </span>
+                <span>Ranks by health and fit. Empty tables split demand.</span>
               </div>
               <div className="stage">
                 <span className="arrivals">Arrivals</span>

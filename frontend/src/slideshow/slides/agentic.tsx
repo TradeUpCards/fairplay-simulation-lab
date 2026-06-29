@@ -1,15 +1,12 @@
-import { useState } from 'react'
 import { Slide } from '../Slide'
-import { useStageKeys } from '../useStageKeys'
 import type { SlideDef } from '../types'
 
 /**
  * "One iteration becomes the prompt for the next one." — the agentic
  * experiment loop. Ported from docs/learn/playsim-agentic-simulator-deck.html.
- * The original advanced through the four loop steps with the deck's Next
- * button; here the slide owns that staged reveal locally (slides are
- * components, so they can hold state) and is re-skinned to the ink/brass/felt
- * theme. ← / → still move between slides; the in-slide control steps the loop.
+ * The four stages are drawn as a live directed graph that cycles back up: a
+ * glowing token travels planner → validator → workers → evaluator and loops
+ * round to the planner, with the edges flowing in the same direction.
  */
 const ARCH: { title: string; body: string }[] = [
   {
@@ -33,97 +30,151 @@ across more seeds before changing scoring.`,
   },
 ]
 
-const STEPS: { title: string; desc: string }[] = [
-  { title: 'LLM planner', desc: 'Reads prior results and proposes a bounded JSON experiment spec.' },
-  {
-    title: 'Validator',
-    desc: 'Rejects unsupported knobs, oversized sweeps, and invalid policy comparisons.',
-  },
-  {
-    title: 'Deterministic workers',
-    desc: 'Run Standard and FairPlay-liveness against the same seeded demand stream.',
-  },
-  {
-    title: 'Evaluator + report',
-    desc: 'Aggregates seat-hours, vulnerable seat-hours, demand drop, exits, and formation metrics.',
-  },
-]
+const NODES = ['LLM planner', 'Validator', 'Deterministic workers', 'Evaluator + report']
+const ACCENT = '#5fcf8a'
 
-const STAGE_LABELS = ['Run Sweep', 'Evaluate', 'Plan Next', 'Replay']
+// graph geometry (SVG user units) — large so node text reads on a projector
+const NODE_W = 410
+const NODE_H = 60
+const NODE_CX = 350
+const RAIL_X = 145 // left edge of every node; the return rail joins here
+const YC = [36, 158, 280, 402] // node centre-y, top to bottom
+// node 4 → out left → up the left rail → into node 1
+const RETURN = 'C 80 415 44 380 44 340 L 44 98 C 44 58 80 24 145 36'
+// the full loop the token rides: down the centre, across to the rail, up, back to start
+const LOOP = `M ${NODE_CX} ${YC[0]} L ${NODE_CX} ${YC[3]} L ${RAIL_X} ${YC[3]} ${RETURN} L ${NODE_CX} ${YC[0]}`
+
+function LoopGraph() {
+  return (
+    <svg
+      viewBox="0 0 565 440"
+      className="mx-auto block w-full max-w-[580px]"
+      role="img"
+      aria-label="Agentic loop: planner, validator, workers, evaluator, cycling back to the planner"
+    >
+      <defs>
+        <marker
+          id="ag-arrow"
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="8"
+          markerHeight="8"
+          orient="auto-start-reverse"
+        >
+          <path d="M0 0 L10 5 L0 10 z" fill={ACCENT} />
+        </marker>
+        <filter id="ag-glow" x="-300%" y="-300%" width="700%" height="700%">
+          <feGaussianBlur stdDeviation="3.5" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* forward edges (down the centre), dashes marching toward the arrowhead */}
+      {[0, 1, 2].map((i) => (
+        <path
+          key={i}
+          d={`M ${NODE_CX} ${YC[i] + NODE_H / 2} L ${NODE_CX} ${YC[i + 1] - NODE_H / 2 - 2}`}
+          fill="none"
+          stroke="#3a5a48"
+          strokeWidth={2.5}
+          strokeDasharray="7 7"
+          markerEnd="url(#ag-arrow)"
+        >
+          <animate attributeName="stroke-dashoffset" from="14" to="0" dur="0.8s" repeatCount="indefinite" />
+        </path>
+      ))}
+
+      {/* return edge — cycles back up to the planner */}
+      <path
+        d={`M ${RAIL_X} ${YC[3]} ${RETURN}`}
+        fill="none"
+        stroke="#3a5a48"
+        strokeWidth={2.5}
+        strokeDasharray="7 7"
+        markerEnd="url(#ag-arrow)"
+      >
+        <animate attributeName="stroke-dashoffset" from="14" to="0" dur="0.8s" repeatCount="indefinite" />
+      </path>
+      <text
+        x="34"
+        y="226"
+        transform="rotate(-90 34 226)"
+        textAnchor="middle"
+        fontSize="13"
+        fill="#7c8698"
+        letterSpacing="2"
+      >
+        loops back
+      </text>
+
+      {/* nodes */}
+      {NODES.map((label, i) => {
+        const x = NODE_CX - NODE_W / 2
+        const y = YC[i] - NODE_H / 2
+        return (
+          <g key={label}>
+            <rect
+              x={x}
+              y={y}
+              width={NODE_W}
+              height={NODE_H}
+              rx={14}
+              fill="#11161f"
+              stroke="rgba(95,207,138,0.55)"
+              strokeWidth={1.75}
+            />
+            <circle cx={x + 36} cy={YC[i]} r={19} fill="#2f8f5b" />
+            <text x={x + 36} y={YC[i] + 7} textAnchor="middle" fontSize="22" fontWeight="700" fill="#eafff3">
+              {i + 1}
+            </text>
+            <text x={x + 74} y={YC[i] + 9} fontSize="28" fontWeight="600" fill="#eaf1fb">
+              {label}
+            </text>
+          </g>
+        )
+      })}
+
+      {/* the live token riding the loop */}
+      <circle r="8" fill="#eafff3" filter="url(#ag-glow)">
+        <animateMotion dur="5.5s" repeatCount="indefinite" path={LOOP} />
+      </circle>
+    </svg>
+  )
+}
 
 function AgenticSlide() {
-  const [stage, setStage] = useState(0)
-  const advance = () => setStage((s) => (s >= STEPS.length - 1 ? 0 : s + 1))
-  // → / ← step through the loop stages before the deck moves on
-  useStageKeys(stage, STEPS.length, setStage)
-
   return (
     <Slide kicker="Agentic loop architecture" title="One iteration becomes the prompt for the next one.">
-      <div className="flex flex-col gap-6">
-        <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,0.82fr) minmax(0,1.18fr)' }}>
-          {/* left: the artifacts that flow around the loop */}
-          <div className="flex flex-col gap-3">
-            {ARCH.map((a) => (
-              <div key={a.title} className="rounded-xl border border-line bg-surface p-4">
-                <div className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-brass">
-                  {a.title}
-                </div>
-                <pre className="m-0 mt-2 whitespace-pre-wrap font-mono text-[0.78rem] leading-snug text-[#c8d0de]">
-                  {a.body}
-                </pre>
+      <div className="grid gap-6" style={{ gridTemplateColumns: 'minmax(0,0.82fr) minmax(0,1.18fr)' }}>
+        {/* left: the artifacts that flow around the loop */}
+        <div className="flex flex-col gap-3">
+          {ARCH.map((a) => (
+            <div key={a.title} className="rounded-xl border border-line bg-surface p-4">
+              <div className="font-mono text-[1.08rem] uppercase tracking-[0.16em] text-brass">
+                {a.title}
               </div>
-            ))}
-          </div>
-
-          {/* right: the four-step loop, revealed one at a time */}
-          <div className="flex flex-col gap-2.5">
-            {STEPS.map((step, i) => {
-              const revealed = i <= stage
-              const active = i === stage
-              return (
-                <div
-                  key={step.title}
-                  className="flex items-start gap-4 rounded-xl border p-4 transition-all duration-300"
-                  style={{
-                    opacity: revealed ? 1 : 0.32,
-                    transform: revealed ? 'translateY(0)' : 'translateY(8px)',
-                    borderColor: active ? 'rgba(95,207,138,0.5)' : 'var(--color-line)',
-                    background: active ? 'rgba(95,207,138,0.08)' : 'var(--color-surface)',
-                  }}
-                >
-                  <span
-                    className="mt-0.5 grid h-8 w-8 flex-none place-items-center rounded-full font-mono text-[0.85rem] font-bold"
-                    style={{
-                      background: active ? '#2f8f5b' : '#1d2531',
-                      color: active ? '#eafff3' : '#8b93a7',
-                    }}
-                  >
-                    {i + 1}
-                  </span>
-                  <div>
-                    <h3 className="m-0 text-[1.25rem] font-semibold leading-tight text-text">
-                      {step.title}
-                    </h3>
-                    <p className="mt-1 text-[1rem] leading-snug text-[#c8d0de]">{step.desc}</p>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+              <pre className="m-0 mt-2 whitespace-pre-wrap font-mono text-[0.78rem] leading-snug text-[#c8d0de]">
+                {a.body}
+              </pre>
+            </div>
+          ))}
         </div>
 
-        <StageControl
-          label={STAGE_LABELS[stage]}
-          stage={stage}
-          total={STEPS.length}
-          onAdvance={advance}
-        />
+        {/* right: the live agentic loop */}
+        <div className="flex items-center justify-center">
+          <LoopGraph />
+        </div>
       </div>
     </Slide>
   )
 }
 
-/** In-slide staged-reveal control: an action button + progress dots. */
+/** In-slide staged-reveal control: an action button + progress dots. Shared kit
+ * piece — used by the routing slide. */
 export function StageControl({
   label,
   stage,
