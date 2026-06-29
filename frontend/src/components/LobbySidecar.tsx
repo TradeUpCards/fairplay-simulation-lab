@@ -126,7 +126,7 @@ function MiniTable({
   const pos = seatPositions(detail.max_seats, 50, 44)
   return (
     <div
-      className={`relative mx-auto aspect-3/2 w-full ${large ? 'my-2 max-w-[16rem]' : 'my-6 max-w-[17rem]'}`}
+      className={`relative mx-auto aspect-3/2 w-full ${large ? 'mb-2 mt-8 max-w-[16rem]' : 'my-6 max-w-[17rem]'}`}
     >
       <img
         src={pokerTable}
