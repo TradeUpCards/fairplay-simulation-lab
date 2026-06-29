@@ -3,7 +3,7 @@ import { loadHealth } from '../data/shim'
 import { useResource } from '../state/useResource'
 import { useLiveRoom, mergeHealthScores } from '../state/liveRoom'
 import { ResourceBoundary } from '../components/ResourceBoundary'
-import { BAND_CHIP, BAND_META, rankTables, TERM_CAP, type TermKey } from '../lib/health'
+import { BAND_CHIP, BAND_META, BAND_TEXT, rankTables, TERM_CAP, type TermKey } from '../lib/health'
 
 // "surface to review" pill — shared with the table-detail header
 export const REVIEW_FLAG =
@@ -113,7 +113,9 @@ function PitRow({
       >
         <span className="min-w-[1.8rem] text-[0.8rem] tabular-nums text-faint">#{rank}</span>
         <span data-testid="pit-table-id" className="min-w-10 font-semibold">{table.table_id}</span>
-        <span className="min-w-8 text-[1.05rem] font-semibold tabular-nums">{table.health.toFixed(0)}</span>
+        <span className={`min-w-10 text-[1.5rem] font-bold tabular-nums ${BAND_TEXT[table.band]}`}>
+          {table.health.toFixed(0)}
+        </span>
         <span className={`${BAND_CHIP} ${band.tone}`}>{band.label}</span>
         {table.integrity_candidate && (
           <span className={REVIEW_FLAG} data-testid="review-flag">

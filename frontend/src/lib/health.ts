@@ -7,6 +7,14 @@ import type { HealthBand } from '../data/types'
 /** Shared chip box (size/shape); `tone` supplies the band's colour trio. */
 export const BAND_CHIP = 'rounded-full border px-2 py-[0.15rem] text-[0.72rem]'
 
+/** Just the band's accent colour — for the big health score number (operator views). */
+export const BAND_TEXT: Record<HealthBand, string> = {
+  healthy: 'text-[#8be3a7]',
+  fragile: 'text-[#e3d28b]',
+  beginner_unfriendly: 'text-[#efc28f]',
+  collapsed: 'text-[#ef8f9b]',
+}
+
 export const BAND_META: Record<HealthBand, { label: string; tone: string; range: string }> = {
   healthy: { label: 'Healthy', tone: 'border-[#2f7d4a] bg-[#16341f] text-[#8be3a7]', range: '70–100' },
   fragile: { label: 'Fragile', tone: 'border-[#8a7a2f] bg-[#33301a] text-[#e3d28b]', range: '50–69' },

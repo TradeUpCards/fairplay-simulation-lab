@@ -31,7 +31,7 @@ function TableSlide() {
 
   return (
     <Slide>
-      <div className="flex h-full min-h-0 flex-col gap-1.5">
+      <div className="relative flex h-full min-h-0 flex-col gap-1.5">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
           <span className="font-mono text-[0.72rem] uppercase tracking-[0.26em] text-brass">
             Pull back the curtain
@@ -60,6 +60,24 @@ function TableSlide() {
             loading T-05…
           </div>
         )}
+
+        {/* How table health is scored — formula callout, pinned bottom-right */}
+        <div className="pointer-events-none absolute bottom-0 right-0 z-10 max-w-[27rem] rounded-xl border border-brass/40 bg-[rgba(9,11,15,0.97)] px-4 py-3 shadow-[0_12px_32px_rgba(0,0,0,0.6)]">
+          <div className="mb-1.5 font-mono text-[0.64rem] uppercase tracking-[0.24em] text-brass">
+            How table health is scored
+          </div>
+          <div className="font-mono text-[1.02rem] leading-relaxed text-text">
+            <span className="font-bold text-[#8be3a7]">Health</span> = 100 −{' '}
+            <span className="text-[#e3a08b]">Predation</span> −{' '}
+            <span className="text-[#e3a08b]">Fragility</span> −{' '}
+            <span className="text-[#e3a08b]">Cluster</span> −{' '}
+            <span className="text-[#e3a08b]">Bleed</span>
+          </div>
+          <div className="mt-1.5 font-mono text-[0.72rem] text-muted">
+            penalty caps 45 · 25 · 30 · 20 — <span className="text-[#8be3a7]">100 = safe</span>,
+            lower = riskier for recreational players
+          </div>
+        </div>
       </div>
     </Slide>
   )
