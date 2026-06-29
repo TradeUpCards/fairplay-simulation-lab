@@ -1,4 +1,4 @@
-import { Slide, Card, Bullets, Pill } from '../Slide'
+import { Slide, Card, Bullets } from '../Slide'
 import type { SlideDef } from '../types'
 
 function ApproachSlide() {
@@ -33,19 +33,8 @@ function ApproachSlide() {
               <span className="text-text">ΔHealth</span> — the marginal effect of this player
               joining.
             </>,
-            <>
-              <span className="text-text">Hard gates</span> — integrity-flagged tables are removed;
-              vulnerable players are only promoted into low-risk seats.
-            </>,
           ]}
         />
-
-        <div className="flex flex-wrap gap-2">
-          <Pill tone="felt">Recommend</Pill>
-          <Pill tone="felt">Explain</Pill>
-          <Pill tone="felt">Human decides</Pill>
-          <Pill>Never accuse · never auto-enforce</Pill>
-        </div>
       </div>
     </Slide>
   )
