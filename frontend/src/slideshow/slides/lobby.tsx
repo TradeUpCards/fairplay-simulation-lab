@@ -1,43 +1,69 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Slide } from '../Slide'
 import { FitToBox } from '../FitToBox'
 import { LobbyBoard } from '../../components/LobbyBoard'
-import { lobbyStore } from '../../state/lobbyStore'
+import { lobbyStore, type LobbyUiState } from '../../state/lobbyStore'
 import type { SlideDef } from '../types'
 
-/** Steps the slide shows: lobby step 0 ("step 1/4", rooms identical) → step 1
- *  ("step 2/4", rooms diverge). The slideshow's right/left arrow walks these two
- *  in-slide first, then falls through to normal slide navigation. */
-const MAX_SLIDE_STEP = 1
+/**
+ * The in-slide story beats, walked by the deck's → arrow (← reverses). Each beat
+ * is the FULL board state at that point, so stepping forward/back is deterministic:
+ *   0 · arrive — step 1/4, both rooms identical
+ *   1 · run the room — step 2/4, the rooms diverge
+ *   2 · open "how each policy seated this round" (seat-events drawer)
+ *   3 · close that drawer
+ *   4 · select T-05 (player preview in the sidecar)
+ *   5 · flip the sidecar to Pit-boss view on T-05
+ * After beat 5, → falls through to the next slide; before beat 0, ← falls through.
+ */
+type Beat = Pick<LobbyUiState, 'step' | 'selected' | 'pitboss' | 'diagOpen'>
+const BEATS: Beat[] = [
+  { step: 0, selected: null, pitboss: false, diagOpen: false },
+  { step: 1, selected: null, pitboss: false, diagOpen: false },
+  { step: 1, selected: null, pitboss: false, diagOpen: true },
+  { step: 1, selected: null, pitboss: false, diagOpen: false },
+  { step: 1, selected: 'LR-05', pitboss: false, diagOpen: false },
+  { step: 1, selected: 'LR-05', pitboss: true, diagOpen: false },
+]
+
+function applyBeat(b: Beat) {
+  lobbyStore.setRevealed(true)
+  lobbyStore.setStep(b.step)
+  lobbyStore.setSelected(b.selected) // also resets pitboss → set it after
+  lobbyStore.setPitboss(b.pitboss)
+  lobbyStore.setDiag(b.diagOpen)
+}
 
 /**
  * Live slide — the real Standard-vs-FairPlay lobby board, curtain up and locked
- * (no manual controls). It starts at step 1 and the deck's → arrow advances the
- * room to step 2 before moving on to the next slide (← reverses). Auto-scaled as
- * large as the slide allows; click T-05 to pull back the curtain.
+ * (no manual controls). The deck's → arrow walks the story beats above before
+ * moving on to the next slide (← reverses). Auto-scaled as large as the slide
+ * allows; click T-05 to pull back the curtain.
  */
 function LobbySlide() {
+  const beat = useRef(0)
+
   useEffect(() => {
-    lobbyStore.setRevealed(true)
-    lobbyStore.setStep(0) // start at "step 1/4" — both rooms identical
-    lobbyStore.setSelected(null)
+    beat.current = 0
+    applyBeat(BEATS[0])
   }, [])
 
-  // Capture the deck's arrow keys: walk the room's two steps in-slide first, then
-  // let the event through so the slideshow advances to / from the neighbouring
-  // slide. Capture phase + stopImmediatePropagation pre-empts Slideshow's own
-  // window keydown listener only when we actually consume the key.
+  // Capture the deck's arrow keys: walk the in-slide beats first, then let the
+  // event through so the slideshow advances to / from the neighbouring slide.
+  // Capture phase + stopImmediatePropagation pre-empts Slideshow's own window
+  // keydown listener only when we actually consume the key.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const step = lobbyStore.getState().step
       const next = e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' '
       const prev = e.key === 'ArrowLeft' || e.key === 'PageUp'
-      if (next && step < MAX_SLIDE_STEP) {
-        lobbyStore.setStep(step + 1)
+      if (next && beat.current < BEATS.length - 1) {
+        beat.current += 1
+        applyBeat(BEATS[beat.current])
         e.preventDefault()
         e.stopImmediatePropagation()
-      } else if (prev && step > 0) {
-        lobbyStore.setStep(step - 1)
+      } else if (prev && beat.current > 0) {
+        beat.current -= 1
+        applyBeat(BEATS[beat.current])
         e.preventDefault()
         e.stopImmediatePropagation()
       }

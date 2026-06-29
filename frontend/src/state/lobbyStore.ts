@@ -36,6 +36,7 @@ export interface LobbyStore {
   setSelected: (selected: string | null) => void
   toggleSelected: (id: string) => void
   toggleDiag: () => void
+  setDiag: (open: boolean) => void
   setRevealed: (revealed: boolean) => void
   setPitboss: (pitboss: boolean) => void
   reset: () => void
@@ -69,6 +70,9 @@ export function createLobbyStore(initial?: Partial<LobbyUiState>): LobbyStore {
     },
     toggleDiag() {
       set({ diagOpen: !state.diagOpen })
+    },
+    setDiag(open) {
+      set({ diagOpen: open })
     },
     setRevealed(revealed) {
       set({ revealed })
