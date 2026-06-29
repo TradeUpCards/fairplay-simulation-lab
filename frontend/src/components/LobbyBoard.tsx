@@ -231,8 +231,8 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
         aria-hidden="true"
       />
       <aside
-        className={`fixed inset-x-0 bottom-0 z-[81] flex max-h-[72vh] flex-col rounded-t-2xl border-t-2 border-t-brass bg-[#0e1014] shadow-[0_-22px_54px_rgba(0,0,0,0.55)] transition-transform duration-[340ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
-          ui.diagOpen ? 'translate-y-0' : 'translate-y-full'
+        className={`fixed inset-x-0 bottom-0 z-[81] flex max-h-[72vh] flex-col rounded-t-2xl border-t-2 border-t-brass bg-[#0e1014] shadow-[0_-22px_54px_rgba(0,0,0,0.55)] transition-[transform,opacity] duration-[340ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+          ui.diagOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-full opacity-0'
         }`}
         role="dialog"
         aria-label="seat events this round"
