@@ -20,4 +20,8 @@ export interface SlideDef {
   label?: string
   /** The slide body. Wrap your content in <Slide> to get the branded frame. */
   Component: ComponentType
+  /** Opt out of the deck's readable-width cap and use the full stage width.
+   *  For slides that embed a live app view (the lobby board, the curtain) that
+   *  wants every pixel — text slides should leave this off. */
+  wide?: boolean
 }

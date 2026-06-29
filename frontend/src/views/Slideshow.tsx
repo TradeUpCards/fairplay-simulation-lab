@@ -109,7 +109,7 @@ export function Slideshow() {
 
       {/* stage */}
       <main className="flex min-h-0 flex-1 items-stretch justify-center overflow-y-auto px-10 py-10">
-        <div className="flex w-full max-w-[1080px] py-2">
+        <div className={`flex w-full py-2 ${slide.wide ? 'max-w-[1600px]' : 'max-w-[1080px]'}`}>
           <Body key={slide.id} />
         </div>
       </main>
