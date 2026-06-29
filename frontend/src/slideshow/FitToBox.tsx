@@ -35,10 +35,10 @@ export function FitToBox({ width, children }: { width: number; children: ReactNo
 
   return (
     <div ref={outer} className="relative min-h-0 flex-1 overflow-hidden">
-      <div className="absolute inset-x-0 top-0 flex justify-center">
+      <div className="absolute inset-0 flex items-center justify-center">
         <div
           ref={inner}
-          className="origin-top shrink-0"
+          className="origin-center shrink-0"
           style={{ width, transform: `scale(${scale})`, visibility: scale ? 'visible' : 'hidden' }}
         >
           {children}
