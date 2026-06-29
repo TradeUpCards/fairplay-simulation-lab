@@ -19,20 +19,12 @@ function LobbyStandardSlide() {
   }, [])
 
   return (
-    <Slide>
-      <div className="flex h-full min-h-0 flex-col gap-1.5">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-          <span className="font-mono text-[0.72rem] uppercase tracking-[0.26em] text-brass">
-            Player floor
-          </span>
-          <h2 className="m-0 text-[1.5rem] font-bold leading-tight tracking-[-0.01em] text-text">
-            A normal cash-game lobby
-          </h2>
-          <span className="text-[0.9rem] text-muted">
-            How every site sorts the floor today — fullest tables first. Click a table to see
-            who&apos;s seated.
-          </span>
-        </div>
+    <Slide kicker="Player floor" title="A normal cash-game lobby">
+      <div className="flex h-full min-h-0 flex-col gap-2">
+        <p className="m-0 text-[0.95rem] leading-snug text-muted">
+          How every site sorts the floor today — fullest tables first. Click a table to see
+          who&apos;s seated.
+        </p>
         <FitToBox width={1500}>
           <div className="px-3 pb-2 pt-1">
             <LobbyBoard locked />

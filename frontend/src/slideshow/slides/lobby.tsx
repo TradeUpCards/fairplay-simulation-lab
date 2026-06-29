@@ -74,16 +74,8 @@ function LobbySlide() {
   }, [])
 
   return (
-    <Slide>
+    <Slide kicker="Player floor" title="Same table, opposite verdict">
       <div className="flex h-full min-h-0 flex-col gap-2">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-          <span className="font-mono text-[0.74rem] uppercase tracking-[0.26em] text-brass">
-            Player floor
-          </span>
-          <h2 className="m-0 text-[1.7rem] font-bold leading-tight tracking-[-0.01em] text-text">
-            Same table, opposite verdict
-          </h2>
-        </div>
         <p className="m-0 text-[0.95rem] leading-snug text-muted">
           <span className="font-semibold text-brass">Standard</span> ranks{' '}
           <span className="text-text">T-05</span> at #3 (it&apos;s full);{' '}

@@ -223,14 +223,6 @@ function LobbyBoardView({ seq, locked = false }: { seq: LobbySequence; locked?: 
         </button>
       </div>
 
-      <p className="mt-3 text-[0.72rem] text-[#6f7682]">
-        Same arrivals, seated by each policy — Standard packs the fullest tables (they fill and drop
-        to the bottom as <span className="text-[#8b8276]">Waitlist</span>); FairPlay routes toward
-        healthy tables. The <span className="text-[#8b8276]">vs</span> column shows each table’s rank
-        in the other room; click a table to inspect it (preview + pit-boss view). Illustrative
-        synthetic room — not a live cash game.
-      </p>
-
       {/* seat-events bottom drawer — slides up on click, closes back down */}
       <div
         className={`fixed inset-0 z-[80] bg-black/50 transition-opacity duration-300 ${
