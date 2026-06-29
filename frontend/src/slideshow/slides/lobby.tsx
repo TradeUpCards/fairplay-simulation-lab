@@ -34,7 +34,7 @@ function LobbySlide() {
           <span className="font-semibold text-[#5fcf8a]">FairPlay</span> buries it dead-last among
           open tables. Step the churn, or click a table to pull back the curtain.
         </p>
-        <FitToBox width={1240}>
+        <FitToBox width={1500}>
           <div className="px-3 pb-2 pt-1">
             <LobbyBoard />
           </div>

@@ -16,7 +16,14 @@ export function FitToBox({ width, children }: { width: number; children: ReactNo
       const o = outer.current
       const i = inner.current
       if (!o || !i) return
-      const s = Math.min(1, o.clientHeight / i.scrollHeight, o.clientWidth / i.scrollWidth)
+      // Measure the content child, not the transformed wrapper: a `position:fixed`
+      // descendant (e.g. the lobby's seat-events drawer, translated off-screen when
+      // closed) is contained by this transformed ancestor and inflates the wrapper's
+      // scrollHeight. The child's own box reports the true natural size.
+      const c = (i.firstElementChild as HTMLElement) ?? i
+      const natH = c.offsetHeight || i.scrollHeight
+      const natW = c.offsetWidth || i.scrollWidth
+      const s = Math.min(1, o.clientHeight / natH, o.clientWidth / natW)
       setScale(s > 0 ? s : 1)
     }
     fit()
@@ -31,7 +38,7 @@ export function FitToBox({ width, children }: { width: number; children: ReactNo
       <div className="absolute inset-x-0 top-0 flex justify-center">
         <div
           ref={inner}
-          className="origin-top"
+          className="origin-top shrink-0"
           style={{ width, transform: `scale(${scale})`, visibility: scale ? 'visible' : 'hidden' }}
         >
           {children}
