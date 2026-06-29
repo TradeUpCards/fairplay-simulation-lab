@@ -20,22 +20,25 @@ function LobbyStandardSlide() {
 
   return (
     <Slide>
-      <div className="flex h-full min-h-0 flex-col gap-1.5">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-          <span className="font-mono text-[0.72rem] uppercase tracking-[0.26em] text-brass">
-            Player floor
-          </span>
-          <h2 className="m-0 text-[1.5rem] font-bold leading-tight tracking-[-0.01em] text-text">
-            A normal cash-game lobby
-          </h2>
-          <span className="text-[0.9rem] text-muted">
-            How every site sorts the floor today — fullest tables first. Click a table to see
-            who&apos;s seated.
-          </span>
-        </div>
+      {/* Whole body in one FitToBox canvas → scales as a unit, zoom-independent. */}
+      <div className="flex h-full min-h-0 flex-col">
         <FitToBox width={1500}>
-          <div className="px-3 pb-2 pt-1">
-            <LobbyBoard locked />
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-0.5">
+              <span className="font-mono text-[0.9rem] uppercase tracking-[0.26em] text-brass">
+                Player floor
+              </span>
+              <h2 className="m-0 text-[2rem] font-bold leading-tight tracking-[-0.01em] text-text">
+                A normal cash-game lobby
+              </h2>
+              <span className="text-[1.15rem] text-muted">
+                How every site sorts the floor today — fullest tables first. Click a table to see
+                who&apos;s seated.
+              </span>
+            </div>
+            <div className="px-3 pb-2 pt-1">
+              <LobbyBoard locked />
+            </div>
           </div>
         </FitToBox>
       </div>

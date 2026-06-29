@@ -34,36 +34,40 @@ function TableSlide() {
 
   return (
     <Slide>
-      <div className="relative flex h-full min-h-0 flex-col gap-1.5">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-          <span className="font-mono text-[0.72rem] uppercase tracking-[0.26em] text-brass">
-            Pull back the curtain
-          </span>
-          <h2 className="m-0 text-[1.5rem] font-bold leading-tight tracking-[-0.01em] text-text">
-            Why FairPlay buries it
-          </h2>
-          <span className="text-[0.9rem] text-muted">
-            health terms, who&apos;s seated, each seat&apos;s{' '}
-            <span className="text-text">propensity-to-leave</span> heat, reason codes — frozen scores,
-            no LLM. <span className="text-text">Flip Player ↔ Pit-boss; it&apos;s live.</span>
-          </span>
-        </div>
-        {detail ? (
-          <FitToBox width={1480}>
-            <LobbySidecar
-              detail={detail}
-              pitboss={pitboss}
-              onPitbossChange={setPitboss}
-              expanded
-              onClose={() => {}}
-              analysisFooter={<HealthFormula />}
-            />
-          </FitToBox>
-        ) : (
-          <div className="flex min-h-0 flex-1 items-center justify-center rounded-md border border-dashed border-line text-[0.85rem] text-faint">
-            loading T-05…
+      {/* Whole body (title + pit-boss curtain) in one FitToBox canvas → scales as a
+          unit, zoom-independent. */}
+      <div className="relative flex h-full min-h-0 flex-col">
+        <FitToBox width={1480}>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-0.5">
+              <span className="font-mono text-[0.9rem] uppercase tracking-[0.26em] text-brass">
+                Pull back the curtain
+              </span>
+              <h2 className="m-0 text-[2rem] font-bold leading-tight tracking-[-0.01em] text-text">
+                Why FairPlay buries it
+              </h2>
+              <span className="text-[1.15rem] text-muted">
+                health terms, who&apos;s seated, each seat&apos;s{' '}
+                <span className="text-text">propensity-to-leave</span> heat, reason codes — frozen
+                scores, no LLM. <span className="text-text">Flip Player ↔ Pit-boss; it&apos;s live.</span>
+              </span>
+            </div>
+            {detail ? (
+              <LobbySidecar
+                detail={detail}
+                pitboss={pitboss}
+                onPitbossChange={setPitboss}
+                expanded
+                onClose={() => {}}
+                analysisFooter={<HealthFormula />}
+              />
+            ) : (
+              <div className="flex h-[24rem] items-center justify-center rounded-md border border-dashed border-line text-[1rem] text-faint">
+                loading T-05…
+              </div>
+            )}
           </div>
-        )}
+        </FitToBox>
       </div>
     </Slide>
   )

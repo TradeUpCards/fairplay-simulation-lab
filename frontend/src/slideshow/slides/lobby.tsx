@@ -75,25 +75,31 @@ function LobbySlide() {
 
   return (
     <Slide>
-      <div className="flex h-full min-h-0 flex-col gap-2">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-          <span className="font-mono text-[0.74rem] uppercase tracking-[0.26em] text-brass">
-            Player floor
-          </span>
-          <h2 className="m-0 text-[1.7rem] font-bold leading-tight tracking-[-0.01em] text-text">
-            Same table, opposite verdict
-          </h2>
-        </div>
-        <p className="m-0 text-[0.95rem] leading-snug text-muted">
-          <span className="font-semibold text-brass">Standard</span> ranks{' '}
-          <span className="text-text">T-05</span> at #3 (it&apos;s full);{' '}
-          <span className="font-semibold text-[#5fcf8a]">FairPlay</span> buries it dead-last among
-          open tables. Press <span className="text-text">→</span> to run the room, or click a table to
-          pull back the curtain.
-        </p>
+      {/* The WHOLE body (title + intro + board) lives inside one FitToBox canvas, so it
+          scales as a single unit and looks identical at any browser zoom. Sizes are set
+          for the 1900px design width; FitToBox scales the lot to fill the slide. The
+          flex-col h-full wrapper gives FitToBox (flex-1) its height. */}
+      <div className="flex h-full min-h-0 flex-col">
         <FitToBox width={1900}>
+          <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-0.5">
+            <span className="font-mono text-[1rem] uppercase tracking-[0.26em] text-brass">
+              Player floor
+            </span>
+            <h2 className="m-0 text-[2.3rem] font-bold leading-tight tracking-[-0.01em] text-text">
+              Same table, opposite verdict
+            </h2>
+          </div>
+          <p className="m-0 text-[1.3rem] leading-snug text-muted">
+            <span className="font-semibold text-brass">Standard</span> ranks{' '}
+            <span className="text-text">T-05</span> at #3 (it&apos;s full);{' '}
+            <span className="font-semibold text-[#5fcf8a]">FairPlay</span> buries it dead-last among
+            open tables. Press <span className="text-text">→</span> to run the room, or click a table to
+            pull back the curtain.
+          </p>
           <div className="px-3 pb-2 pt-1">
             <LobbyBoard locked />
+          </div>
           </div>
         </FitToBox>
       </div>
