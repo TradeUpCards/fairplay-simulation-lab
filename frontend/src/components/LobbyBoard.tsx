@@ -154,26 +154,28 @@ function LobbyBoardView({ seq, locked = false }: { seq: LobbySequence; locked?: 
             step {step + 1}/{seq.steps.length}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => lobbyStore.setRevealed(false)}
-            className="rounded-md border border-[#3a3f47] px-2.5 py-1.5 text-[0.74rem] text-[#b8c0cf] transition hover:border-brass hover:text-brass"
-          >
-            ← Standard only
-          </button>
-          <button
-            type="button"
-            data-testid="shuffle"
-            onClick={advance}
-            className="rounded-md border border-brass bg-brass px-3 py-1.5 text-[0.8rem] font-semibold text-[#1a1407] transition hover:brightness-105"
-          >
-            {atEnd ? '↺ Reset room' : 'Simulate room activity →'}
-          </button>
-        </div>
+        {!locked && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => lobbyStore.setRevealed(false)}
+              className="rounded-md border border-[#3a3f47] px-2.5 py-1.5 text-[0.74rem] text-[#b8c0cf] transition hover:border-brass hover:text-brass"
+            >
+              ← Standard only
+            </button>
+            <button
+              type="button"
+              data-testid="shuffle"
+              onClick={advance}
+              className="rounded-md border border-brass bg-brass px-3 py-1.5 text-[0.8rem] font-semibold text-[#1a1407] transition hover:brightness-105"
+            >
+              {atEnd ? '↺ Reset room' : 'Simulate room activity →'}
+            </button>
+          </div>
+        )}
       </div>
 
-      <RevealHeadline standard={cur.standard} fairplay={cur.fairplay} />
+      <RevealHeadline standard={cur.standard} fairplay={cur.fairplay} locked={locked} />
 
       <div className="flex flex-col gap-4 xl:flex-row">
         <div className={`flex min-w-0 flex-1 flex-col gap-5 lg:flex-row ${lobbyAreaCls}`}>
@@ -297,7 +299,15 @@ function LobbyBoardView({ seq, locked = false }: { seq: LobbySequence; locked?: 
  * number of tables, but Standard packs more of them to capacity (a few crowded
  * tables) while FairPlay leaves seats open (spread thinner). Derived, not written.
  */
-function RevealHeadline({ standard, fairplay }: { standard: LobbyRow[]; fairplay: LobbyRow[] }) {
+function RevealHeadline({
+  standard,
+  fairplay,
+  locked = false,
+}: {
+  standard: LobbyRow[]
+  fairplay: LobbyRow[]
+  locked?: boolean
+}) {
   const fullCount = (rs: LobbyRow[]) => rs.filter((r) => r.open_seats <= 0).length
   const seated = standard.reduce((n, r) => n + r.seated_count, 0)
   const stdFull = fullCount(standard)
@@ -325,6 +335,12 @@ function RevealHeadline({ standard, fairplay }: { standard: LobbyRow[]; fairplay
             spread players apart.
           </span>
         </>
+      ) : locked ? (
+        <span className="text-[#cdd4df]">
+          Same room so far — both policies start identical. Step forward to watch{' '}
+          <span className="font-semibold text-[#f0c98b]">Standard</span> pack tables full while{' '}
+          <span className="font-semibold text-[#8be3a7]">FairPlay</span> keeps seats open.
+        </span>
       ) : (
         <span className="text-[#cdd4df]">
           Same room so far. Hit{' '}
