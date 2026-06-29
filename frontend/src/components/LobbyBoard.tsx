@@ -22,16 +22,16 @@ const tShort = (id: string | null | undefined) => (id ?? '—').replace('LR-', '
  * `lobbyStore` so the scene survives leaving and re-entering the player page. Data
  * is the player-safe `lobby_sequence.json`; no scores in the lobby itself.
  */
-export function LobbyBoard() {
+export function LobbyBoard({ locked = false }: { locked?: boolean } = {}) {
   const seq = useResource(loadLobbySequence, (d) => d.steps.length === 0)
   return (
     <ResourceBoundary state={seq} label="lobby">
-      {(data) => <LobbyBoardView seq={data} />}
+      {(data) => <LobbyBoardView seq={data} locked={locked} />}
     </ResourceBoundary>
   )
 }
 
-function LobbyBoardView({ seq }: { seq: LobbySequence }) {
+function LobbyBoardView({ seq, locked = false }: { seq: LobbySequence; locked?: boolean }) {
   const ui = useSyncExternalStore(lobbyStore.subscribe, lobbyStore.getState)
   const step = Math.min(ui.step, seq.steps.length - 1)
   const cur = seq.steps[step]
@@ -93,17 +93,19 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
             <span className="font-mono text-[0.9rem] font-semibold text-[#f3ece0]">Standard lobby</span>
             <span className="text-[0.74rem] text-[#a9b0bb]">most-full tables first</span>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              data-testid="reveal"
-              onClick={() => lobbyStore.setRevealed(true)}
-              className="group rounded-md border border-brass bg-[linear-gradient(180deg,#e6c47e,#b78a3c)] px-3.5 py-1.5 text-[0.82rem] font-semibold text-[#241806] shadow-[0_0_0_0_rgba(224,189,118,0.5)] transition hover:brightness-105 hover:shadow-[0_0_18px_2px_rgba(224,189,118,0.35)]"
-            >
-              Pull back the curtain
-              <span className="ml-1.5 inline-block transition-transform group-hover:translate-x-0.5">→</span>
-            </button>
-          </div>
+          {!locked && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                data-testid="reveal"
+                onClick={() => lobbyStore.setRevealed(true)}
+                className="group rounded-md border border-brass bg-[linear-gradient(180deg,#e6c47e,#b78a3c)] px-3.5 py-1.5 text-[0.82rem] font-semibold text-[#241806] shadow-[0_0_0_0_rgba(224,189,118,0.5)] transition hover:brightness-105 hover:shadow-[0_0_18px_2px_rgba(224,189,118,0.35)]"
+              >
+                Pull back the curtain
+                <span className="ml-1.5 inline-block transition-transform group-hover:translate-x-0.5">→</span>
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-4 xl:flex-row">
@@ -123,9 +125,14 @@ function LobbyBoardView({ seq }: { seq: LobbySequence }) {
 
         <p className="mt-3 text-[0.72rem] text-[#6f7682]">
           A normal cash-game lobby, sorted the usual way — fullest tables first. Click any table to
-          see who’s sitting there, then{' '}
-          <span className="text-[#8b8276]">pull back the curtain</span> to compare how FairPlay would
-          seat the same players. Illustrative synthetic room — not a live cash game.
+          see who’s sitting there.
+          {!locked && (
+            <>
+              {' '}Then <span className="text-[#8b8276]">pull back the curtain</span> to compare how
+              FairPlay would seat the same players.
+            </>
+          )}{' '}
+          Illustrative synthetic room — not a live cash game.
         </p>
       </section>
     )

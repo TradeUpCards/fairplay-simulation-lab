@@ -4,6 +4,7 @@ import { industrySlide } from './industry'
 import { economicsSlide } from './economics'
 import { questionSlide } from './question'
 import { approachSlide } from './approach'
+import { lobbyStandardSlide } from './lobbyStandard'
 import { lobbySlide } from './lobby'
 import { tableSlide } from './table'
 import { intelligenceSlide } from './intelligence'
@@ -23,12 +24,13 @@ export const SLIDES: SlideDef[] = [
   industrySlide, // 2 · the market
   economicsSlide, // 3 · rake vs seat rental
   questionSlide, // 4 · how do we increase play time?
-  approachSlide, // 5 · FairPlay routing
-  lobbySlide, // 6 · player lobby (placeholder)
-  tableSlide, // 7 · zoom into a table (placeholder)
-  intelligenceSlide, // 8 · the intelligence behind it
-  dashboardSlide, // 9 · the 8-hour A/B results
-  closeSlide, // 10 · close
+  lobbyStandardSlide, // 5 · the lobby today (Standard only, locked)
+  approachSlide, // 6 · FairPlay routing
+  lobbySlide, // 7 · player lobby (live, Standard vs FairPlay)
+  tableSlide, // 8 · zoom into a table (live curtain)
+  intelligenceSlide, // 9 · the intelligence behind it
+  dashboardSlide, // 10 · the 8-hour A/B results
+  closeSlide, // 11 · close
   // — appended: the agentic experiment-engine deck (ported from
   //   docs/learn/playsim-agentic-simulator-deck.html) —
   routingSlide, // 11 · policy routing behavior (staged + animated)
