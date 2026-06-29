@@ -3,6 +3,7 @@ import pokerTable from '../assets/poker-table.png'
 import type { OperatorTableDetail, Archetype, HealthBand, HealthTerms } from '../data/types'
 import { computePtl } from '../lib/ptl'
 import { ptlTone, type PtlTone } from '../lib/table'
+import { BAND_TEXT } from '../lib/health'
 import { ARCH_AVATAR, SeatAvatar, seatPositions } from './tableArt'
 import {
   expandSeats,
@@ -331,16 +332,22 @@ export function LobbySidecar({
     </div>
   )
 
+  const healthTone =
+    (detail.band && BAND_TEXT[detail.band as HealthBand]) || 'text-[#f3ece0]'
   const healthBlock = detail.health != null && (
     <div>
       <div className="mb-1 flex items-baseline justify-between">
         <span className="text-[#8b8276]">Table health</span>
-        <span className="text-[#f3ece0]">
-          <span className={expanded ? 'text-[1.7rem] font-semibold' : 'text-[1.05rem] font-semibold'}>
+        <span className="flex items-baseline gap-1.5">
+          <span
+            className={`font-bold tabular-nums leading-none ${healthTone} ${
+              expanded ? 'text-[3rem]' : 'text-[1.5rem]'
+            }`}
+          >
             {detail.health}
           </span>
-          <span className={`ml-1 text-[#a9b0bb] ${expanded ? 'text-[0.85rem]' : 'text-[0.72rem]'}`}>
-            / 100 · {band}
+          <span className={`text-[#a9b0bb] ${expanded ? 'text-[0.9rem]' : 'text-[0.72rem]'}`}>
+            / 100 · <span className={healthTone}>{band}</span>
           </span>
         </span>
       </div>

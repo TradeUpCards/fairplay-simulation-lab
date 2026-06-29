@@ -17,7 +17,7 @@ import { LiveFloorControls } from '../components/LiveFloorControls'
 import { PlayerSelectModal } from '../components/PlayerSelectModal'
 import { assessmentsForTable, buildSeats, classificationIndex } from '../lib/table'
 import { ptlForTable } from '../lib/ptl'
-import { BAND_META } from '../lib/health'
+import { BAND_META, BAND_TEXT } from '../lib/health'
 
 // PTL legend keys: a coloured pip (::before) then the label
 const PTL_KEY = 'inline-flex items-center gap-[0.34rem] before:h-[0.55rem] before:w-[0.55rem] before:rounded-full before:content-[\'\']'
@@ -95,7 +95,7 @@ export function PitBossTableView({
   const center =
     healthRow && band ? (
       <div className="grid justify-items-center gap-1">
-        <span className="text-[3.25rem] font-bold leading-none tabular-nums text-[#f4efe6] [text-shadow:0_1px_7px_rgba(0,0,0,0.7)]">
+        <span className={`text-[3.5rem] font-bold leading-none tabular-nums [text-shadow:0_1px_7px_rgba(0,0,0,0.7)] ${BAND_TEXT[healthRow.band]}`}>
           <AnimatedNumber value={healthRow.health} />
         </span>
         <span className="font-mono text-[0.8rem] tracking-[0.02em] text-[#d7dfd1] [text-shadow:0_1px_5px_rgba(0,0,0,0.75)]">

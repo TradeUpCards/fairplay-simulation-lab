@@ -6,7 +6,7 @@ import type {
 } from '../data/types'
 import { assessmentsForTable, buildSeats, classificationIndex } from '../lib/table'
 import { ptlForTable } from '../lib/ptl'
-import { BAND_CHIP, BAND_META } from '../lib/health'
+import { BAND_CHIP, BAND_META, BAND_TEXT } from '../lib/health'
 import { AnimatedNumber } from './AnimatedNumber'
 import { SeatRing } from './SeatRing'
 
@@ -43,11 +43,11 @@ export function TableCard({
   // health score (or em-dash) centred on the felt; hover the number for the
   // penalty-term breakdown in a tooltip.
   const healthBase =
-    'text-[1.95rem] font-bold leading-none tabular-nums [text-shadow:0_1px_7px_rgba(0,0,0,0.7)]'
+    'text-[2.25rem] font-bold leading-none tabular-nums [text-shadow:0_1px_7px_rgba(0,0,0,0.7)]'
   const center =
     health && band ? (
       <div className="grid justify-items-center gap-[0.12rem]">
-        <span className={`group relative cursor-help text-[#f4efe6] ${healthBase}`}>
+        <span className={`group relative cursor-help ${BAND_TEXT[health.band]} ${healthBase}`}>
           <AnimatedNumber value={health.health} />
           <span
             className="pointer-events-none invisible absolute bottom-[calc(100%+0.55rem)] left-1/2 z-6 grid w-max max-w-[270px] -translate-x-1/2 translate-y-1 gap-[0.22rem] rounded-lg border border-line bg-[rgba(8,10,14,0.97)] px-[0.7rem] py-2 text-center text-[0.68rem] font-normal leading-[1.35] text-text opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.5)] transition-[opacity,transform] duration-140 text-shadow-none group-hover:visible group-hover:translate-y-0 group-hover:opacity-100"
