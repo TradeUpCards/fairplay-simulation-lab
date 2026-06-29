@@ -126,7 +126,7 @@ function MiniTable({
   const pos = seatPositions(detail.max_seats, 50, 44)
   return (
     <div
-      className={`relative mx-auto my-6 aspect-3/2 w-full ${large ? 'max-w-[22rem]' : 'max-w-[17rem]'}`}
+      className={`relative mx-auto aspect-3/2 w-full ${large ? 'my-2 max-w-[16rem]' : 'my-6 max-w-[17rem]'}`}
     >
       <img
         src={pokerTable}
@@ -220,30 +220,46 @@ function ViewTab({
  * face + handle + stack — NO archetype, ever (the wall). `reveal=true` (pit-boss)
  * adds the archetype glyph + tone and an illustrative sit-time forecast.
  */
-function SeatList({ detail, reveal }: { detail: OperatorTableDetail; reveal: boolean }) {
+function SeatList({
+  detail,
+  reveal,
+  large = false,
+}: {
+  detail: OperatorTableDetail
+  reveal: boolean
+  large?: boolean
+}) {
   const seats = expandSeats(detail.table_id, detail.composition)
   if (seats.length === 0) {
     return <p className="text-[0.74rem] text-[#6f7682]">Empty table — no one seated yet.</p>
   }
+  const handleCls = large ? 'text-[1.08rem]' : 'text-[0.86rem]'
+  const stackCls = large ? 'text-[0.94rem]' : 'text-[0.74rem]'
+  const metaCls = large ? 'text-[0.92rem]' : 'text-[0.7rem]'
   return (
-    <ul className="space-y-1.5" aria-label={reveal ? 'who is seated (operator)' : 'who is seated'}>
+    <ul
+      className={large ? 'space-y-2.5' : 'space-y-1.5'}
+      aria-label={reveal ? 'who is seated (operator)' : 'who is seated'}
+    >
       {seats.map((s) => (
         <li
           key={s.id}
           data-testid="seat-row"
           {...(reveal ? { 'data-archetype': s.archetype } : {})}
-          className="flex items-center gap-2.5 rounded-md border border-[#23262d] bg-[rgba(0,0,0,0.22)] px-2 py-1.5"
+          className={`flex items-center rounded-md border border-[#23262d] bg-[rgba(0,0,0,0.22)] ${
+            large ? 'gap-3 px-2.5 py-2' : 'gap-2.5 px-2 py-1.5'
+          }`}
         >
           <SeatFace id={s.id} archetype={s.archetype} reveal={reveal} size="lg" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-[0.86rem] font-semibold text-[#f3ece0]">
+              <span className={`truncate font-semibold text-[#f3ece0] ${handleCls}`}>
                 {handleFor(s.id)}
               </span>
-              <span className="font-mono text-[0.74rem] text-[#cdb98a]">${stackFor(s.id)}</span>
+              <span className={`font-mono text-[#cdb98a] ${stackCls}`}>${stackFor(s.id)}</span>
             </div>
             {reveal ? (
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.7rem]">
+              <div className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 ${metaCls}`}>
                 <span className={`rounded-full border px-1.5 py-[0.05rem] ${archTone(s.archetype)}`}>
                   {ARCH_AVATAR[s.archetype] ?? ''} {s.archetype.replace(/_/g, ' ')}
                 </span>
@@ -262,7 +278,7 @@ function SeatList({ detail, reveal }: { detail: OperatorTableDetail; reveal: boo
                 </span>
               </div>
             ) : (
-              <div className="text-[0.7rem] text-[#7e8694]">in the game</div>
+              <div className={`text-[#7e8694] ${metaCls}`}>in the game</div>
             )}
           </div>
         </li>
@@ -300,7 +316,7 @@ export function LobbySidecar({
       <span className="font-semibold text-[#f3ece0]">{rec}</span>
       {detail.seating_risk && (
         <span
-          className={`rounded-full border px-1.5 py-[0.05rem] text-[0.7rem] ${
+          className={`rounded-full border px-1.5 py-[0.05rem] ${expanded ? 'text-[0.85rem]' : 'text-[0.7rem]'} ${
             RISK_TONE[detail.seating_risk] ?? RISK_TONE.medium
           }`}
         >
@@ -308,7 +324,9 @@ export function LobbySidecar({
         </span>
       )}
       {detail.rank != null && (
-        <span className="text-[0.72rem] text-[#6f7682]">rank {detail.rank}</span>
+        <span className={`text-[#6f7682] ${expanded ? 'text-[0.85rem]' : 'text-[0.72rem]'}`}>
+          rank {detail.rank}
+        </span>
       )}
     </div>
   )
@@ -318,10 +336,12 @@ export function LobbySidecar({
       <div className="mb-1 flex items-baseline justify-between">
         <span className="text-[#8b8276]">Table health</span>
         <span className="text-[#f3ece0]">
-          <span className={expanded ? 'text-[1.4rem] font-semibold' : 'text-[1.05rem] font-semibold'}>
+          <span className={expanded ? 'text-[1.7rem] font-semibold' : 'text-[1.05rem] font-semibold'}>
             {detail.health}
           </span>
-          <span className="ml-1 text-[0.72rem] text-[#a9b0bb]">/ 100 · {band}</span>
+          <span className={`ml-1 text-[#a9b0bb] ${expanded ? 'text-[0.85rem]' : 'text-[0.72rem]'}`}>
+            / 100 · {band}
+          </span>
         </span>
       </div>
       <div className="space-y-1">
@@ -330,14 +350,16 @@ export function LobbySidecar({
             const v = detail.terms?.[k] ?? 0
             return (
               <div key={k} className="flex items-center gap-2">
-                <span className="w-16 text-[0.68rem] text-[#8b8276]">{TERM_LABEL[k]}</span>
-                <span className={`${expanded ? 'h-2' : 'h-1.5'} flex-1 overflow-hidden rounded-full bg-[#1c2028]`}>
+                <span className={`text-[#8b8276] ${expanded ? 'w-20 text-[0.85rem]' : 'w-16 text-[0.68rem]'}`}>
+                  {TERM_LABEL[k]}
+                </span>
+                <span className={`${expanded ? 'h-2.5' : 'h-1.5'} flex-1 overflow-hidden rounded-full bg-[#1c2028]`}>
                   <span
                     className="block h-full rounded-full bg-[#c98b93]"
                     style={{ width: `${Math.min(100, (v / max) * 100)}%` }}
                   />
                 </span>
-                <span className="w-10 text-right text-[0.66rem] text-[#6f7682]">
+                <span className={`text-right text-[#6f7682] ${expanded ? 'w-12 text-[0.82rem]' : 'w-10 text-[0.66rem]'}`}>
                   {Math.round(v)}/{max}
                 </span>
               </div>
@@ -350,16 +372,19 @@ export function LobbySidecar({
   const seatedBlock = (
     <div>
       <div className="mb-1.5 text-[#8b8276]">Who's seated</div>
-      <SeatList detail={detail} reveal />
+      <SeatList detail={detail} reveal large={expanded} />
     </div>
   )
 
   const reasonsBlock = detail.reasons && detail.reasons.length > 0 && (
     <div>
       <div className="mb-1 text-[#8b8276]">Why this rank</div>
-      <ul className="space-y-1.5">
+      <ul className={expanded ? 'space-y-2' : 'space-y-1.5'}>
         {detail.reasons.map((r) => (
-          <li key={r.code} className="text-[0.74rem] leading-snug text-[#b8c0cf]">
+          <li
+            key={r.code}
+            className={`leading-snug text-[#b8c0cf] ${expanded ? 'text-[0.95rem]' : 'text-[0.74rem]'}`}
+          >
             <span className="text-[#8fd0ef]">{r.code.replace(/_/g, ' ')}</span> — {r.detail}
           </li>
         ))}
@@ -368,7 +393,11 @@ export function LobbySidecar({
   )
 
   const footer = (
-    <p className="border-t border-[#23262d] pt-2 text-[0.68rem] leading-snug text-[#6f7682]">
+    <p
+      className={`border-t border-[#23262d] pt-2 leading-snug text-[#6f7682] ${
+        expanded ? 'text-[0.82rem]' : 'text-[0.68rem]'
+      }`}
+    >
       Operator-only — the reasoning behind the ranking. Players never see scores or risk language.
     </p>
   )
@@ -410,7 +439,7 @@ export function LobbySidecar({
         </div>
       </div>
 
-      <div className="px-3 py-2 text-[0.8rem]">
+      <div className={`px-3 py-2 ${expanded ? 'text-[1rem]' : 'text-[0.8rem]'}`}>
         {!pitboss ? (
           <>
             <MiniTable detail={detail} reveal={false} />
@@ -431,8 +460,8 @@ export function LobbySidecar({
         ) : expanded ? (
           // Focus mode — two columns: the felt + seats, and the analysis.
           <>
-            <div className="grid gap-6 xl:grid-cols-2">
-              <div className="space-y-4">
+            <div className="grid gap-x-8 gap-y-4 xl:grid-cols-2">
+              <div className="space-y-3">
                 <MiniTable detail={detail} reveal large />
                 {seatedBlock}
               </div>
@@ -442,7 +471,7 @@ export function LobbySidecar({
                 {reasonsBlock}
               </div>
             </div>
-            <div className="mt-4">{footer}</div>
+            <div className="mt-3">{footer}</div>
           </>
         ) : (
           <>
